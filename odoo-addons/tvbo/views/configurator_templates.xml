@@ -4,6 +4,10 @@
         <template id="model_configurator_template" name="Model Configurator">
             <t t-call="website.layout">
                 <div id="wrap" class="oe_structure">
+                    <!-- Load required JavaScript files -->
+                    <script src="/tvbo/static/src/js/network_graph_3d.js"></script>
+                    <script src="/tvbo/static/src/js/experiment_builder.js"></script>
+                    
                     <div class="container-fluid" style="max-width: 1400px; margin: 0 auto; padding: 20px;">
                         <div class="header" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #e5e7eb;">
                             <h1 style="margin: 0; color: #1f2937; font-size: 2rem;">Simulation Experiment Configurator</h1>
@@ -41,18 +45,48 @@
                                     </button>
                                 </li>
                                 <li class="nav-item" role="presentation">
-                                    <button class="nav-link" id="observation-tab" data-bs-toggle="tab" data-bs-target="#observation-panel" type="button" role="tab">
-                                        Observation Models
-                                    </button>
-                                </li>
-                                <li class="nav-item" role="presentation">
                                     <button class="nav-link" id="stimulus-tab" data-bs-toggle="tab" data-bs-target="#stimulus-panel" type="button" role="tab">
                                         Stimulus
                                     </button>
                                 </li>
                                 <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="functions-tab" data-bs-toggle="tab" data-bs-target="#functions-panel" type="button" role="tab">
+                                        Functions
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="observations-tab" data-bs-toggle="tab" data-bs-target="#observations-panel" type="button" role="tab">
+                                        Observations
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="derived-observations-tab" data-bs-toggle="tab" data-bs-target="#derived-observations-panel" type="button" role="tab">
+                                        Derived Observations
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="algorithms-tab" data-bs-toggle="tab" data-bs-target="#algorithms-panel" type="button" role="tab">
+                                        Algorithms
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="optimization-tab" data-bs-toggle="tab" data-bs-target="#optimization-panel" type="button" role="tab">
+                                        Optimization
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="explorations-tab" data-bs-toggle="tab" data-bs-target="#explorations-panel" type="button" role="tab">
+                                        Explorations
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="execution-tab" data-bs-toggle="tab" data-bs-target="#execution-panel" type="button" role="tab">
+                                        Execution
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
                                     <button class="nav-link" id="preview-tab" data-bs-toggle="tab" data-bs-target="#preview-panel" type="button" role="tab">
-                                        Preview
+                                        Metadata Specification
                                     </button>
                                 </li>
                                 <li class="nav-item" role="presentation">
@@ -98,6 +132,30 @@
                             <div class="tab-pane fade show active" id="general-panel" role="tabpanel" style="grid-column: 1; grid-row: 1 / 3;">
                                 <div style="background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                                     <h5 class="mb-3" style="color: #1f2937;">General Configuration</h5>
+                                    
+                                    <!-- Load Existing Experiment -->
+                                    <div class="row g-3 mb-4">
+                                        <div class="col-12">
+                                            <div class="card" style="border: 2px dashed #d1d5db; background: #f9fafb;">
+                                                <div class="card-body">
+                                                    <label class="form-label fw-bold mb-2">
+                                                        <i class="fa fa-folder-open me-2"></i>Load Existing Experiment
+                                                    </label>
+                                                    <select id="loadExistingExperiment" class="form-select">
+                                                        <option value="">— Start from scratch —</option>
+                                                        <t t-foreach="experiments" t-as="exp">
+                                                            <option t-att-value="exp['id']" t-att-data-spec="exp['specification']">
+                                                                <t t-esc="exp['name']"/> 
+                                                                <t t-if="exp['label']">(<t t-esc="exp['label']"/>)</t>
+                                                            </option>
+                                                        </t>
+                                                    </select>
+                                                    <small class="text-muted mt-1 d-block">Select an existing experiment to load its configuration and continue editing.</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
                                     <div class="row g-3">
                                         <div class="col-md-6">
                                             <label class="form-label fw-bold">Experiment Name</label>
@@ -325,10 +383,66 @@
                                 </div>
                             </div>
 
-                            <!-- Preview Tab -->
+                            <!-- Functions Tab -->
+                            <div class="tab-pane fade" id="functions-panel" role="tabpanel" style="grid-column: 1; grid-row: 1 / 3;">
+                                <div style="background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                                    <h5 class="mb-3" style="color: #1f2937;">Functions</h5>
+                                    <div id="functionsContent"></div>
+                                </div>
+                            </div>
+
+                            <!-- Observations Tab -->
+                            <div class="tab-pane fade" id="observations-panel" role="tabpanel" style="grid-column: 1; grid-row: 1 / 3;">
+                                <div style="background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                                    <h5 class="mb-3" style="color: #1f2937;">Observations</h5>
+                                    <div id="observationsContent"></div>
+                                </div>
+                            </div>
+
+                            <!-- Derived Observations Tab -->
+                            <div class="tab-pane fade" id="derived-observations-panel" role="tabpanel" style="grid-column: 1; grid-row: 1 / 3;">
+                                <div style="background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                                    <h5 class="mb-3" style="color: #1f2937;">Derived Observations</h5>
+                                    <div id="derivedObservationsContent"></div>
+                                </div>
+                            </div>
+
+                            <!-- Algorithms Tab -->
+                            <div class="tab-pane fade" id="algorithms-panel" role="tabpanel" style="grid-column: 1; grid-row: 1 / 3;">
+                                <div style="background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                                    <h5 class="mb-3" style="color: #1f2937;">Algorithms</h5>
+                                    <div id="algorithmsContent"></div>
+                                </div>
+                            </div>
+
+                            <!-- Optimization Tab -->
+                            <div class="tab-pane fade" id="optimization-panel" role="tabpanel" style="grid-column: 1; grid-row: 1 / 3;">
+                                <div style="background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                                    <h5 class="mb-3" style="color: #1f2937;">Optimization</h5>
+                                    <div id="optimizationContent"></div>
+                                </div>
+                            </div>
+
+                            <!-- Explorations Tab -->
+                            <div class="tab-pane fade" id="explorations-panel" role="tabpanel" style="grid-column: 1; grid-row: 1 / 3;">
+                                <div style="background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                                    <h5 class="mb-3" style="color: #1f2937;">Explorations</h5>
+                                    <div id="explorationsContent"></div>
+                                </div>
+                            </div>
+
+                            <!-- Execution Tab -->
+                            <div class="tab-pane fade" id="execution-panel" role="tabpanel" style="grid-column: 1; grid-row: 1 / 3;">
+                                <div style="background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                                    <h5 class="mb-3" style="color: #1f2937;">Execution</h5>
+                                    <div id="executionContent"></div>
+                                </div>
+                            </div>
+
+                            <!-- Preview Tab (renamed to Metadata Specification) -->
                             <div class="tab-pane fade" id="preview-panel" role="tabpanel" style="grid-column: 1; grid-row: 1 / 3;">
                                 <div style="background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                                    <h5 class="mb-3" style="color: #1f2937;">Configuration Preview</h5>
+                                    <h5 class="mb-3" style="color: #1f2937;">Metadata Specification</h5>
                                     <div id="previewContent">
                                         <pre id="previewYaml" style="background: #f8f9fa; padding: 15px; border-radius: 4px; overflow-x: auto;"></pre>
                                     </div>
@@ -498,6 +612,48 @@
                         const saveBtn = document.getElementById('saveModelBtn');
                         const copyBtn = document.getElementById('builderCopyPython');
                         const downloadBtn = document.getElementById('builderDownloadYaml');
+                        const loadExperimentSelect = document.getElementById('loadExistingExperiment');
+
+                        // Handle loading existing experiment
+                        if (loadExperimentSelect) {
+                            loadExperimentSelect.addEventListener('change', function(e) {
+                                const selectedOption = e.target.selectedOptions[0];
+                                if (!selectedOption || !selectedOption.value) {
+                                    return;
+                                }
+                                
+                                const specJson = selectedOption.getAttribute('data-spec');
+                                if (specJson) {
+                                    try {
+                                        const spec = JSON.parse(specJson);
+                                        console.log('[Configurator] Loading experiment specification:', spec);
+                                        
+                                        // Populate general fields
+                                        if (spec.name) {
+                                            const nameField = document.getElementById('experimentName');
+                                            if (nameField) nameField.value = spec.name;
+                                        }
+                                        if (spec.label) {
+                                            const labelField = document.getElementById('experimentLabel');
+                                            if (labelField) labelField.value = spec.label;
+                                        }
+                                        if (spec.description) {
+                                            const descField = document.getElementById('experimentDescription');
+                                            if (descField) descField.value = spec.description;
+                                        }
+                                        
+                                        // TODO: Populate other tabs with spec data (dynamics, network, etc.)
+                                        // This would require extending the tab initialization functions
+                                        // to accept prefilled data
+                                        
+                                        alert('Experiment loaded! General fields have been populated. Tab-specific data loading will be implemented in future updates.');
+                                    } catch (err) {
+                                        console.error('[Configurator] Error parsing experiment specification:', err);
+                                        alert('Error loading experiment specification.');
+                                    }
+                                }
+                            });
+                        }
 
                         // Initialize tabs manually
                         const tabs = document.querySelectorAll('[data-bs-toggle="tab"]');
@@ -537,10 +693,7 @@
                             });
                         });
 
-                        // Initialize builder on page load
-                        if (window.initializeBuilder) {
-                            window.initializeBuilder();
-                        }
+                        // Note: initializeBuilder is now called when dynamics-tab is shown (see experiment_builder.js)
 
                         // Copy Python functionality
                         if (copyBtn) {

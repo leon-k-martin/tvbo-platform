@@ -1,5 +1,9 @@
-// Simplified Model Builder for Odoo TVBO Configurator
-// Adapted from browser model_builder.js
+// ============================================================================
+// TVBO Experiment Builder for Odoo Platform
+// ============================================================================
+// Comprehensive interactive builder for SimulationExperiment specifications
+// Aligned with TVBO schema: https://w3id.org/tvbo
+// ============================================================================
 
 (function () {
   const STATE = {
@@ -7,14 +11,21 @@
     data: [],
     lastFullModelSpec: null,
     previewEnabled: false,
+    functions: {}, // Reusable function definitions
+    observations: {}, // Observation specifications
+    derivedObservations: {}, // Derived observations
+    algorithms: {}, // Iterative tuning algorithms (FIC, EIB, etc.)
+    optimizations: [], // Optimization stages
+    explorations: [], // Parameter exploration specs
+    execution: {} // Execution configuration
   };
 
   const DEBUG = true;
-  const log = (...args) => { if (DEBUG && console && console.log) console.log('[ModelBuilder]', ...args); };
+  const log = (...args) => { if (DEBUG && console && console.log) console.log('[ExperimentBuilder]', ...args); };
 
   // Global error handler to help debug issues
   window.addEventListener('error', function(event) {
-    console.error('[ModelBuilder] Global error caught:', event.message, 'at', event.filename, ':', event.lineno);
+    console.error('[ExperimentBuilder] Global error caught:', event.message, 'at', event.filename, ':', event.lineno);
   });
 
   function initializeBuilder() {
@@ -32,6 +43,9 @@
       console.error('[ModelBuilder] Error in initializeBuilder:', err);
     }
   }
+
+  // Expose to global scope
+  window.initializeBuilder = initializeBuilder;
 
   function renderBuilder(root) {
     const data = STATE.data || [];
@@ -1910,6 +1924,311 @@
     `;
   }
 
+  // ========================================================================
+  // TAB INITIALIZERS: Functions, Observations, Algorithms, Optimization
+  // ========================================================================
+
+  function initializeFunctionsTab() {
+    const content = document.getElementById('functionsContent');
+    if (!content) return;
+
+    content.innerHTML = `
+      <div class="builder-field">
+        <div class="builder-subtitle">Reusable Functions</div>
+        <p class="text-muted" style="font-size: 0.9em;">
+          Define functions once, reference by name in observations and algorithms. 
+          Supports equation (symbolic), callable (Python function), or source_code.
+        </p>
+        <div id="functionsRows" class="builder-rows"></div>
+        <div class="builder-actions">
+          <button class="btn btn-sm btn-secondary" id="addFunction">Add Function</button>
+        </div>
+      </div>
+    `;
+
+    // Setup add button
+    document.getElementById('addFunction')?.addEventListener('click', function() {
+      addFunctionRow();
+    });
+  }
+
+  function addFunctionRow(name = '', description = '', equation = '', module = '', callable = '') {
+    const container = document.getElementById('functionsRows');
+    if (!container) return;
+
+    const div = document.createElement('div');
+    div.className = 'builder-row';
+    div.style.gridTemplateColumns = '1fr 2fr 1fr 1fr auto';
+    div.innerHTML = `
+      <input class="builder-input fn-name" placeholder="function_name" value="${escapeAttr(name)}" />
+      <input class="builder-input fn-equation" placeholder="x + y" value="${escapeAttr(equation)}" />
+      <input class="builder-input fn-module" placeholder="jax.numpy (optional)" value="${escapeAttr(module)}" />
+      <input class="builder-input fn-callable" placeholder="mean (optional)" value="${escapeAttr(callable)}" />
+      <button class="btn btn-sm btn-danger fn-del" title="Remove">✕</button>
+    `;
+    div.querySelector('.fn-del').addEventListener('click', () => div.remove());
+    container.appendChild(div);
+  }
+
+  function initializeObservationsTab() {
+    const content = document.getElementById('observationsContent');
+    if (!content) return;
+
+    content.innerHTML = `
+      <div class="builder-field">
+        <div class="builder-subtitle">Observations</div>
+        <p class="text-muted" style="font-size: 0.9em;">
+          Define what to observe from simulations: monitors (BOLD, EEG), metrics, or empirical data.
+        </p>
+        <div id="observationsRows" class="builder-rows"></div>
+        <div class="builder-actions">
+          <button class="btn btn-sm btn-secondary" id="addObservation">Add Observation</button>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('addObservation')?.addEventListener('click', function() {
+      addObservationRow();
+    });
+  }
+
+  function addObservationRow(name = '', source = '', type = 'monitor', period = '') {
+    const container = document.getElementById('observationsRows');
+    if (!container) return;
+
+    const div = document.createElement('div');
+    div.className = 'builder-row';
+    div.style.gridTemplateColumns = '1fr 1fr 1fr 1fr auto auto';
+    div.innerHTML = `
+      <input class="builder-input obs-name" placeholder="bold" value="${escapeAttr(name)}" />
+      <select class="builder-select obs-type">
+        <option value="monitor" ${type === 'monitor' ? 'selected' : ''}>Monitor</option>
+        <option value="metric" ${type === 'metric' ? 'selected' : ''}>Metric</option>
+        <option value="external" ${type === 'external' ? 'selected' : ''}>External Data</option>
+      </select>
+      <input class="builder-input obs-source" placeholder="state variable (e.g., S)" value="${escapeAttr(source)}" />
+      <input class="builder-input obs-period" type="number" placeholder="period (ms)" value="${escapeAttr(period)}" />
+      <button class="btn btn-sm btn-info obs-pipeline" title="Configure Pipeline">⚙️</button>
+      <button class="btn btn-sm btn-danger obs-del" title="Remove">✕</button>
+    `;
+    div.querySelector('.obs-del').addEventListener('click', () => div.remove());
+    div.querySelector('.obs-pipeline').addEventListener('click', () => {
+      alert('Pipeline configuration UI - TBD');
+    });
+    container.appendChild(div);
+  }
+
+  function initializeDerivedObservationsTab() {
+    const content = document.getElementById('derivedObservationsContent');
+    if (!content) return;
+
+    content.innerHTML = `
+      <div class="builder-field">
+        <div class="builder-subtitle">Derived Observations</div>
+        <p class="text-muted" style="font-size: 0.9em;">
+          Compute observations from other observations (e.g., FC from BOLD, loss from FC vs empirical).
+        </p>
+        <div id="derivedObservationsRows" class="builder-rows"></div>
+        <div class="builder-actions">
+          <button class="btn btn-sm btn-secondary" id="addDerivedObservation">Add Derived Observation</button>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('addDerivedObservation')?.addEventListener('click', function() {
+      addDerivedObservationRow();
+    });
+  }
+
+  function addDerivedObservationRow(name = '', sources = '', pipeline = '') {
+    const container = document.getElementById('derivedObservationsRows');
+    if (!container) return;
+
+    const div = document.createElement('div');
+    div.className = 'builder-row';
+    div.style.gridTemplateColumns = '1fr 2fr 2fr auto';
+    div.innerHTML = `
+      <input class="builder-input dobs-name" placeholder="fc" value="${escapeAttr(name)}" />
+      <input class="builder-input dobs-sources" placeholder="source observations (comma-sep)" value="${escapeAttr(sources)}" />
+      <input class="builder-input dobs-pipeline" placeholder="pipeline functions (comma-sep)" value="${escapeAttr(pipeline)}" />
+      <button class="btn btn-sm btn-danger dobs-del" title="Remove">✕</button>
+    `;
+    div.querySelector('.dobs-del').addEventListener('click', () => div.remove());
+    container.appendChild(div);
+  }
+
+  function initializeAlgorithmsTab() {
+    const content = document.getElementById('algorithmsContent');
+    if (!content) return;
+
+    content.innerHTML = `
+      <div class="builder-field">
+        <div class="builder-subtitle">Iterative Tuning Algorithms</div>
+        <p class="text-muted" style="font-size: 0.9em;">
+          FIC, EIB, and custom iterative parameter tuning algorithms.
+        </p>
+        <div id="algorithmsRows" class="builder-rows"></div>
+        <div class="builder-actions">
+          <button class="btn btn-sm btn-secondary" id="addAlgorithm">Add Algorithm</button>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('addAlgorithm')?.addEventListener('click', function() {
+      addAlgorithmRow();
+    });
+  }
+
+  function addAlgorithmRow(name = '', type = 'fic', nIter = '10', eta = '0.01') {
+    const container = document.getElementById('algorithmsRows');
+    if (!container) return;
+
+    const div = document.createElement('div');
+    div.className = 'builder-row';
+    div.style.gridTemplateColumns = '1fr 1fr 0.8fr 0.8fr auto auto';
+    div.innerHTML = `
+      <input class="builder-input alg-name" placeholder="fic_tuning" value="${escapeAttr(name)}" />
+      <select class="builder-select alg-type">
+        <option value="fic" ${type === 'fic' ? 'selected' : ''}>FIC (Activity Target)</option>
+        <option value="eib" ${type === 'eib' ? 'selected' : ''}>EIB (FC Matching)</option>
+        <option value="custom" ${type === 'custom' ? 'selected' : ''}>Custom</option>
+      </select>
+      <input class="builder-input alg-niter" type="number" placeholder="iterations" value="${escapeAttr(nIter)}" />
+      <input class="builder-input alg-eta" type="number" step="0.001" placeholder="learn rate" value="${escapeAttr(eta)}" />
+      <button class="btn btn-sm btn-info alg-config" title="Configure Details">⚙️</button>
+      <button class="btn btn-sm btn-danger alg-del" title="Remove">✕</button>
+    `;
+    div.querySelector('.alg-del').addEventListener('click', () => div.remove());
+    div.querySelector('.alg-config').addEventListener('click', () => {
+      alert('Algorithm configuration dialog - TBD');
+    });
+    container.appendChild(div);
+  }
+
+  function initializeOptimizationTab() {
+    const content = document.getElementById('optimizationContent');
+    if (!content) return;
+
+    content.innerHTML = `
+      <div class="builder-field">
+        <div class="builder-subtitle">Optimization Configuration</div>
+        <p class="text-muted" style="font-size: 0.9em;">
+          Gradient-based parameter optimization (single or multi-stage).
+        </p>
+        <div id="optimizationRows" class="builder-rows"></div>
+        <div class="builder-actions">
+          <button class="btn btn-sm btn-secondary" id="addOptimization">Add Optimization Stage</button>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('addOptimization')?.addEventListener('click', function() {
+      addOptimizationRow();
+    });
+  }
+
+  function addOptimizationRow(name = '', optimizer = 'adam', nIter = '100', lr = '0.01') {
+    const container = document.getElementById('optimizationRows');
+    if (!container) return;
+
+    const div = document.createElement('div');
+    div.className = 'builder-row';
+    div.style.gridTemplateColumns = '1fr 1fr 0.8fr 0.8fr 2fr auto';
+    div.innerHTML = `
+      <input class="builder-input opt-name" placeholder="stage_name" value="${escapeAttr(name)}" />
+      <select class="builder-select opt-optimizer">
+        <option value="adam" ${optimizer === 'adam' ? 'selected' : ''}>Adam</option>
+        <option value="sgd" ${optimizer === 'sgd' ? 'selected' : ''}>SGD</option>
+        <option value="lbfgs" ${optimizer === 'lbfgs' ? 'selected' : ''}>L-BFGS</option>
+      </select>
+      <input class="builder-input opt-niter" type="number" placeholder="iterations" value="${escapeAttr(nIter)}" />
+      <input class="builder-input opt-lr" type="number" step="0.001" placeholder="learn rate" value="${escapeAttr(lr)}" />
+      <input class="builder-input opt-params" placeholder="target params (comma-sep)" />
+      <button class="btn btn-sm btn-danger opt-del" title="Remove">✕</button>
+    `;
+    div.querySelector('.opt-del').addEventListener('click', () => div.remove());
+    container.appendChild(div);
+  }
+
+  function initializeExplorationsTab() {
+    const content = document.getElementById('explorationsContent');
+    if (!content) return;
+
+    content.innerHTML = `
+      <div class="builder-field">
+        <div class="builder-subtitle">Parameter Explorations</div>
+        <p class="text-muted" style="font-size: 0.9em;">
+          Grid search or parameter sweeps over defined ranges.
+        </p>
+        <div id="explorationsRows" class="builder-rows"></div>
+        <div class="builder-actions">
+          <button class="btn btn-sm btn-secondary" id="addExploration">Add Exploration</button>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('addExploration')?.addEventListener('click', function() {
+      addExplorationRow();
+    });
+  }
+
+  function addExplorationRow(name = '', params = '', mode = 'product') {
+    const container = document.getElementById('explorationsRows');
+    if (!container) return;
+
+    const div = document.createElement('div');
+    div.className = 'builder-row';
+    div.style.gridTemplateColumns = '1fr 2fr 1fr auto';
+    div.innerHTML = `
+      <input class="builder-input exp-name" placeholder="exploration_name" value="${escapeAttr(name)}" />
+      <input class="builder-input exp-params" placeholder="params (e.g., a:0:1:10, b:0:1:10)" value="${escapeAttr(params)}" />
+      <select class="builder-select exp-mode">
+        <option value="product" ${mode === 'product' ? 'selected' : ''}>Grid (product)</option>
+        <option value="zip" ${mode === 'zip' ? 'selected' : ''}>Paired (zip)</option>
+      </select>
+      <button class="btn btn-sm btn-danger exp-del" title="Remove">✕</button>
+    `;
+    div.querySelector('.exp-del').addEventListener('click', () => div.remove());
+    container.appendChild(div);
+  }
+
+  function initializeExecutionTab() {
+    const content = document.getElementById('executionContent');
+    if (!content) return;
+
+    content.innerHTML = `
+      <div class="builder-field">
+        <div class="builder-subtitle">Execution Configuration</div>
+        <p class="text-muted" style="font-size: 0.9em;">
+          Configure parallelization, precision, and hardware settings.
+        </p>
+      </div>
+      <div class="builder-field">
+        <label>Number of Workers</label>
+        <input id="execNWorkers" type="number" class="builder-input" placeholder="1" value="1" />
+      </div>
+      <div class="builder-field">
+        <label>Precision</label>
+        <select id="execPrecision" class="builder-select">
+          <option value="float32">float32</option>
+          <option value="float64" selected>float64</option>
+        </select>
+      </div>
+      <div class="builder-field">
+        <label>Accelerator</label>
+        <select id="execAccelerator" class="builder-select">
+          <option value="cpu" selected>CPU</option>
+          <option value="gpu">GPU</option>
+          <option value="tpu">TPU</option>
+        </select>
+      </div>
+      <div class="builder-field">
+        <label>Random Seed</label>
+        <input id="execRandomSeed" type="number" class="builder-input" placeholder="42" value="42" />
+      </div>
+    `;
+  }
+
   function initializePreviewTab() {
     const previewElement = document.getElementById('previewYaml');
     if (!previewElement) return;
@@ -1931,7 +2250,14 @@
         network: collectNetworkConfig(),
         integration: collectIntegrationConfig(),
         observation_models: collectObservationModelsConfig(),
-        stimulus: collectStimulusConfig()
+        stimulus: collectStimulusConfig(),
+        functions: collectFunctionsConfig(),
+        observations: collectObservationsConfig(),
+        derived_observations: collectDerivedObservationsConfig(),
+        algorithms: collectAlgorithmsConfig(),
+        optimization: collectOptimizationConfig(),
+        explorations: collectExplorationsConfig(),
+        execution: collectExecutionConfig()
       }
     };
 
@@ -2242,6 +2568,176 @@
     if (regions?.value) config.target_regions = regions.value.split(',').map(r => parseInt(r.trim())).filter(r => !isNaN(r));
 
     return config;
+  }
+
+  // ========================================================================
+  // COLLECTION FUNCTIONS: New Sections
+  // ========================================================================
+
+  function collectFunctionsConfig() {
+    const fnRows = document.querySelectorAll('#functionsRows .builder-row');
+    if (fnRows.length === 0) return null;
+
+    const functions = [];
+    fnRows.forEach(row => {
+      const name = row.querySelector('.fn-name')?.value?.trim();
+      const equation = row.querySelector('.fn-equation')?.value?.trim();
+      const module = row.querySelector('.fn-module')?.value?.trim();
+      const callable = row.querySelector('.fn-callable')?.value?.trim();
+
+      if (name) {
+        const fn = { name };
+        if (equation) fn.equation = { rhs: equation };
+        if (module && callable) {
+          fn.callable = { module, name: callable };
+        }
+        functions.push(fn);
+      }
+    });
+
+    return functions.length > 0 ? functions : null;
+  }
+
+  function collectObservationsConfig() {
+    const obsRows = document.querySelectorAll('#observationsRows .builder-row');
+    if (obsRows.length === 0) return null;
+
+    const observations = [];
+    obsRows.forEach(row => {
+      const name = row.querySelector('.obs-name')?.value?.trim();
+      const type = row.querySelector('.obs-type')?.value;
+      const source = row.querySelector('.obs-source')?.value?.trim();
+      const period = row.querySelector('.obs-period')?.value?.trim();
+
+      if (name) {
+        const obs = { name, type: type || 'monitor' };
+        if (source) obs.source = source;
+        if (period) obs.period = parseFloat(period);
+        observations.push(obs);
+      }
+    });
+
+    return observations.length > 0 ? observations : null;
+  }
+
+  function collectDerivedObservationsConfig() {
+    const dobsRows = document.querySelectorAll('#derivedObservationsRows .builder-row');
+    if (dobsRows.length === 0) return null;
+
+    const derivedObs = [];
+    dobsRows.forEach(row => {
+      const name = row.querySelector('.dobs-name')?.value?.trim();
+      const sources = row.querySelector('.dobs-sources')?.value?.trim();
+      const pipeline = row.querySelector('.dobs-pipeline')?.value?.trim();
+
+      if (name && sources) {
+        const dobs = { name, source_observations: sources.split(',').map(s => s.trim()) };
+        if (pipeline) {
+          dobs.pipeline = pipeline.split(',').map(f => ({ function: f.trim() }));
+        }
+        derivedObs.push(dobs);
+      }
+    });
+
+    return derivedObs.length > 0 ? derivedObs : null;
+  }
+
+  function collectAlgorithmsConfig() {
+    const algRows = document.querySelectorAll('#algorithmsRows .builder-row');
+    if (algRows.length === 0) return null;
+
+    const algorithms = [];
+    algRows.forEach(row => {
+      const name = row.querySelector('.alg-name')?.value?.trim();
+      const type = row.querySelector('.alg-type')?.value;
+      const nIter = row.querySelector('.alg-niter')?.value?.trim();
+      const eta = row.querySelector('.alg-eta')?.value?.trim();
+
+      if (name) {
+        const alg = { name, type: type || 'fic' };
+        if (nIter) alg.n_iterations = parseInt(nIter);
+        if (eta) alg.learning_rate = parseFloat(eta);
+        algorithms.push(alg);
+      }
+    });
+
+    return algorithms.length > 0 ? algorithms : null;
+  }
+
+  function collectOptimizationConfig() {
+    const optRows = document.querySelectorAll('#optimizationRows .builder-row');
+    if (optRows.length === 0) return null;
+
+    const stages = [];
+    optRows.forEach(row => {
+      const name = row.querySelector('.opt-name')?.value?.trim();
+      const optimizer = row.querySelector('.opt-optimizer')?.value;
+      const nIter = row.querySelector('.opt-niter')?.value?.trim();
+      const lr = row.querySelector('.opt-lr')?.value?.trim();
+      const params = row.querySelector('.opt-params')?.value?.trim();
+
+      if (name) {
+        const stage = { name, optimizer: optimizer || 'adam' };
+        if (nIter) stage.n_iterations = parseInt(nIter);
+        if (lr) stage.learning_rate = parseFloat(lr);
+        if (params) stage.target_parameters = params.split(',').map(p => p.trim());
+        stages.push(stage);
+      }
+    });
+
+    return stages.length > 0 ? stages : null;
+  }
+
+  function collectExplorationsConfig() {
+    const expRows = document.querySelectorAll('#explorationsRows .builder-row');
+    if (expRows.length === 0) return null;
+
+    const explorations = [];
+    expRows.forEach(row => {
+      const name = row.querySelector('.exp-name')?.value?.trim();
+      const params = row.querySelector('.exp-params')?.value?.trim();
+      const mode = row.querySelector('.exp-mode')?.value;
+
+      if (name && params) {
+        const exp = { name, mode: mode || 'product' };
+        // Parse params (format: "a:0:1:10, b:0:1:10")
+        exp.parameters = params.split(',').map(p => {
+          const parts = p.trim().split(':');
+          if (parts.length === 4) {
+            return {
+              name: parts[0],
+              domain: {
+                lo: parseFloat(parts[1]),
+                hi: parseFloat(parts[2]),
+                n: parseInt(parts[3])
+              }
+            };
+          }
+          return null;
+        }).filter(p => p !== null);
+
+        if (exp.parameters.length > 0) {
+          explorations.push(exp);
+        }
+      }
+    });
+
+    return explorations.length > 0 ? explorations : null;
+  }
+
+  function collectExecutionConfig() {
+    const nWorkers = document.getElementById('execNWorkers')?.value;
+    const precision = document.getElementById('execPrecision')?.value;
+    const accelerator = document.getElementById('execAccelerator')?.value;
+    const randomSeed = document.getElementById('execRandomSeed')?.value;
+
+    const config = {};
+    if (nWorkers) config.n_workers = parseInt(nWorkers);
+    if (precision) config.precision = precision;
+    if (accelerator) config.accelerator = accelerator;
+    if (randomSeed) config.random_seed = parseInt(randomSeed);
+
+    return Object.keys(config).length > 0 ? config : null;
   }
 
   function generateYamlPreview(config) {
@@ -3368,6 +3864,11 @@
   // Initialize all tabs on DOM ready
   document.addEventListener('DOMContentLoaded', function() {
     // Initialize tab content when tabs are clicked
+    document.getElementById('dynamics-tab')?.addEventListener('shown.bs.tab', function() {
+      if (window.initializeBuilder) {
+        window.initializeBuilder();
+      }
+    });
     document.getElementById('network-tab')?.addEventListener('shown.bs.tab', function() {
       initializeNetworkTab();
       initializeCouplingTab();
@@ -3377,6 +3878,27 @@
     });
     document.getElementById('observation-tab')?.addEventListener('shown.bs.tab', function() {
       initializeObservationModelsTab();
+    });
+    document.getElementById('functions-tab')?.addEventListener('shown.bs.tab', function() {
+      initializeFunctionsTab();
+    });
+    document.getElementById('observations-tab')?.addEventListener('shown.bs.tab', function() {
+      initializeObservationsTab();
+    });
+    document.getElementById('derived-observations-tab')?.addEventListener('shown.bs.tab', function() {
+      initializeDerivedObservationsTab();
+    });
+    document.getElementById('algorithms-tab')?.addEventListener('shown.bs.tab', function() {
+      initializeAlgorithmsTab();
+    });
+    document.getElementById('optimization-tab')?.addEventListener('shown.bs.tab', function() {
+      initializeOptimizationTab();
+    });
+    document.getElementById('explorations-tab')?.addEventListener('shown.bs.tab', function() {
+      initializeExplorationsTab();
+    });
+    document.getElementById('execution-tab')?.addEventListener('shown.bs.tab', function() {
+      initializeExecutionTab();
     });
     document.getElementById('stimulus-tab')?.addEventListener('shown.bs.tab', function() {
       initializeStimulusTab();

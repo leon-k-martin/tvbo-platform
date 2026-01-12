@@ -534,6 +534,10 @@
             <field name="name">c_glob</field>
         </record>
 
+        <record id="coupling_reducedwongwangexcinh_local_coupling" model="tvbo.parameter">
+            <field name="name">local_coupling</field>
+        </record>
+
         <record id="neural_mass_model_reducedwongwangexcinh" model="tvbo.neural_mass_model">
             <field name="name">ReducedWongWangExcInh</field>
             <field name="label">ReducedWongWangExcInh</field>
@@ -542,7 +546,7 @@
             <field name="parameters" eval="[(6, 0, [ref('param_reducedwongwangexcinh_g'),ref('param_reducedwongwangexcinh_i_ext'),ref('param_reducedwongwangexcinh_i_o'),ref('param_reducedwongwangexcinh_j_n'),ref('param_reducedwongwangexcinh_j_i'),ref('param_reducedwongwangexcinh_w_e'),ref('param_reducedwongwangexcinh_w_i'),ref('param_reducedwongwangexcinh_a_e'),ref('param_reducedwongwangexcinh_a_i'),ref('param_reducedwongwangexcinh_b_e'),ref('param_reducedwongwangexcinh_b_i'),ref('param_reducedwongwangexcinh_d_e'),ref('param_reducedwongwangexcinh_d_i'),ref('param_reducedwongwangexcinh_gamma_e'),ref('param_reducedwongwangexcinh_gamma_i'),ref('param_reducedwongwangexcinh_lamda'),ref('param_reducedwongwangexcinh_tau_e'),ref('param_reducedwongwangexcinh_tau_i'),ref('param_reducedwongwangexcinh_w_p')])]"/>
             <field name="state_variables" eval="[(6, 0, [ref('state_var_reducedwongwangexcinh_s_e'),ref('state_var_reducedwongwangexcinh_s_i')])]"/>
             <field name="derived_variables" eval="[(6, 0, [ref('derived_var_reducedwongwangexcinh_j_n_s_e'),ref('derived_var_reducedwongwangexcinh_coupling'),ref('derived_var_reducedwongwangexcinh_x_e'),ref('derived_var_reducedwongwangexcinh_x_i'),ref('derived_var_reducedwongwangexcinh_h_e'),ref('derived_var_reducedwongwangexcinh_h_i')])]"/>
-            <field name="coupling_terms" eval="[(6, 0, [ref('coupling_reducedwongwangexcinh_c_glob')])]"/>
+            <field name="coupling_terms" eval="[(6, 0, [ref('coupling_reducedwongwangexcinh_c_glob'),ref('coupling_reducedwongwangexcinh_local_coupling')])]"/>
             <field name="references">Deco2014</field>
         </record>
 
@@ -2161,6 +2165,10 @@ Note:
             <field name="name">c_pop0</field>
         </record>
 
+        <record id="coupling_kuramoto_local_coupling" model="tvbo.parameter">
+            <field name="name">local_coupling</field>
+        </record>
+
         <record id="neural_mass_model_kuramoto" model="tvbo.neural_mass_model">
             <field name="name">Kuramoto</field>
             <field name="label">Kuramoto</field>
@@ -2169,7 +2177,7 @@ Note:
             <field name="parameters" eval="[(6, 0, [ref('param_kuramoto_omega')])]"/>
             <field name="state_variables" eval="[(6, 0, [ref('state_var_kuramoto_theta')])]"/>
             <field name="derived_variables" eval="[(6, 0, [ref('derived_var_kuramoto_lc_0'),ref('derived_var_kuramoto_i')])]"/>
-            <field name="coupling_terms" eval="[(6, 0, [ref('coupling_kuramoto_c_pop0')])]"/>
+            <field name="coupling_terms" eval="[(6, 0, [ref('coupling_kuramoto_c_pop0'),ref('coupling_kuramoto_local_coupling')])]"/>
             <field name="references">Cabral2011, Strogatz2000, Kuramoto1975</field>
         </record>
 
@@ -2254,6 +2262,10 @@ Note:
             <field name="name">c_pop1</field>
         </record>
 
+        <record id="coupling_suphopf_local_coupling" model="tvbo.parameter">
+            <field name="name">local_coupling</field>
+        </record>
+
         <record id="neural_mass_model_suphopf" model="tvbo.neural_mass_model">
             <field name="name">SupHopf</field>
             <field name="label">SupHopf</field>
@@ -2264,7 +2276,7 @@ This normal form has a supercritical bifurcation at &apos;a=0&apos; with &apos;a
             <field name="parameters" eval="[(6, 0, [ref('param_suphopf_a'),ref('param_suphopf_omega')])]"/>
             <field name="state_variables" eval="[(6, 0, [ref('state_var_suphopf_x'),ref('state_var_suphopf_y')])]"/>
             <field name="derived_variables" eval="[(6, 0, [ref('derived_var_suphopf_lc_0')])]"/>
-            <field name="coupling_terms" eval="[(6, 0, [ref('coupling_suphopf_c_pop0'),ref('coupling_suphopf_c_pop1')])]"/>
+            <field name="coupling_terms" eval="[(6, 0, [ref('coupling_suphopf_c_pop0'),ref('coupling_suphopf_c_pop1'),ref('coupling_suphopf_local_coupling')])]"/>
             <field name="references">Deco2017</field>
         </record>
 
@@ -3110,6 +3122,10 @@ Note:
             <field name="name">c_pop0</field>
         </record>
 
+        <record id="coupling_wilsoncowan_local_coupling" model="tvbo.parameter">
+            <field name="name">local_coupling</field>
+        </record>
+
         <record id="neural_mass_model_wilsoncowan" model="tvbo.neural_mass_model">
             <field name="name">WilsonCowan</field>
             <field name="label">WilsonCowan</field>
@@ -3130,7 +3146,7 @@ Note:
             <field name="parameters" eval="[(6, 0, [ref('param_wilsoncowan_p'),ref('param_wilsoncowan_q'),ref('param_wilsoncowan_a_e'),ref('param_wilsoncowan_a_i'),ref('param_wilsoncowan_alpha_e'),ref('param_wilsoncowan_alpha_i'),ref('param_wilsoncowan_b_e'),ref('param_wilsoncowan_b_i'),ref('param_wilsoncowan_c_e'),ref('param_wilsoncowan_c_ee'),ref('param_wilsoncowan_c_ei'),ref('param_wilsoncowan_c_i'),ref('param_wilsoncowan_c_ie'),ref('param_wilsoncowan_c_ii'),ref('param_wilsoncowan_k_e'),ref('param_wilsoncowan_k_i'),ref('param_wilsoncowan_r_e'),ref('param_wilsoncowan_r_i'),ref('param_wilsoncowan_shift_sigmoid'),ref('param_wilsoncowan_tau_e'),ref('param_wilsoncowan_tau_i'),ref('param_wilsoncowan_theta_e'),ref('param_wilsoncowan_theta_i')])]"/>
             <field name="state_variables" eval="[(6, 0, [ref('state_var_wilsoncowan_e'),ref('state_var_wilsoncowan_i')])]"/>
             <field name="derived_variables" eval="[(6, 0, [ref('derived_var_wilsoncowan_lc_0'),ref('derived_var_wilsoncowan_lc_1'),ref('derived_var_wilsoncowan_x_e'),ref('derived_var_wilsoncowan_x_i'),ref('derived_var_wilsoncowan_s_e'),ref('derived_var_wilsoncowan_s_i')])]"/>
-            <field name="coupling_terms" eval="[(6, 0, [ref('coupling_wilsoncowan_c_pop0')])]"/>
+            <field name="coupling_terms" eval="[(6, 0, [ref('coupling_wilsoncowan_c_pop0'),ref('coupling_wilsoncowan_local_coupling')])]"/>
             <field name="references">Wilson1972, Wilson1973</field>
         </record>
 
@@ -4194,6 +4210,10 @@ Note:
             <field name="name">c_pop0</field>
         </record>
 
+        <record id="coupling_zerlautadaptationfirstorder_local_coupling" model="tvbo.parameter">
+            <field name="name">local_coupling</field>
+        </record>
+
         <record id="neural_mass_model_zerlautadaptationfirstorder" model="tvbo.neural_mass_model">
             <field name="name">ZerlautAdaptationFirstOrder</field>
             <field name="label">ZerlautAdaptationFirstOrder</field>
@@ -4202,7 +4222,7 @@ Note:
             <field name="parameters" eval="[(6, 0, [ref('param_zerlautadaptationfirstorder_c_m'),ref('param_zerlautadaptationfirstorder_dtvn0'),ref('param_zerlautadaptationfirstorder_dmuv0'),ref('param_zerlautadaptationfirstorder_dsv0'),ref('param_zerlautadaptationfirstorder_e_l_e'),ref('param_zerlautadaptationfirstorder_e_l_i'),ref('param_zerlautadaptationfirstorder_e_e'),ref('param_zerlautadaptationfirstorder_e_i'),ref('param_zerlautadaptationfirstorder_k_ext_e'),ref('param_zerlautadaptationfirstorder_k_ext_i'),ref('param_zerlautadaptationfirstorder_n_tot'),ref('param_zerlautadaptationfirstorder_p0_e'),ref('param_zerlautadaptationfirstorder_p0_i'),ref('param_zerlautadaptationfirstorder_p1_e'),ref('param_zerlautadaptationfirstorder_p1_i'),ref('param_zerlautadaptationfirstorder_p2_e'),ref('param_zerlautadaptationfirstorder_p2_i'),ref('param_zerlautadaptationfirstorder_p3_e'),ref('param_zerlautadaptationfirstorder_p3_i'),ref('param_zerlautadaptationfirstorder_p4_e'),ref('param_zerlautadaptationfirstorder_p4_i'),ref('param_zerlautadaptationfirstorder_p5_e'),ref('param_zerlautadaptationfirstorder_p5_i'),ref('param_zerlautadaptationfirstorder_p6_e'),ref('param_zerlautadaptationfirstorder_p6_i'),ref('param_zerlautadaptationfirstorder_p7_e'),ref('param_zerlautadaptationfirstorder_p7_i'),ref('param_zerlautadaptationfirstorder_p8_e'),ref('param_zerlautadaptationfirstorder_p8_i'),ref('param_zerlautadaptationfirstorder_p9_e'),ref('param_zerlautadaptationfirstorder_p9_i'),ref('param_zerlautadaptationfirstorder_p_e'),ref('param_zerlautadaptationfirstorder_p_i'),ref('param_zerlautadaptationfirstorder_q_e'),ref('param_zerlautadaptationfirstorder_q_i'),ref('param_zerlautadaptationfirstorder_s_i'),ref('param_zerlautadaptationfirstorder_t'),ref('param_zerlautadaptationfirstorder_tvn0'),ref('param_zerlautadaptationfirstorder_a_e'),ref('param_zerlautadaptationfirstorder_a_i'),ref('param_zerlautadaptationfirstorder_b_e'),ref('param_zerlautadaptationfirstorder_b_i'),ref('param_zerlautadaptationfirstorder_external_input_ex_ex'),ref('param_zerlautadaptationfirstorder_external_input_ex_in'),ref('param_zerlautadaptationfirstorder_external_input_in_ex'),ref('param_zerlautadaptationfirstorder_external_input_in_in'),ref('param_zerlautadaptationfirstorder_g_l'),ref('param_zerlautadaptationfirstorder_g'),ref('param_zerlautadaptationfirstorder_muv0'),ref('param_zerlautadaptationfirstorder_p_connect_e'),ref('param_zerlautadaptationfirstorder_p_connect_i'),ref('param_zerlautadaptationfirstorder_sv0'),ref('param_zerlautadaptationfirstorder_tau_ou'),ref('param_zerlautadaptationfirstorder_tau_e'),ref('param_zerlautadaptationfirstorder_tau_i'),ref('param_zerlautadaptationfirstorder_tau_w_e'),ref('param_zerlautadaptationfirstorder_tau_w_i'),ref('param_zerlautadaptationfirstorder_weight_noise')])]"/>
             <field name="state_variables" eval="[(6, 0, [ref('state_var_zerlautadaptationfirstorder_e'),ref('state_var_zerlautadaptationfirstorder_i'),ref('state_var_zerlautadaptationfirstorder_w_e'),ref('state_var_zerlautadaptationfirstorder_w_i'),ref('state_var_zerlautadaptationfirstorder_ou_drift')])]"/>
             <field name="derived_variables" eval="[(6, 0, [ref('derived_var_zerlautadaptationfirstorder_lc_e'),ref('derived_var_zerlautadaptationfirstorder_lc_i'),ref('derived_var_zerlautadaptationfirstorder_fe_ext'),ref('derived_var_zerlautadaptationfirstorder_fi_ext'),ref('derived_var_zerlautadaptationfirstorder_fe_e'),ref('derived_var_zerlautadaptationfirstorder_fe_i'),ref('derived_var_zerlautadaptationfirstorder_fi_e'),ref('derived_var_zerlautadaptationfirstorder_fi_i'),ref('derived_var_zerlautadaptationfirstorder_mu_ge_e'),ref('derived_var_zerlautadaptationfirstorder_mu_ge_i'),ref('derived_var_zerlautadaptationfirstorder_mu_gi_e'),ref('derived_var_zerlautadaptationfirstorder_mu_gi_i'),ref('derived_var_zerlautadaptationfirstorder_mu_g_e'),ref('derived_var_zerlautadaptationfirstorder_mu_g_i'),ref('derived_var_zerlautadaptationfirstorder_t_m_e'),ref('derived_var_zerlautadaptationfirstorder_t_m_i'),ref('derived_var_zerlautadaptationfirstorder_mu_v_e'),ref('derived_var_zerlautadaptationfirstorder_mu_v_i'),ref('derived_var_zerlautadaptationfirstorder_u_e_e'),ref('derived_var_zerlautadaptationfirstorder_u_e_i'),ref('derived_var_zerlautadaptationfirstorder_u_i_e'),ref('derived_var_zerlautadaptationfirstorder_u_i_i'),ref('derived_var_zerlautadaptationfirstorder_v_e'),ref('derived_var_zerlautadaptationfirstorder_v_i'),ref('derived_var_zerlautadaptationfirstorder_t_v_e'),ref('derived_var_zerlautadaptationfirstorder_t_v_i'),ref('derived_var_zerlautadaptationfirstorder_sigma_v_e'),ref('derived_var_zerlautadaptationfirstorder_sigma_v_i'),ref('derived_var_zerlautadaptationfirstorder_s_e'),ref('derived_var_zerlautadaptationfirstorder_s_i'),ref('derived_var_zerlautadaptationfirstorder_t_e'),ref('derived_var_zerlautadaptationfirstorder_t_i'),ref('derived_var_zerlautadaptationfirstorder_v_thre_e'),ref('derived_var_zerlautadaptationfirstorder_v_thre_i'),ref('derived_var_zerlautadaptationfirstorder_f_out_e'),ref('derived_var_zerlautadaptationfirstorder_f_out_i')])]"/>
-            <field name="coupling_terms" eval="[(6, 0, [ref('coupling_zerlautadaptationfirstorder_c_pop0')])]"/>
+            <field name="coupling_terms" eval="[(6, 0, [ref('coupling_zerlautadaptationfirstorder_c_pop0'),ref('coupling_zerlautadaptationfirstorder_local_coupling')])]"/>
             <field name="references">Zerlaut2018, diVolo2019</field>
         </record>
 
@@ -4759,6 +4779,10 @@ Describes relationship between membrane voltage and channel conductance.</field>
             <field name="name">c_pop0</field>
         </record>
 
+        <record id="coupling_larterbreakspear_local_coupling" model="tvbo.parameter">
+            <field name="name">local_coupling</field>
+        </record>
+
         <record id="neural_mass_model_larterbreakspear" model="tvbo.neural_mass_model">
             <field name="name">LarterBreakspear</field>
             <field name="label">LarterBreakspear</field>
@@ -4778,7 +4802,7 @@ Note:
             <field name="parameters" eval="[(6, 0, [ref('param_larterbreakspear_c'),ref('param_larterbreakspear_i_ext'),ref('param_larterbreakspear_q_vmax'),ref('param_larterbreakspear_q_zmax'),ref('param_larterbreakspear_t_ca'),ref('param_larterbreakspear_t_k'),ref('param_larterbreakspear_t_na'),ref('param_larterbreakspear_v_ca'),ref('param_larterbreakspear_v_k'),ref('param_larterbreakspear_v_l'),ref('param_larterbreakspear_v_na'),ref('param_larterbreakspear_v_t'),ref('param_larterbreakspear_z_t'),ref('param_larterbreakspear_a_ee'),ref('param_larterbreakspear_a_ei'),ref('param_larterbreakspear_a_ie'),ref('param_larterbreakspear_a_ne'),ref('param_larterbreakspear_a_ni'),ref('param_larterbreakspear_b'),ref('param_larterbreakspear_delta_ca'),ref('param_larterbreakspear_delta_k'),ref('param_larterbreakspear_delta_na'),ref('param_larterbreakspear_delta_v'),ref('param_larterbreakspear_delta_z'),ref('param_larterbreakspear_g_ca'),ref('param_larterbreakspear_g_k'),ref('param_larterbreakspear_g_l'),ref('param_larterbreakspear_g_na'),ref('param_larterbreakspear_phi'),ref('param_larterbreakspear_r_nmda'),ref('param_larterbreakspear_t_scale'),ref('param_larterbreakspear_tau_k')])]"/>
             <field name="state_variables" eval="[(6, 0, [ref('state_var_larterbreakspear_v'),ref('state_var_larterbreakspear_w'),ref('state_var_larterbreakspear_z')])]"/>
             <field name="derived_variables" eval="[(6, 0, [ref('derived_var_larterbreakspear_q_v'),ref('derived_var_larterbreakspear_q_z'),ref('derived_var_larterbreakspear_m_ca'),ref('derived_var_larterbreakspear_m_k'),ref('derived_var_larterbreakspear_m_na'),ref('derived_var_larterbreakspear_lc_0')])]"/>
-            <field name="coupling_terms" eval="[(6, 0, [ref('coupling_larterbreakspear_c_pop0')])]"/>
+            <field name="coupling_terms" eval="[(6, 0, [ref('coupling_larterbreakspear_c_pop0'),ref('coupling_larterbreakspear_local_coupling')])]"/>
             <field name="references">Breakspear2003, Larter1999, Breakspear2003a</field>
         </record>
 
@@ -5456,6 +5480,10 @@ Note:
             <field name="name">c_pop0</field>
         </record>
 
+        <record id="coupling_reducedwongwang_local_coupling" model="tvbo.parameter">
+            <field name="name">local_coupling</field>
+        </record>
+
         <record id="neural_mass_model_reducedwongwang" model="tvbo.neural_mass_model">
             <field name="name">ReducedWongWang</field>
             <field name="label">ReducedWongWang</field>
@@ -5466,7 +5494,7 @@ RWW is the dynamical mean-field (DMF) reduction of the Reduced WongWang Exc-Inh 
             <field name="parameters" eval="[(6, 0, [ref('param_reducedwongwang_i_o'),ref('param_reducedwongwang_j_n'),ref('param_reducedwongwang_a'),ref('param_reducedwongwang_b'),ref('param_reducedwongwang_d'),ref('param_reducedwongwang_gamma'),ref('param_reducedwongwang_tau_s'),ref('param_reducedwongwang_w')])]"/>
             <field name="state_variables" eval="[(6, 0, [ref('state_var_reducedwongwang_s')])]"/>
             <field name="derived_variables" eval="[(6, 0, [ref('derived_var_reducedwongwang_x'),ref('derived_var_reducedwongwang_h')])]"/>
-            <field name="coupling_terms" eval="[(6, 0, [ref('coupling_reducedwongwang_c_pop0')])]"/>
+            <field name="coupling_terms" eval="[(6, 0, [ref('coupling_reducedwongwang_c_pop0'),ref('coupling_reducedwongwang_local_coupling')])]"/>
             <field name="references">WongWang2006, Deco2013</field>
         </record>
 
@@ -5968,6 +5996,10 @@ RWW is the dynamical mean-field (DMF) reduction of the Reduced WongWang Exc-Inh 
             <field name="name">c_pop0</field>
         </record>
 
+        <record id="coupling_zetterbergjansen_local_coupling" model="tvbo.parameter">
+            <field name="name">local_coupling</field>
+        </record>
+
         <record id="neural_mass_model_zetterbergjansen" model="tvbo.neural_mass_model">
             <field name="name">ZetterbergJansen</field>
             <field name="label">ZetterbergJansen</field>
@@ -5976,7 +6008,7 @@ RWW is the dynamical mean-field (DMF) reduction of the Reduced WongWang Exc-Inh 
             <field name="parameters" eval="[(6, 0, [ref('param_zetterbergjansen_he'),ref('param_zetterbergjansen_hi'),ref('param_zetterbergjansen_p'),ref('param_zetterbergjansen_q'),ref('param_zetterbergjansen_u'),ref('param_zetterbergjansen_e0'),ref('param_zetterbergjansen_gamma_1t'),ref('param_zetterbergjansen_gamma_1'),ref('param_zetterbergjansen_gamma_2t'),ref('param_zetterbergjansen_gamma_2'),ref('param_zetterbergjansen_gamma_3t'),ref('param_zetterbergjansen_gamma_3'),ref('param_zetterbergjansen_gamma_4'),ref('param_zetterbergjansen_gamma_5'),ref('param_zetterbergjansen_ke'),ref('param_zetterbergjansen_ki'),ref('param_zetterbergjansen_rho_1'),ref('param_zetterbergjansen_rho_2')])]"/>
             <field name="state_variables" eval="[(6, 0, [ref('state_var_zetterbergjansen_v1'),ref('state_var_zetterbergjansen_v2'),ref('state_var_zetterbergjansen_v3'),ref('state_var_zetterbergjansen_v4'),ref('state_var_zetterbergjansen_v5'),ref('state_var_zetterbergjansen_v6'),ref('state_var_zetterbergjansen_v7'),ref('state_var_zetterbergjansen_y1'),ref('state_var_zetterbergjansen_y2'),ref('state_var_zetterbergjansen_y3'),ref('state_var_zetterbergjansen_y4'),ref('state_var_zetterbergjansen_y5')])]"/>
             <field name="derived_variables" eval="[(6, 0, [ref('derived_var_zetterbergjansen_coupled_input'),ref('derived_var_zetterbergjansen_sigma_v1'),ref('derived_var_zetterbergjansen_sigma_v23'),ref('derived_var_zetterbergjansen_sigma_v45')])]"/>
-            <field name="coupling_terms" eval="[(6, 0, [ref('coupling_zetterbergjansen_c_pop0')])]"/>
+            <field name="coupling_terms" eval="[(6, 0, [ref('coupling_zetterbergjansen_c_pop0'),ref('coupling_zetterbergjansen_local_coupling')])]"/>
             <field name="references">Zetterberg1978</field>
         </record>
 
@@ -6033,8 +6065,34 @@ RWW is the dynamical mean-field (DMF) reduction of the Reduced WongWang Exc-Inh 
             <field name="equation" ref="eq_derived_var_kuramotomodel2_i"/>
         </record>
 
+        <record id="derived_var_kuramotomodel2_phase" model="tvbo.derived_variable">
+            <field name="name">phase</field>
+            <field name="description">Normalized phase output</field>
+        </record>
+        <record id="eq_derived_var_kuramotomodel2_phase" model="tvbo.equation">
+            <field name="righthandside">theta / (2*pi)</field>
+        </record>
+        <record id="derived_var_kuramotomodel2_phase" model="tvbo.derived_variable">
+            <field name="equation" ref="eq_derived_var_kuramotomodel2_phase"/>
+        </record>
+
+        <record id="derived_var_kuramotomodel2_signal" model="tvbo.derived_variable">
+            <field name="name">signal</field>
+            <field name="description">Sinusoidal signal output</field>
+        </record>
+        <record id="eq_derived_var_kuramotomodel2_signal" model="tvbo.equation">
+            <field name="righthandside">sin(theta)</field>
+        </record>
+        <record id="derived_var_kuramotomodel2_signal" model="tvbo.derived_variable">
+            <field name="equation" ref="eq_derived_var_kuramotomodel2_signal"/>
+        </record>
+
         <record id="coupling_kuramotomodel2_c_glob" model="tvbo.parameter">
             <field name="name">c_glob</field>
+        </record>
+
+        <record id="coupling_kuramotomodel2_local_coupling" model="tvbo.parameter">
+            <field name="name">local_coupling</field>
         </record>
 
         <record id="neural_mass_model_kuramotomodel2" model="tvbo.neural_mass_model">
@@ -6042,8 +6100,8 @@ RWW is the dynamical mean-field (DMF) reduction of the Reduced WongWang Exc-Inh 
             <field name="label">KuramotoModel2</field>
             <field name="parameters" eval="[(6, 0, [ref('param_kuramotomodel2_omega')])]"/>
             <field name="state_variables" eval="[(6, 0, [ref('state_var_kuramotomodel2_theta')])]"/>
-            <field name="derived_variables" eval="[(6, 0, [ref('derived_var_kuramotomodel2_lc_0'),ref('derived_var_kuramotomodel2_i')])]"/>
-            <field name="coupling_terms" eval="[(6, 0, [ref('coupling_kuramotomodel2_c_glob')])]"/>
+            <field name="derived_variables" eval="[(6, 0, [ref('derived_var_kuramotomodel2_lc_0'),ref('derived_var_kuramotomodel2_i'),ref('derived_var_kuramotomodel2_phase'),ref('derived_var_kuramotomodel2_signal')])]"/>
+            <field name="coupling_terms" eval="[(6, 0, [ref('coupling_kuramotomodel2_c_glob'),ref('coupling_kuramotomodel2_local_coupling')])]"/>
         </record>
 
         <record id="param_modeljansen1995_a" model="tvbo.parameter">
@@ -6159,6 +6217,18 @@ RWW is the dynamical mean-field (DMF) reduction of the Reduced WongWang Exc-Inh 
             <field name="equation" ref="eq_state_var_modeljansen1995_y5"/>
         </record>
 
+        <record id="derived_var_modeljansen1995_v_pyr" model="tvbo.derived_variable">
+            <field name="name">v_pyr</field>
+            <field name="description">EEG-like output: pyramidal potential difference</field>
+            <field name="unit">mV</field>
+        </record>
+        <record id="eq_derived_var_modeljansen1995_v_pyr" model="tvbo.equation">
+            <field name="righthandside">y1 - y2</field>
+        </record>
+        <record id="derived_var_modeljansen1995_v_pyr" model="tvbo.derived_variable">
+            <field name="equation" ref="eq_derived_var_modeljansen1995_v_pyr"/>
+        </record>
+
         <record id="coupling_modeljansen1995_c_glob" model="tvbo.parameter">
             <field name="name">c_glob</field>
             <field name="description">Long-range input to the pyramidal population (pre-filter).</field>
@@ -6170,6 +6240,7 @@ RWW is the dynamical mean-field (DMF) reduction of the Reduced WongWang Exc-Inh 
             <field name="description">JR model with canonical parameters; long-range input is injected via a coupling term. Output is pyramidal potential difference.</field>
             <field name="parameters" eval="[(6, 0, [ref('param_modeljansen1995_a'),ref('param_modeljansen1995_b'),ref('param_modeljansen1995_c'),ref('param_modeljansen1995_a'),ref('param_modeljansen1995_b'),ref('param_modeljansen1995_v0'),ref('param_modeljansen1995_e0'),ref('param_modeljansen1995_r'),ref('param_modeljansen1995_p')])]"/>
             <field name="state_variables" eval="[(6, 0, [ref('state_var_modeljansen1995_y0'),ref('state_var_modeljansen1995_y3'),ref('state_var_modeljansen1995_y1'),ref('state_var_modeljansen1995_y4'),ref('state_var_modeljansen1995_y2'),ref('state_var_modeljansen1995_y5')])]"/>
+            <field name="derived_variables" eval="[(6, 0, [ref('derived_var_modeljansen1995_v_pyr')])]"/>
             <field name="coupling_terms" eval="[(6, 0, [ref('coupling_modeljansen1995_c_glob')])]"/>
         </record>
 

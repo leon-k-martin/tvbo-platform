@@ -245,6 +245,21 @@ class ModelConfiguratorController(http.Controller):
             tractograms_data = sorted(list(tractograms_set))
             parcellations_data = [{'id': p[0], 'label': p[1]} for p in sorted(parcellations_set, key=lambda x: x[1])]
 
+            # Fetch existing simulation experiments for prefilling
+            experiments = request.env['tvbo.simulation_experiment'].sudo().search([])
+            experiments_data = []
+            for exp in experiments:
+                try:
+                    exp_dict = {
+                        'id': exp.id,
+                        'name': exp.name or f'Experiment_{exp.id}',
+                        'label': exp.label or '',
+                        'specification': exp.specification or '{}',
+                    }
+                    experiments_data.append(exp_dict)
+                except Exception as e:
+                    _logger.error(f"Error processing experiment: {e}")
+
             return request.render('tvbo.model_configurator_template', {
                 'models_json': Markup(json.dumps(model_data)),
                 'integrators_json': Markup(json.dumps(integrator_data)),
@@ -253,6 +268,7 @@ class ModelConfiguratorController(http.Controller):
                 'networks_json': Markup(json.dumps(network_data)),
                 'tractograms_json': Markup(json.dumps(tractograms_data)),
                 'parcellations_json': Markup(json.dumps(parcellations_data)),
+                'experiments': experiments_data,
             })
         except Exception as e:
             _logger.error(f"Error in model_configurator: {e}", exc_info=True)
@@ -264,6 +280,7 @@ class ModelConfiguratorController(http.Controller):
                 'networks_json': Markup('[]'),
                 'tractograms_json': Markup('[]'),
                 'parcellations_json': Markup('[]'),
+                'experiments': [],
             })
 
     @http.route('/tvbo/configurator/save', type='jsonrpc', auth='user', website=True, csrf=True)

@@ -3,37 +3,37 @@
  */
 
 /* ========================================
-   Header Styles
+   Header Styles - Using Odoo's standard behavior
+   Override only background colors for all header states
    ======================================== */
 
-.tvbo-header {
-    background: #ffffff !important;
+/* Always white background for header in all states */
+header.o_header_standard,
+header.tvbo-header,
+header.o_header_standard.o_header_is_scrolled,
+header.o_header_standard.o_header_affixed,
+header.tvbo-header.o_header_affixed,
+header.tvbo-header.o_header_is_scrolled,
+header.o_header_standard.o_header_affixed.o_header_is_scrolled,
+header.tvbo-header.o_header_affixed.o_header_is_scrolled,
+.o_header_standard,
+.o_header_affixed {
     background-color: #ffffff !important;
-    position: sticky;
-    top: 0;
-    z-index: 1000;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.06);
-    border-bottom: 1px solid #e2e8f0;
+    background: #ffffff !important;
 }
 
-.tvbo-header .navbar {
-    padding: 0.75rem 0;
+/* Remove any background image/gradient */
+header.o_header_standard::before,
+header.o_header_standard::after,
+header.tvbo-header::before,
+header.tvbo-header::after {
+    display: none !important;
+}
+
+/* Ensure navbar inside header is also transparent */
+.o_header_standard .navbar,
+header.tvbo-header .navbar {
     background: transparent !important;
-}
-
-.tvbo-header .navbar-brand {
-    color: #2C3E50 !important;
-}
-
-.tvbo-header .nav-link {
-    color: #4a5568 !important;
-    font-weight: 500;
-    padding: 0.5rem 1rem !important;
-    transition: color 0.2s ease;
-}
-
-.tvbo-header .nav-link:hover {
-    color: #3498DB !important;
 }
 
 /* ========================================

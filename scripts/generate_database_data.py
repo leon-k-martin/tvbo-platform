@@ -581,6 +581,43 @@ def generate_study_data_xml(yaml_files: List[Path], output_file: Path):
     output_file.write_text('\n'.join(lines))
 
 
+def generate_experiment_data_xml(yaml_files: List[Path], output_file: Path):
+    """Generate XML data file for simulation experiments."""
+    lines = [
+        '<?xml version="1.0" encoding="utf-8"?>',
+        '<odoo>',
+        '    <data noupdate="0">',
+        ''
+    ]
+
+    for yaml_file in yaml_files:
+        try:
+            with open(yaml_file, 'r') as f:
+                data = yaml.safe_load(f)
+            
+            if not data:
+                continue
+            
+            experiment_name = data.get('name', yaml_file.stem)
+            experiment_label = data.get('label', '')
+            xml_id = f"experiment_{sanitize_xml_id(yaml_file.stem)}"
+            
+            lines.extend([
+                f'        <record id="{xml_id}" model="tvbo.simulation_experiment">',
+                f'            <field name="name">{escape_xml(experiment_name)}</field>',
+                f'            <field name="label">{escape_xml(experiment_label)}</field>',
+                f'            <field name="specification">{escape_xml(json.dumps(data))}</field>',
+                '        </record>',
+                ''
+            ])
+        except Exception as e:
+            print(f"Error processing experiment {yaml_file.name}: {e}")
+            continue
+
+    lines.extend(['    </data>', '</odoo>'])
+    output_file.write_text('\n'.join(lines))
+
+
 def generate_coupling_function_data_xml(yaml_files: List[Path], output_file: Path):
     """Generate XML data file for coupling functions."""
     lines = [
@@ -691,8 +728,9 @@ def generate_coupling_function_data_xml(yaml_files: List[Path], output_file: Pat
 def main():
     """Main entry point."""
     project_root = Path(__file__).parent.parent
-    # Database is in the main repo root, not platform/
-    database_dir = project_root.parent / 'database'
+    # Database is in tools/tvbo/database
+    database_dir = Path('/Users/leonmartin_bih/tools/tvbo/database')
+    # Output to odoo-addons structure for multiple addons support
     output_dir = project_root / 'odoo-addons' / 'tvbo' / 'data'
 
     output_dir.mkdir(exist_ok=True)
@@ -769,6 +807,16 @@ def main():
             generate_coupling_function_data_xml(yaml_files, output_file)
             data_files.append('data/database_coupling_functions.xml')
             print(f"✓ Generated {output_file.name} with {len(yaml_files)} coupling functions")
+
+    # Process experiments
+    experiments_dir = database_dir / 'experiments'
+    if experiments_dir.exists():
+        yaml_files = list(experiments_dir.glob('*.yaml'))
+        if yaml_files:
+            output_file = output_dir / 'database_experiments.xml'
+            generate_experiment_data_xml(yaml_files, output_file)
+            data_files.append('data/database_experiments.xml')
+            print(f"✓ Generated {output_file.name} with {len(yaml_files)} experiments")
 
     print()
     print(f"✓ Generated {len(data_files)} database data files")

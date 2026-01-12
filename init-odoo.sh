@@ -34,5 +34,5 @@ psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" -c "INSERT INTO ir_config_paramet
 psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" -c "UPDATE website SET configurator_done = true;" 2>/dev/null || true
 
 echo "TVBO module ready!"
-echo "Starting Odoo server..."
-exec odoo -d "$DB_NAME" --db_host="$DB_HOST" --db_user="$DB_USER" --db_password="$DB_PASSWORD" --db-filter="^${DB_NAME}$"
+echo "Starting Odoo server with dev mode for auto-reload..."
+exec odoo -d "$DB_NAME" --db_host="$DB_HOST" --db_user="$DB_USER" --db_password="$DB_PASSWORD" --db-filter="^${DB_NAME}$" --dev=all

@@ -3,43 +3,37 @@
 services:
   tvbo-api:
     build:
-      context: ..
+      context: /Users/leonmartin_bih/tools/tvbo
       dockerfile: Dockerfile
     image: tvbo:latest
-    pull_policy: never
-    # NOTE: when tvbo is published to Docker Hub, remove build/pull_policy
-    # and set image: virtual-twin/tvbo:<tag> (or latest) to pull instead.
     container_name: tvbo-api
     environment:
       - MODE=api
     ports:
       - "8100:8000"
-    volumes:
-      # Mount tvbo source for development (live code changes)
-      - ..:/app:ro
     networks:
       - tvbo-network
     restart: unless-stopped
 
   postgres:
     image: postgres:17
-    container_name: odoo-db
+    container_name: tvbo-db
     environment:
       - POSTGRES_DB=postgres
       - POSTGRES_USER=odoo
       - POSTGRES_PASSWORD=odoo
     volumes:
-      - odoo-db-data:/var/lib/postgresql/data
+      - tvbo-db-data:/var/lib/postgresql/data
     networks:
       - tvbo-network
     restart: unless-stopped
 
   odoo:
     build:
-      context: ..
-      dockerfile: platform/Dockerfile.odoo
+      context: /Users/leonmartin_bih
+      dockerfile: projects/TVB-O/tvb-o-platform/Dockerfile.odoo
     platform: linux/amd64
-    container_name: odoo
+    container_name: tvbo-odoo
     depends_on:
       postgres:
         condition: service_started
@@ -51,10 +45,13 @@ services:
     ports:
       - "8169:8069"
     volumes:
-      - odoo-web-data:/var/lib/odoo
+      - tvbo-web-data:/var/lib/odoo
       - ./odoo-config:/etc/odoo
-      - ./odoo-addons:/mnt/extra-addons
       - ./init-odoo.sh:/init-odoo.sh:ro
+      # Dev: Mount addon files for auto-reload (supports multiple addons)
+      - ./odoo-addons:/mnt/extra-addons:ro
+      # Dev: Mount tvbo source for live updates (editable install at /tmp/tvbo)
+      - /Users/leonmartin_bih/tools/tvbo:/tmp/tvbo:ro
       - ../imgs:/mnt/imgs:ro
     networks:
       - tvbo-network
@@ -66,5 +63,5 @@ networks:
     driver: bridge
 
 volumes:
-  odoo-db-data:
-  odoo-web-data:
+  tvbo-db-data:
+  tvbo-web-data:
