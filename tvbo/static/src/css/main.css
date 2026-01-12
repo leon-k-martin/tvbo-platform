@@ -8,20 +8,33 @@
    ======================================== */
 
 /* Always white background for header in all states */
+header.o_header_standard,
+header.tvbo-header,
 header.o_header_standard.o_header_is_scrolled,
 header.o_header_standard.o_header_affixed,
+header.tvbo-header.o_header_affixed,
 header.tvbo-header.o_header_is_scrolled,
-header.tvbo-header.o_header_affixed {
+header.o_header_standard.o_header_affixed.o_header_is_scrolled,
+header.tvbo-header.o_header_affixed.o_header_is_scrolled,
+.o_header_standard,
+.o_header_affixed {
     background-color: #ffffff !important;
-    z-index: 1050;
-}
-header.o_header_standard.o_header_is_scrolled .navbar,
-header.o_header_standard.o_header_affixed .navbar,
-header.tvbo-header.o_header_is_scrolled .navbar,
-header.tvbo-header.o_header_affixed .navbar {
-    background-color: #ffffff !important;
+    background: #ffffff !important;
 }
 
+/* Remove any background image/gradient */
+header.o_header_standard::before,
+header.o_header_standard::after,
+header.tvbo-header::before,
+header.tvbo-header::after {
+    display: none !important;
+}
+
+/* Ensure navbar inside header is also transparent */
+.o_header_standard .navbar,
+header.tvbo-header .navbar {
+    background: transparent !important;
+}
 
 /* ========================================
    Global Search in Header
