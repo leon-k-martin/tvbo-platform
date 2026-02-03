@@ -80,9 +80,9 @@ k8s-up:
 	@echo "Deploying to Kubernetes namespace '$(K8S_NAMESPACE)'..."
 	kubectl apply -f k8s.yaml
 	@echo "Waiting for pods to be ready..."
-	@kubectl wait --for=condition=ready pod -l app=postgres -n $(K8S_NAMESPACE) --timeout=60s
+	@kubectl wait --for=condition=ready pod -l app=tvbo-postgres -n $(K8S_NAMESPACE) --timeout=60s
 	@kubectl wait --for=condition=ready pod -l app=tvbo-api -n $(K8S_NAMESPACE) --timeout=60s
-	@kubectl wait --for=condition=ready pod -l app=odoo -n $(K8S_NAMESPACE) --timeout=120s
+	@kubectl wait --for=condition=ready pod -l app=tvbo-odoo -n $(K8S_NAMESPACE) --timeout=120s
 	@echo ""
 	@echo "✓ Deployment complete!"
 	@echo ""
@@ -98,9 +98,9 @@ k8s-down:
 # Restart Odoo deployment (forces image pull)
 k8s-restart:
 	@echo "Restarting Odoo deployment..."
-	kubectl rollout restart deployment/odoo -n $(K8S_NAMESPACE)
+	kubectl rollout restart deployment/tvbo-odoo -n $(K8S_NAMESPACE)
 	@echo "Waiting for new pod to be ready..."
-	@kubectl wait --for=condition=ready pod -l app=odoo -n $(K8S_NAMESPACE) --timeout=120s
+	@kubectl wait --for=condition=ready pod -l app=tvbo-odoo -n $(K8S_NAMESPACE) --timeout=120s
 	@echo "✓ Odoo restarted"
 
 # Show pod status
@@ -112,24 +112,24 @@ k8s-status:
 k8s-logs:
 	@echo "Recent logs from all pods:"
 	@echo "=== Postgres ==="
-	@kubectl logs -n $(K8S_NAMESPACE) -l app=postgres --tail=20 || true
+	@kubectl logs -n $(K8S_NAMESPACE) -l app=tvbo-postgres --tail=20 || true
 	@echo ""
 	@echo "=== TVBO API ==="
 	@kubectl logs -n $(K8S_NAMESPACE) -l app=tvbo-api --tail=20 || true
 	@echo ""
 	@echo "=== Odoo ==="
-	@kubectl logs -n $(K8S_NAMESPACE) -l app=odoo --tail=20 || true
+	@kubectl logs -n $(K8S_NAMESPACE) -l app=tvbo-odoo --tail=20 || true
 
 # Follow Odoo logs
 k8s-logs-odoo:
-	kubectl logs -n $(K8S_NAMESPACE) -l app=odoo -f
+	kubectl logs -n $(K8S_NAMESPACE) -l app=tvbo-odoo -f
 
 # Port-forward Odoo only
 k8s-forward:
 	@echo "Port-forwarding Odoo to localhost:8069"
 	@echo "Access at: http://localhost:8069"
 	@echo "Press Ctrl+C to stop"
-	kubectl port-forward -n $(K8S_NAMESPACE) svc/odoo 8069:8069
+	kubectl port-forward -n $(K8S_NAMESPACE) svc/tvbo-odoo 8069:8069
 
 # Port-forward both Odoo and API
 k8s-forward-all:
@@ -138,6 +138,6 @@ k8s-forward-all:
 	@echo "API:  http://localhost:8000"
 	@echo "Press Ctrl+C to stop"
 	@echo ""
-	kubectl port-forward -n $(K8S_NAMESPACE) svc/odoo 8069:8069 & \
+	kubectl port-forward -n $(K8S_NAMESPACE) svc/tvbo-odoo 8069:8069 & \
 	kubectl port-forward -n $(K8S_NAMESPACE) svc/tvbo-api 8000:8000 & \
 	wait

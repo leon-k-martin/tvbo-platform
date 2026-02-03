@@ -46,19 +46,19 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: postgres
+  name: tvbo-postgres
   namespace: tvbo
 spec:
   selector:
     matchLabels:
-      app: postgres
+      app: tvbo-postgres
   template:
     metadata:
       labels:
-        app: postgres
+        app: tvbo-postgres
     spec:
       containers:
-        - name: postgres
+        - name: tvbo-postgres
           image: postgres:17
           ports: [{containerPort: 5432}]
           envFrom: [{secretRef: {name: db-credentials}}]
@@ -72,11 +72,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: postgres
+  name: tvbo-postgres
   namespace: tvbo
 spec:
   selector:
-    app: postgres
+    app: tvbo-postgres
   ports: [{port: 5432}]
 
 ---
@@ -118,24 +118,24 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: odoo
+  name: tvbo-odoo
   namespace: tvbo
 spec:
   selector:
     matchLabels:
-      app: odoo
+      app: tvbo-odoo
   template:
     metadata:
       labels:
-        app: odoo
+        app: tvbo-odoo
     spec:
       containers:
-        - name: odoo
+        - name: tvbo-odoo
           image: ghcr.io/leon-k-martin/tvbo-platform:main
           imagePullPolicy: Always
           ports: [{containerPort: 8069}]
           env:
-            - {name: DB_HOST, value: postgres}
+            - {name: DB_HOST, value: tvbo-postgres}
             - {name: DB_USER, value: odoo}
             - {name: DB_PASSWORD, value: odoo}
             - {name: DB_NAME, value: tvbo}
@@ -152,11 +152,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: odoo
+  name: tvbo-odoo
   namespace: tvbo
 spec:
   selector:
-    app: odoo
+    app: tvbo-odoo
   ports: [{port: 8069}]
 
 # Ingress - uncomment and configure for your domain
@@ -174,7 +174,7 @@ spec:
 #         paths:
 #           - path: /
 #             pathType: Prefix
-#             backend: {service: {name: odoo, port: {number: 8069}}}
+#             backend: {service: {name: tvbo-odoo, port: {number: 8069}}}
 #           - path: /api
 #             pathType: Prefix
 #             backend: {service: {name: tvbo-api, port: {number: 8000}}}
