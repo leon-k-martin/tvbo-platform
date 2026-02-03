@@ -2,28 +2,1164 @@
 <odoo>
     <data noupdate="0">
 
+        <record id="exp_ei_tuning_fic_eib_optimization_dyn_param_a_e" model="tvbo.parameter">
+            <field name="name">a_e</field>
+            <field name="label">Excitatory input gain</field>
+            <field name="value">310.0</field>
+            <field name="unit">n/C</field>
+        </record>
+
+        <record id="exp_ei_tuning_fic_eib_optimization_dyn_param_b_e" model="tvbo.parameter">
+            <field name="name">b_e</field>
+            <field name="label">Excitatory input shift</field>
+            <field name="value">125.0</field>
+            <field name="unit">Hz</field>
+        </record>
+
+        <record id="exp_ei_tuning_fic_eib_optimization_dyn_param_d_e" model="tvbo.parameter">
+            <field name="name">d_e</field>
+            <field name="label">Excitatory input scaling</field>
+            <field name="value">0.16</field>
+            <field name="unit">s</field>
+        </record>
+
+        <record id="exp_ei_tuning_fic_eib_optimization_dyn_param_gamma_e" model="tvbo.parameter">
+            <field name="name">gamma_e</field>
+            <field name="label">Excitatory kinetic parameter</field>
+            <field name="value">0.000641</field>
+            <field name="description">gamma_e = 0.641/1000</field>
+        </record>
+
+        <record id="exp_ei_tuning_fic_eib_optimization_dyn_param_tau_e" model="tvbo.parameter">
+            <field name="name">tau_e</field>
+            <field name="label">Excitatory NMDA decay time constant</field>
+            <field name="value">100.0</field>
+            <field name="unit">ms</field>
+        </record>
+
+        <record id="exp_ei_tuning_fic_eib_optimization_dyn_param_w_p" model="tvbo.parameter">
+            <field name="name">w_p</field>
+            <field name="label">Excitatory recurrence weight</field>
+            <field name="value">1.4</field>
+        </record>
+
+        <record id="exp_ei_tuning_fic_eib_optimization_dyn_param_w_e" model="tvbo.parameter">
+            <field name="name">W_e</field>
+            <field name="label">External input scaling (excitatory)</field>
+            <field name="value">1.0</field>
+        </record>
+
+        <record id="exp_ei_tuning_fic_eib_optimization_dyn_param_a_i" model="tvbo.parameter">
+            <field name="name">a_i</field>
+            <field name="label">Inhibitory input gain</field>
+            <field name="value">615.0</field>
+            <field name="unit">n/C</field>
+        </record>
+
+        <record id="exp_ei_tuning_fic_eib_optimization_dyn_param_b_i" model="tvbo.parameter">
+            <field name="name">b_i</field>
+            <field name="label">Inhibitory input shift</field>
+            <field name="value">177.0</field>
+            <field name="unit">Hz</field>
+        </record>
+
+        <record id="exp_ei_tuning_fic_eib_optimization_dyn_param_d_i" model="tvbo.parameter">
+            <field name="name">d_i</field>
+            <field name="label">Inhibitory input scaling</field>
+            <field name="value">0.087</field>
+            <field name="unit">s</field>
+        </record>
+
+        <record id="exp_ei_tuning_fic_eib_optimization_dyn_param_gamma_i" model="tvbo.parameter">
+            <field name="name">gamma_i</field>
+            <field name="label">Inhibitory kinetic parameter</field>
+            <field name="value">0.001</field>
+            <field name="description">gamma_i = 1.0/1000</field>
+        </record>
+
+        <record id="exp_ei_tuning_fic_eib_optimization_dyn_param_tau_i" model="tvbo.parameter">
+            <field name="name">tau_i</field>
+            <field name="label">Inhibitory NMDA decay time constant</field>
+            <field name="value">10.0</field>
+            <field name="unit">ms</field>
+        </record>
+
+        <record id="exp_ei_tuning_fic_eib_optimization_dyn_param_w_i" model="tvbo.parameter">
+            <field name="name">W_i</field>
+            <field name="label">External input scaling (inhibitory)</field>
+            <field name="value">0.7</field>
+        </record>
+
+        <record id="exp_ei_tuning_fic_eib_optimization_dyn_param_j_n" model="tvbo.parameter">
+            <field name="name">J_N</field>
+            <field name="label">NMDA current</field>
+            <field name="value">0.15</field>
+            <field name="unit">nA</field>
+        </record>
+
+        <record id="exp_ei_tuning_fic_eib_optimization_dyn_param_j_i" model="tvbo.parameter">
+            <field name="name">J_i</field>
+            <field name="label">Inhibitory synaptic weight</field>
+            <field name="value">1.0</field>
+            <field name="description">Tuned by FIC algorithm, can be heterogeneous</field>
+            <field name="free">True</field>
+        </record>
+
+        <record id="exp_ei_tuning_fic_eib_optimization_dyn_param_i_o" model="tvbo.parameter">
+            <field name="name">I_o</field>
+            <field name="label">Background input current</field>
+            <field name="value">0.382</field>
+        </record>
+
+        <record id="exp_ei_tuning_fic_eib_optimization_dyn_param_i_ext" model="tvbo.parameter">
+            <field name="name">I_ext</field>
+            <field name="label">External stimulation current</field>
+            <field name="value">0.0</field>
+        </record>
+
+        <record id="exp_ei_tuning_fic_eib_optimization_dyn_param_lamda" model="tvbo.parameter">
+            <field name="name">lamda</field>
+            <field name="label">Inhibitory coupling scaling (lambda)</field>
+            <field name="value">1.0</field>
+        </record>
+
+        <record id="exp_ei_tuning_fic_eib_optimization_dyn_sv_s_e_eq" model="tvbo.equation">
+            <field name="label">dS_e/dt</field>
+            <field name="lefthandside">dS_e/dt</field>
+            <field name="righthandside">-(S_e / tau_e) + (1.0 - S_e) * H_e * gamma_e</field>
+        </record>
+
+        <record id="exp_ei_tuning_fic_eib_optimization_dyn_sv_s_e" model="tvbo.state_variable">
+            <field name="name">S_e</field>
+            <field name="label">Excitatory synaptic gating</field>
+            <field name="initial_value">0.001</field>
+            <field name="coupling_variable">True</field>
+            <field name="description">Fraction of open NMDA channels (excitatory)</field>
+            <field name="equation" ref="exp_ei_tuning_fic_eib_optimization_dyn_sv_s_e_eq"/>
+        </record>
+
+        <record id="exp_ei_tuning_fic_eib_optimization_dyn_sv_s_i_eq" model="tvbo.equation">
+            <field name="label">dS_i/dt</field>
+            <field name="lefthandside">dS_i/dt</field>
+            <field name="righthandside">-(S_i / tau_i) + H_i * gamma_i</field>
+        </record>
+
+        <record id="exp_ei_tuning_fic_eib_optimization_dyn_sv_s_i" model="tvbo.state_variable">
+            <field name="name">S_i</field>
+            <field name="label">Inhibitory synaptic gating</field>
+            <field name="initial_value">0.001</field>
+            <field name="description">Fraction of open NMDA channels (inhibitory)</field>
+            <field name="equation" ref="exp_ei_tuning_fic_eib_optimization_dyn_sv_s_i_eq"/>
+        </record>
+
+        <record id="exp_ei_tuning_fic_eib_optimization_dyn_dv_x_e_pre_eq" model="tvbo.equation">
+            <field name="label">x_e_pre</field>
+            <field name="lefthandside">x_e_pre</field>
+            <field name="righthandside">w_p * J_N * S_e - J_i * S_i + W_e * I_o + J_N * c_lre + I_ext</field>
+        </record>
+
+        <record id="exp_ei_tuning_fic_eib_optimization_dyn_dv_x_e_pre" model="tvbo.derived_variable">
+            <field name="name">x_e_pre</field>
+            <field name="label">Excitatory pre-activation</field>
+            <field name="equation" ref="exp_ei_tuning_fic_eib_optimization_dyn_dv_x_e_pre_eq"/>
+        </record>
+
+        <record id="exp_ei_tuning_fic_eib_optimization_dyn_dv_x_e_eq" model="tvbo.equation">
+            <field name="label">x_e</field>
+            <field name="lefthandside">x_e</field>
+            <field name="righthandside">a_e * x_e_pre - b_e</field>
+        </record>
+
+        <record id="exp_ei_tuning_fic_eib_optimization_dyn_dv_x_e" model="tvbo.derived_variable">
+            <field name="name">x_e</field>
+            <field name="label">Excitatory activation</field>
+            <field name="equation" ref="exp_ei_tuning_fic_eib_optimization_dyn_dv_x_e_eq"/>
+        </record>
+
+        <record id="exp_ei_tuning_fic_eib_optimization_dyn_dv_h_e_eq" model="tvbo.equation">
+            <field name="label">H_e</field>
+            <field name="lefthandside">H_e</field>
+            <field name="righthandside">x_e / (1.0 - exp(-d_e * x_e))</field>
+        </record>
+
+        <record id="exp_ei_tuning_fic_eib_optimization_dyn_dv_h_e" model="tvbo.derived_variable">
+            <field name="name">H_e</field>
+            <field name="label">Excitatory firing rate</field>
+            <field name="description">Sigmoidal transfer function for excitatory population</field>
+            <field name="equation" ref="exp_ei_tuning_fic_eib_optimization_dyn_dv_h_e_eq"/>
+        </record>
+
+        <record id="exp_ei_tuning_fic_eib_optimization_dyn_dv_x_i_pre_eq" model="tvbo.equation">
+            <field name="label">x_i_pre</field>
+            <field name="lefthandside">x_i_pre</field>
+            <field name="righthandside">J_N * S_e - S_i + W_i * I_o + lamda * J_N * c_ffi</field>
+        </record>
+
+        <record id="exp_ei_tuning_fic_eib_optimization_dyn_dv_x_i_pre" model="tvbo.derived_variable">
+            <field name="name">x_i_pre</field>
+            <field name="label">Inhibitory pre-activation</field>
+            <field name="equation" ref="exp_ei_tuning_fic_eib_optimization_dyn_dv_x_i_pre_eq"/>
+        </record>
+
+        <record id="exp_ei_tuning_fic_eib_optimization_dyn_dv_x_i_eq" model="tvbo.equation">
+            <field name="label">x_i</field>
+            <field name="lefthandside">x_i</field>
+            <field name="righthandside">a_i * x_i_pre - b_i</field>
+        </record>
+
+        <record id="exp_ei_tuning_fic_eib_optimization_dyn_dv_x_i" model="tvbo.derived_variable">
+            <field name="name">x_i</field>
+            <field name="label">Inhibitory activation</field>
+            <field name="equation" ref="exp_ei_tuning_fic_eib_optimization_dyn_dv_x_i_eq"/>
+        </record>
+
+        <record id="exp_ei_tuning_fic_eib_optimization_dyn_dv_h_i_eq" model="tvbo.equation">
+            <field name="label">H_i</field>
+            <field name="lefthandside">H_i</field>
+            <field name="righthandside">x_i / (1.0 - exp(-d_i * x_i))</field>
+        </record>
+
+        <record id="exp_ei_tuning_fic_eib_optimization_dyn_dv_h_i" model="tvbo.derived_variable">
+            <field name="name">H_i</field>
+            <field name="label">Inhibitory firing rate</field>
+            <field name="description">Sigmoidal transfer function for inhibitory population</field>
+            <field name="equation" ref="exp_ei_tuning_fic_eib_optimization_dyn_dv_h_i_eq"/>
+        </record>
+
+        <record id="exp_ei_tuning_fic_eib_optimization_dynamics" model="tvbo.dynamics">
+            <field name="name">ReducedWongWangEIB</field>
+            <field name="label">Two-Population Reduced Wong-Wang Model</field>
+            <field name="description">Biophysically-based neural mass model with explicit excitatory (E) and inhibitory (I) populations. Each population has separate synaptic gating variables (S_e, S_i) and transfer functions. Enables independent control of E-I balance via the J_i parameter.
+</field>
+            <field name="parameters" eval="[(6, 0, [ref('exp_ei_tuning_fic_eib_optimization_dyn_param_a_e'), ref('exp_ei_tuning_fic_eib_optimization_dyn_param_b_e'), ref('exp_ei_tuning_fic_eib_optimization_dyn_param_d_e'), ref('exp_ei_tuning_fic_eib_optimization_dyn_param_gamma_e'), ref('exp_ei_tuning_fic_eib_optimization_dyn_param_tau_e'), ref('exp_ei_tuning_fic_eib_optimization_dyn_param_w_p'), ref('exp_ei_tuning_fic_eib_optimization_dyn_param_w_e'), ref('exp_ei_tuning_fic_eib_optimization_dyn_param_a_i'), ref('exp_ei_tuning_fic_eib_optimization_dyn_param_b_i'), ref('exp_ei_tuning_fic_eib_optimization_dyn_param_d_i'), ref('exp_ei_tuning_fic_eib_optimization_dyn_param_gamma_i'), ref('exp_ei_tuning_fic_eib_optimization_dyn_param_tau_i'), ref('exp_ei_tuning_fic_eib_optimization_dyn_param_w_i'), ref('exp_ei_tuning_fic_eib_optimization_dyn_param_j_n'), ref('exp_ei_tuning_fic_eib_optimization_dyn_param_j_i'), ref('exp_ei_tuning_fic_eib_optimization_dyn_param_i_o'), ref('exp_ei_tuning_fic_eib_optimization_dyn_param_i_ext'), ref('exp_ei_tuning_fic_eib_optimization_dyn_param_lamda')])]"/>
+            <field name="state_variables" eval="[(6, 0, [ref('exp_ei_tuning_fic_eib_optimization_dyn_sv_s_e'), ref('exp_ei_tuning_fic_eib_optimization_dyn_sv_s_i')])]"/>
+            <field name="derived_variables" eval="[(6, 0, [ref('exp_ei_tuning_fic_eib_optimization_dyn_dv_x_e_pre'), ref('exp_ei_tuning_fic_eib_optimization_dyn_dv_x_e'), ref('exp_ei_tuning_fic_eib_optimization_dyn_dv_h_e'), ref('exp_ei_tuning_fic_eib_optimization_dyn_dv_x_i_pre'), ref('exp_ei_tuning_fic_eib_optimization_dyn_dv_x_i'), ref('exp_ei_tuning_fic_eib_optimization_dyn_dv_h_i')])]"/>
+        </record>
+
+        <record id="exp_ei_tuning_fic_eib_optimization_cp_eiblinearcoupling_wlre_range" model="tvbo.range">
+            <field name="lo">0.0</field>
+        </record>
+
+        <record id="exp_ei_tuning_fic_eib_optimization_cp_eiblinearcoupling_wlre" model="tvbo.parameter">
+            <field name="name">wLRE</field>
+            <field name="label">Long-range excitation weights</field>
+            <field name="value">1.0</field>
+            <field name="description">Weight matrix for excitatory long-range coupling</field>
+            <field name="free">True</field>
+            <field name="domain" ref="exp_ei_tuning_fic_eib_optimization_cp_eiblinearcoupling_wlre_range"/>
+        </record>
+
+        <record id="exp_ei_tuning_fic_eib_optimization_cp_eiblinearcoupling_wffi_range" model="tvbo.range">
+            <field name="lo">0.0</field>
+        </record>
+
+        <record id="exp_ei_tuning_fic_eib_optimization_cp_eiblinearcoupling_wffi" model="tvbo.parameter">
+            <field name="name">wFFI</field>
+            <field name="label">Feedforward inhibition weights</field>
+            <field name="value">1.0</field>
+            <field name="description">Weight matrix for feedforward inhibition</field>
+            <field name="free">True</field>
+            <field name="domain" ref="exp_ei_tuning_fic_eib_optimization_cp_eiblinearcoupling_wffi_range"/>
+        </record>
+
+        <record id="exp_ei_tuning_fic_eib_optimization_coupling_eiblinearcoupling_pre_expr" model="tvbo.equation">
+            <field name="righthandside">[S_e * wLRE, S_e * wFFI]</field>
+        </record>
+
+        <record id="exp_ei_tuning_fic_eib_optimization_coupling_eiblinearcoupling_post_expr" model="tvbo.equation">
+            <field name="righthandside">gx</field>
+        </record>
+
+        <record id="exp_ei_tuning_fic_eib_optimization_coupling_eiblinearcoupling" model="tvbo.coupling">
+            <field name="name">EIBLinearCoupling</field>
+            <field name="label">EIB Linear Coupling</field>
+            <field name="description">Dual-weight coupling producing two outputs from excitatory activity: long-range excitation (wLRE) and feedforward inhibition (wFFI). Separate weight matrices enable independent tuning of E and I pathways. N_OUTPUT_STATES = 2.
+</field>
+            <field name="delayed">False"</field>
+            <field name="pre_expression" ref="exp_ei_tuning_fic_eib_optimization_coupling_eiblinearcoupling_pre_expr"/>
+            <field name="post_expression" ref="exp_ei_tuning_fic_eib_optimization_coupling_eiblinearcoupling_post_expr"/>
+            <field name="parameters" eval="[(6, 0, [ref('exp_ei_tuning_fic_eib_optimization_cp_eiblinearcoupling_wlre'), ref('exp_ei_tuning_fic_eib_optimization_cp_eiblinearcoupling_wffi')])]"/>
+        </record>
+
+        <record id="exp_ei_tuning_fic_eib_optimization_network" model="tvbo.network">
+            <field name="label">Desikan-Killiany</field>
+            <field name="description">Structural connectivity from dk_average dataset</field>
+            <field name="bids_dir">../networks/bids/dk_average</field>
+            <field name="coupling" eval="[(6, 0, [ref('exp_ei_tuning_fic_eib_optimization_coupling_eiblinearcoupling')])]"/>
+        </record>
+
+        <record id="exp_ei_tuning_fic_eib_optimization_integrator" model="tvbo.integrator">
+            <field name="method">Heun</field>
+            <field name="step_size">4.0</field>
+            <field name="duration">300000</field>
+            <field name="transient_time">300000</field>
+        </record>
+
+        <record id="exp_ei_tuning_fic_eib_optimization_execution" model="tvbo.execution_config">
+            <field name="n_workers">8</field>
+            <field name="precision">float64</field>
+            <field name="random_seed">0</field>
+        </record>
+
+        <record id="exp_ei_tuning_fic_eib_optimization_func_hrf_kernel" model="tvbo.function">
+            <field name="name">hrf_kernel</field>
+            <field name="description">Hemodynamic response function kernel (Lotka-Volterra).
+Analytical solution for balloon model impulse response.
+</field>
+            <field name="definition">(1/3)*exp(-0.5*(t/1000)/tau_s)*sin(sqrt(1/tau_f - 1/(4*tau_s**2))*(t/1000))/sqrt(1/tau_f - 1/(4*tau_s**2))</field>
+        </record>
+
+        <record id="exp_ei_tuning_fic_eib_optimization_func_prepend_history" model="tvbo.function">
+            <field name="name">prepend_history</field>
+            <field name="description">Prepend transient history to data for convolution warmup.
+Concatenates last K samples of history before data along axis 0.
+</field>
+            <field name="definition">concatenate(history, data, 0)</field>
+        </record>
+
+        <record id="exp_ei_tuning_fic_eib_optimization_func_volterra_transform" model="tvbo.function">
+            <field name="name">volterra_transform</field>
+            <field name="description">Volterra nonlinear BOLD transformation.
+Linear approximation of BOLD signal from neural activity.
+</field>
+            <field name="definition">k_1 * V_0 * (data[t,i] - 1)</field>
+        </record>
+
+        <record id="exp_ei_tuning_fic_eib_optimization_func_subsample_bold" model="tvbo.function">
+            <field name="name">subsample_bold</field>
+            <field name="description">Subsample time series to match BOLD TR.
+Selects every s-th sample from input.
+</field>
+            <field name="source_code">data[::s]</field>
+        </record>
+
+        <record id="exp_ei_tuning_fic_eib_optimization_func_rmse" model="tvbo.function">
+            <field name="name">rmse</field>
+            <field name="description">Row-wise root mean squared error using pure mathematical notation.
+Uses SymPy indexed notation: Sum((a[i,j] - b[i,j])**2, (j, 0, m-1))
+The code generator automatically infers axis=1 from the j index position.
+When used with 2D expressions, broadcasting is automatically added.
+</field>
+            <field name="definition">sqrt(Sum((a[i,j] - b[i,j])**2, (j, 0, m-1)) / m)</field>
+        </record>
+
+        <record id="exp_ei_tuning_fic_eib_optimization_func_correlation" model="tvbo.function">
+            <field name="name">correlation</field>
+            <field name="description">Pearson correlation coefficient between two vectors.
+Mathematical definition using indexed notation.
+</field>
+            <field name="definition">Sum((x[t] - mean(x))*(y[t] - mean(y)), (t, 0, T-1)) / (sqrt(Sum((x[t] - mean(x))**2, (t, 0, T-1))) * sqrt(Sum((y[t] - mean(y))**2, (t, 0, T-1))))</field>
+        </record>
+
+        <record id="exp_ei_tuning_fic_eib_optimization_func_fc_corr" model="tvbo.function">
+            <field name="name">fc_corr</field>
+            <field name="description">Correlation between two FC matrices (flattened).
+Measures similarity between predicted and target functional connectivity.
+</field>
+            <field name="definition">Sum((A[i,j] - mean(A))*(B[i,j] - mean(B)), (i, 0, N_nodes-1), (j, 0, N_nodes-1)) / (sqrt(Sum((A[i,j] - mean(A))**2, (i, 0, N_nodes-1), (j, 0, N_nodes-1))) * sqrt(Sum((B[i,j] - mean(B))**2, (i, 0, N_nodes-1), (j, 0, N_nodes-1))))</field>
+        </record>
+
+        <record id="exp_ei_tuning_fic_eib_optimization_func_fc_rmse" model="tvbo.function">
+            <field name="name">fc_rmse</field>
+            <field name="description">Root mean squared error between two FC matrices.
+Measures discrepancy between predicted and target functional connectivity.
+</field>
+            <field name="definition">sqrt(Sum((A[i,j] - B[i,j])**2, (i, 0, N_nodes-1), (j, 0, N_nodes-1)) / (N_nodes*N_nodes))</field>
+        </record>
+
+        <record id="exp_ei_tuning_fic_eib_optimization_func_compute_fc" model="tvbo.function">
+            <field name="name">compute_fc</field>
+            <field name="description">Functional connectivity matrix as Pearson correlations between node time series.
+FC[i,j] = correlation(timeseries[:, i], timeseries[:, j])
+Diagonal is set to 0 (no self-connections in FC).
+</field>
+            <field name="definition">Sum((X[t,i] - mean_i)*(X[t,j] - mean_j), (t, 0, T-1)) / (sqrt(Sum((X[t,i] - mean_i)**2, (t, 0, T-1))) * sqrt(Sum((X[t,j] - mean_j)**2, (t, 0, T-1))))</field>
+        </record>
+
+        <record id="exp_ei_tuning_fic_eib_optimization_func_mean_activity" model="tvbo.function">
+            <field name="name">mean_activity</field>
+            <field name="description">Temporal mean of activity at each node.
+Computes mean over time dimension for a specific state variable.
+</field>
+            <field name="definition">Sum(X[t,i], (t, 0, T-1)) / T</field>
+        </record>
+
+        <record id="exp_ei_tuning_fic_eib_optimization_func_fic_update_rule" model="tvbo.function">
+            <field name="name">FIC_update_rule</field>
+            <field name="description">Feedback Inhibition Control (FIC) update rule.
+Adjusts inhibitory weight J_i to drive mean excitatory activity toward target.
+Based on: ΔJ_i ∝ S_i * (S_e - target)
+</field>
+            <field name="definition">J_i[k] + eta * mean_S_i[k] * (mean_S_e[k] - target)</field>
+        </record>
+
+        <record id="exp_ei_tuning_fic_eib_optimization_func_eib_update_wlre" model="tvbo.function">
+            <field name="name">EIB_update_wLRE</field>
+            <field name="description">EIB update for long-range excitation (wLRE).
+Increases coupling where FC is below target, scaled by node-wise RMSE.
+</field>
+            <field name="definition">wLRE[i,k] + eta * (fc_target[i,k] - fc[i,k]) * sqrt(Sum((fc_target[i,j] - fc[i,j])**2, (j, 0, N_nodes-1)) / N_nodes)</field>
+        </record>
+
+        <record id="exp_ei_tuning_fic_eib_optimization_func_eib_update_wffi" model="tvbo.function">
+            <field name="name">EIB_update_wFFI</field>
+            <field name="description">EIB update for feedforward inhibition (wFFI).
+Decreases inhibition where FC is below target, scaled by node-wise RMSE.
+</field>
+            <field name="definition">wFFI[i,k] - eta * (fc_target[i,k] - fc[i,k]) * sqrt(Sum((fc_target[i,j] - fc[i,j])**2, (j, 0, N_nodes-1)) / N_nodes)</field>
+        </record>
+
+        <record id="exp_ei_tuning_fic_eib_optimization_func_combined_loss" model="tvbo.function">
+            <field name="name">combined_loss</field>
+            <field name="description">Combined loss for gradient-based EI tuning.
+L = RMSE(FC_pred, FC_target) + MSE(activity, target_activity)
+Note: No alpha scaling - both terms contribute equally as in original.
+</field>
+            <field name="definition">sqrt(Sum((fc_pred[i,j] - fc_target[i,j])**2, (i, 0, N_nodes-1), (j, 0, N_nodes-1)) / (N_nodes*N_nodes)) + Sum((mean_activity[k] - target_activity)**2, (k, 0, N_nodes-1)) / N_nodes</field>
+        </record>
+
+        <record id="exp_ei_tuning_fic_eib_optimization_obs_bold" model="tvbo.observation">
+            <field name="name">bold</field>
+            <field name="label">Simulated BOLD Signal</field>
+            <field name="description">BOLD signal from hemodynamic response function</field>
+        </record>
+
+        <record id="exp_ei_tuning_fic_eib_optimization_obs_mean_s_e" model="tvbo.observation">
+            <field name="name">mean_S_e</field>
+            <field name="label">Mean Excitatory Activity</field>
+            <field name="description">Mean S_e over simulation window (for FIC algorithms)</field>
+        </record>
+
+        <record id="exp_ei_tuning_fic_eib_optimization_obs_mean_s_e_final" model="tvbo.observation">
+            <field name="name">mean_S_e_final</field>
+            <field name="label">Mean Excitatory Activity (Final 500 Timesteps)</field>
+            <field name="description">Mean S_e over final 500 timesteps (for gradient optimization loss)</field>
+        </record>
+
+        <record id="exp_ei_tuning_fic_eib_optimization_obs_mean_s_i" model="tvbo.observation">
+            <field name="name">mean_S_i</field>
+            <field name="label">Mean Inhibitory Activity</field>
+            <field name="description">Mean S_i over simulation window (for FIC)</field>
+        </record>
+
+        <record id="exp_ei_tuning_fic_eib_optimization_obs_fc_target" model="tvbo.observation">
+            <field name="name">fc_target</field>
+            <field name="label">Empirical Functional Connectivity</field>
+            <field name="description">Target FC matrix from network observations (loaded from BIDS)</field>
+        </record>
+
+        <record id="exp_ei_tuning_fic_eib_optimization_dobs_fc" model="tvbo.derived_observation">
+            <field name="name">fc</field>
+            <field name="label">Simulated Functional Connectivity (Post-Tuning)</field>
+            <field name="description">Pearson correlation matrix from BOLD time series (skip_t=20 for post-tuning evaluation)</field>
+        </record>
+
+        <record id="exp_ei_tuning_fic_eib_optimization_dobs_fc_inloop" model="tvbo.derived_observation">
+            <field name="name">fc_inloop</field>
+            <field name="label">Simulated Functional Connectivity (In-Loop)</field>
+            <field name="description">FC computed on sliding window without transient skip (for algorithm in-loop)</field>
+        </record>
+
+        <record id="exp_ei_tuning_fic_eib_optimization_dobs_fc_gradient" model="tvbo.derived_observation">
+            <field name="name">fc_gradient</field>
+            <field name="label">Simulated FC for Gradient Optimization</field>
+            <field name="description">FC computation for gradient optimization (skip_t=30 as in original)</field>
+        </record>
+
+        <record id="exp_ei_tuning_fic_eib_optimization_dobs_fc_corr" model="tvbo.derived_observation">
+            <field name="name">fc_corr</field>
+            <field name="label">FC Correlation with Target</field>
+            <field name="description">Pearson correlation between simulated FC and empirical FC target</field>
+        </record>
+
+        <record id="exp_ei_tuning_fic_eib_optimization_dobs_fc_rmse" model="tvbo.derived_observation">
+            <field name="name">fc_rmse</field>
+            <field name="label">FC RMSE with Target</field>
+            <field name="description">Root mean squared error between simulated FC and empirical FC target</field>
+        </record>
+
+        <record id="exp_ei_tuning_fic_eib_optimization_algo_fic" model="tvbo.algorithm">
+            <field name="name">fic</field>
+            <field name="description">Feedback Inhibition Control adjusts local inhibitory weight (J_i) to maintain excitatory activity at target level. When S_e &gt; target, J_i increases; when S_e &lt; target, J_i decreases.
+</field>
+            <field name="n_iterations">200</field>
+        </record>
+
+        <record id="exp_ei_tuning_fic_eib_optimization_algo_fic_eib" model="tvbo.algorithm">
+            <field name="name">fic_eib</field>
+            <field name="description">Combined FIC+EIB tuning loop. Applies both Feedback Inhibition Control (J_i adjustment) and Excitation-Inhibition Balance tuning (wLRE, wFFI) in each iteration. Matches Schirner et al. 2023 implementation.
+</field>
+            <field name="n_iterations">2000</field>
+        </record>
+
+        <record id="exp_ei_tuning_fic_eib_optimization_opt_gradient_eib" model="tvbo.optimization">
+            <field name="name">gradient_eib</field>
+            <field name="label">Gradient-Based EI Tuning</field>
+            <field name="description">Alternative to iterative FIC+EIB: define combined loss and use automatic differentiation with modern optimizers. Loss combines FC error and activity deviation from FIC target.
+</field>
+        </record>
+
         <record id="experiment_ei_tuning_fic_eib_optimization" model="tvbo.simulation_experiment">
-            <field name="name">EI_Tuning_FIC_EIB_Optimization</field>
             <field name="label">EI Tuning: Functional Connectivity Fitting</field>
-            <field name="specification">{&quot;id&quot;: 3, &quot;label&quot;: &quot;EI Tuning: Functional Connectivity Fitting&quot;, &quot;description&quot;: &quot;Fitting functional connectivity using the two-population Reduced Wong-Wang model with explicit excitatory and inhibitory populations. Combines Feedback Inhibition Control (FIC) to maintain local E-I balance with EIB tuning to globally optimize network connectivity. Supports both iterative (FIC+EIB) and gradient-based optimization approaches.\n&quot;, &quot;local_dynamics&quot;: {&quot;name&quot;: &quot;ReducedWongWangEIB&quot;, &quot;label&quot;: &quot;Two-Population Reduced Wong-Wang Model&quot;, &quot;description&quot;: &quot;Biophysically-based neural mass model with explicit excitatory (E) and inhibitory (I) populations. Each population has separate synaptic gating variables (S_e, S_i) and transfer functions. Enables independent control of E-I balance via the J_i parameter.\n&quot;, &quot;output&quot;: [&quot;S_e&quot;, &quot;S_i&quot;, &quot;H_e&quot;, &quot;H_i&quot;], &quot;parameters&quot;: {&quot;a_e&quot;: {&quot;label&quot;: &quot;Excitatory input gain&quot;, &quot;value&quot;: 310.0, &quot;unit&quot;: &quot;n/C&quot;}, &quot;b_e&quot;: {&quot;label&quot;: &quot;Excitatory input shift&quot;, &quot;value&quot;: 125.0, &quot;unit&quot;: &quot;Hz&quot;}, &quot;d_e&quot;: {&quot;label&quot;: &quot;Excitatory input scaling&quot;, &quot;value&quot;: 0.16, &quot;unit&quot;: &quot;s&quot;}, &quot;gamma_e&quot;: {&quot;label&quot;: &quot;Excitatory kinetic parameter&quot;, &quot;value&quot;: 0.000641, &quot;description&quot;: &quot;gamma_e = 0.641/1000&quot;}, &quot;tau_e&quot;: {&quot;label&quot;: &quot;Excitatory NMDA decay time constant&quot;, &quot;value&quot;: 100.0, &quot;unit&quot;: &quot;ms&quot;}, &quot;w_p&quot;: {&quot;label&quot;: &quot;Excitatory recurrence weight&quot;, &quot;value&quot;: 1.4}, &quot;W_e&quot;: {&quot;label&quot;: &quot;External input scaling (excitatory)&quot;, &quot;value&quot;: 1.0}, &quot;a_i&quot;: {&quot;label&quot;: &quot;Inhibitory input gain&quot;, &quot;value&quot;: 615.0, &quot;unit&quot;: &quot;n/C&quot;}, &quot;b_i&quot;: {&quot;label&quot;: &quot;Inhibitory input shift&quot;, &quot;value&quot;: 177.0, &quot;unit&quot;: &quot;Hz&quot;}, &quot;d_i&quot;: {&quot;label&quot;: &quot;Inhibitory input scaling&quot;, &quot;value&quot;: 0.087, &quot;unit&quot;: &quot;s&quot;}, &quot;gamma_i&quot;: {&quot;label&quot;: &quot;Inhibitory kinetic parameter&quot;, &quot;value&quot;: 0.001, &quot;description&quot;: &quot;gamma_i = 1.0/1000&quot;}, &quot;tau_i&quot;: {&quot;label&quot;: &quot;Inhibitory NMDA decay time constant&quot;, &quot;value&quot;: 10.0, &quot;unit&quot;: &quot;ms&quot;}, &quot;W_i&quot;: {&quot;label&quot;: &quot;External input scaling (inhibitory)&quot;, &quot;value&quot;: 0.7}, &quot;J_N&quot;: {&quot;label&quot;: &quot;NMDA current&quot;, &quot;value&quot;: 0.15, &quot;unit&quot;: &quot;nA&quot;}, &quot;J_i&quot;: {&quot;label&quot;: &quot;Inhibitory synaptic weight&quot;, &quot;value&quot;: 1.0, &quot;description&quot;: &quot;Tuned by FIC algorithm, can be heterogeneous&quot;, &quot;heterogeneous&quot;: true, &quot;free&quot;: true, &quot;shape&quot;: &quot;(n_nodes,)&quot;}, &quot;I_o&quot;: {&quot;label&quot;: &quot;Background input current&quot;, &quot;value&quot;: 0.382}, &quot;I_ext&quot;: {&quot;label&quot;: &quot;External stimulation current&quot;, &quot;value&quot;: 0.0}, &quot;lamda&quot;: {&quot;label&quot;: &quot;Inhibitory coupling scaling (lambda)&quot;, &quot;value&quot;: 1.0}}, &quot;derived_variables&quot;: {&quot;x_e_pre&quot;: {&quot;label&quot;: &quot;Excitatory pre-activation&quot;, &quot;equation&quot;: {&quot;rhs&quot;: &quot;w_p * J_N * S_e - J_i * S_i + W_e * I_o + J_N * c_lre + I_ext&quot;}}, &quot;x_e&quot;: {&quot;label&quot;: &quot;Excitatory activation&quot;, &quot;equation&quot;: {&quot;rhs&quot;: &quot;a_e * x_e_pre - b_e&quot;}}, &quot;H_e&quot;: {&quot;label&quot;: &quot;Excitatory firing rate&quot;, &quot;equation&quot;: {&quot;rhs&quot;: &quot;x_e / (1.0 - exp(-d_e * x_e))&quot;}, &quot;description&quot;: &quot;Sigmoidal transfer function for excitatory population&quot;}, &quot;x_i_pre&quot;: {&quot;label&quot;: &quot;Inhibitory pre-activation&quot;, &quot;equation&quot;: {&quot;rhs&quot;: &quot;J_N * S_e - S_i + W_i * I_o + lamda * J_N * c_ffi&quot;}}, &quot;x_i&quot;: {&quot;label&quot;: &quot;Inhibitory activation&quot;, &quot;equation&quot;: {&quot;rhs&quot;: &quot;a_i * x_i_pre - b_i&quot;}}, &quot;H_i&quot;: {&quot;label&quot;: &quot;Inhibitory firing rate&quot;, &quot;equation&quot;: {&quot;rhs&quot;: &quot;x_i / (1.0 - exp(-d_i * x_i))&quot;}, &quot;description&quot;: &quot;Sigmoidal transfer function for inhibitory population&quot;}}, &quot;state_variables&quot;: {&quot;S_e&quot;: {&quot;label&quot;: &quot;Excitatory synaptic gating&quot;, &quot;equation&quot;: {&quot;rhs&quot;: &quot;-(S_e / tau_e) + (1.0 - S_e) * H_e * gamma_e&quot;}, &quot;initial_value&quot;: 0.001, &quot;domain&quot;: {&quot;lo&quot;: 0.0, &quot;hi&quot;: 1.0}, &quot;description&quot;: &quot;Fraction of open NMDA channels (excitatory)&quot;, &quot;coupling_variable&quot;: true, &quot;noise&quot;: {&quot;additive&quot;: true, &quot;parameters&quot;: {&quot;sigma&quot;: {&quot;value&quot;: 0.01, &quot;description&quot;: &quot;Noise intensity for S_e&quot;}}}}, &quot;S_i&quot;: {&quot;label&quot;: &quot;Inhibitory synaptic gating&quot;, &quot;equation&quot;: {&quot;rhs&quot;: &quot;-(S_i / tau_i) + H_i * gamma_i&quot;}, &quot;initial_value&quot;: 0.001, &quot;domain&quot;: {&quot;lo&quot;: 0.0, &quot;hi&quot;: 1.0}, &quot;description&quot;: &quot;Fraction of open NMDA channels (inhibitory)&quot;}}, &quot;coupling_inputs&quot;: {&quot;EIBLinearCoupling&quot;: {&quot;dimension&quot;: 2, &quot;keys&quot;: [&quot;c_lre&quot;, &quot;c_ffi&quot;], &quot;description&quot;: &quot;Multi-output coupling: long-range excitation (c_lre) and feedforward inhibition (c_ffi)&quot;}}}, &quot;network&quot;: {&quot;label&quot;: &quot;Desikan-Killiany&quot;, &quot;description&quot;: &quot;Structural connectivity from dk_average dataset&quot;, &quot;bids_dir&quot;: &quot;../networks/bids/dk_average&quot;, &quot;structural_measures&quot;: [&quot;streamlineCount&quot;, &quot;tractLength&quot;], &quot;observational_measures&quot;: [&quot;BoldCorrelation&quot;], &quot;conduction_speed&quot;: {&quot;name&quot;: &quot;conduction_speed&quot;, &quot;value&quot;: 3.0, &quot;unit&quot;: &quot;mm/ms&quot;}, &quot;normalization&quot;: {&quot;rhs&quot;: &quot;W / max(W)&quot;}, &quot;coupling&quot;: {&quot;EIBLinearCoupling&quot;: {&quot;label&quot;: &quot;EIB Linear Coupling&quot;, &quot;description&quot;: &quot;Dual-weight coupling producing two outputs from excitatory activity: long-range excitation (wLRE) and feedforward inhibition (wFFI). Separate weight matrices enable independent tuning of E and I pathways. N_OUTPUT_STATES = 2.\n&quot;, &quot;delayed&quot;: false, &quot;parameters&quot;: {&quot;wLRE&quot;: {&quot;label&quot;: &quot;Long-range excitation weights&quot;, &quot;value&quot;: 1.0, &quot;description&quot;: &quot;Weight matrix for excitatory long-range coupling&quot;, &quot;heterogeneous&quot;: true, &quot;free&quot;: true, &quot;shape&quot;: &quot;(n_nodes, n_nodes)&quot;, &quot;domain&quot;: {&quot;lo&quot;: 0.0}}, &quot;wFFI&quot;: {&quot;label&quot;: &quot;Feedforward inhibition weights&quot;, &quot;value&quot;: 1.0, &quot;description&quot;: &quot;Weight matrix for feedforward inhibition&quot;, &quot;heterogeneous&quot;: true, &quot;free&quot;: true, &quot;shape&quot;: &quot;(n_nodes, n_nodes)&quot;, &quot;domain&quot;: {&quot;lo&quot;: 0.0}}}, &quot;incoming_states&quot;: [&quot;S_e&quot;], &quot;pre_expression&quot;: {&quot;rhs&quot;: &quot;[S_e * wLRE, S_e * wFFI]&quot;, &quot;description&quot;: &quot;Apply separate weight matrices to S_e, returns [LRE, FFI] outputs&quot;}, &quot;post_expression&quot;: {&quot;rhs&quot;: &quot;gx&quot;, &quot;description&quot;: &quot;Pass through summed inputs&quot;}}}}, &quot;integration&quot;: {&quot;method&quot;: &quot;Heun&quot;, &quot;description&quot;: &quot;Heun integrator&quot;, &quot;step_size&quot;: 4.0, &quot;duration&quot;: 300000, &quot;transient_time&quot;: 300000}, &quot;functions&quot;: {&quot;hrf_kernel&quot;: {&quot;description&quot;: &quot;Hemodynamic response function kernel (Lotka-Volterra).\nAnalytical solution for balloon model impulse response.\n&quot;, &quot;time_range&quot;: {&quot;lo&quot;: 0, &quot;hi&quot;: &quot;duration&quot;, &quot;n&quot;: 5000}, &quot;equation&quot;: {&quot;rhs&quot;: &quot;(1/3)*exp(-0.5*(t/1000)/tau_s)*sin(sqrt(1/tau_f - 1/(4*tau_s**2))*(t/1000))/sqrt(1/tau_f - 1/(4*tau_s**2))&quot;, &quot;description&quot;: &quot;h(t) = (1/3) * exp(-t/(2\u03c4_s)) * sin(\u03c9t)/\u03c9, where \u03c9 = sqrt(1/\u03c4_f - 1/(4\u03c4_s\u00b2))&quot;, &quot;parameters&quot;: {&quot;tau_s&quot;: {&quot;value&quot;: 0.8, &quot;description&quot;: &quot;Signal decay time constant (seconds)&quot;}, &quot;tau_f&quot;: {&quot;value&quot;: 0.4, &quot;description&quot;: &quot;Feedback time constant (seconds)&quot;}}}, &quot;arguments&quot;: [{&quot;name&quot;: &quot;duration&quot;, &quot;value&quot;: 20000.0, &quot;description&quot;: &quot;HRF kernel duration in ms&quot;}]}, &quot;prepend_history&quot;: {&quot;description&quot;: &quot;Prepend transient history to data for convolution warmup.\nConcatenates last K samples of history before data along axis 0.\n&quot;, &quot;equation&quot;: {&quot;rhs&quot;: &quot;concatenate(history, data, 0)&quot;, &quot;description&quot;: &quot;output = concat([history[-K:], data], axis=0)&quot;}, &quot;arguments&quot;: [{&quot;name&quot;: &quot;data&quot;, &quot;description&quot;: &quot;Input time series (T_d x n)&quot;}, {&quot;name&quot;: &quot;history&quot;, &quot;description&quot;: &quot;Transient history data, already sliced to last K samples&quot;}]}, &quot;volterra_transform&quot;: {&quot;description&quot;: &quot;Volterra nonlinear BOLD transformation.\nLinear approximation of BOLD signal from neural activity.\n&quot;, &quot;equation&quot;: {&quot;rhs&quot;: &quot;k_1 * V_0 * (data[t,i] - 1)&quot;, &quot;description&quot;: &quot;BOLD[t,i] = k\u2081 * V\u2080 * (activity[t,i] - 1)&quot;, &quot;parameters&quot;: {&quot;k_1&quot;: {&quot;value&quot;: 5.6, &quot;description&quot;: &quot;Intravascular signal contribution&quot;}, &quot;V_0&quot;: {&quot;value&quot;: 0.02, &quot;description&quot;: &quot;Resting blood volume fraction&quot;}}}, &quot;arguments&quot;: [{&quot;name&quot;: &quot;data&quot;, &quot;description&quot;: &quot;Input neural activity data&quot;}]}, &quot;subsample_bold&quot;: {&quot;description&quot;: &quot;Subsample time series to match BOLD TR.\nSelects every s-th sample from input.\n&quot;, &quot;source_code&quot;: &quot;data[::s]&quot;, &quot;arguments&quot;: [{&quot;name&quot;: &quot;data&quot;, &quot;description&quot;: &quot;Input time series (T x n)&quot;}, {&quot;name&quot;: &quot;s&quot;, &quot;value&quot;: 180, &quot;description&quot;: &quot;Subsample factor (TR/dt = 720/4 = 180)&quot;}]}, &quot;rmse&quot;: {&quot;description&quot;: &quot;Row-wise root mean squared error using pure mathematical notation.\nUses SymPy indexed notation: Sum((a[i,j] - b[i,j])**2, (j, 0, m-1))\nThe code generator automatically infers axis=1 from the j index position.\nWhen used with 2D expressions, broadcasting is automatically added.\n&quot;, &quot;equation&quot;: {&quot;rhs&quot;: &quot;sqrt(Sum((a[i,j] - b[i,j])**2, (j, 0, m-1)) / m)&quot;, &quot;description&quot;: &quot;RMSE_i = sqrt(1/m * sum_j((a_ij - b_ij)^2))&quot;}, &quot;arguments&quot;: [{&quot;name&quot;: &quot;a&quot;, &quot;description&quot;: &quot;First matrix (n x m)&quot;}, {&quot;name&quot;: &quot;b&quot;, &quot;description&quot;: &quot;Second matrix (n x m)&quot;}, {&quot;name&quot;: &quot;m&quot;, &quot;description&quot;: &quot;Number of columns (for normalization)&quot;}]}, &quot;correlation&quot;: {&quot;description&quot;: &quot;Pearson correlation coefficient between two vectors.\nMathematical definition using indexed notation.\n&quot;, &quot;equation&quot;: {&quot;rhs&quot;: &quot;Sum((x[t] - mean(x))*(y[t] - mean(y)), (t, 0, T-1)) / (sqrt(Sum((x[t] - mean(x))**2, (t, 0, T-1))) * sqrt(Sum((y[t] - mean(y))**2, (t, 0, T-1))))&quot;, &quot;description&quot;: &quot;\u03c1 = \u03a3_t(x_t - x\u0304)(y_t - \u0233) / (\u03c3_x * \u03c3_y)&quot;}, &quot;arguments&quot;: [{&quot;name&quot;: &quot;x&quot;, &quot;description&quot;: &quot;First vector (length T)&quot;}, {&quot;name&quot;: &quot;y&quot;, &quot;description&quot;: &quot;Second vector (length T)&quot;}, {&quot;name&quot;: &quot;T&quot;, &quot;description&quot;: &quot;Vector length&quot;}]}, &quot;fc_corr&quot;: {&quot;description&quot;: &quot;Correlation between two FC matrices (flattened).\nMeasures similarity between predicted and target functional connectivity.\n&quot;, &quot;equation&quot;: {&quot;rhs&quot;: &quot;Sum((A[i,j] - mean(A))*(B[i,j] - mean(B)), (i, 0, N_nodes-1), (j, 0, N_nodes-1)) / (sqrt(Sum((A[i,j] - mean(A))**2, (i, 0, N_nodes-1), (j, 0, N_nodes-1))) * sqrt(Sum((B[i,j] - mean(B))**2, (i, 0, N_nodes-1), (j, 0, N_nodes-1))))&quot;, &quot;description&quot;: &quot;\u03c1(A, B) = correlation between flattened matrices&quot;}, &quot;arguments&quot;: [{&quot;name&quot;: &quot;A&quot;, &quot;description&quot;: &quot;First FC matrix (N_nodes x N_nodes)&quot;}, {&quot;name&quot;: &quot;B&quot;, &quot;description&quot;: &quot;Second FC matrix (N_nodes x N_nodes)&quot;}]}, &quot;fc_rmse&quot;: {&quot;description&quot;: &quot;Root mean squared error between two FC matrices.\nMeasures discrepancy between predicted and target functional connectivity.\n&quot;, &quot;equation&quot;: {&quot;rhs&quot;: &quot;sqrt(Sum((A[i,j] - B[i,j])**2, (i, 0, N_nodes-1), (j, 0, N_nodes-1)) / (N_nodes*N_nodes))&quot;, &quot;description&quot;: &quot;RMSE(A, B) = sqrt(mean((A - B)^2))&quot;}, &quot;arguments&quot;: [{&quot;name&quot;: &quot;A&quot;, &quot;description&quot;: &quot;First FC matrix (N_nodes x N_nodes)&quot;}, {&quot;name&quot;: &quot;B&quot;, &quot;description&quot;: &quot;Second FC matrix (N_nodes x N_nodes)&quot;}]}, &quot;compute_fc&quot;: {&quot;description&quot;: &quot;Functional connectivity matrix as Pearson correlations between node time series.\nFC[i,j] = correlation(timeseries[:, i], timeseries[:, j])\nDiagonal is set to 0 (no self-connections in FC).\n&quot;, &quot;equation&quot;: {&quot;rhs&quot;: &quot;Sum((X[t,i] - mean_i)*(X[t,j] - mean_j), (t, 0, T-1)) / (sqrt(Sum((X[t,i] - mean_i)**2, (t, 0, T-1))) * sqrt(Sum((X[t,j] - mean_j)**2, (t, 0, T-1))))&quot;, &quot;description&quot;: &quot;FC[i,j] = \u03c1(X[:,i], X[:,j]) with FC[i,i] = 0&quot;}, &quot;arguments&quot;: [{&quot;name&quot;: &quot;X&quot;, &quot;description&quot;: &quot;Time series matrix (T x n) - time by nodes&quot;}, {&quot;name&quot;: &quot;T&quot;, &quot;description&quot;: &quot;Number of time points&quot;}, {&quot;name&quot;: &quot;mean_i&quot;, &quot;description&quot;: &quot;Mean of time series at node i: (1/T)*\u03a3_t X[t,i]&quot;}, {&quot;name&quot;: &quot;mean_j&quot;, &quot;description&quot;: &quot;Mean of time series at node j: (1/T)*\u03a3_t X[t,j]&quot;}]}, &quot;mean_activity&quot;: {&quot;description&quot;: &quot;Temporal mean of activity at each node.\nComputes mean over time dimension for a specific state variable.\n&quot;, &quot;equation&quot;: {&quot;rhs&quot;: &quot;Sum(X[t,i], (t, 0, T-1)) / T&quot;, &quot;description&quot;: &quot;mean_i = (1/T) * \u03a3_t X[t,i]&quot;}, &quot;arguments&quot;: [{&quot;name&quot;: &quot;X&quot;, &quot;description&quot;: &quot;Time series data (T x n) for one state variable&quot;}, {&quot;name&quot;: &quot;T&quot;, &quot;description&quot;: &quot;Number of time points&quot;}]}, &quot;FIC_update_rule&quot;: {&quot;name&quot;: &quot;FIC_update_rule&quot;, &quot;description&quot;: &quot;Feedback Inhibition Control (FIC) update rule.\nAdjusts inhibitory weight J_i to drive mean excitatory activity toward target.\nBased on: \u0394J_i \u221d S_i * (S_e - target)\n&quot;, &quot;equation&quot;: {&quot;rhs&quot;: &quot;J_i[k] + eta * mean_S_i[k] * (mean_S_e[k] - target)&quot;, &quot;description&quot;: &quot;J_i[k] += \u03b7 * S_i[k] * (S_e[k] - target)&quot;}, &quot;arguments&quot;: [{&quot;name&quot;: &quot;J_i&quot;, &quot;description&quot;: &quot;Current inhibitory weights (per node)&quot;}, {&quot;name&quot;: &quot;mean_S_e&quot;, &quot;description&quot;: &quot;Mean excitatory activity (per node)&quot;}, {&quot;name&quot;: &quot;mean_S_i&quot;, &quot;description&quot;: &quot;Mean inhibitory activity (per node)&quot;}, {&quot;name&quot;: &quot;eta&quot;, &quot;value&quot;: 0.1, &quot;description&quot;: &quot;FIC learning rate&quot;}, {&quot;name&quot;: &quot;target&quot;, &quot;value&quot;: 0.25, &quot;description&quot;: &quot;Target excitatory activity&quot;}]}, &quot;EIB_update_wLRE&quot;: {&quot;name&quot;: &quot;EIB_update_wLRE&quot;, &quot;description&quot;: &quot;EIB update for long-range excitation (wLRE).\nIncreases coupling where FC is below target, scaled by node-wise RMSE.\n&quot;, &quot;equation&quot;: {&quot;rhs&quot;: &quot;wLRE[i,k] + eta * (fc_target[i,k] - fc[i,k]) * sqrt(Sum((fc_target[i,j] - fc[i,j])**2, (j, 0, N_nodes-1)) / N_nodes)&quot;, &quot;description&quot;: &quot;wLRE[i,k] += \u03b7 * (T[i,k] - P[i,k]) * RMSE_i&quot;}, &quot;arguments&quot;: [{&quot;name&quot;: &quot;wLRE&quot;, &quot;description&quot;: &quot;Current LRE weights matrix (N_nodes x N_nodes)&quot;}, {&quot;name&quot;: &quot;fc_target&quot;, &quot;description&quot;: &quot;Target FC matrix (N_nodes x N_nodes)&quot;}, {&quot;name&quot;: &quot;fc&quot;, &quot;description&quot;: &quot;Predicted FC matrix (N_nodes x N_nodes)&quot;}, {&quot;name&quot;: &quot;eta&quot;, &quot;value&quot;: 0.005, &quot;description&quot;: &quot;EIB learning rate&quot;}]}, &quot;EIB_update_wFFI&quot;: {&quot;name&quot;: &quot;EIB_update_wFFI&quot;, &quot;description&quot;: &quot;EIB update for feedforward inhibition (wFFI).\nDecreases inhibition where FC is below target, scaled by node-wise RMSE.\n&quot;, &quot;equation&quot;: {&quot;rhs&quot;: &quot;wFFI[i,k] - eta * (fc_target[i,k] - fc[i,k]) * sqrt(Sum((fc_target[i,j] - fc[i,j])**2, (j, 0, N_nodes-1)) / N_nodes)&quot;, &quot;description&quot;: &quot;wFFI[i,k] -= \u03b7 * (T[i,k] - P[i,k]) * RMSE_i&quot;}, &quot;arguments&quot;: [{&quot;name&quot;: &quot;wFFI&quot;, &quot;description&quot;: &quot;Current FFI weights matrix (N_nodes x N_nodes)&quot;}, {&quot;name&quot;: &quot;fc_target&quot;, &quot;description&quot;: &quot;Target FC matrix (N_nodes x N_nodes)&quot;}, {&quot;name&quot;: &quot;fc&quot;, &quot;description&quot;: &quot;Predicted FC matrix (N_nodes x N_nodes)&quot;}, {&quot;name&quot;: &quot;eta&quot;, &quot;value&quot;: 0.005, &quot;description&quot;: &quot;EIB learning rate&quot;}]}, &quot;combined_loss&quot;: {&quot;name&quot;: &quot;combined_loss&quot;, &quot;description&quot;: &quot;Combined loss for gradient-based EI tuning.\nL = RMSE(FC_pred, FC_target) + MSE(activity, target_activity)\nNote: No alpha scaling - both terms contribute equally as in original.\n&quot;, &quot;equation&quot;: {&quot;rhs&quot;: &quot;sqrt(Sum((fc_pred[i,j] - fc_target[i,j])**2, (i, 0, N_nodes-1), (j, 0, N_nodes-1)) / (N_nodes*N_nodes)) + Sum((mean_activity[k] - target_activity)**2, (k, 0, N_nodes-1)) / N_nodes&quot;, &quot;description&quot;: &quot;L = RMSE(FC) + MSE(activity deviation)&quot;}, &quot;arguments&quot;: [{&quot;name&quot;: &quot;fc_pred&quot;, &quot;description&quot;: &quot;Predicted FC matrix (N_nodes x N_nodes)&quot;}, {&quot;name&quot;: &quot;fc_target&quot;, &quot;description&quot;: &quot;Target empirical FC matrix (N_nodes x N_nodes)&quot;}, {&quot;name&quot;: &quot;mean_activity&quot;, &quot;description&quot;: &quot;Mean excitatory activity per region (N_nodes,)&quot;}, {&quot;name&quot;: &quot;target_activity&quot;, &quot;value&quot;: 0.25, &quot;description&quot;: &quot;Target excitatory activity for FIC&quot;}]}}, &quot;observations&quot;: {&quot;bold&quot;: {&quot;label&quot;: &quot;Simulated BOLD Signal&quot;, &quot;description&quot;: &quot;BOLD signal from hemodynamic response function&quot;, &quot;source&quot;: &quot;S_e&quot;, &quot;period&quot;: 720.0, &quot;pipeline&quot;: [{&quot;function&quot;: &quot;hrf_kernel&quot;}, {&quot;function&quot;: &quot;prepend_history&quot;, &quot;arguments&quot;: [{&quot;name&quot;: &quot;data&quot;, &quot;value&quot;: &quot;integration.result&quot;}, {&quot;name&quot;: &quot;history&quot;, &quot;value&quot;: &quot;integration.transient&quot;}]}, {&quot;output&quot;: &quot;bold_convolve&quot;, &quot;callable&quot;: {&quot;module&quot;: &quot;jax.scipy.signal&quot;, &quot;name&quot;: &quot;fftconvolve&quot;}, &quot;apply_on_dimension&quot;: &quot;node&quot;, &quot;arguments&quot;: [{&quot;name&quot;: &quot;in1&quot;, &quot;value&quot;: &quot;prepend_history&quot;}, {&quot;name&quot;: &quot;in2&quot;, &quot;value&quot;: &quot;hrf_kernel&quot;}, {&quot;name&quot;: &quot;mode&quot;, &quot;value&quot;: &quot;valid&quot;}]}, {&quot;function&quot;: &quot;volterra_transform&quot;, &quot;arguments&quot;: [{&quot;name&quot;: &quot;data&quot;, &quot;value&quot;: &quot;bold_convolve&quot;}]}, {&quot;function&quot;: &quot;subsample_bold&quot;, &quot;arguments&quot;: [{&quot;name&quot;: &quot;data&quot;, &quot;value&quot;: &quot;volterra_transform&quot;}]}]}, &quot;mean_S_e&quot;: {&quot;label&quot;: &quot;Mean Excitatory Activity&quot;, &quot;description&quot;: &quot;Mean S_e over simulation window (for FIC algorithms)&quot;, &quot;source&quot;: &quot;S_e&quot;, &quot;aggregation&quot;: &quot;mean&quot;}, &quot;mean_S_e_final&quot;: {&quot;label&quot;: &quot;Mean Excitatory Activity (Final 500 Timesteps)&quot;, &quot;description&quot;: &quot;Mean S_e over final 500 timesteps (for gradient optimization loss)&quot;, &quot;source&quot;: &quot;S_e&quot;, &quot;aggregation&quot;: &quot;mean&quot;, &quot;tail_samples&quot;: 500}, &quot;mean_S_i&quot;: {&quot;label&quot;: &quot;Mean Inhibitory Activity&quot;, &quot;description&quot;: &quot;Mean S_i over simulation window (for FIC)&quot;, &quot;source&quot;: &quot;S_i&quot;, &quot;aggregation&quot;: &quot;mean&quot;}, &quot;fc_target&quot;: {&quot;label&quot;: &quot;Empirical Functional Connectivity&quot;, &quot;description&quot;: &quot;Target FC matrix from network observations (loaded from BIDS)&quot;, &quot;source&quot;: &quot;network.observations.BoldCorrelation&quot;}}, &quot;derived_observations&quot;: {&quot;fc&quot;: {&quot;label&quot;: &quot;Simulated Functional Connectivity (Post-Tuning)&quot;, &quot;description&quot;: &quot;Pearson correlation matrix from BOLD time series (skip_t=20 for post-tuning evaluation)&quot;, &quot;source_observations&quot;: [&quot;bold&quot;], &quot;pipeline&quot;: [{&quot;callable&quot;: {&quot;name&quot;: &quot;compute_fc&quot;, &quot;module&quot;: &quot;tvboptim.observations.observation&quot;}, &quot;arguments&quot;: [{&quot;name&quot;: &quot;timeseries&quot;, &quot;value&quot;: &quot;bold&quot;}, {&quot;name&quot;: &quot;skip_t&quot;, &quot;value&quot;: 20, &quot;description&quot;: &quot;Skip first 20 TRs for transient removal in post-tuning&quot;}]}]}, &quot;fc_inloop&quot;: {&quot;label&quot;: &quot;Simulated Functional Connectivity (In-Loop)&quot;, &quot;description&quot;: &quot;FC computed on sliding window without transient skip (for algorithm in-loop)&quot;, &quot;source_observations&quot;: [&quot;bold&quot;], &quot;pipeline&quot;: [{&quot;callable&quot;: {&quot;name&quot;: &quot;compute_fc&quot;, &quot;module&quot;: &quot;tvboptim.observations.observation&quot;}, &quot;arguments&quot;: [{&quot;name&quot;: &quot;timeseries&quot;, &quot;value&quot;: &quot;bold&quot;}, {&quot;name&quot;: &quot;skip_t&quot;, &quot;value&quot;: 0, &quot;description&quot;: &quot;No skip for in-loop FC (sliding window already handles transient)&quot;}]}]}, &quot;fc_gradient&quot;: {&quot;label&quot;: &quot;Simulated FC for Gradient Optimization&quot;, &quot;description&quot;: &quot;FC computation for gradient optimization (skip_t=30 as in original)&quot;, &quot;source_observations&quot;: [&quot;bold&quot;], &quot;pipeline&quot;: [{&quot;callable&quot;: {&quot;name&quot;: &quot;compute_fc&quot;, &quot;module&quot;: &quot;tvboptim.observations.observation&quot;}, &quot;arguments&quot;: [{&quot;name&quot;: &quot;timeseries&quot;, &quot;value&quot;: &quot;bold&quot;}, {&quot;name&quot;: &quot;skip_t&quot;, &quot;value&quot;: 30, &quot;description&quot;: &quot;Skip first 30 TRs as in original gradient optimization&quot;}]}]}, &quot;fc_corr&quot;: {&quot;label&quot;: &quot;FC Correlation with Target&quot;, &quot;description&quot;: &quot;Pearson correlation between simulated FC and empirical FC target&quot;, &quot;source_observations&quot;: [&quot;fc&quot;, &quot;fc_target&quot;], &quot;pipeline&quot;: [{&quot;callable&quot;: {&quot;name&quot;: &quot;fc_corr&quot;, &quot;module&quot;: &quot;tvboptim.observations.observation&quot;}, &quot;arguments&quot;: [{&quot;name&quot;: &quot;A&quot;, &quot;value&quot;: &quot;fc&quot;}, {&quot;name&quot;: &quot;B&quot;, &quot;value&quot;: &quot;fc_target&quot;}]}]}, &quot;fc_rmse&quot;: {&quot;label&quot;: &quot;FC RMSE with Target&quot;, &quot;description&quot;: &quot;Root mean squared error between simulated FC and empirical FC target&quot;, &quot;source_observations&quot;: [&quot;fc&quot;, &quot;fc_target&quot;], &quot;pipeline&quot;: [{&quot;callable&quot;: {&quot;name&quot;: &quot;rmse&quot;, &quot;module&quot;: &quot;tvboptim.observations.observation&quot;}, &quot;arguments&quot;: [{&quot;name&quot;: &quot;A&quot;, &quot;value&quot;: &quot;fc&quot;}, {&quot;name&quot;: &quot;B&quot;, &quot;value&quot;: &quot;fc_target&quot;}]}]}}, &quot;algorithms&quot;: [{&quot;name&quot;: &quot;fic&quot;, &quot;description&quot;: &quot;Feedback Inhibition Control adjusts local inhibitory weight (J_i) to maintain excitatory activity at target level. When S_e &gt; target, J_i increases; when S_e &lt; target, J_i decreases.\n&quot;, &quot;execution&quot;: {&quot;random_seed&quot;: 0}, &quot;objective&quot;: {&quot;type&quot;: &quot;activity_target&quot;, &quot;target_variable&quot;: &quot;S_e&quot;, &quot;target_value&quot;: 0.25, &quot;description&quot;: &quot;Maintain mean S_e at 0.25&quot;}, &quot;observations&quot;: [&quot;mean_S_e&quot;, &quot;mean_S_i&quot;, &quot;bold&quot;], &quot;update_rules&quot;: [{&quot;name&quot;: &quot;J_i_update&quot;, &quot;target_parameter&quot;: {&quot;name&quot;: &quot;J_i&quot;}, &quot;equation&quot;: {&quot;rhs&quot;: &quot;J_i + eta * (mean_S_i * mean_S_e - target * mean_S_i)&quot;}, &quot;bounds&quot;: {&quot;lo&quot;: 0.0, &quot;hi&quot;: 5.0}}], &quot;hyperparameters&quot;: [{&quot;name&quot;: &quot;eta&quot;, &quot;value&quot;: 0.5}, {&quot;name&quot;: &quot;target&quot;, &quot;value&quot;: 0.25}], &quot;n_iterations&quot;: 200, &quot;simulation_period&quot;: 720.0}, {&quot;name&quot;: &quot;fic_eib&quot;, &quot;description&quot;: &quot;Combined FIC+EIB tuning loop. Applies both Feedback Inhibition Control (J_i adjustment) and Excitation-Inhibition Balance tuning (wLRE, wFFI) in each iteration. Matches Schirner et al. 2023 implementation.\n&quot;, &quot;execution&quot;: {&quot;random_seed&quot;: 0}, &quot;depends_on&quot;: &quot;fic&quot;, &quot;objective&quot;: {&quot;type&quot;: &quot;fc_matching&quot;, &quot;target_variable&quot;: &quot;fc_inloop&quot;, &quot;description&quot;: &quot;Match predicted FC to empirical FC target while maintaining E-I balance&quot;}, &quot;observations&quot;: [&quot;mean_S_e&quot;, &quot;mean_S_i&quot;, &quot;bold&quot;, &quot;fc_inloop&quot;, &quot;fc_target&quot;], &quot;includes&quot;: [{&quot;algorithm&quot;: &quot;fic&quot;, &quot;arguments&quot;: [{&quot;name&quot;: &quot;eta&quot;, &quot;value&quot;: 0.1}]}], &quot;update_rules&quot;: [{&quot;name&quot;: &quot;wLRE_update&quot;, &quot;target_parameter&quot;: {&quot;name&quot;: &quot;wLRE&quot;}, &quot;equation&quot;: {&quot;rhs&quot;: &quot;wLRE[i,k] + eta * (fc_target[i,k] - fc_inloop[i,k]) * sqrt(Sum((fc_target[i,j] - fc_inloop[i,j])**2, (j, 0, N_nodes-1)) / N_nodes)&quot;}, &quot;bounds&quot;: {&quot;lo&quot;: 0.0}, &quot;warmup&quot;: true}, {&quot;name&quot;: &quot;wFFI_update&quot;, &quot;target_parameter&quot;: {&quot;name&quot;: &quot;wFFI&quot;}, &quot;equation&quot;: {&quot;rhs&quot;: &quot;wFFI[i,k] - eta * (fc_target[i,k] - fc_inloop[i,k]) * sqrt(Sum((fc_target[i,j] - fc_inloop[i,j])**2, (j, 0, N_nodes-1)) / N_nodes)&quot;}, &quot;bounds&quot;: {&quot;lo&quot;: 0.0}, &quot;warmup&quot;: true}], &quot;functions&quot;: [{&quot;function&quot;: &quot;fc_corr&quot;, &quot;arguments&quot;: [{&quot;name&quot;: &quot;A&quot;, &quot;value&quot;: &quot;fc_inloop&quot;}, {&quot;name&quot;: &quot;B&quot;, &quot;value&quot;: &quot;fc_target&quot;}]}, {&quot;function&quot;: &quot;fc_rmse&quot;, &quot;arguments&quot;: [{&quot;name&quot;: &quot;A&quot;, &quot;value&quot;: &quot;fc_inloop&quot;}, {&quot;name&quot;: &quot;B&quot;, &quot;value&quot;: &quot;fc_target&quot;}]}], &quot;hyperparameters&quot;: [{&quot;name&quot;: &quot;eta&quot;, &quot;value&quot;: 0.005}, {&quot;name&quot;: &quot;window_size&quot;, &quot;value&quot;: 150}], &quot;n_iterations&quot;: 2000, &quot;simulation_period&quot;: 720.0}], &quot;optimization&quot;: [{&quot;name&quot;: &quot;gradient_eib&quot;, &quot;label&quot;: &quot;Gradient-Based EI Tuning&quot;, &quot;description&quot;: &quot;Alternative to iterative FIC+EIB: define combined loss and use automatic differentiation with modern optimizers. Loss combines FC error and activity deviation from FIC target.\n&quot;, &quot;integration&quot;: {&quot;method&quot;: &quot;heun&quot;, &quot;step_size&quot;: 4.0, &quot;duration&quot;: 300000.0}, &quot;loss&quot;: {&quot;function&quot;: &quot;combined_loss&quot;, &quot;arguments&quot;: [{&quot;name&quot;: &quot;fc_pred&quot;, &quot;value&quot;: &quot;observations.fc_gradient.data&quot;, &quot;description&quot;: &quot;Predicted functional connectivity from simulation (skip_t=30)&quot;}, {&quot;name&quot;: &quot;fc_target&quot;, &quot;value&quot;: &quot;observations.fc_target.data&quot;, &quot;description&quot;: &quot;Empirical functional connectivity matrix from network observations&quot;}, {&quot;name&quot;: &quot;mean_activity&quot;, &quot;value&quot;: &quot;observations.mean_S_e_final.data&quot;, &quot;description&quot;: &quot;Mean excitatory activity over final 500 timesteps&quot;}, {&quot;name&quot;: &quot;target_activity&quot;, &quot;value&quot;: 0.25, &quot;description&quot;: &quot;Target excitatory activity for FIC&quot;}]}, &quot;free_parameters&quot;: [{&quot;name&quot;: &quot;J_i&quot;, &quot;heterogeneous&quot;: true, &quot;shape&quot;: &quot;(n_nodes,)&quot;}, {&quot;name&quot;: &quot;wLRE&quot;, &quot;heterogeneous&quot;: true, &quot;shape&quot;: &quot;(n_nodes, n_nodes)&quot;}, {&quot;name&quot;: &quot;wFFI&quot;, &quot;heterogeneous&quot;: true, &quot;shape&quot;: &quot;(n_nodes, n_nodes)&quot;}], &quot;algorithm&quot;: &quot;adamaxw&quot;, &quot;learning_rate&quot;: 0.033, &quot;max_iterations&quot;: 66}], &quot;execution&quot;: {&quot;n_workers&quot;: 8, &quot;precision&quot;: &quot;float64&quot;, &quot;random_seed&quot;: 0}, &quot;references&quot;: [&quot;Schirner, M., Deco, G., &amp; Ritter, P. (2023). Learning how network structure shapes decision-making for bio-inspired computing. Nature Communications, 14(1), Article 1.&quot;, &quot;Wong, K.-F., &amp; Wang, X.-J. (2006). A recurrent network mechanism of time integration in perceptual decisions. J Neurosci, 26:1314-1328.&quot;, &quot;Deco, G., Ponce-Alvarez, A., Mantini, D., Romani, G.L., Hagmann, P., &amp; Corbetta, M. (2013). Resting-state functional connectivity emerges from structurally and dynamically shaped slow linear fluctuations. J Neurosci, 33(27):11239-11252.&quot;]}</field>
+            <field name="description">Fitting functional connectivity using the two-population Reduced Wong-Wang model with explicit excitatory and inhibitory populations. Combines Feedback Inhibition Control (FIC) to maintain local E-I balance with EIB tuning to globally optimize network connectivity. Supports both iterative (FIC+EIB) and gradient-based optimization approaches.
+</field>
+            <field name="dynamics" eval="[(6, 0, [ref('exp_ei_tuning_fic_eib_optimization_dynamics')])]"/>
+            <field name="network" ref="exp_ei_tuning_fic_eib_optimization_network"/>
+            <field name="integration" ref="exp_ei_tuning_fic_eib_optimization_integrator"/>
+            <field name="functions" eval="[(6, 0, [ref('exp_ei_tuning_fic_eib_optimization_func_hrf_kernel'), ref('exp_ei_tuning_fic_eib_optimization_func_prepend_history'), ref('exp_ei_tuning_fic_eib_optimization_func_volterra_transform'), ref('exp_ei_tuning_fic_eib_optimization_func_subsample_bold'), ref('exp_ei_tuning_fic_eib_optimization_func_rmse'), ref('exp_ei_tuning_fic_eib_optimization_func_correlation'), ref('exp_ei_tuning_fic_eib_optimization_func_fc_corr'), ref('exp_ei_tuning_fic_eib_optimization_func_fc_rmse'), ref('exp_ei_tuning_fic_eib_optimization_func_compute_fc'), ref('exp_ei_tuning_fic_eib_optimization_func_mean_activity'), ref('exp_ei_tuning_fic_eib_optimization_func_fic_update_rule'), ref('exp_ei_tuning_fic_eib_optimization_func_eib_update_wlre'), ref('exp_ei_tuning_fic_eib_optimization_func_eib_update_wffi'), ref('exp_ei_tuning_fic_eib_optimization_func_combined_loss')])]"/>
+            <field name="observations" eval="[(6, 0, [ref('exp_ei_tuning_fic_eib_optimization_obs_bold'), ref('exp_ei_tuning_fic_eib_optimization_obs_mean_s_e'), ref('exp_ei_tuning_fic_eib_optimization_obs_mean_s_e_final'), ref('exp_ei_tuning_fic_eib_optimization_obs_mean_s_i'), ref('exp_ei_tuning_fic_eib_optimization_obs_fc_target')])]"/>
+            <field name="derived_observations" eval="[(6, 0, [ref('exp_ei_tuning_fic_eib_optimization_dobs_fc'), ref('exp_ei_tuning_fic_eib_optimization_dobs_fc_inloop'), ref('exp_ei_tuning_fic_eib_optimization_dobs_fc_gradient'), ref('exp_ei_tuning_fic_eib_optimization_dobs_fc_corr'), ref('exp_ei_tuning_fic_eib_optimization_dobs_fc_rmse')])]"/>
+            <field name="algorithms" eval="[(6, 0, [ref('exp_ei_tuning_fic_eib_optimization_algo_fic'), ref('exp_ei_tuning_fic_eib_optimization_algo_fic_eib')])]"/>
+            <field name="optimization" eval="[(6, 0, [ref('exp_ei_tuning_fic_eib_optimization_opt_gradient_eib')])]"/>
+            <field name="execution" ref="exp_ei_tuning_fic_eib_optimization_execution"/>
+            <field name="references">- Schirner, M., Deco, G., &amp; Ritter, P. (2023). Learning how network structure shapes decision-making for bio-inspired computing. Nature Communications, 14(1), Article 1.
+- Wong, K.-F., &amp; Wang, X.-J. (2006). A recurrent network mechanism of time integration in perceptual decisions. J Neurosci, 26:1314-1328.
+- Deco, G., Ponce-Alvarez, A., Mantini, D., Romani, G.L., Hagmann, P., &amp; Corbetta, M. (2013). Resting-state functional connectivity emerges from structurally and dynamically shaped slow linear fluctuations. J Neurosci, 33(27):11239-11252.</field>
+        </record>
+
+        <record id="exp_jr_meg_frequencygradient_optimization_dyn_param_a" model="tvbo.parameter">
+            <field name="name">A</field>
+            <field name="value">3.25</field>
+            <field name="unit">mV</field>
+            <field name="description">Maximum amplitude of EPSP [mV]</field>
+        </record>
+
+        <record id="exp_jr_meg_frequencygradient_optimization_dyn_param_b" model="tvbo.parameter">
+            <field name="name">B</field>
+            <field name="value">22.0</field>
+            <field name="unit">mV</field>
+            <field name="description">Maximum amplitude of IPSP [mV]</field>
+        </record>
+
+        <record id="exp_jr_meg_frequencygradient_optimization_dyn_param_a_range" model="tvbo.range">
+            <field name="lo">0.001</field>
+            <field name="hi">0.2</field>
+        </record>
+
+        <record id="exp_jr_meg_frequencygradient_optimization_dyn_param_a" model="tvbo.parameter">
+            <field name="name">a</field>
+            <field name="value">0.065</field>
+            <field name="unit">ms^-1</field>
+            <field name="description">Reciprocal of membrane time constant (excitatory)</field>
+            <field name="domain" ref="exp_jr_meg_frequencygradient_optimization_dyn_param_a_range"/>
+        </record>
+
+        <record id="exp_jr_meg_frequencygradient_optimization_dyn_param_b_range" model="tvbo.range">
+            <field name="lo">0.001</field>
+            <field name="hi">0.2</field>
+        </record>
+
+        <record id="exp_jr_meg_frequencygradient_optimization_dyn_param_b" model="tvbo.parameter">
+            <field name="name">b</field>
+            <field name="value">0.065</field>
+            <field name="unit">ms^-1</field>
+            <field name="description">Reciprocal of membrane time constant (inhibitory)</field>
+            <field name="domain" ref="exp_jr_meg_frequencygradient_optimization_dyn_param_b_range"/>
+        </record>
+
+        <record id="exp_jr_meg_frequencygradient_optimization_dyn_param_v0" model="tvbo.parameter">
+            <field name="name">v0</field>
+            <field name="value">5.52</field>
+            <field name="unit">mV</field>
+            <field name="description">Firing threshold [mV]</field>
+        </record>
+
+        <record id="exp_jr_meg_frequencygradient_optimization_dyn_param_nu_max" model="tvbo.parameter">
+            <field name="name">nu_max</field>
+            <field name="value">0.0025</field>
+            <field name="unit">ms^-1</field>
+            <field name="description">Maximum firing rate</field>
+        </record>
+
+        <record id="exp_jr_meg_frequencygradient_optimization_dyn_param_r" model="tvbo.parameter">
+            <field name="name">r</field>
+            <field name="value">0.56</field>
+            <field name="unit">mV^-1</field>
+            <field name="description">Steepness of sigmoid</field>
+        </record>
+
+        <record id="exp_jr_meg_frequencygradient_optimization_dyn_param_j" model="tvbo.parameter">
+            <field name="name">J</field>
+            <field name="value">135.0</field>
+            <field name="description">Average number of synapses</field>
+        </record>
+
+        <record id="exp_jr_meg_frequencygradient_optimization_dyn_param_a_1" model="tvbo.parameter">
+            <field name="name">a_1</field>
+            <field name="value">1.0</field>
+            <field name="description">Excitatory feedback probability</field>
+        </record>
+
+        <record id="exp_jr_meg_frequencygradient_optimization_dyn_param_a_2" model="tvbo.parameter">
+            <field name="name">a_2</field>
+            <field name="value">0.8</field>
+            <field name="description">Slow excitatory feedback probability</field>
+        </record>
+
+        <record id="exp_jr_meg_frequencygradient_optimization_dyn_param_a_3" model="tvbo.parameter">
+            <field name="name">a_3</field>
+            <field name="value">0.25</field>
+            <field name="description">Inhibitory feedback probability</field>
+        </record>
+
+        <record id="exp_jr_meg_frequencygradient_optimization_dyn_param_a_4" model="tvbo.parameter">
+            <field name="name">a_4</field>
+            <field name="value">0.25</field>
+            <field name="description">Slow inhibitory feedback probability</field>
+        </record>
+
+        <record id="exp_jr_meg_frequencygradient_optimization_dyn_param_mu" model="tvbo.parameter">
+            <field name="name">mu</field>
+            <field name="value">0.15</field>
+            <field name="description">Mean input firing rate</field>
+        </record>
+
+        <record id="exp_jr_meg_frequencygradient_optimization_dyn_sv_y0_eq" model="tvbo.equation">
+            <field name="label">dy0/dt</field>
+            <field name="lefthandside">dy0/dt</field>
+            <field name="righthandside">y3</field>
+        </record>
+
+        <record id="exp_jr_meg_frequencygradient_optimization_dyn_sv_y0" model="tvbo.state_variable">
+            <field name="name">y0</field>
+            <field name="initial_value">0.0</field>
+            <field name="equation" ref="exp_jr_meg_frequencygradient_optimization_dyn_sv_y0_eq"/>
+        </record>
+
+        <record id="exp_jr_meg_frequencygradient_optimization_dyn_sv_y1_eq" model="tvbo.equation">
+            <field name="label">dy1/dt</field>
+            <field name="lefthandside">dy1/dt</field>
+            <field name="righthandside">y4</field>
+        </record>
+
+        <record id="exp_jr_meg_frequencygradient_optimization_dyn_sv_y1" model="tvbo.state_variable">
+            <field name="name">y1</field>
+            <field name="initial_value">5.0</field>
+            <field name="equation" ref="exp_jr_meg_frequencygradient_optimization_dyn_sv_y1_eq"/>
+        </record>
+
+        <record id="exp_jr_meg_frequencygradient_optimization_dyn_sv_y2_eq" model="tvbo.equation">
+            <field name="label">dy2/dt</field>
+            <field name="lefthandside">dy2/dt</field>
+            <field name="righthandside">y5</field>
+        </record>
+
+        <record id="exp_jr_meg_frequencygradient_optimization_dyn_sv_y2" model="tvbo.state_variable">
+            <field name="name">y2</field>
+            <field name="initial_value">5.0</field>
+            <field name="equation" ref="exp_jr_meg_frequencygradient_optimization_dyn_sv_y2_eq"/>
+        </record>
+
+        <record id="exp_jr_meg_frequencygradient_optimization_dyn_sv_y3_eq" model="tvbo.equation">
+            <field name="label">dy3/dt</field>
+            <field name="lefthandside">dy3/dt</field>
+            <field name="righthandside">A * a * sigm_y1_y2 - 2.0 * a * y3 - a**2 * y0</field>
+        </record>
+
+        <record id="exp_jr_meg_frequencygradient_optimization_dyn_sv_y3" model="tvbo.state_variable">
+            <field name="name">y3</field>
+            <field name="initial_value">0.0</field>
+            <field name="equation" ref="exp_jr_meg_frequencygradient_optimization_dyn_sv_y3_eq"/>
+        </record>
+
+        <record id="exp_jr_meg_frequencygradient_optimization_dyn_sv_y4_eq" model="tvbo.equation">
+            <field name="label">dy4/dt</field>
+            <field name="lefthandside">dy4/dt</field>
+            <field name="righthandside">A * a * (mu + a_2 * J * sigm_y0_1 + DelayedSigmoidalJansenRit) - 2.0 * a * y4 - a**2 * y1</field>
+        </record>
+
+        <record id="exp_jr_meg_frequencygradient_optimization_dyn_sv_y4" model="tvbo.state_variable">
+            <field name="name">y4</field>
+            <field name="initial_value">0.0</field>
+            <field name="coupling_variable">True</field>
+            <field name="equation" ref="exp_jr_meg_frequencygradient_optimization_dyn_sv_y4_eq"/>
+        </record>
+
+        <record id="exp_jr_meg_frequencygradient_optimization_dyn_sv_y5_eq" model="tvbo.equation">
+            <field name="label">dy5/dt</field>
+            <field name="lefthandside">dy5/dt</field>
+            <field name="righthandside">B * b * (a_4 * J * sigm_y0_3) - 2.0 * b * y5 - b**2 * y2</field>
+        </record>
+
+        <record id="exp_jr_meg_frequencygradient_optimization_dyn_sv_y5" model="tvbo.state_variable">
+            <field name="name">y5</field>
+            <field name="initial_value">0.0</field>
+            <field name="equation" ref="exp_jr_meg_frequencygradient_optimization_dyn_sv_y5_eq"/>
+        </record>
+
+        <record id="exp_jr_meg_frequencygradient_optimization_dyn_dv_sigm_y1_y2_eq" model="tvbo.equation">
+            <field name="label">sigm_y1_y2</field>
+            <field name="lefthandside">sigm_y1_y2</field>
+            <field name="righthandside">2.0 * nu_max / (1.0 + exp(r * (v0 - (y1 - y2))))</field>
+        </record>
+
+        <record id="exp_jr_meg_frequencygradient_optimization_dyn_dv_sigm_y1_y2" model="tvbo.derived_variable">
+            <field name="name">sigm_y1_y2</field>
+            <field name="description">Sigmoid of y1-y2</field>
+            <field name="equation" ref="exp_jr_meg_frequencygradient_optimization_dyn_dv_sigm_y1_y2_eq"/>
+        </record>
+
+        <record id="exp_jr_meg_frequencygradient_optimization_dyn_dv_sigm_y0_1_eq" model="tvbo.equation">
+            <field name="label">sigm_y0_1</field>
+            <field name="lefthandside">sigm_y0_1</field>
+            <field name="righthandside">2.0 * nu_max / (1.0 + exp(r * (v0 - (a_1 * J * y0))))</field>
+        </record>
+
+        <record id="exp_jr_meg_frequencygradient_optimization_dyn_dv_sigm_y0_1" model="tvbo.derived_variable">
+            <field name="name">sigm_y0_1</field>
+            <field name="description">Sigmoid of a_1*J*y0</field>
+            <field name="equation" ref="exp_jr_meg_frequencygradient_optimization_dyn_dv_sigm_y0_1_eq"/>
+        </record>
+
+        <record id="exp_jr_meg_frequencygradient_optimization_dyn_dv_sigm_y0_3_eq" model="tvbo.equation">
+            <field name="label">sigm_y0_3</field>
+            <field name="lefthandside">sigm_y0_3</field>
+            <field name="righthandside">2.0 * nu_max / (1.0 + exp(r * (v0 - (a_3 * J * y0))))</field>
+        </record>
+
+        <record id="exp_jr_meg_frequencygradient_optimization_dyn_dv_sigm_y0_3" model="tvbo.derived_variable">
+            <field name="name">sigm_y0_3</field>
+            <field name="description">Sigmoid of a_3*J*y0</field>
+            <field name="equation" ref="exp_jr_meg_frequencygradient_optimization_dyn_dv_sigm_y0_3_eq"/>
+        </record>
+
+        <record id="exp_jr_meg_frequencygradient_optimization_dynamics" model="tvbo.dynamics">
+            <field name="name">JansenRit</field>
+            <field name="label">Jansen-Rit Neural Mass Model</field>
+            <field name="description">Neural mass model with three populations (pyramidal, excitatory interneurons, inhibitory interneurons). Produces characteristic alpha-band oscillations.
+</field>
+            <field name="parameters" eval="[(6, 0, [ref('exp_jr_meg_frequencygradient_optimization_dyn_param_a'), ref('exp_jr_meg_frequencygradient_optimization_dyn_param_b'), ref('exp_jr_meg_frequencygradient_optimization_dyn_param_a'), ref('exp_jr_meg_frequencygradient_optimization_dyn_param_b'), ref('exp_jr_meg_frequencygradient_optimization_dyn_param_v0'), ref('exp_jr_meg_frequencygradient_optimization_dyn_param_nu_max'), ref('exp_jr_meg_frequencygradient_optimization_dyn_param_r'), ref('exp_jr_meg_frequencygradient_optimization_dyn_param_j'), ref('exp_jr_meg_frequencygradient_optimization_dyn_param_a_1'), ref('exp_jr_meg_frequencygradient_optimization_dyn_param_a_2'), ref('exp_jr_meg_frequencygradient_optimization_dyn_param_a_3'), ref('exp_jr_meg_frequencygradient_optimization_dyn_param_a_4'), ref('exp_jr_meg_frequencygradient_optimization_dyn_param_mu')])]"/>
+            <field name="state_variables" eval="[(6, 0, [ref('exp_jr_meg_frequencygradient_optimization_dyn_sv_y0'), ref('exp_jr_meg_frequencygradient_optimization_dyn_sv_y1'), ref('exp_jr_meg_frequencygradient_optimization_dyn_sv_y2'), ref('exp_jr_meg_frequencygradient_optimization_dyn_sv_y3'), ref('exp_jr_meg_frequencygradient_optimization_dyn_sv_y4'), ref('exp_jr_meg_frequencygradient_optimization_dyn_sv_y5')])]"/>
+            <field name="derived_variables" eval="[(6, 0, [ref('exp_jr_meg_frequencygradient_optimization_dyn_dv_sigm_y1_y2'), ref('exp_jr_meg_frequencygradient_optimization_dyn_dv_sigm_y0_1'), ref('exp_jr_meg_frequencygradient_optimization_dyn_dv_sigm_y0_3')])]"/>
+        </record>
+
+        <record id="exp_jr_meg_frequencygradient_optimization_cp_delayedsigmoidaljansenrit_g" model="tvbo.parameter">
+            <field name="name">G</field>
+            <field name="value">15.0</field>
+            <field name="description">Global coupling strength</field>
+            <field name="free">True</field>
+        </record>
+
+        <record id="exp_jr_meg_frequencygradient_optimization_cp_delayedsigmoidaljansenrit_cmin" model="tvbo.parameter">
+            <field name="name">cmin</field>
+            <field name="value">0.0</field>
+        </record>
+
+        <record id="exp_jr_meg_frequencygradient_optimization_cp_delayedsigmoidaljansenrit_cmax" model="tvbo.parameter">
+            <field name="name">cmax</field>
+            <field name="value">0.005</field>
+            <field name="description">2 * nu_max from TVB default</field>
+        </record>
+
+        <record id="exp_jr_meg_frequencygradient_optimization_cp_delayedsigmoidaljansenrit_midpoint" model="tvbo.parameter">
+            <field name="name">midpoint</field>
+            <field name="value">6.0</field>
+        </record>
+
+        <record id="exp_jr_meg_frequencygradient_optimization_cp_delayedsigmoidaljansenrit_r" model="tvbo.parameter">
+            <field name="name">r</field>
+            <field name="value">0.56</field>
+        </record>
+
+        <record id="exp_jr_meg_frequencygradient_optimization_coupling_delayedsigmoidaljansenrit_pre_expr" model="tvbo.equation">
+            <field name="righthandside">cmin + (cmax - cmin) / (1.0 + exp(r * (midpoint - (y1 - y2))))</field>
+        </record>
+
+        <record id="exp_jr_meg_frequencygradient_optimization_coupling_delayedsigmoidaljansenrit_post_expr" model="tvbo.equation">
+            <field name="righthandside">G * gx</field>
+        </record>
+
+        <record id="exp_jr_meg_frequencygradient_optimization_coupling_delayedsigmoidaljansenrit" model="tvbo.coupling">
+            <field name="name">DelayedSigmoidalJansenRit</field>
+            <field name="label">Delayed Sigmoidal Jansen-Rit Coupling</field>
+            <field name="description">Sigmoidal Jansen-Rit coupling function with delays</field>
+            <field name="delayed">True"</field>
+            <field name="pre_expression" ref="exp_jr_meg_frequencygradient_optimization_coupling_delayedsigmoidaljansenrit_pre_expr"/>
+            <field name="post_expression" ref="exp_jr_meg_frequencygradient_optimization_coupling_delayedsigmoidaljansenrit_post_expr"/>
+            <field name="parameters" eval="[(6, 0, [ref('exp_jr_meg_frequencygradient_optimization_cp_delayedsigmoidaljansenrit_g'), ref('exp_jr_meg_frequencygradient_optimization_cp_delayedsigmoidaljansenrit_cmin'), ref('exp_jr_meg_frequencygradient_optimization_cp_delayedsigmoidaljansenrit_cmax'), ref('exp_jr_meg_frequencygradient_optimization_cp_delayedsigmoidaljansenrit_midpoint'), ref('exp_jr_meg_frequencygradient_optimization_cp_delayedsigmoidaljansenrit_r')])]"/>
+        </record>
+
+        <record id="exp_jr_meg_frequencygradient_optimization_network" model="tvbo.network">
+            <field name="label">Desikan-Killiany</field>
+            <field name="description">Structural connectivity from dk_average dataset</field>
+            <field name="bids_dir">../networks/bids/dk_average</field>
+            <field name="coupling" eval="[(6, 0, [ref('exp_jr_meg_frequencygradient_optimization_coupling_delayedsigmoidaljansenrit')])]"/>
+        </record>
+
+        <record id="exp_jr_meg_frequencygradient_optimization_integrator" model="tvbo.integrator">
+            <field name="method">Heun</field>
+            <field name="step_size">1.0</field>
+            <field name="duration">1000</field>
+            <field name="transient_time">20000</field>
+        </record>
+
+        <record id="exp_jr_meg_frequencygradient_optimization_execution" model="tvbo.execution_config">
+            <field name="n_workers">8</field>
+        </record>
+
+        <record id="exp_jr_meg_frequencygradient_optimization_func_subsample" model="tvbo.function">
+            <field name="name">subsample</field>
+            <field name="description">Downsample array by step factor</field>
+            <field name="source_code">data[::step]</field>
+        </record>
+
+        <record id="exp_jr_meg_frequencygradient_optimization_func_index_at" model="tvbo.function">
+            <field name="name">index_at</field>
+            <field name="description">Index into array at given position</field>
+            <field name="source_code">arr[idx]</field>
+        </record>
+
+        <record id="exp_jr_meg_frequencygradient_optimization_func_compute_target_frequencies" model="tvbo.function">
+            <field name="name">compute_target_frequencies</field>
+            <field name="description">Compute target frequencies from tract lengths to visual cortex</field>
+            <field name="definition">f_max - (f_max - f_min) * (d - min(d)) / (max(d) - min(d))</field>
+        </record>
+
+        <record id="exp_jr_meg_frequencygradient_optimization_func_cauchy_pdf" model="tvbo.function">
+            <field name="name">cauchy_pdf</field>
+            <field name="description">Cauchy-Lorentz probability density function</field>
+            <field name="definition">1 / (pi * gamma * (1 + ((x - x0) / gamma)**2))</field>
+        </record>
+
+        <record id="exp_jr_meg_frequencygradient_optimization_func_correlation" model="tvbo.function">
+            <field name="name">correlation</field>
+            <field name="description">Pearson correlation coefficient</field>
+            <field name="definition">Sum((x[i] - mean(x)) * (y[i] - mean(y)), (i, 0, n-1)) / sqrt(Sum((x[i] - mean(x))**2, (i, 0, n-1)) * Sum((y[i] - mean(y))**2, (i, 0, n-1)))</field>
+        </record>
+
+        <record id="exp_jr_meg_frequencygradient_optimization_func_spectral_loss" model="tvbo.function">
+            <field name="name">spectral_loss</field>
+            <field name="description">1 - correlation between simulated and target spectra (per-element)</field>
+            <field name="definition">1 - correlation(simulated, target)</field>
+        </record>
+
+        <record id="exp_jr_meg_frequencygradient_optimization_obs_simulated_psd" model="tvbo.observation">
+            <field name="name">simulated_psd</field>
+            <field name="label">Simulated Power Spectral Density</field>
+            <field name="description">Power spectral density using Welch&apos;s method on simulated y0</field>
+        </record>
+
+        <record id="exp_jr_meg_frequencygradient_optimization_dobs_avg_spectrum" model="tvbo.derived_observation">
+            <field name="name">avg_spectrum</field>
+            <field name="label">Average Spectrum</field>
+            <field name="description">Mean power spectrum across all regions</field>
+        </record>
+
+        <record id="exp_jr_meg_frequencygradient_optimization_dobs_peak_frequencies" model="tvbo.derived_observation">
+            <field name="name">peak_frequencies</field>
+            <field name="label">Peak Frequencies per Region</field>
+            <field name="description">Peak frequency for each brain region from its PSD</field>
+        </record>
+
+        <record id="exp_jr_meg_frequencygradient_optimization_dobs_peak_frequency" model="tvbo.derived_observation">
+            <field name="name">peak_frequency</field>
+            <field name="label">Peak Frequency</field>
+            <field name="description">Extract peak frequency from average spectrum</field>
+        </record>
+
+        <record id="exp_jr_meg_frequencygradient_optimization_opt_spectral_gradient_fit" model="tvbo.optimization">
+            <field name="name">spectral_gradient_fit</field>
+            <field name="label">Spectral Gradient Fitting</field>
+            <field name="description">Fit region-specific a and b parameters to reproduce the MEG frequency gradient. Target frequencies range from 11 Hz (visual cortex) to 7 Hz (most distant regions from lateral occipital gyrus).
+</field>
+        </record>
+
+        <record id="exp_jr_meg_frequencygradient_optimization_explr_frequency_landscape" model="tvbo.exploration">
+            <field name="name">frequency_landscape</field>
+            <field name="label">Frequency Landscape Exploration</field>
+            <field name="description">Grid search over a and b parameters to map the relationship between time constants and peak oscillation frequency. Used to understand the parameter landscape before optimization.
+</field>
+            <field name="mode">product</field>
         </record>
 
         <record id="experiment_jr_meg_frequencygradient_optimization" model="tvbo.simulation_experiment">
-            <field name="name">JR_MEG_FrequencyGradient_Optimization</field>
             <field name="label">JR Peak Frequency Optimization</field>
-            <field name="specification">{&quot;id&quot;: 1, &quot;label&quot;: &quot;JR Peak Frequency Optimization&quot;, &quot;description&quot;: &quot;Reproducing MEG Resting-State Frequency Gradients with Network Dynamics. This experiment fits region-specific Jansen-Rit parameters to reproduce the empirical frequency gradient from visual cortex (11 Hz) to association areas (7 Hz).\n&quot;, &quot;local_dynamics&quot;: {&quot;name&quot;: &quot;JansenRit&quot;, &quot;label&quot;: &quot;Jansen-Rit Neural Mass Model&quot;, &quot;description&quot;: &quot;Neural mass model with three populations (pyramidal, excitatory interneurons, inhibitory interneurons). Produces characteristic alpha-band oscillations.\n&quot;, &quot;parameters&quot;: {&quot;A&quot;: {&quot;value&quot;: 3.25, &quot;description&quot;: &quot;Maximum amplitude of EPSP [mV]&quot;, &quot;unit&quot;: &quot;mV&quot;}, &quot;B&quot;: {&quot;value&quot;: 22.0, &quot;description&quot;: &quot;Maximum amplitude of IPSP [mV]&quot;, &quot;unit&quot;: &quot;mV&quot;}, &quot;a&quot;: {&quot;value&quot;: 0.065, &quot;description&quot;: &quot;Reciprocal of membrane time constant (excitatory)&quot;, &quot;domain&quot;: {&quot;lo&quot;: 0.001, &quot;hi&quot;: 0.2}, &quot;unit&quot;: &quot;ms^-1&quot;}, &quot;b&quot;: {&quot;value&quot;: 0.065, &quot;description&quot;: &quot;Reciprocal of membrane time constant (inhibitory)&quot;, &quot;domain&quot;: {&quot;lo&quot;: 0.001, &quot;hi&quot;: 0.2}, &quot;unit&quot;: &quot;ms^-1&quot;}, &quot;v0&quot;: {&quot;value&quot;: 5.52, &quot;description&quot;: &quot;Firing threshold [mV]&quot;, &quot;unit&quot;: &quot;mV&quot;}, &quot;nu_max&quot;: {&quot;value&quot;: 0.0025, &quot;description&quot;: &quot;Maximum firing rate&quot;, &quot;unit&quot;: &quot;ms^-1&quot;}, &quot;r&quot;: {&quot;value&quot;: 0.56, &quot;description&quot;: &quot;Steepness of sigmoid&quot;, &quot;unit&quot;: &quot;mV^-1&quot;}, &quot;J&quot;: {&quot;value&quot;: 135.0, &quot;description&quot;: &quot;Average number of synapses&quot;}, &quot;a_1&quot;: {&quot;value&quot;: 1.0, &quot;description&quot;: &quot;Excitatory feedback probability&quot;}, &quot;a_2&quot;: {&quot;value&quot;: 0.8, &quot;description&quot;: &quot;Slow excitatory feedback probability&quot;}, &quot;a_3&quot;: {&quot;value&quot;: 0.25, &quot;description&quot;: &quot;Inhibitory feedback probability&quot;}, &quot;a_4&quot;: {&quot;value&quot;: 0.25, &quot;description&quot;: &quot;Slow inhibitory feedback probability&quot;}, &quot;mu&quot;: {&quot;value&quot;: 0.15, &quot;description&quot;: &quot;Mean input firing rate&quot;}}, &quot;derived_variables&quot;: {&quot;sigm_y1_y2&quot;: {&quot;equation&quot;: {&quot;rhs&quot;: &quot;2.0 * nu_max / (1.0 + exp(r * (v0 - (y1 - y2))))&quot;}, &quot;description&quot;: &quot;Sigmoid of y1-y2&quot;}, &quot;sigm_y0_1&quot;: {&quot;equation&quot;: {&quot;rhs&quot;: &quot;2.0 * nu_max / (1.0 + exp(r * (v0 - (a_1 * J * y0))))&quot;}, &quot;description&quot;: &quot;Sigmoid of a_1*J*y0&quot;}, &quot;sigm_y0_3&quot;: {&quot;equation&quot;: {&quot;rhs&quot;: &quot;2.0 * nu_max / (1.0 + exp(r * (v0 - (a_3 * J * y0))))&quot;}, &quot;description&quot;: &quot;Sigmoid of a_3*J*y0&quot;}}, &quot;state_variables&quot;: {&quot;y0&quot;: {&quot;equation&quot;: {&quot;rhs&quot;: &quot;y3&quot;}, &quot;initial_value&quot;: 0.0}, &quot;y1&quot;: {&quot;equation&quot;: {&quot;rhs&quot;: &quot;y4&quot;}, &quot;initial_value&quot;: 5.0}, &quot;y2&quot;: {&quot;equation&quot;: {&quot;rhs&quot;: &quot;y5&quot;}, &quot;initial_value&quot;: 5.0}, &quot;y3&quot;: {&quot;equation&quot;: {&quot;rhs&quot;: &quot;A * a * sigm_y1_y2 - 2.0 * a * y3 - a**2 * y0&quot;}, &quot;initial_value&quot;: 0.0}, &quot;y4&quot;: {&quot;equation&quot;: {&quot;rhs&quot;: &quot;A * a * (mu + a_2 * J * sigm_y0_1 + DelayedSigmoidalJansenRit) - 2.0 * a * y4 - a**2 * y1&quot;}, &quot;initial_value&quot;: 0.0, &quot;coupling_variable&quot;: true}, &quot;y5&quot;: {&quot;equation&quot;: {&quot;rhs&quot;: &quot;B * b * (a_4 * J * sigm_y0_3) - 2.0 * b * y5 - b**2 * y2&quot;}, &quot;initial_value&quot;: 0.0}}, &quot;coupling_inputs&quot;: {&quot;DelayedSigmoidalJansenRit&quot;: {&quot;dimension&quot;: 1}}}, &quot;network&quot;: {&quot;label&quot;: &quot;Desikan-Killiany&quot;, &quot;description&quot;: &quot;Structural connectivity from dk_average dataset&quot;, &quot;bids_dir&quot;: &quot;../networks/bids/dk_average&quot;, &quot;structural_measures&quot;: [&quot;streamlineCount&quot;, &quot;tractLength&quot;], &quot;conduction_speed&quot;: {&quot;name&quot;: &quot;conduction_speed&quot;, &quot;value&quot;: 3.0, &quot;unit&quot;: &quot;mm/ms&quot;}, &quot;normalization&quot;: {&quot;rhs&quot;: &quot;W / W_max&quot;}, &quot;coupling&quot;: {&quot;DelayedSigmoidalJansenRit&quot;: {&quot;label&quot;: &quot;Delayed Sigmoidal Jansen-Rit Coupling&quot;, &quot;description&quot;: &quot;Sigmoidal Jansen-Rit coupling function with delays&quot;, &quot;delayed&quot;: true, &quot;parameters&quot;: {&quot;G&quot;: {&quot;value&quot;: 15.0, &quot;description&quot;: &quot;Global coupling strength&quot;, &quot;free&quot;: true}, &quot;cmin&quot;: {&quot;value&quot;: 0.0}, &quot;cmax&quot;: {&quot;value&quot;: 0.005, &quot;description&quot;: &quot;2 * nu_max from TVB default&quot;}, &quot;midpoint&quot;: {&quot;value&quot;: 6.0}, &quot;r&quot;: {&quot;value&quot;: 0.56}}, &quot;incoming_states&quot;: [&quot;y1&quot;, &quot;y2&quot;], &quot;pre_expression&quot;: {&quot;rhs&quot;: &quot;cmin + (cmax - cmin) / (1.0 + exp(r * (midpoint - (y1 - y2))))&quot;}, &quot;post_expression&quot;: {&quot;rhs&quot;: &quot;G * gx&quot;}}}}, &quot;integration&quot;: {&quot;method&quot;: &quot;Heun&quot;, &quot;step_size&quot;: 1.0, &quot;duration&quot;: 1000, &quot;transient_time&quot;: 20000, &quot;noise&quot;: {&quot;additive&quot;: true, &quot;parameters&quot;: {&quot;sigma&quot;: {&quot;value&quot;: 0.0001}}}}, &quot;functions&quot;: {&quot;subsample&quot;: {&quot;name&quot;: &quot;subsample&quot;, &quot;description&quot;: &quot;Downsample array by step factor&quot;, &quot;source_code&quot;: &quot;data[::step]&quot;, &quot;arguments&quot;: [{&quot;name&quot;: &quot;data&quot;, &quot;description&quot;: &quot;Input array&quot;}, {&quot;name&quot;: &quot;step&quot;, &quot;value&quot;: 10, &quot;description&quot;: &quot;Downsample factor (1ms * 10 = 10ms period = 100 Hz)&quot;}]}, &quot;index_at&quot;: {&quot;name&quot;: &quot;index_at&quot;, &quot;description&quot;: &quot;Index into array at given position&quot;, &quot;source_code&quot;: &quot;arr[idx]&quot;, &quot;arguments&quot;: [{&quot;name&quot;: &quot;arr&quot;, &quot;description&quot;: &quot;Input array&quot;}, {&quot;name&quot;: &quot;idx&quot;, &quot;description&quot;: &quot;Index position&quot;}]}, &quot;compute_target_frequencies&quot;: {&quot;name&quot;: &quot;compute_target_frequencies&quot;, &quot;description&quot;: &quot;Compute target frequencies from tract lengths to visual cortex&quot;, &quot;equation&quot;: {&quot;rhs&quot;: &quot;f_max - (f_max - f_min) * (d - min(d)) / (max(d) - min(d))&quot;, &quot;definition&quot;: &quot;Linear mapping from distance to frequency: f_max at visual cortex, f_min at maximum distance&quot;}, &quot;arguments&quot;: [{&quot;name&quot;: &quot;d&quot;, &quot;description&quot;: &quot;Distance array from visual cortex for each region&quot;}, {&quot;name&quot;: &quot;f_min&quot;, &quot;value&quot;: 7.0, &quot;description&quot;: &quot;Minimum frequency at max distance [Hz]&quot;}, {&quot;name&quot;: &quot;f_max&quot;, &quot;value&quot;: 11.0, &quot;description&quot;: &quot;Maximum frequency at visual cortex [Hz]&quot;}]}, &quot;cauchy_pdf&quot;: {&quot;name&quot;: &quot;cauchy_pdf&quot;, &quot;description&quot;: &quot;Cauchy-Lorentz probability density function&quot;, &quot;equation&quot;: {&quot;rhs&quot;: &quot;1 / (pi * gamma * (1 + ((x - x0) / gamma)**2))&quot;, &quot;definition&quot;: &quot;Cauchy-Lorentz distribution centered at x0 with scale gamma&quot;}, &quot;arguments&quot;: [{&quot;name&quot;: &quot;x&quot;, &quot;description&quot;: &quot;Input values (frequency axis)&quot;}, {&quot;name&quot;: &quot;x0&quot;, &quot;description&quot;: &quot;Peak location for each region (target frequencies)&quot;}, {&quot;name&quot;: &quot;gamma&quot;, &quot;value&quot;: 1.0, &quot;description&quot;: &quot;Scale parameter (half-width at half-maximum)&quot;}]}, &quot;correlation&quot;: {&quot;name&quot;: &quot;correlation&quot;, &quot;description&quot;: &quot;Pearson correlation coefficient&quot;, &quot;equation&quot;: {&quot;rhs&quot;: &quot;Sum((x[i] - mean(x)) * (y[i] - mean(y)), (i, 0, n-1)) / sqrt(Sum((x[i] - mean(x))**2, (i, 0, n-1)) * Sum((y[i] - mean(y))**2, (i, 0, n-1)))&quot;, &quot;definition&quot;: &quot;Pearson product-moment correlation coefficient&quot;}, &quot;arguments&quot;: [{&quot;name&quot;: &quot;x&quot;, &quot;description&quot;: &quot;First array&quot;}, {&quot;name&quot;: &quot;y&quot;, &quot;description&quot;: &quot;Second array&quot;}]}, &quot;spectral_loss&quot;: {&quot;name&quot;: &quot;spectral_loss&quot;, &quot;description&quot;: &quot;1 - correlation between simulated and target spectra (per-element)&quot;, &quot;equation&quot;: {&quot;rhs&quot;: &quot;1 - correlation(simulated, target)&quot;}, &quot;arguments&quot;: [{&quot;name&quot;: &quot;simulated&quot;, &quot;description&quot;: &quot;Simulated power spectrum for one region&quot;}, {&quot;name&quot;: &quot;target&quot;, &quot;description&quot;: &quot;Target power spectrum for one region&quot;}]}}, &quot;observations&quot;: {&quot;simulated_psd&quot;: {&quot;label&quot;: &quot;Simulated Power Spectral Density&quot;, &quot;description&quot;: &quot;Power spectral density using Welch&apos;s method on simulated y0&quot;, &quot;source&quot;: &quot;y0&quot;, &quot;pipeline&quot;: [{&quot;function&quot;: &quot;subsample&quot;, &quot;arguments&quot;: [{&quot;name&quot;: &quot;data&quot;, &quot;value&quot;: &quot;integration.result&quot;, &quot;description&quot;: &quot;Input time series from simulation&quot;}]}, {&quot;callable&quot;: {&quot;module&quot;: &quot;jax.numpy&quot;, &quot;name&quot;: &quot;transpose&quot;}, &quot;output&quot;: &quot;transposed&quot;, &quot;arguments&quot;: [{&quot;name&quot;: &quot;a&quot;, &quot;value&quot;: &quot;subsample&quot;, &quot;description&quot;: &quot;Subsampled time series&quot;}]}, {&quot;callable&quot;: {&quot;module&quot;: &quot;jax.scipy.signal&quot;, &quot;name&quot;: &quot;welch&quot;}, &quot;output&quot;: &quot;frequencies, psd&quot;, &quot;arguments&quot;: [{&quot;name&quot;: &quot;x&quot;, &quot;value&quot;: &quot;transposed&quot;, &quot;description&quot;: &quot;Transposed time series (nodes, time)&quot;}, {&quot;name&quot;: &quot;fs&quot;, &quot;value&quot;: 100.0, &quot;description&quot;: &quot;Sampling frequency (Hz)&quot;}, {&quot;name&quot;: &quot;nperseg&quot;, &quot;value&quot;: 256, &quot;description&quot;: &quot;Segment length for Welch&quot;}]}]}}, &quot;derived_observations&quot;: {&quot;avg_spectrum&quot;: {&quot;name&quot;: &quot;avg_spectrum&quot;, &quot;label&quot;: &quot;Average Spectrum&quot;, &quot;description&quot;: &quot;Mean power spectrum across all regions&quot;, &quot;source_observations&quot;: [&quot;simulated_psd&quot;], &quot;pipeline&quot;: [{&quot;callable&quot;: {&quot;module&quot;: &quot;jax.numpy&quot;, &quot;name&quot;: &quot;mean&quot;}, &quot;output&quot;: &quot;avg_psd&quot;, &quot;arguments&quot;: [{&quot;name&quot;: &quot;a&quot;, &quot;value&quot;: &quot;simulated_psd.psd&quot;, &quot;description&quot;: &quot;Power spectrum from simulated_psd observation&quot;}, {&quot;name&quot;: &quot;axis&quot;, &quot;value&quot;: 0, &quot;description&quot;: &quot;Average over regions dimension&quot;}]}]}, &quot;peak_frequencies&quot;: {&quot;label&quot;: &quot;Peak Frequencies per Region&quot;, &quot;description&quot;: &quot;Peak frequency for each brain region from its PSD&quot;, &quot;source_observations&quot;: [&quot;simulated_psd&quot;], &quot;pipeline&quot;: [{&quot;callable&quot;: {&quot;module&quot;: &quot;jax.numpy&quot;, &quot;name&quot;: &quot;argmax&quot;}, &quot;output&quot;: &quot;peak_indices&quot;, &quot;arguments&quot;: [{&quot;name&quot;: &quot;a&quot;, &quot;value&quot;: &quot;simulated_psd.psd&quot;, &quot;description&quot;: &quot;PSD array (regions, 1, frequencies)&quot;}, {&quot;name&quot;: &quot;axis&quot;, &quot;value&quot;: -1, &quot;description&quot;: &quot;Find max along frequency axis&quot;}]}, {&quot;callable&quot;: {&quot;module&quot;: &quot;jax.numpy&quot;, &quot;name&quot;: &quot;squeeze&quot;}, &quot;output&quot;: &quot;peak_indices_squeezed&quot;, &quot;arguments&quot;: [{&quot;name&quot;: &quot;a&quot;, &quot;value&quot;: &quot;peak_indices&quot;}]}, {&quot;function&quot;: &quot;index_at&quot;, &quot;output&quot;: &quot;peak_frequencies&quot;, &quot;arguments&quot;: [{&quot;name&quot;: &quot;arr&quot;, &quot;value&quot;: &quot;simulated_psd.frequencies&quot;, &quot;description&quot;: &quot;Frequency array from PSD&quot;}, {&quot;name&quot;: &quot;idx&quot;, &quot;value&quot;: &quot;peak_indices_squeezed&quot;, &quot;description&quot;: &quot;Indices of peak frequencies per region&quot;}]}]}, &quot;peak_frequency&quot;: {&quot;label&quot;: &quot;Peak Frequency&quot;, &quot;description&quot;: &quot;Extract peak frequency from average spectrum&quot;, &quot;source_observations&quot;: [&quot;avg_spectrum&quot;, &quot;simulated_psd&quot;], &quot;pipeline&quot;: [{&quot;callable&quot;: {&quot;module&quot;: &quot;jax.numpy&quot;, &quot;name&quot;: &quot;argmax&quot;}, &quot;output&quot;: &quot;peak_idx&quot;, &quot;arguments&quot;: [{&quot;name&quot;: &quot;a&quot;, &quot;value&quot;: &quot;avg_spectrum&quot;, &quot;description&quot;: &quot;Average power spectrum (output of jnp.mean)&quot;}]}, {&quot;function&quot;: &quot;index_at&quot;, &quot;arguments&quot;: [{&quot;name&quot;: &quot;arr&quot;, &quot;value&quot;: &quot;simulated_psd.frequencies&quot;, &quot;description&quot;: &quot;Frequency array from PSD&quot;}, {&quot;name&quot;: &quot;idx&quot;, &quot;value&quot;: &quot;peak_idx&quot;, &quot;description&quot;: &quot;Index of peak frequency&quot;}]}]}}, &quot;optimization&quot;: [{&quot;name&quot;: &quot;spectral_gradient_fit&quot;, &quot;label&quot;: &quot;Spectral Gradient Fitting&quot;, &quot;description&quot;: &quot;Fit region-specific a and b parameters to reproduce the MEG frequency gradient. Target frequencies range from 11 Hz (visual cortex) to 7 Hz (most distant regions from lateral occipital gyrus).\n&quot;, &quot;free_parameters&quot;: [{&quot;name&quot;: &quot;a&quot;, &quot;heterogeneous&quot;: true}, {&quot;name&quot;: &quot;b&quot;, &quot;heterogeneous&quot;: true}], &quot;loss&quot;: {&quot;function&quot;: &quot;spectral_loss&quot;, &quot;aggregate&quot;: {&quot;over&quot;: &quot;node&quot;, &quot;type&quot;: &quot;mean&quot;}, &quot;arguments&quot;: [{&quot;name&quot;: &quot;simulated&quot;, &quot;value&quot;: &quot;observations.simulated_psd.psd&quot;, &quot;description&quot;: &quot;Simulated power spectrum from observation (n_regions, n_freqs)&quot;}, {&quot;name&quot;: &quot;target&quot;, &quot;description&quot;: &quot;Target power spectrum (passed to optimizer at runtime)&quot;}]}, &quot;algorithm&quot;: &quot;adamaxw&quot;, &quot;learning_rate&quot;: 0.001, &quot;max_iterations&quot;: 151}], &quot;explorations&quot;: [{&quot;name&quot;: &quot;frequency_landscape&quot;, &quot;label&quot;: &quot;Frequency Landscape Exploration&quot;, &quot;description&quot;: &quot;Grid search over a and b parameters to map the relationship between time constants and peak oscillation frequency. Used to understand the parameter landscape before optimization.\n&quot;, &quot;parameters&quot;: [{&quot;name&quot;: &quot;a&quot;, &quot;domain&quot;: {&quot;lo&quot;: 0.001, &quot;hi&quot;: 0.2, &quot;n&quot;: 32, &quot;log_scale&quot;: false}}, {&quot;name&quot;: &quot;b&quot;, &quot;domain&quot;: {&quot;lo&quot;: 0.001, &quot;hi&quot;: 0.2, &quot;n&quot;: 32, &quot;log_scale&quot;: false}}], &quot;mode&quot;: &quot;product&quot;, &quot;n_parallel&quot;: 1, &quot;observable&quot;: {&quot;function&quot;: &quot;peak_frequency&quot;}}], &quot;execution&quot;: {&quot;n_workers&quot;: 8}, &quot;references&quot;: [&quot;Mahjoory et al. (2020) eLife 9:e53715 - MEG frequency gradient&quot;, &quot;Jansen &amp; Rit (1995) Biol Cybern 73:357-366 - Neural mass model&quot;]}</field>
+            <field name="description">Reproducing MEG Resting-State Frequency Gradients with Network Dynamics. This experiment fits region-specific Jansen-Rit parameters to reproduce the empirical frequency gradient from visual cortex (11 Hz) to association areas (7 Hz).
+</field>
+            <field name="dynamics" eval="[(6, 0, [ref('exp_jr_meg_frequencygradient_optimization_dynamics')])]"/>
+            <field name="network" ref="exp_jr_meg_frequencygradient_optimization_network"/>
+            <field name="integration" ref="exp_jr_meg_frequencygradient_optimization_integrator"/>
+            <field name="functions" eval="[(6, 0, [ref('exp_jr_meg_frequencygradient_optimization_func_subsample'), ref('exp_jr_meg_frequencygradient_optimization_func_index_at'), ref('exp_jr_meg_frequencygradient_optimization_func_compute_target_frequencies'), ref('exp_jr_meg_frequencygradient_optimization_func_cauchy_pdf'), ref('exp_jr_meg_frequencygradient_optimization_func_correlation'), ref('exp_jr_meg_frequencygradient_optimization_func_spectral_loss')])]"/>
+            <field name="observations" eval="[(6, 0, [ref('exp_jr_meg_frequencygradient_optimization_obs_simulated_psd')])]"/>
+            <field name="derived_observations" eval="[(6, 0, [ref('exp_jr_meg_frequencygradient_optimization_dobs_avg_spectrum'), ref('exp_jr_meg_frequencygradient_optimization_dobs_peak_frequencies'), ref('exp_jr_meg_frequencygradient_optimization_dobs_peak_frequency')])]"/>
+            <field name="optimization" eval="[(6, 0, [ref('exp_jr_meg_frequencygradient_optimization_opt_spectral_gradient_fit')])]"/>
+            <field name="explorations" eval="[(6, 0, [ref('exp_jr_meg_frequencygradient_optimization_explr_frequency_landscape')])]"/>
+            <field name="execution" ref="exp_jr_meg_frequencygradient_optimization_execution"/>
+            <field name="references">- Mahjoory et al. (2020) eLife 9:e53715 - MEG frequency gradient
+- Jansen &amp; Rit (1995) Biol Cybern 73:357-366 - Neural mass model</field>
+        </record>
+
+        <record id="exp_rww_bold_fc_optimization_dyn_param_a" model="tvbo.parameter">
+            <field name="name">a</field>
+            <field name="label">Input gain parameter</field>
+            <field name="value">0.27</field>
+            <field name="unit">n/C</field>
+        </record>
+
+        <record id="exp_rww_bold_fc_optimization_dyn_param_b" model="tvbo.parameter">
+            <field name="name">b</field>
+            <field name="label">Input shift parameter</field>
+            <field name="value">0.108</field>
+            <field name="unit">kHz</field>
+        </record>
+
+        <record id="exp_rww_bold_fc_optimization_dyn_param_d" model="tvbo.parameter">
+            <field name="name">d</field>
+            <field name="label">Parameter for H function</field>
+            <field name="value">154.0</field>
+            <field name="unit">ms</field>
+        </record>
+
+        <record id="exp_rww_bold_fc_optimization_dyn_param_gamma" model="tvbo.parameter">
+            <field name="name">gamma</field>
+            <field name="label">Kinetic parameter</field>
+            <field name="value">0.641</field>
+        </record>
+
+        <record id="exp_rww_bold_fc_optimization_dyn_param_tau_s" model="tvbo.parameter">
+            <field name="name">tau_s</field>
+            <field name="label">Synaptic time constant</field>
+            <field name="value">100.0</field>
+            <field name="unit">ms</field>
+        </record>
+
+        <record id="exp_rww_bold_fc_optimization_dyn_param_w_range" model="tvbo.range">
+            <field name="lo">0.0</field>
+            <field name="hi">1.0</field>
+        </record>
+
+        <record id="exp_rww_bold_fc_optimization_dyn_param_w" model="tvbo.parameter">
+            <field name="name">w</field>
+            <field name="label">Excitatory recurrence</field>
+            <field name="value">0.5</field>
+            <field name="domain" ref="exp_rww_bold_fc_optimization_dyn_param_w_range"/>
+        </record>
+
+        <record id="exp_rww_bold_fc_optimization_dyn_param_j_n" model="tvbo.parameter">
+            <field name="name">J_N</field>
+            <field name="label">Excitatory recurrence</field>
+            <field name="value">0.2609</field>
+        </record>
+
+        <record id="exp_rww_bold_fc_optimization_dyn_param_i_o" model="tvbo.parameter">
+            <field name="name">I_o</field>
+            <field name="label">External input</field>
+            <field name="value">0.32</field>
+        </record>
+
+        <record id="exp_rww_bold_fc_optimization_dyn_sv_s_eq" model="tvbo.equation">
+            <field name="label">dS/dt</field>
+            <field name="lefthandside">dS/dt</field>
+            <field name="righthandside">-(S / tau_s) + (1 - S) * H * gamma</field>
+        </record>
+
+        <record id="exp_rww_bold_fc_optimization_dyn_sv_s" model="tvbo.state_variable">
+            <field name="name">S</field>
+            <field name="label">Synaptic gating</field>
+            <field name="initial_value">0.3</field>
+            <field name="coupling_variable">True</field>
+            <field name="description">Fraction of open NMDA channels</field>
+            <field name="equation" ref="exp_rww_bold_fc_optimization_dyn_sv_s_eq"/>
+        </record>
+
+        <record id="exp_rww_bold_fc_optimization_dyn_dv_x_eq" model="tvbo.equation">
+            <field name="label">x</field>
+            <field name="lefthandside">x</field>
+            <field name="righthandside">w * J_N * S + I_o + J_N * FastLinearCoupling</field>
+        </record>
+
+        <record id="exp_rww_bold_fc_optimization_dyn_dv_x" model="tvbo.derived_variable">
+            <field name="name">x</field>
+            <field name="label">Total synaptic input</field>
+            <field name="description">Sum of local recurrence, external input, and long-range coupling</field>
+            <field name="equation" ref="exp_rww_bold_fc_optimization_dyn_dv_x_eq"/>
+        </record>
+
+        <record id="exp_rww_bold_fc_optimization_dyn_dv_h_eq" model="tvbo.equation">
+            <field name="label">H</field>
+            <field name="lefthandside">H</field>
+            <field name="righthandside">(a * x - b) / (1 - exp(-d * (a * x - b)))</field>
+        </record>
+
+        <record id="exp_rww_bold_fc_optimization_dyn_dv_h" model="tvbo.derived_variable">
+            <field name="name">H</field>
+            <field name="label">Population firing rate</field>
+            <field name="description">Sigmoidal transfer function converting input to firing rate</field>
+            <field name="equation" ref="exp_rww_bold_fc_optimization_dyn_dv_h_eq"/>
+        </record>
+
+        <record id="exp_rww_bold_fc_optimization_dynamics" model="tvbo.dynamics">
+            <field name="name">ReducedWongWang</field>
+            <field name="label">Reduced Wong-Wang Model</field>
+            <field name="description">Biophysically-based neural mass model for BOLD FC fitting. Captures slow dynamics relevant for resting-state fMRI.
+</field>
+            <field name="parameters" eval="[(6, 0, [ref('exp_rww_bold_fc_optimization_dyn_param_a'), ref('exp_rww_bold_fc_optimization_dyn_param_b'), ref('exp_rww_bold_fc_optimization_dyn_param_d'), ref('exp_rww_bold_fc_optimization_dyn_param_gamma'), ref('exp_rww_bold_fc_optimization_dyn_param_tau_s'), ref('exp_rww_bold_fc_optimization_dyn_param_w'), ref('exp_rww_bold_fc_optimization_dyn_param_j_n'), ref('exp_rww_bold_fc_optimization_dyn_param_i_o')])]"/>
+            <field name="state_variables" eval="[(6, 0, [ref('exp_rww_bold_fc_optimization_dyn_sv_s')])]"/>
+            <field name="derived_variables" eval="[(6, 0, [ref('exp_rww_bold_fc_optimization_dyn_dv_x'), ref('exp_rww_bold_fc_optimization_dyn_dv_h')])]"/>
+        </record>
+
+        <record id="exp_rww_bold_fc_optimization_cp_fastlinearcoupling_g_range" model="tvbo.range">
+            <field name="lo">0.0</field>
+            <field name="hi">1.0</field>
+        </record>
+
+        <record id="exp_rww_bold_fc_optimization_cp_fastlinearcoupling_g" model="tvbo.parameter">
+            <field name="name">G</field>
+            <field name="label">Global coupling</field>
+            <field name="value">0.5</field>
+            <field name="description">Global scaling of long-range connections</field>
+            <field name="free">True</field>
+            <field name="domain" ref="exp_rww_bold_fc_optimization_cp_fastlinearcoupling_g_range"/>
+        </record>
+
+        <record id="exp_rww_bold_fc_optimization_coupling_fastlinearcoupling_pre_expr" model="tvbo.equation">
+            <field name="righthandside">local_states</field>
+        </record>
+
+        <record id="exp_rww_bold_fc_optimization_coupling_fastlinearcoupling_post_expr" model="tvbo.equation">
+            <field name="righthandside">G * gx</field>
+        </record>
+
+        <record id="exp_rww_bold_fc_optimization_coupling_fastlinearcoupling" model="tvbo.coupling">
+            <field name="name">FastLinearCoupling</field>
+            <field name="label">Fast Linear Coupling</field>
+            <field name="description">Instantaneous linear coupling (no conduction delays)</field>
+            <field name="delayed">False"</field>
+            <field name="pre_expression" ref="exp_rww_bold_fc_optimization_coupling_fastlinearcoupling_pre_expr"/>
+            <field name="post_expression" ref="exp_rww_bold_fc_optimization_coupling_fastlinearcoupling_post_expr"/>
+            <field name="parameters" eval="[(6, 0, [ref('exp_rww_bold_fc_optimization_cp_fastlinearcoupling_g')])]"/>
+        </record>
+
+        <record id="exp_rww_bold_fc_optimization_network" model="tvbo.network">
+            <field name="label">Desikan-Killiany</field>
+            <field name="description">Structural connectivity from dk_average dataset</field>
+            <field name="bids_dir">../networks/bids/dk_average</field>
+            <field name="coupling" eval="[(6, 0, [ref('exp_rww_bold_fc_optimization_coupling_fastlinearcoupling')])]"/>
+        </record>
+
+        <record id="exp_rww_bold_fc_optimization_integrator" model="tvbo.integrator">
+            <field name="method">Heun</field>
+            <field name="step_size">4.0</field>
+            <field name="duration">120000</field>
+            <field name="transient_time">120000</field>
+        </record>
+
+        <record id="exp_rww_bold_fc_optimization_execution" model="tvbo.execution_config">
+            <field name="n_workers">8</field>
+            <field name="precision">float64</field>
+            <field name="random_seed">0</field>
+        </record>
+
+        <record id="exp_rww_bold_fc_optimization_func_temporal_average" model="tvbo.function">
+            <field name="name">temporal_average</field>
+            <field name="description">Temporal average downsampling</field>
+            <field name="source_code">jnp.mean(data.reshape(-1, period_samples, *data.shape[1:]), axis=1)</field>
+        </record>
+
+        <record id="exp_rww_bold_fc_optimization_func_hrf_kernel" model="tvbo.function">
+            <field name="name">hrf_kernel</field>
+            <field name="description">Hemodynamic response function kernel (Lotka-Volterra)</field>
+            <field name="definition">(1/3)*exp(-0.5*(t/1000)/tau_s)*sin(sqrt(1/tau_f - 1/(4*tau_s**2))*(t/1000))/sqrt(1/tau_f - 1/(4*tau_s**2))</field>
+        </record>
+
+        <record id="exp_rww_bold_fc_optimization_func_prepend_history" model="tvbo.function">
+            <field name="name">prepend_history</field>
+            <field name="description">Prepend transient history to data for convolution</field>
+            <field name="source_code">jnp.concatenate([history[-kernel_samples:], data], axis=0)</field>
+        </record>
+
+        <record id="exp_rww_bold_fc_optimization_func_volterra_transform" model="tvbo.function">
+            <field name="name">volterra_transform</field>
+            <field name="description">Volterra nonlinear BOLD transformation</field>
+            <field name="definition">k_1 * V_0 * (data - 1.0)</field>
+        </record>
+
+        <record id="exp_rww_bold_fc_optimization_func_subsample_bold" model="tvbo.function">
+            <field name="name">subsample_bold</field>
+            <field name="description">Subsample to BOLD TR (final_period / downsample_period)</field>
+            <field name="source_code">data[::step][:n_samples]</field>
+        </record>
+
+        <record id="exp_rww_bold_fc_optimization_func_rmse" model="tvbo.function">
+            <field name="name">rmse</field>
+            <field name="description">Root mean squared error</field>
+            <field name="definition">sqrt(mean((x - y)**2))</field>
+        </record>
+
+        <record id="exp_rww_bold_fc_optimization_func_fc_corr" model="tvbo.function">
+            <field name="name">fc_corr</field>
+            <field name="description">FC correlation (upper triangle)</field>
+        </record>
+
+        <record id="exp_rww_bold_fc_optimization_obs_empirical_fc" model="tvbo.observation">
+            <field name="name">empirical_fc</field>
+            <field name="label">Empirical Functional Connectivity</field>
+            <field name="description">Target FC matrix from network observations (loaded from BIDS)</field>
+        </record>
+
+        <record id="exp_rww_bold_fc_optimization_obs_bold" model="tvbo.observation">
+            <field name="name">bold</field>
+            <field name="label">Simulated BOLD Signal</field>
+            <field name="description">BOLD signal from hemodynamic response function (matches tvboptim Bold)</field>
+        </record>
+
+        <record id="exp_rww_bold_fc_optimization_dobs_fc" model="tvbo.derived_observation">
+            <field name="name">fc</field>
+            <field name="label">Simulated Functional Connectivity</field>
+            <field name="description">Pearson correlation matrix from BOLD time series</field>
+        </record>
+
+        <record id="exp_rww_bold_fc_optimization_opt_fc_fitting" model="tvbo.optimization">
+            <field name="name">fc_fitting</field>
+            <field name="label">FC Fitting</field>
+            <field name="description">Two-stage optimization to fit empirical FC. Stage 1: Global parameters (w, G) - same for all regions. Stage 2: Regional parameters (w, I_o) - heterogeneous across regions.
+</field>
+        </record>
+
+        <record id="exp_rww_bold_fc_optimization_explr_parameter_landscape" model="tvbo.exploration">
+            <field name="name">parameter_landscape</field>
+            <field name="label">w-G Parameter Landscape</field>
+            <field name="description">Grid search over excitatory recurrence (w) and global coupling (G) to understand the FC fitting landscape before optimization.
+</field>
+            <field name="mode">product</field>
         </record>
 
         <record id="experiment_rww_bold_fc_optimization" model="tvbo.simulation_experiment">
-            <field name="name">RWW_BOLD_FC_Optimization</field>
             <field name="label">RWW Functional Connectivity Fitting</field>
-            <field name="specification">{&quot;id&quot;: 2, &quot;label&quot;: &quot;RWW Functional Connectivity Fitting&quot;, &quot;description&quot;: &quot;Fitting functional connectivity using the Reduced Wong-Wang model. Two-stage optimization: global parameters first, then regional heterogeneity. Based on tvboptim RWW.qmd tutorial.\n&quot;, &quot;local_dynamics&quot;: {&quot;name&quot;: &quot;ReducedWongWang&quot;, &quot;label&quot;: &quot;Reduced Wong-Wang Model&quot;, &quot;description&quot;: &quot;Biophysically-based neural mass model for BOLD FC fitting. Captures slow dynamics relevant for resting-state fMRI.\n&quot;, &quot;output&quot;: [&quot;S&quot;, &quot;H&quot;], &quot;parameters&quot;: {&quot;a&quot;: {&quot;label&quot;: &quot;Input gain parameter&quot;, &quot;value&quot;: 0.27, &quot;unit&quot;: &quot;n/C&quot;}, &quot;b&quot;: {&quot;label&quot;: &quot;Input shift parameter&quot;, &quot;unit&quot;: &quot;kHz&quot;, &quot;value&quot;: 0.108}, &quot;d&quot;: {&quot;label&quot;: &quot;Parameter for H function&quot;, &quot;value&quot;: 154.0, &quot;unit&quot;: &quot;ms&quot;}, &quot;gamma&quot;: {&quot;label&quot;: &quot;Kinetic parameter&quot;, &quot;value&quot;: 0.641}, &quot;tau_s&quot;: {&quot;label&quot;: &quot;Synaptic time constant&quot;, &quot;value&quot;: 100.0, &quot;unit&quot;: &quot;ms&quot;}, &quot;w&quot;: {&quot;label&quot;: &quot;Excitatory recurrence&quot;, &quot;value&quot;: 0.5, &quot;domain&quot;: {&quot;lo&quot;: 0.0, &quot;hi&quot;: 1.0}}, &quot;J_N&quot;: {&quot;label&quot;: &quot;Excitatory recurrence&quot;, &quot;value&quot;: 0.2609}, &quot;I_o&quot;: {&quot;label&quot;: &quot;External input&quot;, &quot;value&quot;: 0.32}}, &quot;derived_variables&quot;: {&quot;x&quot;: {&quot;label&quot;: &quot;Total synaptic input&quot;, &quot;equation&quot;: {&quot;rhs&quot;: &quot;w * J_N * S + I_o + J_N * FastLinearCoupling&quot;}, &quot;description&quot;: &quot;Sum of local recurrence, external input, and long-range coupling&quot;}, &quot;H&quot;: {&quot;label&quot;: &quot;Population firing rate&quot;, &quot;equation&quot;: {&quot;rhs&quot;: &quot;(a * x - b) / (1 - exp(-d * (a * x - b)))&quot;}, &quot;description&quot;: &quot;Sigmoidal transfer function converting input to firing rate&quot;}}, &quot;state_variables&quot;: {&quot;S&quot;: {&quot;label&quot;: &quot;Synaptic gating&quot;, &quot;equation&quot;: {&quot;rhs&quot;: &quot;-(S / tau_s) + (1 - S) * H * gamma&quot;}, &quot;initial_value&quot;: 0.3, &quot;domain&quot;: {&quot;lo&quot;: 0.0, &quot;hi&quot;: 1.0}, &quot;description&quot;: &quot;Fraction of open NMDA channels&quot;, &quot;coupling_variable&quot;: true, &quot;noise&quot;: {&quot;additive&quot;: true, &quot;parameters&quot;: {&quot;sigma&quot;: {&quot;value&quot;: 0.00283, &quot;description&quot;: &quot;Noise intensity for S state variable&quot;}}}}}, &quot;coupling_inputs&quot;: {&quot;FastLinearCoupling&quot;: {&quot;dimension&quot;: 1}}}, &quot;network&quot;: {&quot;label&quot;: &quot;Desikan-Killiany&quot;, &quot;description&quot;: &quot;Structural connectivity from dk_average dataset&quot;, &quot;bids_dir&quot;: &quot;../networks/bids/dk_average&quot;, &quot;structural_measures&quot;: [&quot;streamlineCount&quot;, &quot;tractLength&quot;], &quot;observational_measures&quot;: [&quot;BoldCorrelation&quot;], &quot;normalization&quot;: {&quot;rhs&quot;: &quot;W / max(W)&quot;}, &quot;coupling&quot;: {&quot;FastLinearCoupling&quot;: {&quot;label&quot;: &quot;Fast Linear Coupling&quot;, &quot;description&quot;: &quot;Instantaneous linear coupling (no conduction delays)&quot;, &quot;delayed&quot;: false, &quot;parameters&quot;: {&quot;G&quot;: {&quot;label&quot;: &quot;Global coupling&quot;, &quot;value&quot;: 0.5, &quot;description&quot;: &quot;Global scaling of long-range connections&quot;, &quot;free&quot;: true, &quot;domain&quot;: {&quot;lo&quot;: 0.0, &quot;hi&quot;: 1.0}}}, &quot;local_states&quot;: [&quot;S&quot;], &quot;pre_expression&quot;: {&quot;rhs&quot;: &quot;local_states&quot;, &quot;description&quot;: &quot;Return local states to trigger vectorized matmul mode&quot;}, &quot;post_expression&quot;: {&quot;rhs&quot;: &quot;G * gx&quot;}}}}, &quot;integration&quot;: {&quot;method&quot;: &quot;Heun&quot;, &quot;step_size&quot;: 4.0, &quot;duration&quot;: 120000, &quot;transient_time&quot;: 120000}, &quot;functions&quot;: {&quot;temporal_average&quot;: {&quot;description&quot;: &quot;Temporal average downsampling&quot;, &quot;source_code&quot;: &quot;jnp.mean(data.reshape(-1, period_samples, *data.shape[1:]), axis=1)&quot;, &quot;arguments&quot;: [{&quot;name&quot;: &quot;data&quot;, &quot;description&quot;: &quot;Input time series (time, nodes)&quot;}, {&quot;name&quot;: &quot;period_samples&quot;, &quot;value&quot;: 1, &quot;description&quot;: &quot;Samples per averaging window&quot;}]}, &quot;hrf_kernel&quot;: {&quot;description&quot;: &quot;Hemodynamic response function kernel (Lotka-Volterra)&quot;, &quot;time_range&quot;: {&quot;lo&quot;: 0, &quot;hi&quot;: &quot;duration&quot;, &quot;n&quot;: 5000}, &quot;equation&quot;: {&quot;rhs&quot;: &quot;(1/3)*exp(-0.5*(t/1000)/tau_s)*sin(sqrt(1/tau_f - 1/(4*tau_s**2))*(t/1000))/sqrt(1/tau_f - 1/(4*tau_s**2))&quot;, &quot;parameters&quot;: {&quot;tau_s&quot;: {&quot;value&quot;: 0.8, &quot;description&quot;: &quot;Signal decay time constant (seconds)&quot;}, &quot;tau_f&quot;: {&quot;value&quot;: 0.4, &quot;description&quot;: &quot;Feedback time constant (seconds)&quot;}}}, &quot;arguments&quot;: [{&quot;name&quot;: &quot;duration&quot;, &quot;value&quot;: 20000.0, &quot;description&quot;: &quot;HRF kernel duration in ms&quot;}]}, &quot;prepend_history&quot;: {&quot;description&quot;: &quot;Prepend transient history to data for convolution&quot;, &quot;source_code&quot;: &quot;jnp.concatenate([history[-kernel_samples:], data], axis=0)&quot;, &quot;arguments&quot;: [{&quot;name&quot;: &quot;data&quot;, &quot;description&quot;: &quot;Input time series (time, nodes)&quot;}, {&quot;name&quot;: &quot;history&quot;, &quot;description&quot;: &quot;Transient history data&quot;}, {&quot;name&quot;: &quot;kernel_samples&quot;, &quot;value&quot;: 5000, &quot;description&quot;: &quot;Number of samples to prepend from history&quot;}]}, &quot;volterra_transform&quot;: {&quot;description&quot;: &quot;Volterra nonlinear BOLD transformation&quot;, &quot;equation&quot;: {&quot;rhs&quot;: &quot;k_1 * V_0 * (data - 1.0)&quot;, &quot;parameters&quot;: {&quot;k_1&quot;: {&quot;value&quot;: 5.6, &quot;description&quot;: &quot;Intravascular signal contribution&quot;}, &quot;V_0&quot;: {&quot;value&quot;: 0.02, &quot;description&quot;: &quot;Resting blood volume fraction&quot;}}}, &quot;arguments&quot;: [{&quot;name&quot;: &quot;data&quot;, &quot;description&quot;: &quot;Input data from previous step&quot;}]}, &quot;subsample_bold&quot;: {&quot;description&quot;: &quot;Subsample to BOLD TR (final_period / downsample_period)&quot;, &quot;source_code&quot;: &quot;data[::step][:n_samples]&quot;, &quot;arguments&quot;: [{&quot;name&quot;: &quot;data&quot;, &quot;description&quot;: &quot;Input time series&quot;}, {&quot;name&quot;: &quot;step&quot;, &quot;value&quot;: 250, &quot;description&quot;: &quot;Subsample factor (TR/downsample_period = 1000/4 = 250)&quot;}, {&quot;name&quot;: &quot;n_samples&quot;, &quot;value&quot;: 120, &quot;description&quot;: &quot;Number of output samples (simulation_time / TR = 120000 / 1000 = 120)&quot;}]}, &quot;rmse&quot;: {&quot;description&quot;: &quot;Root mean squared error&quot;, &quot;equation&quot;: {&quot;rhs&quot;: &quot;sqrt(mean((x - y)**2))&quot;}, &quot;arguments&quot;: [{&quot;name&quot;: &quot;x&quot;, &quot;description&quot;: &quot;First array (simulated)&quot;}, {&quot;name&quot;: &quot;y&quot;, &quot;description&quot;: &quot;Second array (target)&quot;}]}, &quot;fc_corr&quot;: {&quot;description&quot;: &quot;FC correlation (upper triangle)&quot;, &quot;callable&quot;: {&quot;name&quot;: &quot;fc_corr&quot;, &quot;module&quot;: &quot;tvboptim.observations.observation&quot;}}}, &quot;observations&quot;: {&quot;empirical_fc&quot;: {&quot;label&quot;: &quot;Empirical Functional Connectivity&quot;, &quot;description&quot;: &quot;Target FC matrix from network observations (loaded from BIDS)&quot;, &quot;source&quot;: &quot;network.observations.BoldCorrelation&quot;}, &quot;bold&quot;: {&quot;label&quot;: &quot;Simulated BOLD Signal&quot;, &quot;description&quot;: &quot;BOLD signal from hemodynamic response function (matches tvboptim Bold)&quot;, &quot;source&quot;: &quot;S&quot;, &quot;period&quot;: 1000.0, &quot;pipeline&quot;: [{&quot;function&quot;: &quot;hrf_kernel&quot;}, {&quot;output&quot;: &quot;downsampled_data&quot;, &quot;function&quot;: &quot;temporal_average&quot;, &quot;arguments&quot;: [{&quot;name&quot;: &quot;data&quot;, &quot;value&quot;: &quot;integration.result&quot;}, {&quot;name&quot;: &quot;period_samples&quot;, &quot;value&quot;: 1}]}, {&quot;output&quot;: &quot;downsampled_history&quot;, &quot;function&quot;: &quot;temporal_average&quot;, &quot;arguments&quot;: [{&quot;name&quot;: &quot;data&quot;, &quot;value&quot;: &quot;integration.transient&quot;}, {&quot;name&quot;: &quot;period_samples&quot;, &quot;value&quot;: 1}]}, {&quot;function&quot;: &quot;prepend_history&quot;, &quot;arguments&quot;: [{&quot;name&quot;: &quot;data&quot;, &quot;value&quot;: &quot;downsampled_data&quot;}, {&quot;name&quot;: &quot;history&quot;, &quot;value&quot;: &quot;downsampled_history&quot;}, {&quot;name&quot;: &quot;kernel_samples&quot;, &quot;value&quot;: 5000}]}, {&quot;output&quot;: &quot;bold_convolve&quot;, &quot;callable&quot;: {&quot;module&quot;: &quot;jax.scipy.signal&quot;, &quot;name&quot;: &quot;fftconvolve&quot;}, &quot;apply_on_dimension&quot;: &quot;node&quot;, &quot;arguments&quot;: [{&quot;name&quot;: &quot;in1&quot;, &quot;value&quot;: &quot;prepend_history&quot;}, {&quot;name&quot;: &quot;in2&quot;, &quot;value&quot;: &quot;hrf_kernel&quot;}, {&quot;name&quot;: &quot;mode&quot;, &quot;value&quot;: &quot;valid&quot;}]}, {&quot;function&quot;: &quot;volterra_transform&quot;, &quot;arguments&quot;: [{&quot;name&quot;: &quot;data&quot;, &quot;value&quot;: &quot;bold_convolve&quot;}]}, {&quot;function&quot;: &quot;subsample_bold&quot;, &quot;arguments&quot;: [{&quot;name&quot;: &quot;data&quot;, &quot;value&quot;: &quot;volterra_transform&quot;}]}]}}, &quot;derived_observations&quot;: {&quot;fc&quot;: {&quot;label&quot;: &quot;Simulated Functional Connectivity&quot;, &quot;description&quot;: &quot;Pearson correlation matrix from BOLD time series&quot;, &quot;source_observations&quot;: [&quot;bold&quot;], &quot;pipeline&quot;: [{&quot;callable&quot;: {&quot;name&quot;: &quot;compute_fc&quot;, &quot;module&quot;: &quot;tvboptim.observations.observation&quot;}, &quot;arguments&quot;: [{&quot;name&quot;: &quot;timeseries&quot;, &quot;value&quot;: &quot;bold&quot;}, {&quot;name&quot;: &quot;skip_t&quot;, &quot;value&quot;: 20, &quot;description&quot;: &quot;Skip first 20 TRs to avoid transient effects&quot;}]}]}}, &quot;optimization&quot;: {&quot;fc_fitting&quot;: {&quot;label&quot;: &quot;FC Fitting&quot;, &quot;description&quot;: &quot;Two-stage optimization to fit empirical FC. Stage 1: Global parameters (w, G) - same for all regions. Stage 2: Regional parameters (w, I_o) - heterogeneous across regions.\n&quot;, &quot;loss&quot;: {&quot;function&quot;: &quot;rmse&quot;, &quot;arguments&quot;: [{&quot;name&quot;: &quot;simulated_fc&quot;, &quot;value&quot;: &quot;observations.fc.data&quot;, &quot;description&quot;: &quot;Simulated functional connectivity matrix from fc observation&quot;}, {&quot;name&quot;: &quot;empirical_fc&quot;, &quot;value&quot;: &quot;observations.empirical_fc.data&quot;, &quot;description&quot;: &quot;Empirical functional connectivity matrix (target, passed at runtime)&quot;}]}, &quot;stages&quot;: [{&quot;name&quot;: &quot;global_optimization&quot;, &quot;label&quot;: &quot;Global Parameter Optimization&quot;, &quot;description&quot;: &quot;Optimize global w and G (same value for all regions)&quot;, &quot;free_parameters&quot;: [&quot;ReducedWongWang.w&quot;, &quot;FastLinearCoupling.G&quot;], &quot;algorithm&quot;: &quot;adam&quot;, &quot;learning_rate&quot;: 0.01, &quot;max_iterations&quot;: 300, &quot;hyperparameters&quot;: [{&quot;name&quot;: &quot;b2&quot;, &quot;value&quot;: 0.9999, &quot;description&quot;: &quot;Second moment decay for Adam&quot;}]}, {&quot;name&quot;: &quot;regional_optimization&quot;, &quot;label&quot;: &quot;Regional Parameter Optimization&quot;, &quot;description&quot;: &quot;Optimize heterogeneous w and I_o per region&quot;, &quot;warmup_from&quot;: &quot;global_optimization&quot;, &quot;free_parameters&quot;: [{&quot;name&quot;: &quot;ReducedWongWang.w&quot;, &quot;heterogeneous&quot;: true, &quot;description&quot;: &quot;Region-specific excitatory recurrence&quot;}, {&quot;name&quot;: &quot;ReducedWongWang.I_o&quot;, &quot;heterogeneous&quot;: true, &quot;description&quot;: &quot;Region-specific external input&quot;}], &quot;algorithm&quot;: &quot;adam&quot;, &quot;learning_rate&quot;: 0.004, &quot;max_iterations&quot;: 200, &quot;hyperparameters&quot;: [{&quot;name&quot;: &quot;b2&quot;, &quot;value&quot;: 0.999, &quot;description&quot;: &quot;Second moment decay for Adam&quot;}]}]}}, &quot;explorations&quot;: {&quot;parameter_landscape&quot;: {&quot;label&quot;: &quot;w-G Parameter Landscape&quot;, &quot;description&quot;: &quot;Grid search over excitatory recurrence (w) and global coupling (G) to understand the FC fitting landscape before optimization.\n&quot;, &quot;parameters&quot;: [{&quot;name&quot;: &quot;ReducedWongWang.w&quot;, &quot;domain&quot;: {&quot;lo&quot;: 0.001, &quot;hi&quot;: 0.7, &quot;n&quot;: 32}}, {&quot;name&quot;: &quot;FastLinearCoupling.G&quot;, &quot;domain&quot;: {&quot;lo&quot;: 0.001, &quot;hi&quot;: 0.7, &quot;n&quot;: 32}}], &quot;mode&quot;: &quot;product&quot;, &quot;observable&quot;: {&quot;function&quot;: &quot;rmse&quot;, &quot;arguments&quot;: [{&quot;name&quot;: &quot;simulated_fc&quot;, &quot;value&quot;: &quot;fc.data&quot;}, {&quot;name&quot;: &quot;empirical_fc&quot;, &quot;value&quot;: &quot;empirical_fc.data&quot;, &quot;description&quot;: &quot;Target FC (passed at runtime)&quot;}]}}}, &quot;execution&quot;: {&quot;n_workers&quot;: 8, &quot;precision&quot;: &quot;float64&quot;, &quot;random_seed&quot;: 0}, &quot;references&quot;: [&quot;Wong &amp; Wang (2006) J Neurosci 26:1314-1328 - Reduced Wong-Wang model&quot;, &quot;Deco et al. (2014) J Neurosci 34:7886-7898 - Resting-state FC modeling&quot;]}</field>
+            <field name="description">Fitting functional connectivity using the Reduced Wong-Wang model. Two-stage optimization: global parameters first, then regional heterogeneity. Based on tvboptim RWW.qmd tutorial.
+</field>
+            <field name="dynamics" eval="[(6, 0, [ref('exp_rww_bold_fc_optimization_dynamics')])]"/>
+            <field name="network" ref="exp_rww_bold_fc_optimization_network"/>
+            <field name="integration" ref="exp_rww_bold_fc_optimization_integrator"/>
+            <field name="functions" eval="[(6, 0, [ref('exp_rww_bold_fc_optimization_func_temporal_average'), ref('exp_rww_bold_fc_optimization_func_hrf_kernel'), ref('exp_rww_bold_fc_optimization_func_prepend_history'), ref('exp_rww_bold_fc_optimization_func_volterra_transform'), ref('exp_rww_bold_fc_optimization_func_subsample_bold'), ref('exp_rww_bold_fc_optimization_func_rmse'), ref('exp_rww_bold_fc_optimization_func_fc_corr')])]"/>
+            <field name="observations" eval="[(6, 0, [ref('exp_rww_bold_fc_optimization_obs_empirical_fc'), ref('exp_rww_bold_fc_optimization_obs_bold')])]"/>
+            <field name="derived_observations" eval="[(6, 0, [ref('exp_rww_bold_fc_optimization_dobs_fc')])]"/>
+            <field name="optimization" eval="[(6, 0, [ref('exp_rww_bold_fc_optimization_opt_fc_fitting')])]"/>
+            <field name="explorations" eval="[(6, 0, [ref('exp_rww_bold_fc_optimization_explr_parameter_landscape')])]"/>
+            <field name="execution" ref="exp_rww_bold_fc_optimization_execution"/>
+            <field name="references">- Wong &amp; Wang (2006) J Neurosci 26:1314-1328 - Reduced Wong-Wang model
+- Deco et al. (2014) J Neurosci 34:7886-7898 - Resting-state FC modeling</field>
+        </record>
+
+        <record id="exp_rateml_reducedwongwang_network" model="tvbo.network">
+        </record>
+
+        <record id="exp_rateml_reducedwongwang_integrator" model="tvbo.integrator">
+            <field name="method">euler</field>
+            <field name="step_size">0.1</field>
+            <field name="duration">1000.0</field>
+        </record>
+
+        <record id="exp_rateml_reducedwongwang_obs_bold" model="tvbo.observation">
+            <field name="name">bold</field>
+            <field name="description">BOLD fMRI observation using BalloonWindkessel dynamics</field>
         </record>
 
         <record id="experiment_rateml_reducedwongwang" model="tvbo.simulation_experiment">
-            <field name="name">RateML_ReducedWongWang</field>
             <field name="label">RateML rwongwang ground truth</field>
-            <field name="specification">{&quot;id&quot;: 1, &quot;label&quot;: &quot;RateML rwongwang ground truth&quot;, &quot;coupling&quot;: {&quot;name&quot;: &quot;LinearCoupling&quot;, &quot;parameters&quot;: {}, &quot;incoming_states&quot;: [&quot;V&quot;], &quot;pre_expression&quot;: {&quot;rhs&quot;: &quot;V_j&quot;}, &quot;post_expression&quot;: {&quot;rhs&quot;: &quot;1&quot;}}, &quot;network&quot;: {&quot;number_of_regions&quot;: 4}, &quot;integration&quot;: {&quot;method&quot;: &quot;euler&quot;, &quot;step_size&quot;: 0.1, &quot;duration&quot;: 1000.0}, &quot;dynamics&quot;: {&quot;rwongwang&quot;: {&quot;system_type&quot;: &quot;continuous&quot;, &quot;parameters&quot;: {&quot;a_E&quot;: {&quot;value&quot;: 310.0, &quot;description&quot;: &quot;[n/C]. Excitatory population input gain parameter&quot;}, &quot;b_E&quot;: {&quot;value&quot;: 125.0, &quot;description&quot;: &quot;[Hz]. Excitatory population input shift parameter&quot;}, &quot;d_E&quot;: {&quot;value&quot;: 0.16, &quot;description&quot;: &quot;[s]. Excitatory population input scaling parameter&quot;}, &quot;a_I&quot;: {&quot;value&quot;: 615.0, &quot;description&quot;: &quot;[n/C]. Inhibitory population input gain parameter&quot;}, &quot;b_I&quot;: {&quot;value&quot;: 177.0, &quot;description&quot;: &quot;[Hz]. Inhibitory population input shift parameter&quot;}, &quot;d_I&quot;: {&quot;value&quot;: 0.087, &quot;description&quot;: &quot;[s]. Inhibitory population input scaling parameter&quot;}, &quot;gamma_E&quot;: {&quot;value&quot;: 0.000641, &quot;description&quot;: &quot;Excitatory population kinetic parameter&quot;}, &quot;tau_E&quot;: {&quot;value&quot;: 100.0, &quot;description&quot;: &quot;[ms]. Excitatory population NMDA decay time constant&quot;}, &quot;w_plus&quot;: {&quot;value&quot;: 1.4, &quot;description&quot;: &quot;Excitatory population recurrence weight&quot;}, &quot;w_E&quot;: {&quot;value&quot;: 1.0, &quot;description&quot;: &quot;Excitatory population external input scaling weight&quot;}, &quot;gamma_I&quot;: {&quot;value&quot;: 0.001, &quot;description&quot;: &quot;Inhibitory population kinetic parameter&quot;}, &quot;tau_I&quot;: {&quot;value&quot;: 10.0, &quot;description&quot;: &quot;[ms]. Inhibitory population NMDA decay time constant&quot;}, &quot;w_I&quot;: {&quot;value&quot;: 0.7, &quot;description&quot;: &quot;Inhibitory population external input scaling weight&quot;}, &quot;I_0&quot;: {&quot;value&quot;: 0.382, &quot;description&quot;: &quot;[nA]. Effective external input&quot;}, &quot;J_NMDA&quot;: {&quot;value&quot;: 0.15, &quot;description&quot;: &quot;NMDA synaptic coupling&quot;}, &quot;JI&quot;: {&quot;value&quot;: 1.0, &quot;description&quot;: &quot;Inhibitory synaptic coupling&quot;}}, &quot;derived_variables&quot;: {&quot;tmp_I_E&quot;: {&quot;equation&quot;: {&quot;rhs&quot;: &quot;a_E * ((w_E * I_0) + (w_plus * J_NMDA) * V + c_pop0 - JI*W) - b_E&quot;}}, &quot;tmp_H_E&quot;: {&quot;equation&quot;: {&quot;rhs&quot;: &quot;tmp_I_E / (1.0 - exp((-1.0 * d_E) * tmp_I_E))&quot;}}, &quot;tmp_I_I&quot;: {&quot;equation&quot;: {&quot;rhs&quot;: &quot;(a_I * (((w_I * I_0) + (J_NMDA * V)) - W)) - b_I&quot;}}, &quot;tmp_H_I&quot;: {&quot;equation&quot;: {&quot;rhs&quot;: &quot;tmp_I_I / (1.0 - exp((-1.0 * d_I) * tmp_I_I))&quot;}}}, &quot;state_variables&quot;: {&quot;V&quot;: {&quot;initial_value&quot;: 0.998307465821013, &quot;boundaries&quot;: {&quot;lo&quot;: 0.0, &quot;hi&quot;: 1.0}, &quot;equation&quot;: {&quot;rhs&quot;: &quot;((-1.0 / tau_E) * V) + (tmp_H_E * (1 - V) * gamma_E)&quot;}, &quot;variable_of_interest&quot;: true, &quot;coupling_variable&quot;: true}, &quot;W&quot;: {&quot;initial_value&quot;: 0.12069886682928, &quot;boundaries&quot;: {&quot;lo&quot;: 0.0, &quot;hi&quot;: 1.0}, &quot;equation&quot;: {&quot;rhs&quot;: &quot;((-1.0 / tau_I) * W) + (tmp_H_I * gamma_I)&quot;}, &quot;variable_of_interest&quot;: true, &quot;coupling_variable&quot;: false}}, &quot;coupling_terms&quot;: {&quot;c_pop0&quot;: {}}}, &quot;BalloonWindkessel&quot;: {&quot;name&quot;: &quot;BalloonWindkessel&quot;, &quot;description&quot;: &quot;Balloon-Windkessel hemodynamic model for BOLD fMRI&quot;, &quot;system_type&quot;: &quot;continuous&quot;, &quot;parameters&quot;: {&quot;tau_s&quot;: {&quot;value&quot;: 0.65, &quot;description&quot;: &quot;Signal decay time constant [s]&quot;}, &quot;tau_f&quot;: {&quot;value&quot;: 0.41, &quot;description&quot;: &quot;Feedback time constant [s]&quot;}, &quot;tau_o&quot;: {&quot;value&quot;: 0.98, &quot;description&quot;: &quot;Volume time constant [s]&quot;}, &quot;alpha&quot;: {&quot;value&quot;: 0.32, &quot;description&quot;: &quot;Grubb exponent (stiffness)&quot;}, &quot;TE&quot;: {&quot;value&quot;: 0.04, &quot;description&quot;: &quot;Echo time [s]&quot;}, &quot;V0&quot;: {&quot;value&quot;: 4.0, &quot;description&quot;: &quot;Resting blood volume fraction&quot;}, &quot;E0&quot;: {&quot;value&quot;: 0.4, &quot;description&quot;: &quot;Resting oxygen extraction fraction&quot;}, &quot;epsilon&quot;: {&quot;value&quot;: 0.5, &quot;description&quot;: &quot;Ratio of intra- to extra-vascular signal&quot;}, &quot;nu_0&quot;: {&quot;value&quot;: 40.3, &quot;description&quot;: &quot;Frequency offset [Hz]&quot;}, &quot;r_0&quot;: {&quot;value&quot;: 25.0, &quot;description&quot;: &quot;Slope of intravascular relaxation rate [Hz]&quot;}}, &quot;derived_parameters&quot;: {&quot;recip_tau_s&quot;: {&quot;equation&quot;: {&quot;rhs&quot;: &quot;1.0 / tau_s&quot;}}, &quot;recip_tau_f&quot;: {&quot;equation&quot;: {&quot;rhs&quot;: &quot;1.0 / tau_f&quot;}}, &quot;recip_tau_o&quot;: {&quot;equation&quot;: {&quot;rhs&quot;: &quot;1.0 / tau_o&quot;}}, &quot;recip_alpha&quot;: {&quot;equation&quot;: {&quot;rhs&quot;: &quot;1.0 / alpha&quot;}}, &quot;recip_E0&quot;: {&quot;equation&quot;: {&quot;rhs&quot;: &quot;1.0 / E0&quot;}}, &quot;k1&quot;: {&quot;equation&quot;: {&quot;rhs&quot;: &quot;4.3 * nu_0 * E0 * TE&quot;}}, &quot;k2&quot;: {&quot;equation&quot;: {&quot;rhs&quot;: &quot;epsilon * r_0 * E0 * TE&quot;}}, &quot;k3&quot;: {&quot;equation&quot;: {&quot;rhs&quot;: &quot;1.0 - epsilon&quot;}}}, &quot;state_variables&quot;: {&quot;s&quot;: {&quot;initial_value&quot;: 0.0, &quot;equation&quot;: {&quot;rhs&quot;: &quot;x - recip_tau_s * s - recip_tau_f * (f - 1.0)&quot;}, &quot;description&quot;: &quot;Vasodilatory signal&quot;}, &quot;f&quot;: {&quot;initial_value&quot;: 1.0, &quot;equation&quot;: {&quot;rhs&quot;: &quot;s&quot;}, &quot;description&quot;: &quot;Blood inflow&quot;}, &quot;v&quot;: {&quot;initial_value&quot;: 1.0, &quot;equation&quot;: {&quot;rhs&quot;: &quot;recip_tau_o * (f - pow(v, recip_alpha))&quot;}, &quot;description&quot;: &quot;Blood volume&quot;}, &quot;q&quot;: {&quot;initial_value&quot;: 1.0, &quot;equation&quot;: {&quot;rhs&quot;: &quot;recip_tau_o * (f * (1.0 - pow(1.0 - E0, 1.0 / f)) * recip_E0 - pow(v, recip_alpha) * (q / v))&quot;}, &quot;description&quot;: &quot;Deoxyhemoglobin content&quot;}}, &quot;derived_variables&quot;: {&quot;bold_signal&quot;: {&quot;equation&quot;: {&quot;rhs&quot;: &quot;V0 * (k1 * (1.0 - q) + k2 * (1.0 - q / v) + k3 * (1.0 - v))&quot;}, &quot;description&quot;: &quot;BOLD signal output&quot;}}}}, &quot;observations&quot;: {&quot;bold&quot;: {&quot;name&quot;: &quot;bold&quot;, &quot;imaging_modality&quot;: &quot;BOLD&quot;, &quot;voi&quot;: 0, &quot;description&quot;: &quot;BOLD fMRI observation using BalloonWindkessel dynamics&quot;}}}</field>
+            <field name="network" ref="exp_rateml_reducedwongwang_network"/>
+            <field name="integration" ref="exp_rateml_reducedwongwang_integrator"/>
+            <field name="observations" eval="[(6, 0, [ref('exp_rateml_reducedwongwang_obs_bold')])]"/>
         </record>
 
     </data>

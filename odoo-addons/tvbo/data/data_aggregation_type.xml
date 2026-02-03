@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+
+        <record id="aggregation_type_mean" model="tvbo.aggregation_type">
+            <field name="name">Mean</field>
+            <field name="technical_name">mean</field>
+            <field name="description">Average over time</field>
+        </record>
+
+        <record id="aggregation_type_last" model="tvbo.aggregation_type">
+            <field name="name">Last</field>
+            <field name="technical_name">last</field>
+            <field name="description">Last value in window</field>
+        </record>
+
+        <record id="aggregation_type_first" model="tvbo.aggregation_type">
+            <field name="name">First</field>
+            <field name="technical_name">first</field>
+            <field name="description">First value in window</field>
+        </record>
+
+        <record id="aggregation_type_window" model="tvbo.aggregation_type">
+            <field name="name">Window</field>
+            <field name="technical_name">window</field>
+            <field name="description">Sliding window aggregation</field>
+        </record>
+
+        <record id="aggregation_type_none" model="tvbo.aggregation_type">
+            <field name="name">None</field>
+            <field name="technical_name">none</field>
+            <field name="description">No aggregation</field>
+        </record>
+
+    </data>
+</odoo>

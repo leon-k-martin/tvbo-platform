@@ -30,8 +30,10 @@ services:
 
   odoo:
     build:
-      context: /Users/leonmartin_bih
-      dockerfile: projects/TVB-O/tvb-o-platform/Dockerfile.odoo
+      context: .
+      dockerfile: Dockerfile.odoo
+      additional_contexts:
+        tvbo: /Users/leonmartin_bih/tools/tvbo
     platform: linux/amd64
     container_name: tvbo-odoo
     depends_on:
@@ -42,6 +44,7 @@ services:
       - USER=odoo
       - PASSWORD=odoo
       - TVBO_TEMPDIR=/tmp/tvbo
+      - TVBO_UPGRADE=${TVBO_UPGRADE:-0}
     ports:
       - "8169:8069"
     volumes:

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+
+        <record id="reduction_type_mean" model="tvbo.reduction_type">
+            <field name="name">Mean</field>
+            <field name="technical_name">mean</field>
+            <field name="description">Arithmetic mean</field>
+        </record>
+
+        <record id="reduction_type_sum" model="tvbo.reduction_type">
+            <field name="name">Sum</field>
+            <field name="technical_name">sum</field>
+            <field name="description">Sum of values</field>
+        </record>
+
+        <record id="reduction_type_max" model="tvbo.reduction_type">
+            <field name="name">Max</field>
+            <field name="technical_name">max</field>
+            <field name="description">Maximum value</field>
+        </record>
+
+        <record id="reduction_type_min" model="tvbo.reduction_type">
+            <field name="name">Min</field>
+            <field name="technical_name">min</field>
+            <field name="description">Minimum value</field>
+        </record>
+
+        <record id="reduction_type_none" model="tvbo.reduction_type">
+            <field name="name">None</field>
+            <field name="technical_name">none</field>
+            <field name="description">No reduction (return per-element values)</field>
+        </record>
+
+    </data>
+</odoo>

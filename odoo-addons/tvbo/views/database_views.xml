@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Neural Mass Models Views -->
-    <record id="view_neural_mass_model_list" model="ir.ui.view">
-        <field name="name">tvbo.neural_mass_model.list</field>
-        <field name="model">tvbo.neural_mass_model</field>
+    <!-- Dynamics Views -->
+    <record id="view_dynamics_list" model="ir.ui.view">
+        <field name="name">tvbo.dynamics.list</field>
+        <field name="model">tvbo.dynamics</field>
         <field name="arch" type="xml">
-            <list string="Neural Mass Models">
+            <list string="Dynamics">
                 <field name="name"/>
                 <field name="label"/>
                 <field name="number_of_modes"/>
@@ -13,11 +13,11 @@
         </field>
     </record>
 
-    <record id="view_neural_mass_model_form" model="ir.ui.view">
-        <field name="name">tvbo.neural_mass_model.form</field>
-        <field name="model">tvbo.neural_mass_model</field>
+    <record id="view_dynamics_form" model="ir.ui.view">
+        <field name="name">tvbo.dynamics.form</field>
+        <field name="model">tvbo.dynamics</field>
         <field name="arch" type="xml">
-            <form string="Neural Mass Models">
+            <form string="Dynamics">
                 <sheet>
                     <group>
                         <field name="name"/>
@@ -38,15 +38,19 @@
                         <field name="references"/>
                         <field name="iri"/>
                         <field name="has_reference"/>
+                        <field name="is_modified"/>
+                        <field name="output"/>
+                        <field name="derived_from_model"/>
+                        <field name="local_coupling_term"/>
                     </group>
                 </sheet>
             </form>
         </field>
     </record>
 
-    <record id="action_neural_mass_model_list" model="ir.actions.act_window">
-        <field name="name">Neural Mass Models</field>
-        <field name="res_model">tvbo.neural_mass_model</field>
+    <record id="action_dynamics_list" model="ir.actions.act_window">
+        <field name="name">Dynamics</field>
+        <field name="res_model">tvbo.dynamics</field>
         <field name="view_mode">list,form</field>
     </record>
 
@@ -128,12 +132,15 @@
                         <field name="nodes"/>
                         <field name="edges"/>
                         <field name="coupling"/>
-                        <field name="weights"/>
-                        <field name="lengths"/>
                         <field name="normalization"/>
-                        <field name="node_labels"/>
                         <field name="global_coupling_strength"/>
                         <field name="conduction_speed"/>
+                        <field name="bids_dir"/>
+                        <field name="structural_measures"/>
+                        <field name="observational_measures"/>
+                        <field name="distance_unit"/>
+                        <field name="time_unit"/>
+                        <field name="edge_matrix_files"/>
                     </group>
                 </sheet>
             </form>
@@ -381,11 +388,16 @@
                         <field name="connectivity"/>
                         <field name="network"/>
                         <field name="coupling"/>
-                        <field name="monitors"/>
+                        <field name="observations"/>
+                        <field name="derived_observations"/>
+                        <field name="functions"/>
                         <field name="stimulation"/>
                         <field name="field_dynamics"/>
-                        <field name="modelfitting"/>
+                        <field name="optimization"/>
+                        <field name="explorations"/>
+                        <field name="algorithms"/>
                         <field name="environment"/>
+                        <field name="execution"/>
                         <field name="software"/>
                         <field name="additional_equations"/>
                         <field name="references"/>
@@ -401,12 +413,12 @@
         <field name="view_mode">list,form</field>
     </record>
 
-    <!-- Monitors Views -->
-    <record id="view_monitor_list" model="ir.ui.view">
-        <field name="name">tvbo.monitor.list</field>
-        <field name="model">tvbo.monitor</field>
+    <!-- Observations Views -->
+    <record id="view_observation_list" model="ir.ui.view">
+        <field name="name">tvbo.observation.list</field>
+        <field name="model">tvbo.observation</field>
         <field name="arch" type="xml">
-            <list string="Monitors">
+            <list string="Observations">
                 <field name="name"/>
                 <field name="label"/>
                 <field name="period"/>
@@ -414,11 +426,11 @@
         </field>
     </record>
 
-    <record id="view_monitor_form" model="ir.ui.view">
-        <field name="name">tvbo.monitor.form</field>
-        <field name="model">tvbo.monitor</field>
+    <record id="view_observation_form" model="ir.ui.view">
+        <field name="name">tvbo.observation.form</field>
+        <field name="model">tvbo.observation</field>
         <field name="arch" type="xml">
-            <form string="Monitors">
+            <form string="Observations">
                 <sheet>
                     <group>
                         <field name="name"/>
@@ -431,69 +443,21 @@
                         <field name="environment"/>
                         <field name="period"/>
                         <field name="imaging_modality"/>
-                    </group>
-                </sheet>
-            </form>
-        </field>
-    </record>
-
-    <record id="action_monitor_list" model="ir.actions.act_window">
-        <field name="name">Monitors</field>
-        <field name="res_model">tvbo.monitor</field>
-        <field name="view_mode">list,form</field>
-    </record>
-
-    <!-- Dynamics Views -->
-    <record id="view_dynamics_list" model="ir.ui.view">
-        <field name="name">tvbo.dynamics.list</field>
-        <field name="model">tvbo.dynamics</field>
-        <field name="arch" type="xml">
-            <list string="Dynamics">
-                <field name="name"/>
-                <field name="label"/>
-                <field name="number_of_modes"/>
-            </list>
-        </field>
-    </record>
-
-    <record id="view_dynamics_form" model="ir.ui.view">
-        <field name="name">tvbo.dynamics.form</field>
-        <field name="model">tvbo.dynamics</field>
-        <field name="arch" type="xml">
-            <form string="Dynamics">
-                <sheet>
-                    <group>
-                        <field name="name"/>
-                        <field name="label"/>
-                        <field name="description"/>
-                        <field name="number_of_modes"/>
-                        <field name="parameters"/>
-                        <field name="state_variables"/>
-                        <field name="derived_parameters"/>
-                        <field name="derived_variables"/>
-                        <field name="coupling_inputs"/>
-                        <field name="coupling_terms"/>
-                        <field name="system_type"/>
-                        <field name="functions"/>
-                        <field name="stimulus"/>
-                        <field name="modes"/>
                         <field name="source"/>
-                        <field name="references"/>
-                        <field name="iri"/>
-                        <field name="has_reference"/>
-                        <field name="is_modified"/>
-                        <field name="output"/>
-                        <field name="derived_from_model"/>
-                        <field name="local_coupling_term"/>
+                        <field name="downsample_period"/>
+                        <field name="voi"/>
+                        <field name="warmup_source"/>
+                        <field name="data_source"/>
+                        <field name="skip_t"/>
                     </group>
                 </sheet>
             </form>
         </field>
     </record>
 
-    <record id="action_dynamics_list" model="ir.actions.act_window">
-        <field name="name">Dynamics</field>
-        <field name="res_model">tvbo.dynamics</field>
+    <record id="action_observation_list" model="ir.actions.act_window">
+        <field name="name">Observations</field>
+        <field name="res_model">tvbo.observation</field>
         <field name="view_mode">list,form</field>
     </record>
 

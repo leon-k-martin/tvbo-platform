@@ -8,6 +8,12 @@ DB_NAME=${DB_NAME:-tvbo}
 
 export PGPASSWORD="$DB_PASSWORD"
 
+# Install tvbo from mounted volume if available
+if [ -d "/tmp/tvbo" ] && [ -f "/tmp/tvbo/pyproject.toml" ]; then
+  echo "Installing tvbo from /tmp/tvbo..."
+  pip3 install --break-system-packages --ignore-installed typing-extensions -e /tmp/tvbo
+fi
+
 # Wait for PostgreSQL to be ready (explicitly hit the default "postgres" DB so we don't fail when the target DB is missing)
 until pg_isready -h "$DB_HOST" -U "$DB_USER" -d postgres > /dev/null 2>&1; do
   echo "Waiting for PostgreSQL at $DB_HOST..."
@@ -18,8 +24,14 @@ echo "PostgreSQL is ready!"
 
 # Check if database exists
 if psql -h "$DB_HOST" -U "$DB_USER" -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname='${DB_NAME}'" | grep -q 1; then
-  echo "Database exists, upgrading TVBO module..."
-  odoo -d "$DB_NAME" -u tvbo --stop-after-init --without-demo=True --db_host="$DB_HOST" --db_user="$DB_USER" --db_password="$DB_PASSWORD"
+  echo "Database exists."
+  # Only upgrade if explicitly requested via TVBO_UPGRADE=1
+  if [ "${TVBO_UPGRADE:-0}" = "1" ]; then
+    echo "Upgrading TVBO module (TVBO_UPGRADE=1)..."
+    odoo -d "$DB_NAME" -u tvbo --stop-after-init --without-demo=True --db_host="$DB_HOST" --db_user="$DB_USER" --db_password="$DB_PASSWORD"
+  else
+    echo "Skipping upgrade (set TVBO_UPGRADE=1 to force upgrade)"
+  fi
 else
   echo "Creating database and installing base modules..."
   odoo -d "$DB_NAME" -i base,website --stop-after-init --without-demo=True --db_host="$DB_HOST" --db_user="$DB_USER" --db_password="$DB_PASSWORD"

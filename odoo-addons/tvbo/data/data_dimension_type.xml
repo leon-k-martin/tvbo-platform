@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+
+        <record id="dimension_type_time" model="tvbo.dimension_type">
+            <field name="name">Time</field>
+            <field name="technical_name">time</field>
+            <field name="description">Temporal dimension</field>
+        </record>
+
+        <record id="dimension_type_state" model="tvbo.dimension_type">
+            <field name="name">State</field>
+            <field name="technical_name">state</field>
+            <field name="description">State variable dimension</field>
+        </record>
+
+        <record id="dimension_type_node" model="tvbo.dimension_type">
+            <field name="name">Node</field>
+            <field name="technical_name">node</field>
+            <field name="description">Network node dimension (general graph term)</field>
+        </record>
+
+        <record id="dimension_type_region" model="tvbo.dimension_type">
+            <field name="name">Region</field>
+            <field name="technical_name">region</field>
+            <field name="description">Spatial/regional dimension (alias for node in brain networks)</field>
+        </record>
+
+        <record id="dimension_type_mode" model="tvbo.dimension_type">
+            <field name="name">Mode</field>
+            <field name="technical_name">mode</field>
+            <field name="description">Mode dimension (e.g., coupling modes)</field>
+        </record>
+
+        <record id="dimension_type_sample" model="tvbo.dimension_type">
+            <field name="name">Sample</field>
+            <field name="technical_name">sample</field>
+            <field name="description">Sample/trial/realization dimension</field>
+        </record>
+
+        <record id="dimension_type_batch" model="tvbo.dimension_type">
+            <field name="name">Batch</field>
+            <field name="technical_name">batch</field>
+            <field name="description">Batch dimension (for parallel processing)</field>
+        </record>
+
+        <record id="dimension_type_frequency" model="tvbo.dimension_type">
+            <field name="name">Frequency</field>
+            <field name="technical_name">frequency</field>
+            <field name="description">Frequency dimension (spectral analysis)</field>
+        </record>
+
+    </data>
+</odoo>

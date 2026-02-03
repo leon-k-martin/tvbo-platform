@@ -176,8 +176,8 @@ def generate_database_views(
     # Models we want to create views for with their known fields
     # Only include fields that definitely exist in the Odoo models
     target_models = {
-        "neural_mass_model": {
-            "display_name": "Neural Mass Models",
+        "dynamics": {
+            "display_name": "Dynamics Models",
             "list_fields": ["name", "label", "number_of_modes"],
             "form_fields": [
                 "name", "label", "description", "number_of_modes",
@@ -204,8 +204,9 @@ def generate_database_views(
             "form_fields": [
                 "label", "description", "number_of_regions", "number_of_nodes",
                 "tractogram", "parcellation", "nodes", "edges", "coupling",
-                "weights", "lengths", "normalization", "node_labels",
-                "global_coupling_strength", "conduction_speed"
+                "normalization", "global_coupling_strength", "conduction_speed",
+                "bids_dir", "structural_measures", "observational_measures",
+                "distance_unit", "time_unit", "edge_matrix_files"
             ],
         },
         "simulation_study": {
@@ -259,18 +260,22 @@ def generate_database_views(
                 "label", "description", "record_id",
                 "model", "local_dynamics", "dynamics",
                 "integration", "connectivity", "network", "coupling",
-                "monitors", "stimulation", "field_dynamics",
-                "modelfitting", "environment", "software",
+                "observations", "derived_observations", "functions",
+                "stimulation", "field_dynamics",
+                "optimization", "explorations", "algorithms",
+                "environment", "execution", "software",
                 "additional_equations", "references"
             ],
         },
-        "monitor": {
-            "display_name": "Monitors",
+        "observation": {
+            "display_name": "Observations",
             "list_fields": ["name", "label", "period"],
             "form_fields": [
                 "name", "label", "acronym", "description",
                 "time_scale", "parameters", "equation",
-                "environment", "period", "imaging_modality"
+                "environment", "period", "imaging_modality",
+                "source", "downsample_period", "voi",
+                "warmup_source", "data_source", "skip_t"
             ],
         },
         "dynamics": {
@@ -441,16 +446,22 @@ def generate_field_definition(
         attr_name = RESERVED_FIELD_NAMES[attr_name]
 
     # Check if this is a special field
+
     if original_name in SPECIAL_FIELDS:
         field_type, options = SPECIAL_FIELDS[original_name]
     else:
         linkml_range = attr_def.get("range", "string")
         is_multivalued = attr_def.get("multivalued", False)
 
+        # Determine if this is a reference to another class (not a primitive type)
+        # If range is not in TYPE_MAPPING, it's a class reference
+        is_class_reference = linkml_range not in TYPE_MAPPING
+        range_class = linkml_range if is_class_reference else None
+
         field_type, options = get_odoo_field_type(
             linkml_range,
             is_multivalued,
-            linkml_range if linkml_range not in TYPE_MAPPING else None,
+            range_class,
         )
 
         # For Many2many fields, add unique relation table name
@@ -540,10 +551,19 @@ def generate_model_class(
 
     model_name = camel_to_snake(class_name)
 
+    # Escape description for use in single-quoted string
+    description = class_def.get('description', class_name)
+    if description:
+        # Replace newlines and escape single quotes
+        description = description.replace('\n', ' ').replace("'", "\\'").strip()
+        # Truncate if too long (Odoo has limits)
+        if len(description) > 200:
+            description = description[:197] + '...'
+
     lines = [
         f"class {class_name}(models.Model):",
         f"    _name = 'tvbo.{model_name}'",
-        f"    _description = '{class_def.get('description', class_name)}'",
+        f"    _description = '{description}'",
         "",
     ]
 
@@ -721,11 +741,23 @@ def generate_odoo_module(schema_path: Path, output_dir: Path):
 
 def main():
     """Main entry point."""
-    # Resolve repository root (two levels above this script: platform/scripts -> platform -> repo)
-    project_root = Path(__file__).resolve().parents[2]
-    schema_dir = project_root / "schema"
-    # Odoo module lives under platform/odoo-addons
-    output_dir = project_root / "platform" / "odoo-addons"
+    import os
+
+    # Resolve paths relative to this script
+    script_dir = Path(__file__).resolve().parent
+    platform_root = script_dir.parent  # tvb-o-platform
+
+    # TVBO schema location - can be overridden by TVBO_REPO environment variable
+    tvbo_repo = Path(os.environ.get("TVBO_REPO", Path.home() / "tools" / "tvbo"))
+    schema_dir = tvbo_repo / "schema"
+
+    if not schema_dir.exists():
+        print(f"ERROR: Schema directory not found: {schema_dir}")
+        print("Set TVBO_REPO environment variable to the tvbo repository path")
+        return
+
+    # Odoo module lives under tvb-o-platform/odoo-addons
+    output_dir = platform_root / "odoo-addons"
 
     output_dir.mkdir(exist_ok=True)
 
@@ -884,6 +916,7 @@ def main():
         "database_networks.xml",
         "database_studies.xml",
         "database_coupling_functions.xml",
+        "database_experiments.xml",
     ]:
         if (module_dir / "data" / db_file).exists():
             database_files.append(f"data/{db_file}")

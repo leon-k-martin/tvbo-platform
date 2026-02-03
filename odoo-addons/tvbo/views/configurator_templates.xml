@@ -7,7 +7,7 @@
                     <!-- Load required JavaScript files -->
                     <script src="/tvbo/static/src/js/network_graph_3d.js"></script>
                     <script src="/tvbo/static/src/js/experiment_builder.js"></script>
-                    
+
                     <div class="container-fluid" style="max-width: 1400px; margin: 0 auto; padding: 20px;">
                         <div class="header" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #e5e7eb;">
                             <h1 style="margin: 0; color: #1f2937; font-size: 2rem;">Simulation Experiment Configurator</h1>
@@ -132,7 +132,7 @@
                             <div class="tab-pane fade show active" id="general-panel" role="tabpanel" style="grid-column: 1; grid-row: 1 / 3;">
                                 <div style="background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                                     <h5 class="mb-3" style="color: #1f2937;">General Configuration</h5>
-                                    
+
                                     <!-- Load Existing Experiment -->
                                     <div class="row g-3 mb-4">
                                         <div class="col-12">
@@ -141,21 +141,20 @@
                                                     <label class="form-label fw-bold mb-2">
                                                         <i class="fa fa-folder-open me-2"></i>Load Existing Experiment
                                                     </label>
-                                                    <select id="loadExistingExperiment" class="form-select">
-                                                        <option value="">— Start from scratch —</option>
-                                                        <t t-foreach="experiments" t-as="exp">
-                                                            <option t-att-value="exp['id']" t-att-data-spec="exp['specification']">
-                                                                <t t-esc="exp['name']"/> 
-                                                                <t t-if="exp['label']">(<t t-esc="exp['label']"/>)</t>
-                                                            </option>
-                                                        </t>
-                                                    </select>
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <select id="loadExistingExperiment" class="form-select">
+                                                            <option value="">— Start from scratch —</option>
+                                                        </select>
+                                                        <div id="experimentLoadingSpinner" class="spinner-border spinner-border-sm text-primary" role="status" style="display: none;">
+                                                            <span class="visually-hidden">Loading...</span>
+                                                        </div>
+                                                    </div>
                                                     <small class="text-muted mt-1 d-block">Select an existing experiment to load its configuration and continue editing.</small>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                    
+
                                     <div class="row g-3">
                                         <div class="col-md-6">
                                             <label class="form-label fw-bold">Experiment Name</label>
@@ -589,7 +588,6 @@
                 <script type="text/javascript">
                     console.log('[DEBUG] network_graph_3d.js loaded, NetworkGraph3D:', typeof window.NetworkGraph3D);
                 </script>
-                <script type="text/javascript" src="/tvbo/static/src/js/model_builder.js?v=19"></script>
 
                 <script type="text/javascript">
                     console.log('[DEBUG] All scripts loaded, checking THREE:', typeof THREE);
@@ -598,16 +596,83 @@
                 </script>
 
                 <script type="text/javascript">
-                    // Make models data available globally
-                    window.searchData = <t t-out="models_json"/>;
-                    window.integratorsData = <t t-out="integrators_json"/>;
-                    window.couplingsData = <t t-out="couplings_json"/>;
-                    window.monitorsData = <t t-out="monitors_json"/>;
-                    window.networksData = <t t-out="networks_json"/>;
-                    window.tractogramsData = <t t-out="tractograms_json"/>;
-                    window.parcellationsData = <t t-out="parcellations_json"/>;
+                    // Initialize data containers
+                    window.searchData = [];
+                    window.integratorsData = [];
+                    window.couplingsData = [];
+                    window.monitorsData = [];
+                    window.networksData = [];
+                    window.tractogramsData = [];
+                    window.parcellationsData = [];
+                    window.experimentsData = [];
 
-                        // Initialize the configurator
+                    // Fetch all configurator data from API endpoints
+                    async function loadConfiguratorData() {
+                        try {
+                            const [dynamics, integrators, couplings, monitors, networks, experiments] = await Promise.all([
+                                fetch('/tvbo/api/configurator/dynamics').then(r => r.json()),
+                                fetch('/tvbo/api/configurator/integrators').then(r => r.json()),
+                                fetch('/tvbo/api/configurator/couplings').then(r => r.json()),
+                                fetch('/tvbo/api/configurator/monitors').then(r => r.json()),
+                                fetch('/tvbo/api/configurator/networks').then(r => r.json()),
+                                fetch('/tvbo/api/configurator/experiments').then(r => r.json()),
+                            ]);
+
+                            if (dynamics.success) window.searchData = dynamics.data;
+                            if (integrators.success) window.integratorsData = integrators.data;
+                            if (couplings.success) window.couplingsData = couplings.data;
+                            if (monitors.success) window.monitorsData = monitors.data;
+                            if (networks.success) {
+                                window.networksData = networks.data;
+                                window.tractogramsData = networks.tractograms || [];
+                                window.parcellationsData = networks.parcellations || [];
+                            }
+                            if (experiments.success) {
+                                window.experimentsData = experiments.data;
+                                populateExperimentsDropdown(experiments.data);
+                            }
+
+                            console.log('[Configurator] Data loaded:', {
+                                dynamics: window.searchData.length,
+                                integrators: window.integratorsData.length,
+                                couplings: window.couplingsData.length,
+                                experiments: window.experimentsData.length
+                            });
+
+                            // Initialize builder after data is loaded
+                            if (window.initializeBuilder) {
+                                window.initializeBuilder();
+                            }
+                        } catch (err) {
+                            console.error('[Configurator] Error loading data:', err);
+                        }
+                    }
+
+                    function populateExperimentsDropdown(experiments) {
+                        const select = document.getElementById('loadExistingExperiment');
+                        if (!select) return;
+
+                        // Clear existing options except the first one
+                        while (select.options.length > 1) {
+                            select.remove(1);
+                        }
+
+                        // Add experiment options
+                        experiments.forEach(exp => {
+                            const option = document.createElement('option');
+                            option.value = exp.id;
+                            option.textContent = exp.label + (exp.model_name ? ` (${exp.model_name})` : '');
+                            option.dataset.description = exp.description || '';
+                            select.appendChild(option);
+                        });
+                    }
+
+                    // Load data when DOM is ready
+                    document.addEventListener('DOMContentLoaded', loadConfiguratorData);
+                </script>
+
+                <script type="text/javascript">
+                    // Initialize the configurator
                     document.addEventListener('DOMContentLoaded', function() {
                         const saveBtn = document.getElementById('saveModelBtn');
                         const copyBtn = document.getElementById('builderCopyPython');
@@ -616,41 +681,81 @@
 
                         // Handle loading existing experiment
                         if (loadExperimentSelect) {
-                            loadExperimentSelect.addEventListener('change', function(e) {
-                                const selectedOption = e.target.selectedOptions[0];
-                                if (!selectedOption || !selectedOption.value) {
-                                    return;
-                                }
-                                
-                                const specJson = selectedOption.getAttribute('data-spec');
-                                if (specJson) {
-                                    try {
-                                        const spec = JSON.parse(specJson);
-                                        console.log('[Configurator] Loading experiment specification:', spec);
-                                        
-                                        // Populate general fields
-                                        if (spec.name) {
-                                            const nameField = document.getElementById('experimentName');
-                                            if (nameField) nameField.value = spec.name;
-                                        }
-                                        if (spec.label) {
-                                            const labelField = document.getElementById('experimentLabel');
-                                            if (labelField) labelField.value = spec.label;
-                                        }
-                                        if (spec.description) {
-                                            const descField = document.getElementById('experimentDescription');
-                                            if (descField) descField.value = spec.description;
-                                        }
-                                        
-                                        // TODO: Populate other tabs with spec data (dynamics, network, etc.)
-                                        // This would require extending the tab initialization functions
-                                        // to accept prefilled data
-                                        
-                                        alert('Experiment loaded! General fields have been populated. Tab-specific data loading will be implemented in future updates.');
-                                    } catch (err) {
-                                        console.error('[Configurator] Error parsing experiment specification:', err);
-                                        alert('Error loading experiment specification.');
+                            loadExperimentSelect.addEventListener('change', async function(e) {
+                                const experimentId = e.target.value;
+                                if (!experimentId) return;
+
+                                const spinner = document.getElementById('experimentLoadingSpinner');
+                                try {
+                                    // Show loading spinner
+                                    if (spinner) spinner.style.display = 'inline-block';
+                                    loadExperimentSelect.disabled = true;
+
+                                    // Fetch full experiment details from API
+                                    const response = await fetch(`/tvbo/api/configurator/experiment/${experimentId}`);
+                                    const result = await response.json();
+
+                                    if (!result.success) {
+                                        console.error('[Configurator] Error loading experiment:', result.error);
+                                        alert('Error loading experiment: ' + result.error);
+                                        return;
                                     }
+
+                                    const exp = result.data;
+                                    console.log('[Configurator] Loading experiment:', exp);
+
+                                    // Populate General tab
+                                    if (exp.name) document.getElementById('experimentName').value = exp.name;
+                                    if (exp.label) document.getElementById('experimentLabel').value = exp.label;
+                                    if (exp.description) document.getElementById('experimentDescription').value = exp.description;
+
+                                    // Populate Dynamics tab - select the model
+                                    if (exp.model &amp;&amp; exp.model.name) {
+                                        const modelSelect = document.getElementById('builderModel');
+                                        if (modelSelect) {
+                                            modelSelect.value = exp.model.name;
+                                            modelSelect.dispatchEvent(new Event('change'));
+                                        }
+                                    }
+
+                                    // Populate Network tab
+                                    if (exp.network) {
+                                        const netLabel = document.getElementById('customNetworkLabel');
+                                        const globalCoupling = document.getElementById('customGlobalCoupling');
+                                        const conductionSpeed = document.getElementById('customConductionSpeed');
+                                        if (netLabel) netLabel.value = exp.network.label || '';
+                                        if (globalCoupling) globalCoupling.value = exp.network.global_coupling || 1.0;
+                                        if (conductionSpeed) conductionSpeed.value = exp.network.conduction_speed || 3.0;
+                                    }
+
+                                    // Populate Integration tab
+                                    if (exp.integration) {
+                                        const integratorSelect = document.getElementById('integratorMethod');
+                                        const stepSize = document.getElementById('integratorStepSize');
+                                        const duration = document.getElementById('integratorDuration');
+                                        if (integratorSelect) integratorSelect.value = exp.integration.method || '';
+                                        if (stepSize) stepSize.value = exp.integration.step_size || 0.1;
+                                        if (duration) duration.value = exp.integration.duration || 1000;
+                                    }
+
+                                    // Populate Execution tab
+                                    if (exp.execution) {
+                                        const nWorkers = document.getElementById('executionWorkers');
+                                        const precision = document.getElementById('executionPrecision');
+                                        const randomSeed = document.getElementById('executionSeed');
+                                        if (nWorkers) nWorkers.value = exp.execution.n_workers || 1;
+                                        if (precision) precision.value = exp.execution.precision || 'float32';
+                                        if (randomSeed) randomSeed.value = exp.execution.random_seed || '';
+                                    }
+
+                                    console.log('[Configurator] Experiment loaded successfully');
+                                } catch (err) {
+                                    console.error('[Configurator] Error loading experiment:', err);
+                                    alert('Error loading experiment: ' + err.message);
+                                } finally {
+                                    // Hide loading spinner
+                                    if (spinner) spinner.style.display = 'none';
+                                    loadExperimentSelect.disabled = false;
                                 }
                             });
                         }
@@ -694,6 +799,11 @@
                         });
 
                         // Note: initializeBuilder is now called when dynamics-tab is shown (see experiment_builder.js)
+
+                        // Also initialize immediately so the Dynamics tab works on first page load
+                        if (window.initializeBuilder) {
+                            window.initializeBuilder();
+                        }
 
                         // Copy Python functionality
                         if (copyBtn) {

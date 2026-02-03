@@ -14,7 +14,7 @@ class TVBOWebsite(http.Controller):
     @http.route('/tvbo/models', type='http', auth='public', website=True)
     def models(self, **kw):
         """List all neural models."""
-        models = request.env['tvbo.neural_mass_model'].sudo().search([])
+        models = request.env['tvbo.dynamics'].sudo().search([])
         return request.render('tvbo.tvbo_models_list', {
             'models': models,
         })
@@ -22,7 +22,7 @@ class TVBOWebsite(http.Controller):
     @http.route('/tvbo/model/<int:model_id>', type='http', auth='public', website=True)
     def model_detail(self, model_id, **kw):
         """Show detailed neural model information."""
-        model = request.env['tvbo.neural_mass_model'].sudo().browse(model_id)
+        model = request.env['tvbo.dynamics'].sudo().browse(model_id)
         return request.render('tvbo.tvbo_model_detail', {
             'model': model,
         })

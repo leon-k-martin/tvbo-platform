@@ -2,6 +2,11 @@ FROM odoo:19
 
 USER root
 
+# Set locale to avoid perl warnings
+ENV LANG=C.UTF-8 \
+    LC_ALL=C.UTF-8 \
+    LANGUAGE=C.UTF-8
+
 # Install minimal system dependencies including build tools for tvbo
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -12,18 +17,21 @@ RUN apt-get update && \
         gcc \
         g++ \
         gfortran \
-        make && \
+        make \
+        locales && \
+    echo "en_US.UTF-8 UTF-8" > /etc/locale.gen && \
+    locale-gen && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
 # Copy local tvbo source and install in editable mode
-COPY --chown=odoo:odoo tools/tvbo /tmp/tvbo
+COPY --from=tvbo --chown=odoo:odoo . /tmp/tvbo
 RUN cd /tmp/tvbo && \
     pip3 install --break-system-packages --ignore-installed typing-extensions -e .
 
 # Copy the Odoo addons and config
-COPY projects/TVB-O/tvb-o-platform/odoo-addons /mnt/extra-addons
-COPY projects/TVB-O/tvb-o-platform/odoo-config /etc/odoo
+COPY odoo-addons /mnt/extra-addons
+COPY odoo-config /etc/odoo
 
 USER odoo
 CMD ["odoo"]

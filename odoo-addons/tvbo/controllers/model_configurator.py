@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from odoo import http
 from odoo.http import request
-from markupsafe import Markup
 import json
 import logging
 
@@ -12,276 +11,322 @@ class ModelConfiguratorController(http.Controller):
 
     @http.route('/tvbo/configurator', type='http', auth='public', website=True)
     def model_configurator(self, **kwargs):
-        """Main configurator page - loads existing models for browsing"""
+        """Main configurator page - data is loaded via API endpoints"""
+        return request.render('tvbo.model_configurator_template', {})
+
+    # =========================================================================
+    # Generic API Endpoints for Configurator Data
+    # =========================================================================
+
+    def _json_response(self, data):
+        """Helper to create JSON response"""
+        return request.make_response(
+            json.dumps(data, default=str),
+            headers=[('Content-Type', 'application/json')]
+        )
+
+    def _serialize_records(self, records, fields=None):
+        """Generic serializer using Odoo's read() method"""
+        if not records:
+            return []
+        if fields:
+            return records.read(fields)
+        # Default: read all fields
+        return records.read()
+
+    @http.route('/tvbo/api/configurator/experiments', type='http', auth='public', methods=['GET'], csrf=False)
+    def api_experiments(self, **kwargs):
+        """Get all simulation experiments"""
         try:
-            # Fetch all models, integrators, networks, coupling functions for selection
-            models = request.env['tvbo.neural_mass_model'].sudo().search([])
-            integrators = request.env['tvbo.integrator'].sudo().search([])
-            couplings = request.env['tvbo.coupling'].sudo().search([])
-            monitors = request.env['tvbo.monitor'].sudo().search([])
-            networks = request.env['tvbo.network'].sudo().search([])
-            _logger.info(f"Found {len(models)} neural mass models, {len(integrators)} integrators, {len(couplings)} couplings, {len(monitors)} monitors, {len(networks)} networks")
-
-            # Prepare model data for JS
-            model_data = []
-            for model in models:
-                try:
-                    _logger.info(f"Processing model: {model.name}")
-                    model_dict = {
-                        'id': model.id,
-                        'key': model.name,
-                        'title': model.label or model.name,
-                        'name': model.name,
-                        'description': model.description or '',
-                        'type': 'model',
-                        'system_type': model.system_type.technical_name if model.system_type else 'continuous',
-                        'parameters': [],
-                        'derived_parameters': [],
-                        'state_variables': [],
-                        'derived_variables': [],
-                        'output': [],
-                        'functions': [],
-                        'coupling_terms': [],
-                    }
-
-                    # Add parameters
-                    try:
-                        for param in model.parameters:
-                            param_dict = {
-                                'name': param.name,
-                                'value': param.value,
-                                'unit': param.unit or '',
-                                'description': param.description or '',
-                            }
-                            if param.domain:
-                                param_dict['domain'] = {
-                                    'lo': param.domain.lo,
-                                    'hi': param.domain.hi,
-                                    'step': param.domain.step,
-                                }
-                            model_dict['parameters'].append(param_dict)
-                        _logger.info(f"Added {len(model_dict['parameters'])} parameters")
-                    except Exception as e:
-                        _logger.error(f"Error loading parameters for {model.name}: {e}")
-
-                    # Add derived_parameters
-                    try:
-                        if hasattr(model, 'derived_parameters'):
-                            for dparam in model.derived_parameters:
-                                dparam_dict = {
-                                    'name': dparam.name,
-                                    'unit': dparam.unit or '',
-                                    'description': dparam.description or '',
-                                }
-                                if dparam.equation:
-                                    dparam_dict['equation'] = {
-                                        'lhs': dparam.equation.lefthandside or '',
-                                        'rhs': dparam.equation.righthandside or '',
-                                    }
-                                model_dict['derived_parameters'].append(dparam_dict)
-                            _logger.info(f"Added {len(model_dict['derived_parameters'])} derived parameters")
-                    except Exception as e:
-                        _logger.error(f"Error loading derived_parameters for {model.name}: {e}")
-
-                    # Add state variables
-                    try:
-                        for sv in model.state_variables:
-                            sv_dict = {
-                                'name': sv.name,
-                                'description': sv.description or '',
-                                'initial_value': sv.initial_value,
-                            }
-                            if sv.equation:
-                                sv_dict['equation'] = {
-                                    'lhs': sv.equation.lefthandside or '',
-                                    'rhs': sv.equation.righthandside or '',
-                                }
-                            if sv.domain:
-                                sv_dict['domain'] = {
-                                    'lo': sv.domain.lo,
-                                    'hi': sv.domain.hi,
-                                }
-                            model_dict['state_variables'].append(sv_dict)
-                        _logger.info(f"Added {len(model_dict['state_variables'])} state variables")
-                    except Exception as e:
-                        _logger.error(f"Error loading state variables for {model.name}: {e}")
-
-                    # Add derived variables
-                    try:
-                        for dv in model.derived_variables:
-                            dv_dict = {
-                                'name': dv.name,
-                                'description': dv.description or '',
-                            }
-                            if dv.equation:
-                                dv_dict['equation'] = {
-                                    'lhs': dv.equation.lefthandside or '',
-                                    'rhs': dv.equation.righthandside or '',
-                                }
-                            model_dict['derived_variables'].append(dv_dict)
-                    except Exception as e:
-                        _logger.error(f"Error loading derived variables for {model.name}: {e}")
-
-                    # Add output
-                    try:
-                        if hasattr(model, 'output'):
-                            for ot in model.output:
-                                ot_dict = {
-                                    'name': ot.name,
-                                    'description': ot.description or '',
-                                    'unit': ot.unit or '',
-                                }
-                                if ot.equation:
-                                    ot_dict['equation'] = {
-                                        'lhs': ot.equation.lefthandside or '',
-                                        'rhs': ot.equation.righthandside or '',
-                                    }
-                                model_dict['output'].append(ot_dict)
-                            _logger.info(f"Added {len(model_dict['output'])} output transforms")
-                    except Exception as e:
-                        _logger.error(f"Error loading output for {model.name}: {e}")
-
-                    # Add functions
-                    try:
-                        if hasattr(model, 'functions'):
-                            for fn in model.functions:
-                                fn_dict = {
-                                    'name': fn.name,
-                                    'description': fn.description or '',
-                                }
-                                if fn.equation:
-                                    fn_dict['equation'] = {
-                                        'lhs': fn.equation.lefthandside or '',
-                                        'rhs': fn.equation.righthandside or '',
-                                    }
-                                model_dict['functions'].append(fn_dict)
-                            _logger.info(f"Added {len(model_dict['functions'])} functions")
-                    except Exception as e:
-                        _logger.error(f"Error loading functions for {model.name}: {e}")
-
-                    # Add coupling terms
-                    try:
-                        for ct in model.coupling_terms:
-                            model_dict['coupling_terms'].append({
-                                'name': ct.name,
-                                'value': ct.value,
-                            })
-                    except Exception as e:
-                        _logger.error(f"Error loading coupling terms for {model.name}: {e}")
-
-                    model_data.append(model_dict)
-                except Exception as e:
-                    _logger.error(f"Error processing model {model.name}: {e}", exc_info=True)
-
-            _logger.info(f"Returning {len(model_data)} models to template")
-
-            # Prepare integrator data
-            integrator_data = []
-            for integrator in integrators:
-                try:
-                    integrator_dict = {
-                        'id': integrator.id,
-                        'name': integrator.method or f'Integrator_{integrator.id}',
-                        'method': integrator.method or 'HeunDeterministic',
-                        'step_size': integrator.step_size,
-                        'duration': integrator.duration,
-                    }
-                    integrator_data.append(integrator_dict)
-                except Exception as e:
-                    _logger.error(f"Error processing integrator: {e}")
-
-            # Prepare coupling data
-            coupling_data = []
-            for coupling in couplings:
-                try:
-                    coupling_dict = {
-                        'id': coupling.id,
-                        'name': coupling.name,
-                        'label': coupling.label or coupling.name,
-                    }
-                    coupling_data.append(coupling_dict)
-                except Exception as e:
-                    _logger.error(f"Error processing coupling: {e}")
-
-            # Prepare monitor data
-            monitor_data = []
-            for monitor in monitors:
-                try:
-                    monitor_dict = {
-                        'id': monitor.id,
-                        'name': monitor.name,
-                        'label': monitor.label or monitor.name,
-                        'period': monitor.period,
-                    }
-                    monitor_data.append(monitor_dict)
-                except Exception as e:
-                    _logger.error(f"Error processing monitor: {e}")
-
-            # Prepare network data
-            network_data = []
-            tractograms_set = set()
-            parcellations_set = set()
-            for network in networks:
-                try:
-                    network_dict = {
-                        'id': network.id,
-                        'label': network.label or f'Network_{network.id}',
-                        'number_of_regions': network.number_of_regions,
-                        'tractogram': network.tractogram or '',
-                        'parcellation': network.parcellation.label if network.parcellation else '',
-                        'parcellation_id': network.parcellation.id if network.parcellation else None,
-                    }
-                    network_data.append(network_dict)
-
-                    # Collect unique tractograms and parcellations
-                    if network.tractogram:
-                        tractograms_set.add(network.tractogram)
-                    if network.parcellation and network.parcellation.label:
-                        parcellations_set.add((network.parcellation.id, network.parcellation.label))
-                except Exception as e:
-                    _logger.error(f"Error processing network: {e}")
-
-            # Convert to list for JSON
-            tractograms_data = sorted(list(tractograms_set))
-            parcellations_data = [{'id': p[0], 'label': p[1]} for p in sorted(parcellations_set, key=lambda x: x[1])]
-
-            # Fetch existing simulation experiments for prefilling
-            experiments = request.env['tvbo.simulation_experiment'].sudo().search([])
-            experiments_data = []
-            for exp in experiments:
-                try:
-                    exp_dict = {
-                        'id': exp.id,
-                        'name': exp.name or f'Experiment_{exp.id}',
-                        'label': exp.label or '',
-                        'specification': exp.specification or '{}',
-                    }
-                    experiments_data.append(exp_dict)
-                except Exception as e:
-                    _logger.error(f"Error processing experiment: {e}")
-
-            return request.render('tvbo.model_configurator_template', {
-                'models_json': Markup(json.dumps(model_data)),
-                'integrators_json': Markup(json.dumps(integrator_data)),
-                'couplings_json': Markup(json.dumps(coupling_data)),
-                'monitors_json': Markup(json.dumps(monitor_data)),
-                'networks_json': Markup(json.dumps(network_data)),
-                'tractograms_json': Markup(json.dumps(tractograms_data)),
-                'parcellations_json': Markup(json.dumps(parcellations_data)),
-                'experiments': experiments_data,
-            })
+            records = request.env['tvbo.simulation_experiment'].sudo().search([])
+            data = records.read()
+            return self._json_response({'success': True, 'data': data})
         except Exception as e:
-            _logger.error(f"Error in model_configurator: {e}", exc_info=True)
-            return request.render('tvbo.model_configurator_template', {
-                'models_json': Markup('[]'),
-                'integrators_json': Markup('[]'),
-                'couplings_json': Markup('[]'),
-                'monitors_json': Markup('[]'),
-                'networks_json': Markup('[]'),
-                'tractograms_json': Markup('[]'),
-                'parcellations_json': Markup('[]'),
-                'experiments': [],
-            })
+            _logger.error(f"Error in api_experiments: {e}", exc_info=True)
+            return self._json_response({'success': False, 'error': str(e)})
+
+    @http.route('/tvbo/api/configurator/dynamics', type='http', auth='public', methods=['GET'], csrf=False)
+    def api_dynamics(self, **kwargs):
+        """Get all dynamics models"""
+        try:
+            records = request.env['tvbo.dynamics'].sudo().search([])
+            data = records.read()
+            return self._json_response({'success': True, 'data': data})
+        except Exception as e:
+            _logger.error(f"Error in api_dynamics: {e}", exc_info=True)
+            return self._json_response({'success': False, 'error': str(e)})
+
+    @http.route('/tvbo/api/configurator/dynamics/<int:dynamics_id>', type='http', auth='public', methods=['GET'], csrf=False)
+    def api_dynamics_detail(self, dynamics_id, **kwargs):
+        """
+        Get full details of a dynamics model with all nested relations resolved.
+        
+        Schema-driven: Uses _resolve_record_deep to automatically resolve
+        all Many2one/Many2many relations without manual field unpacking.
+        """
+        try:
+            dyn = request.env['tvbo.dynamics'].sudo().browse(dynamics_id)
+            if not dyn.exists():
+                return self._json_response({'success': False, 'error': 'Not found'})
+            
+            # Schema-driven deep resolution - no manual unpacking
+            data = self._resolve_record_deep(dyn, depth=3)
+            
+            return self._json_response({'success': True, 'data': data})
+        except Exception as e:
+            _logger.error(f"Error in api_dynamics_detail: {e}", exc_info=True)
+            return self._json_response({'success': False, 'error': str(e)})
+
+    @http.route('/tvbo/api/configurator/integrators', type='http', auth='public', methods=['GET'], csrf=False)
+    def api_integrators(self, **kwargs):
+        """Get all integrators"""
+        try:
+            records = request.env['tvbo.integrator'].sudo().search([])
+            data = records.read()
+            return self._json_response({'success': True, 'data': data})
+        except Exception as e:
+            _logger.error(f"Error in api_integrators: {e}", exc_info=True)
+            return self._json_response({'success': False, 'error': str(e)})
+
+    @http.route('/tvbo/api/configurator/couplings', type='http', auth='public', methods=['GET'], csrf=False)
+    def api_couplings(self, **kwargs):
+        """Get all coupling functions"""
+        try:
+            records = request.env['tvbo.coupling'].sudo().search([])
+            data = records.read()
+            return self._json_response({'success': True, 'data': data})
+        except Exception as e:
+            _logger.error(f"Error in api_couplings: {e}", exc_info=True)
+            return self._json_response({'success': False, 'error': str(e)})
+
+    @http.route('/tvbo/api/configurator/networks', type='http', auth='public', methods=['GET'], csrf=False)
+    def api_networks(self, **kwargs):
+        """Get all networks"""
+        try:
+            records = request.env['tvbo.network'].sudo().search([])
+            data = records.read()
+            return self._json_response({'success': True, 'data': data})
+        except Exception as e:
+            _logger.error(f"Error in api_networks: {e}", exc_info=True)
+            return self._json_response({'success': False, 'error': str(e)})
+
+    @http.route('/tvbo/api/configurator/monitors', type='http', auth='public', methods=['GET'], csrf=False)
+    def api_monitors(self, **kwargs):
+        """Get all monitors"""
+        try:
+            records = request.env['tvbo.monitor'].sudo().search([])
+            data = records.read()
+            return self._json_response({'success': True, 'data': data})
+        except Exception as e:
+            _logger.error(f"Error in api_monitors: {e}", exc_info=True)
+            return self._json_response({'success': False, 'error': str(e)})
+
+    @http.route('/tvbo/api/configurator/experiment/<int:experiment_id>', type='http', auth='public', methods=['GET'], csrf=False)
+    def api_experiment_detail(self, experiment_id, **kwargs):
+        """
+        Get full experiment details with all nested relations resolved.
+        
+        Schema-driven: Uses _resolve_record_deep to automatically resolve
+        all Many2one/Many2many relations without manual field unpacking.
+        """
+        try:
+            exp = request.env['tvbo.simulation_experiment'].sudo().browse(experiment_id)
+            if not exp.exists():
+                return self._json_response({'success': False, 'error': 'Experiment not found'})
+
+            # Schema-driven deep resolution - no manual unpacking
+            data = self._resolve_record_deep(exp, depth=4)
+            
+            return self._json_response({'success': True, 'data': data})
+        except Exception as e:
+            _logger.error(f"Error in api_experiment_detail: {e}", exc_info=True)
+            return self._json_response({'success': False, 'error': str(e)})
+
+    def _resolve_record_deep(self, record, depth=3):
+        """
+        Schema-driven deep resolution of Odoo record with all relations.
+        
+        Design principle: Trust the schema completely. Iterate over all fields
+        in the record and resolve Many2one/Many2many relations automatically.
+        No manual field-by-field unpacking - if schema changes, this adapts.
+        
+        Args:
+            record: Odoo record to resolve
+            depth: Maximum recursion depth to prevent infinite loops (default 3)
+        
+        Returns:
+            dict with all fields resolved, relations expanded to full data
+        """
+        if not record or depth <= 0:
+            return None
+        
+        data = record.read()[0]
+        
+        # Iterate over all fields in the model - schema-driven, no manual unpacking
+        for field_name, field_obj in record._fields.items():
+            # Skip internal/system fields
+            if field_name in ('id', 'display_name', 'create_uid', 'create_date', 
+                              'write_uid', 'write_date', '__last_update'):
+                continue
+            
+            field_value = getattr(record, field_name, None)
+            
+            # Skip empty values (Odoo uses False for empty)
+            if not field_value:
+                continue
+            
+            # Resolve Many2one - single related record
+            if field_obj.type == 'many2one':
+                data[field_name] = self._resolve_record_deep(field_value, depth - 1)
+            
+            # Resolve Many2many/One2many - collection of related records
+            elif field_obj.type in ('many2many', 'one2many'):
+                data[field_name] = [
+                    self._resolve_record_deep(r, depth - 1) for r in field_value
+                ]
+        
+        return data
+
+    @http.route('/tvbo/api/configurator/experiment/<int:experiment_id>/yaml', type='http', auth='public', methods=['GET'], csrf=False)
+    def api_experiment_yaml(self, experiment_id, **kwargs):
+        """Export experiment as YAML using Pydantic SimulationExperiment model"""
+        try:
+            from tvbo.datamodel.tvbopydantic import SimulationExperiment
+            import yaml
+
+            exp = request.env['tvbo.simulation_experiment'].sudo().browse(experiment_id)
+            if not exp.exists():
+                return self._json_response({'success': False, 'error': 'Experiment not found'})
+
+            # Convert Odoo record to Pydantic model
+            pydantic_exp = self._odoo_to_pydantic(exp)
+
+            # Export to YAML using Pydantic's model_dump
+            data = pydantic_exp.model_dump(exclude_none=True, exclude_unset=True)
+            yaml_content = yaml.dump(data, default_flow_style=False, sort_keys=False, allow_unicode=True)
+
+            return request.make_response(
+                yaml_content,
+                headers=[
+                    ('Content-Type', 'text/yaml'),
+                    ('Content-Disposition', f'attachment; filename="{exp.label or exp.name or "experiment"}.yaml"')
+                ]
+            )
+        except ImportError as e:
+            _logger.error(f"tvbo package not available: {e}")
+            return self._json_response({'success': False, 'error': 'tvbo package not installed'})
+        except Exception as e:
+            _logger.error(f"Error in api_experiment_yaml: {e}", exc_info=True)
+            return self._json_response({'success': False, 'error': str(e)})
+
+    def _odoo_to_pydantic(self, odoo_record, pydantic_class=None):
+        """
+        Schema-driven conversion from Odoo record to Pydantic model.
+        
+        Design principle: Both Odoo and Pydantic models are generated from the same 
+        LinkML schema, so field names match. No manual unpacking - iterate over 
+        Pydantic model fields and pull corresponding values from Odoo.
+        
+        Raises on missing fields rather than silently skipping - we need to know
+        when schema is out of sync.
+        """
+        from tvbo.datamodel import tvbopydantic as pyd
+        from pydantic import BaseModel
+        from odoo.fields import Many2one, Many2many
+        
+        if not odoo_record:
+            return None
+            
+        # Infer Pydantic class from Odoo model name if not provided
+        if pydantic_class is None:
+            # tvbo.simulation_experiment -> SimulationExperiment
+            model_name = odoo_record._name.replace('tvbo.', '')
+            class_name = ''.join(word.capitalize() for word in model_name.split('_'))
+            pydantic_class = getattr(pyd, class_name)
+        
+        # Build kwargs from Pydantic model fields
+        kwargs = {}
+        for field_name, field_info in pydantic_class.model_fields.items():
+            # Skip internal fields
+            if field_name in ('linkml_meta',):
+                continue
+                
+            # Get value from Odoo record
+            if not hasattr(odoo_record, field_name):
+                continue  # Field not in Odoo model (e.g., computed field in Pydantic)
+            
+            odoo_value = getattr(odoo_record, field_name)
+            odoo_field = odoo_record._fields.get(field_name)
+            
+            if odoo_value is False or odoo_value is None:
+                # Odoo uses False for empty values
+                kwargs[field_name] = None
+                continue
+            
+            # Handle relation fields
+            if odoo_field and isinstance(odoo_field, Many2one):
+                # Recursively convert related record
+                related_type = self._get_pydantic_type_from_annotation(field_info.annotation)
+                if related_type and issubclass(related_type, BaseModel):
+                    kwargs[field_name] = self._odoo_to_pydantic(odoo_value, related_type)
+                else:
+                    # Fallback: just get the ID or name
+                    kwargs[field_name] = odoo_value.id if hasattr(odoo_value, 'id') else odoo_value
+                    
+            elif odoo_field and isinstance(odoo_field, Many2many):
+                # Convert Many2many to dict (keyed by name) or list
+                related_type = self._get_pydantic_type_from_annotation(field_info.annotation)
+                if related_type and issubclass(related_type, BaseModel):
+                    # Check if target is dict[str, X] or list[X]
+                    origin = getattr(field_info.annotation, '__origin__', None)
+                    if origin is dict:
+                        kwargs[field_name] = {
+                            rec.name: self._odoo_to_pydantic(rec, related_type)
+                            for rec in odoo_value if hasattr(rec, 'name')
+                        }
+                    else:
+                        kwargs[field_name] = [
+                            self._odoo_to_pydantic(rec, related_type) for rec in odoo_value
+                        ]
+                else:
+                    # Fallback: list of names or IDs
+                    kwargs[field_name] = [rec.name if hasattr(rec, 'name') else rec.id for rec in odoo_value]
+            else:
+                # Simple field - direct assignment
+                kwargs[field_name] = odoo_value
+        
+        return pydantic_class(**kwargs)
+    
+    def _get_pydantic_type_from_annotation(self, annotation):
+        """Extract the base Pydantic model class from a type annotation."""
+        from pydantic import BaseModel
+        import typing
+        
+        # Handle Optional[X], dict[str, X], list[X], etc.
+        origin = getattr(annotation, '__origin__', None)
+        args = getattr(annotation, '__args__', ())
+        
+        if origin is type(None):
+            return None
+        elif origin in (dict, typing.Dict):
+            # dict[str, X] -> return X
+            if len(args) >= 2:
+                return self._get_pydantic_type_from_annotation(args[1])
+        elif origin in (list, typing.List):
+            # list[X] -> return X
+            if args:
+                return self._get_pydantic_type_from_annotation(args[0])
+        elif origin is typing.Union:
+            # Optional[X] = Union[X, None] -> return X
+            for arg in args:
+                if arg is not type(None):
+                    result = self._get_pydantic_type_from_annotation(arg)
+                    if result:
+                        return result
+        elif isinstance(annotation, type) and issubclass(annotation, BaseModel):
+            return annotation
+        
+        return None
 
     @http.route('/tvbo/configurator/save', type='jsonrpc', auth='user', website=True, csrf=True)
     def save_model(self, **kwargs):
@@ -399,14 +444,9 @@ class ModelConfiguratorController(http.Controller):
                 'coupling_terms': [(6, 0, ct_ids)],
             })
 
-            # Create the NeuralMassModel record linked to the Dynamics
-            nmm = request.env['tvbo.neural_mass_model'].sudo().create({
-                'dynamics_id': dynamics.id,
-            })
-
             return {
                 'success': True,
-                'model_id': nmm.id,
+                'model_id': dynamics.id,
                 'message': f'Model "{data.get("name")}" created successfully!'
             }
 

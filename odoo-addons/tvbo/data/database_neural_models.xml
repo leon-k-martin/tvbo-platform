@@ -99,7 +99,7 @@
             <field name="name">c_pop0</field>
         </record>
 
-        <record id="neural_mass_model_coombesbyrne2d" model="tvbo.neural_mass_model">
+        <record id="dynamics_coombesbyrne2d" model="tvbo.dynamics">
             <field name="name">CoombesByrne2D</field>
             <field name="label">CoombesByrne2D</field>
             <field name="description"></field>
@@ -145,7 +145,7 @@
             <field name="name">c_pop0</field>
         </record>
 
-        <record id="neural_mass_model_genericlinear" model="tvbo.neural_mass_model">
+        <record id="dynamics_genericlinear" model="tvbo.dynamics">
             <field name="name">GenericLinear</field>
             <field name="label">GenericLinear</field>
             <field name="description">The Generic Linear (GL) is a phenomenological, linear one-dimensional  (i.e., one state-variable (&apos;x&apos;)) neural mass model (Galán, 2008).</field>
@@ -538,7 +538,7 @@
             <field name="name">local_coupling</field>
         </record>
 
-        <record id="neural_mass_model_reducedwongwangexcinh" model="tvbo.neural_mass_model">
+        <record id="dynamics_reducedwongwangexcinh" model="tvbo.dynamics">
             <field name="name">ReducedWongWangExcInh</field>
             <field name="label">ReducedWongWangExcInh</field>
             <field name="description">Reduced WongWang Exc-Inh (RWW_EI) is a biologically-inspired two-dimensional (i.e., two state-variables (&apos;S_E&apos;,&apos;S_I&apos;)) neural mass model describing the dynamics of a cortical area consisting of local networks of excitatory (AMPA) and inhibitory (GABA-A) populations of spiking neurons interconnected via NMDA synapses. These neurons are organized into an inhibitory population accounting for 20% of the neurons and an excitatory population accounting for 80% of the neurons.</field>
@@ -876,7 +876,7 @@ into an average firing rate to the PCs.</field>
             <field name="name">c_pop0</field>
         </record>
 
-        <record id="neural_mass_model_jansenrit" model="tvbo.neural_mass_model">
+        <record id="dynamics_jansenrit" model="tvbo.dynamics">
             <field name="name">JansenRit</field>
             <field name="label">JansenRit</field>
             <field name="description">The Jansen-Rit is a neurophysiologically-inspired neural mass model of a cortical column (or area), developed to simulate the electrical brain activity, i.e., the electroencephalogram (EEG), and evoked-potentials (EPs; Jansen et al., 1993; Jansen &amp; Rit, 1995). It is a 6-dimensional, non-linear, model describing the local average states of three interconnected neural populations: pyramidal cells (PCs), excitatory and inhibitory interneurons (EINs and IINs), interacting through positive and negative feedback loops. The main output of the model is the average membrane potential of the pyramidal cell population, as the sum of the potential of these cells is thought to be the source of the potential recorded in the EEG.</field>
@@ -1732,7 +1732,7 @@ into an average firing rate to the PCs.</field>
             <field name="name">c_pop0</field>
         </record>
 
-        <record id="neural_mass_model_kionex" model="tvbo.neural_mass_model">
+        <record id="dynamics_kionex" model="tvbo.dynamics">
             <field name="name">KIonEx</field>
             <field name="label">KIonEx</field>
             <field name="description">It describes the mean-field activity of a population of Hodgkin-Huxley-type neurons (Depannemaker et al 2022) linking the slow fluctuations of intra- and extra-cellular potassium ion concentrations to the mean membrane potential, and the synaptic input to the population firing rate. 
@@ -2082,7 +2082,7 @@ The model is derived as the mathematical limit of an infinite number of all-to-a
             <field name="name">c_pop1</field>
         </record>
 
-        <record id="neural_mass_model_epileptor5d" model="tvbo.neural_mass_model">
+        <record id="dynamics_epileptor5d" model="tvbo.dynamics">
             <field name="name">Epileptor5D</field>
             <field name="label">Epileptor5D</field>
             <field name="description">Epilepor5D (E5D) is a phenomenological, coupled, nonlinear five-dimensional (i.e., five state-variables (&apos;x1&apos;, &apos;y1&apos;, &apos;z&apos;, &apos;x2&apos;, &apos;y2&apos;)) neural mass model able to realistically reproduce the temporal dynamics of epileptic seizures and the alternating sequence of seizures (ictal and interictal state; Jirsa et al.,2014; El Houssaini et al., 2015, 2020).
@@ -2169,7 +2169,7 @@ Note:
             <field name="name">local_coupling</field>
         </record>
 
-        <record id="neural_mass_model_kuramoto" model="tvbo.neural_mass_model">
+        <record id="dynamics_kuramoto" model="tvbo.dynamics">
             <field name="name">Kuramoto</field>
             <field name="label">Kuramoto</field>
             <field name="description">The Kuramoto model is a model of synchronization phenomena derived by Yoshiki Kuramoto in 1975 which has since been applied to diverse domains including the study of neuronal oscillations and synchronization.</field>
@@ -2266,7 +2266,7 @@ Note:
             <field name="name">local_coupling</field>
         </record>
 
-        <record id="neural_mass_model_suphopf" model="tvbo.neural_mass_model">
+        <record id="dynamics_suphopf" model="tvbo.dynamics">
             <field name="name">SupHopf</field>
             <field name="label">SupHopf</field>
             <field name="description">Supercritical Hopf (SUPH) is an oscillatory/excitable neural mass model that describe the normal form of a supercritical Hopf bifurcation in Cartesian coordinates (Kuznetsov, 2013; Deco et al., 2017). 
@@ -2482,7 +2482,7 @@ This normal form has a supercritical bifurcation at &apos;a=0&apos; with &apos;a
             <field name="name">c_pop1</field>
         </record>
 
-        <record id="neural_mass_model_gastschmidtknosche_sd" model="tvbo.neural_mass_model">
+        <record id="dynamics_gastschmidtknosche_sd" model="tvbo.dynamics">
             <field name="name">GastSchmidtKnosche_SD</field>
             <field name="label">GastSchmidtKnosche_SD</field>
             <field name="description">4D model describing the Ott-Antonsen reduction of infinite all-to-all 
@@ -2703,7 +2703,7 @@ This normal form has a supercritical bifurcation at &apos;a=0&apos; with &apos;a
             <field name="name">c_pop0</field>
         </record>
 
-        <record id="neural_mass_model_epileptor2d" model="tvbo.neural_mass_model">
+        <record id="dynamics_epileptor2d" model="tvbo.dynamics">
             <field name="name">Epileptor2D</field>
             <field name="label">Epileptor2D</field>
             <field name="description">Epileptor2D (E2D) is a phenomenological neural mass model consisting in the two-dimensional reduction (&apos;x&apos;, &apos;z&apos;) of the original Epileptor model (see Epileptor5D; Proix et al., 2014, 2017).
@@ -3126,7 +3126,7 @@ Note:
             <field name="name">local_coupling</field>
         </record>
 
-        <record id="neural_mass_model_wilsoncowan" model="tvbo.neural_mass_model">
+        <record id="dynamics_wilsoncowan" model="tvbo.dynamics">
             <field name="name">WilsonCowan</field>
             <field name="label">WilsonCowan</field>
             <field name="description">The Wilson and Cowan model consists of two populations or masses, one excitatory and one inhibitory, that are described by their mean firings rates E and I respectively (Wilson and Cowan, 1972, 1973). 
@@ -4214,7 +4214,7 @@ Note:
             <field name="name">local_coupling</field>
         </record>
 
-        <record id="neural_mass_model_zerlautadaptationfirstorder" model="tvbo.neural_mass_model">
+        <record id="dynamics_zerlautadaptationfirstorder" model="tvbo.dynamics">
             <field name="name">ZerlautAdaptationFirstOrder</field>
             <field name="label">ZerlautAdaptationFirstOrder</field>
             <field name="description"></field>
@@ -4783,7 +4783,7 @@ Describes relationship between membrane voltage and channel conductance.</field>
             <field name="name">local_coupling</field>
         </record>
 
-        <record id="neural_mass_model_larterbreakspear" model="tvbo.neural_mass_model">
+        <record id="dynamics_larterbreakspear" model="tvbo.dynamics">
             <field name="name">LarterBreakspear</field>
             <field name="label">LarterBreakspear</field>
             <field name="description">The Larter-Breakspear is an extension (Breakspear et al., 2003a, 2003b) of the biophysical-inspired neural mass model of a cortical column (or area) from Larter et al. (1999), initially developed to simulate firing rate activity from focal region involved in partial seizure. It is determined by voltage- and ligand-gated ions channels and feedback between intensively interconnected excitatory and inhibitory neurons.
@@ -5008,7 +5008,7 @@ Note:
             <field name="name">c_pop1</field>
         </record>
 
-        <record id="neural_mass_model_gastschmidtknosche_sf" model="tvbo.neural_mass_model">
+        <record id="dynamics_gastschmidtknosche_sf" model="tvbo.dynamics">
             <field name="name">GastSchmidtKnosche_SF</field>
             <field name="label">GastSchmidtKnosche_SF</field>
             <field name="description"></field>
@@ -5089,7 +5089,7 @@ Note:
             <field name="name">c_pop1</field>
         </record>
 
-        <record id="neural_mass_model_hopfield" model="tvbo.neural_mass_model">
+        <record id="dynamics_hopfield" model="tvbo.dynamics">
             <field name="name">Hopfield</field>
             <field name="label">Hopfield</field>
             <field name="description">The Hopfield neural network is a discrete time dynamical system composed of multiple binary nodes, with a connectivity matrix built from a predetermined set of patterns. The update, inspired from the spin-glass model (used to describe magnetic properties of dilute alloys), is based on a random scanning of every node. The existence of a fixed point dynamics is guaranteed by a Lyapunov function. The Hopfield network is expected to have those multiple patterns as attractors (multistable dynamical system).
@@ -5306,7 +5306,7 @@ Note:
             <field name="name">c_pop0</field>
         </record>
 
-        <record id="neural_mass_model_generic2doscillator" model="tvbo.neural_mass_model">
+        <record id="dynamics_generic2doscillator" model="tvbo.dynamics">
             <field name="name">Generic2dOscillator</field>
             <field name="label">Generic2dOscillator</field>
             <field name="description">The Generic 2-Dimensional Oscillator (G2D) is a phenomenological, coupled, nonlinear two-dimensional (i.e., two state-variables (&apos;V&apos;, &apos;W&apos;)) oscillatory, neural mass model. The G2D is a generalization of the well-known FitzHugh-Nagumo model (FitzHugh, 1961; Nagumo et. al, 1962), adapted here for reproducing a wilder class of dynamical configurations of physiological phenomena as observed in neuronal population using phase-portrait method.</field>
@@ -5484,7 +5484,7 @@ Note:
             <field name="name">local_coupling</field>
         </record>
 
-        <record id="neural_mass_model_reducedwongwang" model="tvbo.neural_mass_model">
+        <record id="dynamics_reducedwongwang" model="tvbo.dynamics">
             <field name="name">ReducedWongWang</field>
             <field name="label">ReducedWongWang</field>
             <field name="description">Reduced WongWang (RWW) is a biologically-inspired one-dimensional (i.e., only one state-variable &apos;S&apos;) neural mass model that approximates the realistic temporal dynamics of a detailed spiking and conductance-based synaptic large-scale network (Deco et al., 2013).
@@ -6000,7 +6000,7 @@ RWW is the dynamical mean-field (DMF) reduction of the Reduced WongWang Exc-Inh 
             <field name="name">local_coupling</field>
         </record>
 
-        <record id="neural_mass_model_zetterbergjansen" model="tvbo.neural_mass_model">
+        <record id="dynamics_zetterbergjansen" model="tvbo.dynamics">
             <field name="name">ZetterbergJansen</field>
             <field name="label">ZetterbergJansen</field>
             <field name="description"></field>
@@ -6095,7 +6095,7 @@ RWW is the dynamical mean-field (DMF) reduction of the Reduced WongWang Exc-Inh 
             <field name="name">local_coupling</field>
         </record>
 
-        <record id="neural_mass_model_kuramotomodel2" model="tvbo.neural_mass_model">
+        <record id="dynamics_kuramotomodel2" model="tvbo.dynamics">
             <field name="name">KuramotoModel2</field>
             <field name="label">KuramotoModel2</field>
             <field name="parameters" eval="[(6, 0, [ref('param_kuramotomodel2_omega')])]"/>
@@ -6234,7 +6234,7 @@ RWW is the dynamical mean-field (DMF) reduction of the Reduced WongWang Exc-Inh 
             <field name="description">Long-range input to the pyramidal population (pre-filter).</field>
         </record>
 
-        <record id="neural_mass_model_modeljansen1995" model="tvbo.neural_mass_model">
+        <record id="dynamics_modeljansen1995" model="tvbo.dynamics">
             <field name="name">ModelJansen1995</field>
             <field name="label">ModelJansen1995</field>
             <field name="description">JR model with canonical parameters; long-range input is injected via a coupling term. Output is pyramidal potential difference.</field>
@@ -6770,7 +6770,7 @@ RWW is the dynamical mean-field (DMF) reduction of the Reduced WongWang Exc-Inh 
             <field name="name">c_pop2</field>
         </record>
 
-        <record id="neural_mass_model_epileptorrestingstate" model="tvbo.neural_mass_model">
+        <record id="dynamics_epileptorrestingstate" model="tvbo.dynamics">
             <field name="name">EpileptorRestingState</field>
             <field name="label">EpileptorRestingState</field>
             <field name="description">Epileptor Resting-State (ERS) is an extension of the phenomenological neural mass model of Epileptor5D, tuned to express regionally specific physiological oscillations in addition to the epileptiform discharges (Courtiol et al., 2020). This extension was made using the Generic 2-dimensional Oscillator model (parametrized close to a supercritical Hopf Bifurcation) (Sanz-Leon et al., 2013, 2015) to reproduce the spontaneous local field potential-like signal.
@@ -6924,7 +6924,7 @@ This model, its motivation and derivation can be found in the published article 
             <field name="name">c_pop1</field>
         </record>
 
-        <record id="neural_mass_model_montbriopazoroxin" model="tvbo.neural_mass_model">
+        <record id="dynamics_montbriopazoroxin" model="tvbo.dynamics">
             <field name="name">MontbrioPazoRoxin</field>
             <field name="label">MontbrioPazoRoxin</field>
             <field name="description"></field>
@@ -7081,7 +7081,7 @@ This model, its motivation and derivation can be found in the published article 
             <field name="name">c_pop0</field>
         </record>
 
-        <record id="neural_mass_model_coombesbyrne" model="tvbo.neural_mass_model">
+        <record id="dynamics_coombesbyrne" model="tvbo.dynamics">
             <field name="name">CoombesByrne</field>
             <field name="label">CoombesByrne</field>
             <field name="description">4D model describing the Ott-Antonsen reduction of infinite all-to-all
@@ -7437,7 +7437,7 @@ $Z$. Using the conformal transformation $Z=(1-W^\star)/(1+W^\star)$ and $W= \pi 
             <field name="name">c_pop0</field>
         </record>
 
-        <record id="neural_mass_model_dumontgutkin" model="tvbo.neural_mass_model">
+        <record id="dynamics_dumontgutkin" model="tvbo.dynamics">
             <field name="name">DumontGutkin</field>
             <field name="label">DumontGutkin</field>
             <field name="description"></field>
