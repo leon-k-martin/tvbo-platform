@@ -7,28 +7,17 @@ variables:
 
 build:
   stage: build
-  # No tags - runs on any available runner (including untagged)
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    # Set up Docker buildx for multi-platform builds
-    - docker buildx create --use --name multiarch || docker buildx use multiarch
-    - docker buildx inspect --bootstrap
   script:
-    # Build and push multi-platform image
-    - |
-      docker buildx build \
-        --platform linux/amd64,linux/arm64 \
-        -f Dockerfile.odoo \
-        -t $IMAGE_TAG \
-        --push .
+    # Build for linux/amd64 (production servers)
+    - docker build --platform linux/amd64 -f Dockerfile.odoo -t $IMAGE_TAG .
+    - docker push $IMAGE_TAG
     # Also tag as latest if on main branch
     - |
       if [ "$CI_COMMIT_BRANCH" = "main" ]; then
-        docker buildx build \
-          --platform linux/amd64,linux/arm64 \
-          -f Dockerfile.odoo \
-          -t $CI_REGISTRY_IMAGE:latest \
-          --push .
+        docker tag $IMAGE_TAG $CI_REGISTRY_IMAGE:latest
+        docker push $CI_REGISTRY_IMAGE:latest
       fi
   only:
     - main
