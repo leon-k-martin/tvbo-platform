@@ -11,11 +11,11 @@ metadata:
 apiVersion: v1
 kind: Secret
 metadata:
-  name: db-credentials
+  name: tvbo-postgres-db-credentials
   namespace: tvbo
 stringData:
-  POSTGRES_DB: postgres
-  POSTGRES_USER: odoo
+  POSTGRES_DB: tvbo_postgres
+  POSTGRES_USER: tvbo_odoo
   POSTGRES_PASSWORD: odoo  # Change in production!
 
 ---
@@ -61,7 +61,7 @@ spec:
         - name: tvbo-postgres
           image: postgres:17
           ports: [{containerPort: 5432}]
-          envFrom: [{secretRef: {name: db-credentials}}]
+          envFrom: [{secretRef: {name: tvbo-postgres-db-credentials}}]
           volumeMounts: [{name: data, mountPath: /var/lib/postgresql/data}]
       volumes:
         - name: data
@@ -135,9 +135,9 @@ spec:
           imagePullPolicy: Always
           ports: [{containerPort: 8069}]
           env:
-            - {name: DB_HOST, value: tvbo-postgres}
-            - {name: DB_USER, value: odoo}
-            - {name: DB_PASSWORD, value: odoo}
+            - {name: HOST, value: tvbo-postgres}
+            - {name: USER, value: tvbo_odoo}
+            - {name: PASSWORD, value: odoo}
             - {name: DB_NAME, value: tvbo}
           volumeMounts: [{name: data, mountPath: /var/lib/odoo}]
           readinessProbe:

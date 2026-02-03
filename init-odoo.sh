@@ -6,9 +6,10 @@ log() {
   echo "[$(date -u +"%Y-%m-%d %H:%M:%S UTC")] $*"
 }
 
-DB_HOST=${DB_HOST:-postgres}
-DB_USER=${DB_USER:-odoo}
-DB_PASSWORD=${DB_PASSWORD:-odoo}
+# Support both Odoo's standard env vars (HOST, USER, PASSWORD) and DB_* variants
+DB_HOST=${HOST:-${DB_HOST:-postgres}}
+DB_USER=${USER:-${DB_USER:-odoo}}
+DB_PASSWORD=${PASSWORD:-${DB_PASSWORD:-odoo}}
 DB_NAME=${DB_NAME:-tvbo}
 
 export PGPASSWORD="$DB_PASSWORD"
