@@ -9,8 +9,8 @@ build:
   stage: build
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    # Create buildx builder for multi-platform (uses containerd image store)
-    - docker buildx create --name multibuilder --driver docker-container --use || docker buildx use multibuilder
+    # Use Docker Desktop's default builder which supports multi-platform
+    - docker buildx use default || true
   script:
     # Build for both linux/amd64 and linux/arm64
     - |
