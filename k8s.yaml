@@ -132,6 +132,7 @@ spec:
       containers:
         - name: odoo
           image: ghcr.io/leon-k-martin/tvbo-platform:main
+          imagePullPolicy: Always
           ports: [{containerPort: 8069}]
           env:
             - {name: DB_HOST, value: postgres}
