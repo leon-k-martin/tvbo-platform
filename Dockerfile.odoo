@@ -1,30 +1,28 @@
+# Odoo container with tvbo Python package for API integration
+# Heavy computations run in separate tvbo container via API
 FROM odoo:19
 
 USER root
 
-# Set locale to avoid perl warnings
+# Set locale
 ENV LANG=C.UTF-8 \
     LC_ALL=C.UTF-8 \
     LANGUAGE=C.UTF-8
 
-# Install minimal system dependencies including build tools for tvbo
+# Install minimal system dependencies
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         python3-pip \
         libcairo2-dev \
         libpango1.0-dev \
         git \
-        gcc \
-        g++ \
-        gfortran \
-        make \
         locales && \
     echo "en_US.UTF-8 UTF-8" > /etc/locale.gen && \
     locale-gen && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Install tvbo from GitHub (dev branch)
+# Install tvbo Python package (for model loading, not heavy compute)
 ARG TVBO_REF=dev
 RUN pip3 install --break-system-packages --ignore-installed typing-extensions \
     "tvbo @ git+https://github.com/virtual-twin/tvbo.git@${TVBO_REF}"
