@@ -9,24 +9,21 @@ build:
   stage: build
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    # Use Docker Desktop's desktop-linux builder (supports multi-platform)
-    - docker buildx use desktop-linux
   script:
-    # Build for both linux/amd64 and linux/arm64
-    - |
-      docker buildx build \
-        --platform linux/amd64,linux/arm64 \
-        -f Dockerfile.odoo \
-        -t $IMAGE_TAG \
-        --push .
+    # Build each platform separately
+    - docker build --platform linux/amd64 -f Dockerfile.odoo -t ${IMAGE_TAG}-amd64 .
+    - docker build --platform linux/arm64 -f Dockerfile.odoo -t ${IMAGE_TAG}-arm64 .
+    # Push both
+    - docker push ${IMAGE_TAG}-amd64
+    - docker push ${IMAGE_TAG}-arm64
+    # Create and push multi-arch manifest
+    - docker manifest create $IMAGE_TAG ${IMAGE_TAG}-amd64 ${IMAGE_TAG}-arm64
+    - docker manifest push $IMAGE_TAG
     # Also tag as latest if on main branch
     - |
       if [ "$CI_COMMIT_BRANCH" = "main" ]; then
-        docker buildx build \
-          --platform linux/amd64,linux/arm64 \
-          -f Dockerfile.odoo \
-          -t $CI_REGISTRY_IMAGE:latest \
-          --push .
+        docker manifest create $CI_REGISTRY_IMAGE:latest ${IMAGE_TAG}-amd64 ${IMAGE_TAG}-arm64
+        docker manifest push $CI_REGISTRY_IMAGE:latest
       fi
   only:
     - main
