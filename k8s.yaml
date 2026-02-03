@@ -134,13 +134,14 @@ spec:
           image: ghcr.io/leon-k-martin/tvbo-platform:main
           ports: [{containerPort: 8069}]
           env:
-            - {name: HOST, value: postgres}
-            - {name: USER, value: odoo}
-            - {name: PASSWORD, value: odoo}
+            - {name: DB_HOST, value: postgres}
+            - {name: DB_USER, value: odoo}
+            - {name: DB_PASSWORD, value: odoo}
+            - {name: DB_NAME, value: tvbo}
           volumeMounts: [{name: data, mountPath: /var/lib/odoo}]
           readinessProbe:
-            httpGet: {path: /web/health, port: 8069}
-            initialDelaySeconds: 30
+            tcpSocket: {port: 8069}
+            initialDelaySeconds: 60
       volumes:
         - name: data
           persistentVolumeClaim:

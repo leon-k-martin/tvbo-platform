@@ -29,12 +29,44 @@ TVB-O Platform consists of three Docker services communicating via APIs.
 
 ## Development Commands
 
+### Docker Compose (Local)
+
 ```bash
 make up           # Start all services
 make down         # Stop all services
 make update-odoo  # Reload Odoo module after XML changes
 make logs-odoo    # View Odoo logs
 make rebuild      # Rebuild containers
+```
+
+### Kubernetes (Local Testing)
+
+1. **Enable Kubernetes** in Docker Desktop (Settings → Kubernetes → Enable Kubernetes)
+
+2. **Deploy the platform:**
+```bash
+kubectl apply -f k8s.yaml
+```
+
+3. **Check pod status:**
+```bash
+kubectl get pods -n tvbo
+# Wait until all pods are 1/1 Ready (~60s for Odoo initialization)
+```
+
+4. **Expose services locally:**
+```bash
+kubectl port-forward -n tvbo svc/odoo 8069:8069 &
+kubectl port-forward -n tvbo svc/tvbo-api 8000:8000 &
+```
+
+5. **Access:**
+- Odoo: http://localhost:8069 (login: admin/admin)
+- API: http://localhost:8000
+
+6. **Clean up:**
+```bash
+kubectl delete -f k8s.yaml
 ```
 
 ## CI/CD
