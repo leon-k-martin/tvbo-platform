@@ -9,6 +9,8 @@ build:
   stage: build
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    # Set up QEMU for cross-platform builds
+    - docker run --rm --privileged tonistiigi/binfmt --install all
   script:
     # Build each platform separately
     - docker build --platform linux/amd64 -f Dockerfile.odoo -t ${IMAGE_TAG}-amd64 .
