@@ -7,8 +7,7 @@ variables:
 
 build:
   stage: build
-  tags:
-    - shell  # Use shell executor on local runner
+  # No tags - runs on any available runner (including untagged)
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
