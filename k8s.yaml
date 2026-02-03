@@ -1,0 +1,178 @@
+# TVB-O Platform - Kubernetes
+# kubectl apply -f k8s.yaml
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: tvbo
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: db-credentials
+  namespace: tvbo
+stringData:
+  POSTGRES_DB: postgres
+  POSTGRES_USER: odoo
+  POSTGRES_PASSWORD: odoo  # Change in production!
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pvc
+  namespace: tvbo
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 10Gi
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: odoo-pvc
+  namespace: tvbo
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 5Gi
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+  namespace: tvbo
+spec:
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:17
+          ports: [{containerPort: 5432}]
+          envFrom: [{secretRef: {name: db-credentials}}]
+          volumeMounts: [{name: data, mountPath: /var/lib/postgresql/data}]
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: postgres-pvc
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: tvbo
+spec:
+  selector:
+    app: postgres
+  ports: [{port: 5432}]
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tvbo-api
+  namespace: tvbo
+spec:
+  selector:
+    matchLabels:
+      app: tvbo-api
+  template:
+    metadata:
+      labels:
+        app: tvbo-api
+    spec:
+      containers:
+        - name: tvbo-api
+          image: ghcr.io/virtual-twin/tvbo:dev
+          ports: [{containerPort: 8000}]
+          env: [{name: MODE, value: api}]
+          readinessProbe:
+            httpGet: {path: /api/health, port: 8000}
+            initialDelaySeconds: 10
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tvbo-api
+  namespace: tvbo
+spec:
+  selector:
+    app: tvbo-api
+  ports: [{port: 8000}]
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: odoo
+  namespace: tvbo
+spec:
+  selector:
+    matchLabels:
+      app: odoo
+  template:
+    metadata:
+      labels:
+        app: odoo
+    spec:
+      containers:
+        - name: odoo
+          image: ghcr.io/leon-k-martin/tvbo-platform:main
+          ports: [{containerPort: 8069}]
+          env:
+            - {name: HOST, value: postgres}
+            - {name: USER, value: odoo}
+            - {name: PASSWORD, value: odoo}
+          volumeMounts: [{name: data, mountPath: /var/lib/odoo}]
+          readinessProbe:
+            httpGet: {path: /web/health, port: 8069}
+            initialDelaySeconds: 30
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: odoo-pvc
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: odoo
+  namespace: tvbo
+spec:
+  selector:
+    app: odoo
+  ports: [{port: 8069}]
+
+# Ingress - uncomment and configure for your domain
+# ---
+# apiVersion: networking.k8s.io/v1
+# kind: Ingress
+# metadata:
+#   name: tvbo
+#   namespace: tvbo
+# spec:
+#   ingressClassName: nginx
+#   rules:
+#     - host: tvbo.example.com
+#       http:
+#         paths:
+#           - path: /
+#             pathType: Prefix
+#             backend: {service: {name: odoo, port: {number: 8069}}}
+#           - path: /api
+#             pathType: Prefix
+#             backend: {service: {name: tvbo-api, port: {number: 8000}}}
