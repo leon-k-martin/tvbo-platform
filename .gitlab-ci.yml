@@ -9,15 +9,24 @@ build:
   stage: build
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    # Create buildx builder for multi-platform (uses containerd image store)
+    - docker buildx create --name multibuilder --driver docker-container --use || docker buildx use multibuilder
   script:
-    # Build for linux/amd64 (production servers)
-    - docker build --platform linux/amd64 -f Dockerfile.odoo -t $IMAGE_TAG .
-    - docker push $IMAGE_TAG
+    # Build for both linux/amd64 and linux/arm64
+    - |
+      docker buildx build \
+        --platform linux/amd64,linux/arm64 \
+        -f Dockerfile.odoo \
+        -t $IMAGE_TAG \
+        --push .
     # Also tag as latest if on main branch
     - |
       if [ "$CI_COMMIT_BRANCH" = "main" ]; then
-        docker tag $IMAGE_TAG $CI_REGISTRY_IMAGE:latest
-        docker push $CI_REGISTRY_IMAGE:latest
+        docker buildx build \
+          --platform linux/amd64,linux/arm64 \
+          -f Dockerfile.odoo \
+          -t $CI_REGISTRY_IMAGE:latest \
+          --push .
       fi
   only:
     - main
