@@ -141,7 +141,7 @@ spec:
           volumeMounts: [{name: data, mountPath: /var/lib/odoo}]
           readinessProbe:
             tcpSocket: {port: 8069}
-            initialDelaySeconds: 60
+            initialDelaySeconds: 30
       volumes:
         - name: data
           persistentVolumeClaim:
