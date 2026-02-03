@@ -2,9 +2,14 @@
  * TVB-O Knowledge Graph Browser Styles
  */
 
-/* Container */
+/* Global utility class */
+.hidden {
+    display: none !important;
+}
+
+/* Container - natural flow, scrollable page */
 .tvbo-kg-container {
-    min-height: calc(100vh - 100px);
+    min-height: 80vh;
     background: #f8f9fa;
 }
 
@@ -21,24 +26,24 @@
     white-space: nowrap;
 }
 
-/* Main Content Layout */
+/* Main Content Layout - sidebar + results side by side */
 .tvbo-kg-container .main-content {
     display: flex;
-    min-height: calc(100vh - 200px);
+    gap: 0;
 }
 
-/* Sidebar */
+/* Sidebar - sticky for scrolling */
 .tvbo-kg-container .sidebar {
     width: 280px;
     flex: 0 0 280px;
     background: #fff;
     padding: 20px;
     border-right: 1px solid #e2e8f0;
-    overflow-y: auto;
-    max-height: calc(100vh - 140px);
     position: sticky;
-    top: 80px;
+    top: 70px;
     align-self: flex-start;
+    max-height: calc(100vh - 80px);
+    overflow-y: auto;
 }
 
 /* Facet Groups */
@@ -127,12 +132,19 @@
     color: white;
 }
 
+.tvbo-kg-container .facet-item.dimmed {
+    opacity: 0.5;
+}
+
+.tvbo-kg-container .facet-item.dimmed:hover {
+    opacity: 0.8;
+}
+
 /* Results Area */
 .tvbo-kg-container .results-area {
     flex: 1;
     padding: 20px 30px;
-    overflow-y: auto;
-    max-height: calc(100vh - 280px);
+    min-width: 0;
 }
 
 .tvbo-kg-container .results-header {
@@ -182,26 +194,27 @@
 /* Results Grid */
 .tvbo-kg-container .results-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 16px;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 20px;
 }
 
-@media (min-width: 1200px) {
+@media (min-width: 1400px) {
     .tvbo-kg-container .results-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: repeat(3, 1fr);
     }
 }
 
 /* Result Cards */
 .tvbo-kg-container .result-card {
     background: white;
-    border-radius: 10px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
     transition: all 0.3s ease;
     overflow: hidden;
     border: 1px solid #e2e8f0;
-    padding: 16px;
+    padding: 20px;
     cursor: pointer;
+    min-height: 120px;
 }
 
 .tvbo-kg-container .result-card:hover {
@@ -492,7 +505,7 @@
 }
 
 /* Responsive */
-@media (max-width: 768px) {
+@media (max-width: 900px) {
     .tvbo-kg-container .main-content {
         flex-direction: column;
     }
@@ -500,13 +513,10 @@
     .tvbo-kg-container .sidebar {
         width: 100%;
         flex: none;
-        max-height: 300px;
+        position: static;
+        max-height: none;
         border-right: none;
         border-bottom: 1px solid #e2e8f0;
-    }
-
-    .tvbo-kg-container .results-area {
-        max-height: none;
     }
 
     .tvbo-kg-container .results-header {
@@ -563,7 +573,7 @@
 .graph-container {
     position: relative;
     width: 100%;
-    height: calc(100vh - 200px);
+    height: 70vh;
     min-height: 500px;
     background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
     border-radius: 12px;

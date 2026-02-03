@@ -8,10 +8,13 @@ DB_NAME=${DB_NAME:-tvbo}
 
 export PGPASSWORD="$DB_PASSWORD"
 
-# Install tvbo from mounted volume if available
-if [ -d "/tmp/tvbo" ] && [ -f "/tmp/tvbo/pyproject.toml" ]; then
-  echo "Installing tvbo from /tmp/tvbo..."
+# Only install tvbo if TVBO_REINSTALL=1 is set (for development)
+# The image already has tvbo pre-installed from the Dockerfile
+if [ "${TVBO_REINSTALL:-0}" = "1" ] && [ -d "/tmp/tvbo" ] && [ -f "/tmp/tvbo/pyproject.toml" ]; then
+  echo "Reinstalling tvbo from /tmp/tvbo (TVBO_REINSTALL=1)..."
   pip3 install --break-system-packages --ignore-installed typing-extensions -e /tmp/tvbo
+else
+  echo "Using pre-installed tvbo from Docker image"
 fi
 
 # Wait for PostgreSQL to be ready (explicitly hit the default "postgres" DB so we don't fail when the target DB is missing)
@@ -46,5 +49,5 @@ psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" -c "INSERT INTO ir_config_paramet
 psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" -c "UPDATE website SET configurator_done = true;" 2>/dev/null || true
 
 echo "TVBO module ready!"
-echo "Starting Odoo server with dev mode for auto-reload..."
-exec odoo -d "$DB_NAME" --db_host="$DB_HOST" --db_user="$DB_USER" --db_password="$DB_PASSWORD" --db-filter="^${DB_NAME}$" --dev=all
+echo "Starting Odoo server..."
+exec odoo -d "$DB_NAME" --db_host="$DB_HOST" --db_user="$DB_USER" --db_password="$DB_PASSWORD" --db-filter="^${DB_NAME}$" --log-level=info --log-handler=werkzeug:INFO --log-handler=odoo.http:DEBUG

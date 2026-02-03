@@ -9,12 +9,15 @@ class KnowledgeGraphVisualization {
         this.simulation = null;
         this.nodes = [];
         this.links = [];
+        this.allNodes = [];  // All nodes before filtering
+        this.allLinks = [];  // All links before filtering
+        this.filteredItemIds = null;  // Set of filtered item IDs (null = show all)
         this.width = 0;
         this.height = 0;
         this.zoom = null;
         this.g = null;
         this.selectedNode = null;
-        this.limit = 100; // Default limit for performance
+        this.limit = 500; // Default limit - must be high enough to include core ontology classes
 
         // Color scheme for node types
         this.colors = {
@@ -28,6 +31,30 @@ class KnowledgeGraphVisualization {
             'coupling': '#ed64a6',     // Couplings - pink
             'ontology': '#667eea',     // Generic ontology - blue
         };
+    }
+
+    /**
+     * Set filtered items from the browser's search/filter results
+     * @param {Array} items - Array of {id, type, storid} objects
+     */
+    setFilteredItems(items) {
+        if (!items || items.length === 0) {
+            this.filteredItemIds = null; // Show all
+            return;
+        }
+
+        // Create a Set of node IDs that should be visible
+        this.filteredItemIds = new Set();
+        items.forEach(item => {
+            // Database items have format: db_<type>_<id>
+            if (item.type && item.type !== 'ontology') {
+                this.filteredItemIds.add(`db_${item.type}_${item.id}`);
+            }
+            // Ontology items have format: onto_<storid>
+            if (item.storid) {
+                this.filteredItemIds.add(`onto_${item.storid}`);
+            }
+        });
     }
 
     async init() {
@@ -87,11 +114,102 @@ class KnowledgeGraphVisualization {
         });
 
         document.getElementById('graphReset')?.addEventListener('click', () => {
+            this.resetToLargestCluster();
+        });
+    }
+
+    /**
+     * Find the largest connected component and center view on it
+     */
+    resetToLargestCluster() {
+        if (!this.nodes || this.nodes.length === 0) {
+            // Fallback to center
             this.svg.transition().duration(500).call(
                 this.zoom.transform,
                 d3.zoomIdentity.translate(this.width / 2, this.height / 2).scale(0.5)
             );
+            return;
+        }
+
+        // Find connected components using Union-Find
+        const nodeMap = new Map();
+        this.nodes.forEach((n, i) => {
+            const id = n.storid || n.id;
+            nodeMap.set(id, i);
         });
+
+        const parent = this.nodes.map((_, i) => i);
+        const find = (i) => {
+            if (parent[i] !== i) parent[i] = find(parent[i]);
+            return parent[i];
+        };
+        const union = (i, j) => {
+            const pi = find(i), pj = find(j);
+            if (pi !== pj) parent[pi] = pj;
+        };
+
+        // Union nodes connected by links
+        this.links.forEach(l => {
+            const srcId = l.source.storid || l.source.id || l.source;
+            const tgtId = l.target.storid || l.target.id || l.target;
+            const srcIdx = nodeMap.get(srcId);
+            const tgtIdx = nodeMap.get(tgtId);
+            if (srcIdx !== undefined && tgtIdx !== undefined) {
+                union(srcIdx, tgtIdx);
+            }
+        });
+
+        // Count component sizes
+        const compSize = new Map();
+        this.nodes.forEach((_, i) => {
+            const root = find(i);
+            compSize.set(root, (compSize.get(root) || 0) + 1);
+        });
+
+        // Find largest component
+        let largestRoot = 0, maxSize = 0;
+        compSize.forEach((size, root) => {
+            if (size > maxSize) {
+                maxSize = size;
+                largestRoot = root;
+            }
+        });
+
+        // Get nodes in largest component
+        const clusterNodes = this.nodes.filter((_, i) => find(i) === largestRoot);
+
+        // Calculate centroid of the cluster
+        let cx = 0, cy = 0;
+        clusterNodes.forEach(n => {
+            cx += n.x || 0;
+            cy += n.y || 0;
+        });
+        cx /= clusterNodes.length;
+        cy /= clusterNodes.length;
+
+        // Calculate appropriate scale to fit the cluster
+        let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+        clusterNodes.forEach(n => {
+            minX = Math.min(minX, n.x || 0);
+            maxX = Math.max(maxX, n.x || 0);
+            minY = Math.min(minY, n.y || 0);
+            maxY = Math.max(maxY, n.y || 0);
+        });
+
+        const clusterWidth = maxX - minX + 100;  // Add padding
+        const clusterHeight = maxY - minY + 100;
+        const scaleX = this.width / clusterWidth;
+        const scaleY = this.height / clusterHeight;
+        const scale = Math.min(scaleX, scaleY, 1.5) * 0.9; // Cap at 1.5x, with 90% margin
+
+        // Transform to center on cluster
+        this.svg.transition().duration(500).call(
+            this.zoom.transform,
+            d3.zoomIdentity
+                .translate(this.width / 2, this.height / 2)
+                .scale(scale)
+                .translate(-cx, -cy)
+        );
     }
 
     async loadGraph() {
@@ -106,13 +224,17 @@ class KnowledgeGraphVisualization {
             }
             const data = await response.json();
 
-            this.nodes = data.nodes || [];
-            this.links = data.links || [];
+            // Store all nodes and links for filtering
+            this.allNodes = data.nodes || [];
+            this.allLinks = data.links || [];
 
-            if (this.nodes.length === 0) {
+            if (this.allNodes.length === 0) {
                 this.showError('No graph data available');
                 return;
             }
+
+            // Apply current filters
+            this.applyFiltersInternal();
 
             this.render();
             this.renderLegend(data.stats || {});
@@ -120,6 +242,65 @@ class KnowledgeGraphVisualization {
             console.error('Failed to load graph:', error);
             this.showError(`Failed to load graph: ${error.message}`);
         }
+    }
+
+    /**
+     * Apply filters from the browser sidebar to the graph
+     * Called when filters change while graph is visible
+     */
+    applyFilters() {
+        if (this.allNodes.length === 0) return; // Not loaded yet
+
+        this.applyFiltersInternal();
+
+        // Re-render with filtered data
+        if (this.g) {
+            this.g.selectAll('*').remove();
+        }
+        this.render();
+
+        // Update legend with filtered counts
+        this.renderLegend({
+            ontology_classes: this.nodes.filter(n => n.type === 'Class' || !n.db_type).length,
+            database_items: this.nodes.filter(n => n.db_type).length,
+            total_links: this.links.length
+        });
+    }
+
+    /**
+     * Internal method to apply filter logic
+     */
+    applyFiltersInternal() {
+        if (!this.filteredItemIds) {
+            // No filter - show all
+            this.nodes = [...this.allNodes];
+            this.links = [...this.allLinks];
+            return;
+        }
+
+        // Filter database items, but keep all ontology classes
+        const visibleNodeIds = new Set();
+
+        this.nodes = this.allNodes.filter(node => {
+            // Always show ontology classes (they start with onto_)
+            if (node.id.startsWith('onto_')) {
+                visibleNodeIds.add(node.id);
+                return true;
+            }
+            // Show database items only if they match the filter
+            if (this.filteredItemIds.has(node.id)) {
+                visibleNodeIds.add(node.id);
+                return true;
+            }
+            return false;
+        });
+
+        // Filter links to only include visible nodes
+        this.links = this.allLinks.filter(link => {
+            const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
+            const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+            return visibleNodeIds.has(sourceId) && visibleNodeIds.has(targetId);
+        });
     }
 
     showLoading() {
@@ -227,6 +408,11 @@ class KnowledgeGraphVisualization {
 
             node.attr('transform', d => `translate(${d.x},${d.y})`);
         });
+
+        // Center on largest cluster when simulation stabilizes
+        this.simulation.on('end', () => {
+            this.resetToLargestCluster();
+        });
     }
 
     getNodeRadius(node) {
@@ -264,28 +450,17 @@ class KnowledgeGraphVisualization {
     }
 
     showTooltip(event, node) {
-        let tooltip = document.getElementById('graphTooltip');
-        if (!tooltip) {
-            tooltip = document.createElement('div');
-            tooltip.id = 'graphTooltip';
-            tooltip.className = 'graph-tooltip';
-            document.body.appendChild(tooltip);
+        // Use modular tooltip component
+        if (!this.tooltip) {
+            this.tooltip = new KGComponents.Tooltip();
         }
-
-        const typeLabel = node.db_type || node.type || 'Class';
-        tooltip.innerHTML = `
-            <div class="tooltip-title">${node.label || node.name || 'Unknown'}</div>
-            <div class="tooltip-type">${typeLabel}</div>
-            ${node.iri ? `<div class="tooltip-iri">${node.iri}</div>` : ''}
-        `;
-        tooltip.style.left = (event.pageX + 10) + 'px';
-        tooltip.style.top = (event.pageY - 10) + 'px';
-        tooltip.classList.add('visible');
+        this.tooltip.show(node, event.pageX, event.pageY);
     }
 
     hideTooltip() {
-        const tooltip = document.getElementById('graphTooltip');
-        if (tooltip) tooltip.classList.remove('visible');
+        if (this.tooltip) {
+            this.tooltip.hide();
+        }
     }
 
     handleNodeClick(event, node) {

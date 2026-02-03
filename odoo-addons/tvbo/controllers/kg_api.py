@@ -70,21 +70,41 @@ class KnowledgeGraphAPI(http.Controller):
     @http.route('/tvbo/api/kg/data', type='http', auth='public', methods=['GET'], csrf=False)
     def get_all_data(self, **kw):
         """Get all knowledge graph data."""
-        include_ontology = kw.get('include_ontology', 'true').lower() != 'false'
-        ontology_query = kw.get('ontology_query', '')
+        import traceback
+        try:
+            include_ontology = kw.get('include_ontology', 'true').lower() != 'false'
+            ontology_query = kw.get('ontology_query', '')
 
-        data = []
-        data.extend(self._get_dynamics())
-        data.extend(self._get_networks())
-        data.extend(self._get_integrators())
-        data.extend(self._get_experiments())
-        data.extend(self._get_studies())
-        data.extend(self._get_couplings())
+            data = []
+            _logger.info("Fetching dynamics...")
+            data.extend(self._get_dynamics())
+            _logger.info(f"Got {len(data)} dynamics")
+            _logger.info("Fetching networks...")
+            data.extend(self._get_networks())
+            _logger.info(f"Total items: {len(data)}")
+            _logger.info("Fetching integrators...")
+            data.extend(self._get_integrators())
+            _logger.info(f"Total items: {len(data)}")
+            _logger.info("Fetching experiments...")
+            data.extend(self._get_experiments())
+            _logger.info(f"Total items: {len(data)}")
+            _logger.info("Fetching studies...")
+            data.extend(self._get_studies())
+            _logger.info(f"Total items: {len(data)}")
+            _logger.info("Fetching couplings...")
+            data.extend(self._get_couplings())
+            _logger.info(f"Total items: {len(data)}")
 
-        if include_ontology:
-            data.extend(self._get_ontology_concepts(ontology_query))
+            if include_ontology:
+                _logger.info("Fetching ontology concepts...")
+                data.extend(self._get_ontology_concepts(ontology_query))
+                _logger.info(f"Total items with ontology: {len(data)}")
 
-        return json_response(data)
+            return json_response(data)
+        except Exception as e:
+            _logger.error(f"Error in get_all_data: {e}")
+            _logger.error(traceback.format_exc())
+            return json_response({"error": str(e), "traceback": traceback.format_exc()}, 500)
 
     # ===================
     # Database serializers
@@ -185,6 +205,7 @@ class KnowledgeGraphAPI(http.Controller):
             tags.append(record.network.label)
 
         result = PydanticSimulationExperiment(
+            id=str(record.id),
             label=record.label or None,
             description=record.description or None,
         ).model_dump(exclude_none=True)
@@ -540,16 +561,24 @@ class KnowledgeGraphAPI(http.Controller):
             }
             nodes.append(node)
 
-            # Link to ontology class if enriched
-            if item.get('ontology_storid'):
-                onto_storid = item['ontology_storid']
-                if onto_storid in onto_storid_map:
-                    links.append({
-                        'source': node_id,
-                        'target': onto_storid,
-                        'type': 'instance_of',
-                        'label': 'instance of',
-                    })
+            # Link to ontology class if enriched (check ontology_class.storid or ontology_instance.storid)
+            onto_class = item.get('ontology_class')
+            onto_instance = item.get('ontology_instance')
+
+            # Try to link to specific instance first, then to class
+            target_storid = None
+            if onto_instance and onto_instance.get('storid'):
+                target_storid = onto_instance['storid']
+            elif onto_class and onto_class.get('storid'):
+                target_storid = onto_class['storid']
+
+            if target_storid and target_storid in onto_storid_map:
+                links.append({
+                    'source': node_id,
+                    'target': target_storid,
+                    'type': 'instance_of',
+                    'label': 'instance of',
+                })
 
         return json_response({
             "nodes": nodes,

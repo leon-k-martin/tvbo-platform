@@ -85,6 +85,12 @@ function renderMarkdownWithMath(md) {
     return html;
 }
 
+// Ensure KGComponents is available
+if (typeof window.KGComponents === 'undefined') {
+    console.error('KGComponents not loaded! Make sure kg_components.js is loaded before kg_browser.js');
+    window.KGComponents = {};
+}
+
 class KnowledgeGraphBrowser {
     constructor() {
         console.log('🏗️ KnowledgeGraphBrowser constructor called');
@@ -100,6 +106,18 @@ class KnowledgeGraphBrowser {
         this.facetIndex = {};
         this.currentView = 'list'; // 'list' or 'graph'
         this.graphViz = null;
+
+        // Initialize modular components (with fallbacks)
+        if (window.KGComponents.DetailPanel) {
+            this.detailPanel = new KGComponents.DetailPanel();
+        }
+        if (window.KGComponents.Modal) {
+            this.modal = new KGComponents.Modal({
+                id: 'kgDetailModal',
+                onAction: (action, data) => this.handleModalAction(action, data)
+            });
+            this.modal.create();
+        }
 
         this.init();
     }
@@ -131,6 +149,10 @@ class KnowledgeGraphBrowser {
 
             console.log('🔍 Performing initial search...');
             this.search();
+
+            // Check URL hash for view state
+            this.initViewFromHash();
+
             console.log('✅ Browser initialized successfully');
         } catch (error) {
             console.error('❌ Error initializing browser:', error);
@@ -311,20 +333,7 @@ class KnowledgeGraphBrowser {
             });
         }
 
-        // Modal handlers
-        const modal = document.getElementById('detailsModal');
-        const closeBtn = document.getElementById('modalClose');
-        const backdrop = modal ? modal.querySelector('.modal-backdrop') : null;
-        if (closeBtn) {
-            closeBtn.addEventListener('click', () => this.closeModal());
-        }
-        if (backdrop) {
-            backdrop.addEventListener('click', () => this.closeModal());
-        }
-        const downloadBtn = document.getElementById('modalDownload');
-        if (downloadBtn) {
-            downloadBtn.addEventListener('click', () => this.downloadModalItem());
-        }
+        // Note: Modal events are handled by KGComponents.Modal
 
         // View toggle handlers
         const listViewBtn = document.getElementById('listViewBtn');
@@ -336,10 +345,30 @@ class KnowledgeGraphBrowser {
         if (graphViewBtn) {
             graphViewBtn.addEventListener('click', () => this.switchView('graph'));
         }
+
+        // Listen for hash changes (browser back/forward)
+        window.addEventListener('hashchange', () => this.initViewFromHash());
     }
 
-    async switchView(view) {
+    /**
+     * Initialize view based on URL hash
+     */
+    initViewFromHash() {
+        const hash = window.location.hash.replace('#', '');
+        if (hash === 'graph') {
+            this.switchView('graph', false); // false = don't update hash again
+        } else if (hash === 'list' || !hash) {
+            this.switchView('list', false);
+        }
+    }
+
+    async switchView(view, updateHash = true) {
         this.currentView = view;
+
+        // Update URL hash for bookmarkability
+        if (updateHash) {
+            history.replaceState(null, '', `#${view}`);
+        }
 
         const resultsGrid = document.getElementById('resultsGrid');
         const graphContainer = document.getElementById('graphContainer');
@@ -363,12 +392,28 @@ class KnowledgeGraphBrowser {
             listViewBtn?.classList.remove('active');
             graphViewBtn?.classList.add('active');
 
-            // Initialize graph visualization
+            // Initialize graph visualization with current filters
             if (window.KnowledgeGraphVisualization) {
                 this.graphViz = new window.KnowledgeGraphVisualization();
+                // Pass filtered item IDs to the graph
+                this.graphViz.setFilteredItems(this.getFilteredItemIds());
                 await this.graphViz.init();
             }
         }
+    }
+
+    /**
+     * Get the IDs of currently filtered items (for graph filtering)
+     */
+    getFilteredItemIds() {
+        return this.lastResultIndices.map(idx => {
+            const item = this.originalData[idx];
+            return {
+                id: item.id,
+                type: item.type,
+                storid: item.storid
+            };
+        });
     }
 
     handleFacetClick(facetItem) {
@@ -468,6 +513,12 @@ class KnowledgeGraphBrowser {
         this.renderFacets(results);
         this.renderResults(resultItems);
 
+        // Update graph if it's currently visible
+        if (this.currentView === 'graph' && this.graphViz) {
+            this.graphViz.setFilteredItems(this.getFilteredItemIds());
+            this.graphViz.applyFilters();
+        }
+
         const perfInfo = document.getElementById('performanceInfo');
         if (perfInfo) {
             perfInfo.textContent = `Found ${resultItems.length} results in ${searchTime}ms`;
@@ -480,8 +531,28 @@ class KnowledgeGraphBrowser {
         facetsSidebar.innerHTML = '';
 
         this.schema.facets.forEach(facet => {
-            const facetValues = new Map();
+            // Get all possible values from the full dataset (not just filtered)
+            const allFacetValues = new Map();
+            this.originalData.forEach((item) => {
+                const value = item[facet.field];
+                if (facet.type === 'array' && Array.isArray(value)) {
+                    value.forEach(val => {
+                        if (val) {
+                            const key = String(val);
+                            if (!allFacetValues.has(key)) {
+                                allFacetValues.set(key, 0);
+                            }
+                        }
+                    });
+                } else if (value !== undefined && value !== null && value !== '') {
+                    const key = String(value);
+                    if (!allFacetValues.has(key)) {
+                        allFacetValues.set(key, 0);
+                    }
+                }
+            });
 
+            // Count how many of the current results match each value
             currentResults.forEach(idx => {
                 const item = this.originalData[idx];
                 const value = item[facet.field];
@@ -490,16 +561,16 @@ class KnowledgeGraphBrowser {
                     value.forEach(val => {
                         if (val) {
                             const key = String(val);
-                            facetValues.set(key, (facetValues.get(key) || 0) + 1);
+                            allFacetValues.set(key, (allFacetValues.get(key) || 0) + 1);
                         }
                     });
                 } else if (value !== undefined && value !== null && value !== '') {
                     const key = String(value);
-                    facetValues.set(key, (facetValues.get(key) || 0) + 1);
+                    allFacetValues.set(key, (allFacetValues.get(key) || 0) + 1);
                 }
             });
 
-            if (facetValues.size === 0) return;
+            if (allFacetValues.size === 0) return;
 
             const facetGroup = document.createElement('div');
             facetGroup.className = 'facet-group';
@@ -516,7 +587,13 @@ class KnowledgeGraphBrowser {
             const content = document.createElement('div');
             content.className = 'facet-content';
 
-            const sortedValues = [...facetValues.entries()].sort((a, b) => b[1] - a[1]);
+            // Sort by count (descending), but keep active filters at top
+            const sortedValues = [...allFacetValues.entries()].sort((a, b) => {
+                const aActive = this.currentFilters[facet.field]?.includes(a[0]) ? 1 : 0;
+                const bActive = this.currentFilters[facet.field]?.includes(b[0]) ? 1 : 0;
+                if (aActive !== bActive) return bActive - aActive; // Active items first
+                return b[1] - a[1]; // Then by count
+            });
 
             sortedValues.forEach(([value, count]) => {
                 const facetItem = document.createElement('div');
@@ -528,6 +605,11 @@ class KnowledgeGraphBrowser {
                                 this.currentFilters[facet.field].includes(value);
                 if (isActive) {
                     facetItem.classList.add('active');
+                }
+
+                // Dim items with 0 count (but still show them)
+                if (count === 0 && !isActive) {
+                    facetItem.classList.add('dimmed');
                 }
 
                 facetItem.innerHTML = `
@@ -671,185 +753,69 @@ class KnowledgeGraphBrowser {
     }
 
     async openModal(item) {
-        const modal = document.getElementById('detailsModal');
-        if (!modal) return;
         this.currentModalItem = item;
-        const titleEl = document.getElementById('modalTitle');
-        const contentEl = document.getElementById('modalContent');
+        const title = this.getItemTitle(item);
 
-        if (titleEl) titleEl.textContent = this.getItemTitle(item);
-
-        if (contentEl) {
-            // Fetch detailed data if available
-            let detailData = item;
-            const isOntology = item.type === 'ontology';
-
-            try {
-                if (isOntology && item.storid) {
-                    const resp = await fetch(`/tvbo/api/kg/ontology/node/${item.storid}`);
-                    if (resp.ok) {
-                        detailData = await resp.json();
-                    }
-                } else if (item.type === 'model' && item.id) {
-                    const resp = await fetch(`/tvbo/api/kg/model/${item.id}`);
-                    if (resp.ok) {
-                        detailData = await resp.json();
-                    }
-                } else if (item.type === 'dynamics' && item.id) {
-                    const resp = await fetch(`/tvbo/api/kg/dynamics/${item.id}`);
-                    if (resp.ok) {
-                        detailData = await resp.json();
-                    }
-                } else if (item.type === 'network' && item.id) {
-                    const resp = await fetch(`/tvbo/api/kg/network/${item.id}`);
-                    if (resp.ok) {
-                        detailData = await resp.json();
-                    }
-                }
-            } catch (e) {
-                console.warn('Could not fetch detailed data:', e);
-            }
-
-            let html = '';
-
-            // Ontology-specific header with symbol and IRI
-            if (isOntology) {
-                if (detailData.symbol && detailData.symbol !== detailData.label) {
-                    html += `<div class="ontology-header">
-                        <span class="ontology-symbol-large">${detailData.symbol}</span>
-                    </div>`;
-                }
-                if (detailData.iri) {
-                    html += `<div class="ontology-iri">
-                        <a href="${detailData.iri}" target="_blank" rel="noopener">${detailData.iri}</a>
-                    </div>`;
-                }
-            }
-
-            // Description / Definition
-            const descText = detailData.definition || detailData.description;
-            if (descText) {
-                html += `<div class="modal-section">
-                    <div class="detail-value">${renderMarkdownWithMath(descText)}</div>
-                </div>`;
-            }
-
-            // Type badge and metadata
-            html += '<div class="modal-details">';
-
-            // Basic fields
-            const basicFields = isOntology
-                ? ['ontology_type', 'type', 'iri']
-                : ['type', 'system_type', 'source', 'iri', 'year', 'journal', 'doi'];
-            basicFields.forEach(key => {
-                const value = detailData[key];
-                if (value !== undefined && value !== null && value !== '' && key !== 'iri') {
-                    html += `<div class="detail-row">
-                        <div class="detail-label">${this.formatLabel(key)}:</div>
-                        <div class="detail-value">${this.escapeHtml(String(value))}</div>
-                    </div>`;
-                }
-            });
-
-            // Ontology hierarchy (is_a)
-            if (isOntology && detailData.is_a && detailData.is_a.length > 0) {
-                html += `<div class="detail-row">
-                    <div class="detail-label">Parent Classes:</div>
-                    <div class="detail-value">
-                        ${detailData.is_a.map(p =>
-                            `<span class="badge type-ontology">${this.escapeHtml(p)}</span>`
-                        ).join(' ')}
-                    </div>
-                </div>`;
-            }
-
-            // Ontology requirements
-            if (isOntology && detailData.requires && detailData.requires.length > 0) {
-                html += `<div class="detail-row">
-                    <div class="detail-label">Requires:</div>
-                    <div class="detail-value">
-                        ${detailData.requires.map(r =>
-                            `<span class="badge">${this.escapeHtml(String(r))}</span>`
-                        ).join(' ')}
-                    </div>
-                </div>`;
-            }
-
-            // Parameters
-            if (detailData.parameters && detailData.parameters.length > 0) {
-                html += `<div class="detail-row">
-                    <div class="detail-label">Parameters:</div>
-                    <div class="detail-value">
-                        ${detailData.parameters.map(p =>
-                            `<span class="badge">${this.escapeHtml(p.name || p.label || '')}</span>`
-                        ).join(' ')}
-                    </div>
-                </div>`;
-            }
-
-            // State variables
-            if (detailData.state_variables && detailData.state_variables.length > 0) {
-                html += `<div class="detail-row">
-                    <div class="detail-label">State Variables:</div>
-                    <div class="detail-value">
-                        ${detailData.state_variables.map(sv => {
-                            let svHtml = `<span class="badge">${this.escapeHtml(sv.label || '')}</span>`;
-                            if (sv.equation && sv.equation.definition) {
-                                svHtml += `<div class="eq-display">${sv.equation.definition}</div>`;
-                            }
-                            return svHtml;
-                        }).join(' ')}
-                    </div>
-                </div>`;
-            }
-
-            // Tags
-            if (detailData.tags && detailData.tags.length > 0) {
-                html += `<div class="detail-row">
-                    <div class="detail-label">Tags:</div>
-                    <div class="detail-value">
-                        ${detailData.tags.map(t =>
-                            `<span class="badge">${this.escapeHtml(t)}</span>`
-                        ).join(' ')}
-                    </div>
-                </div>`;
-            }
-
-            // References
-            if (detailData.references) {
-                html += `<div class="detail-row">
-                    <div class="detail-label">References:</div>
-                    <div class="detail-value">${renderMarkdownWithMath(detailData.references)}</div>
-                </div>`;
-            }
-
-            html += '</div>';
-            contentEl.innerHTML = html;
-
-            // Typeset math
-            if (window.MathJax && window.MathJax.typesetPromise) {
-                window.MathJax.typesetPromise([contentEl]).catch(() => {});
-            }
+        // Show modal IMMEDIATELY with basic data we already have
+        const initialContent = this.detailPanel ? this.detailPanel.render(item, null) : '';
+        if (this.modal) {
+            this.modal.open(title, initialContent, { item, detailData: null });
         }
 
-        modal.classList.remove('hidden');
-        modal.classList.add('show');
-        modal.style.display = 'block';
+        // Fetch detailed data in background (optional enhancement, fails silently)
+        const isOntology = item.type === 'ontology';
+
+        try {
+            let url = null;
+            if (isOntology && item.storid) {
+                url = `/tvbo/api/kg/ontology/node/${item.storid}`;
+            } else if (item.type === 'model' && item.id) {
+                url = `/tvbo/api/kg/model/${item.id}`;
+            } else if (item.type === 'dynamics' && item.id) {
+                url = `/tvbo/api/kg/dynamics/${item.id}`;
+            } else if (item.type === 'network' && item.id) {
+                url = `/tvbo/api/kg/network/${item.id}`;
+            }
+
+            if (url) {
+                // Add timeout to prevent hanging
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 3000);
+
+                const resp = await fetch(url, { signal: controller.signal });
+                clearTimeout(timeoutId);
+
+                if (resp.ok && this.currentModalItem === item) {
+                    const detailData = await resp.json();
+                    // Update modal content with full details
+                    const fullContent = this.detailPanel ? this.detailPanel.render(item, detailData) : '';
+                    if (this.modal && this.modal.isOpen) {
+                        this.modal.updateContent(fullContent, { item, detailData });
+                    }
+                }
+            }
+        } catch (e) {
+            // Silently ignore - modal already shows basic data
+        }
+    }
+
+    handleModalAction(action, data) {
+        if (action === 'download' && data) {
+            this.downloadItem(data.item);
+        }
     }
 
     closeModal() {
-        const modal = document.getElementById('detailsModal');
-        if (!modal) return;
-        modal.classList.add('hidden');
-        modal.classList.remove('show');
-        modal.style.display = 'none';
+        if (this.modal) {
+            this.modal.close();
+        }
         this.currentModalItem = null;
     }
 
-    downloadModalItem() {
-        if (!this.currentModalItem) return;
-        const yaml = this.objectToYAML(this.currentModalItem);
-        const filename = (this.currentModalItem.title || this.currentModalItem.name || 'item').replace(/\s+/g, '_') + '.yaml';
+    downloadItem(item) {
+        if (!item) return;
+        const yaml = this.objectToYAML(item);
+        const filename = (item.title || item.name || 'item').replace(/\s+/g, '_') + '.yaml';
         const blob = new Blob([yaml], { type: 'text/yaml' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');

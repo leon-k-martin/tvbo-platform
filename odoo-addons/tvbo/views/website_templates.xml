@@ -196,7 +196,7 @@
                         <section class="pt-5 pb-5">
                             <div class="container">
                                 <h2 class="text-center mb-3"
-                                    style="font-size: 2.5rem; color: #2C3E50;">One Model, Complete
+                                    style="font-size: 2.5rem; color: #2C3E50;">One Specification, Reproducible
                                     Simulations</h2>
                                 <p class="text-center text-muted mb-5"
                                     style="max-width: 700px; margin: 0 auto;">
@@ -419,6 +419,7 @@
                     <div id="wrap">
                         <!-- Include custom styles -->
                         <link rel="stylesheet" href="/tvbo/static/src/css/kg_browser.css"/>
+                        <link rel="stylesheet" href="/tvbo/static/src/css/kg_components.css"/>
                         <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
 
                         <!-- Browser Container -->
@@ -503,6 +504,7 @@
                         <script src="https://d3js.org/d3.v7.min.js"></script>
 
                         <!-- KG Browser JavaScript -->
+                        <script src="/tvbo/static/src/js/kg_components.js"></script>
                         <script src="/tvbo/static/src/js/kg_graph.js"></script>
                         <script src="/tvbo/static/src/js/kg_browser.js"></script>
                     </div>
