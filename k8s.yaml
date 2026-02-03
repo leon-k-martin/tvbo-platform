@@ -96,11 +96,11 @@ spec:
     spec:
       containers:
         - name: tvbo-api
-          image: ghcr.io/virtual-twin/tvbo:dev
+          image: leonmartin2/tvbo:dev
           ports: [{containerPort: 8000}]
           env: [{name: MODE, value: api}]
           readinessProbe:
-            httpGet: {path: /api/health, port: 8000}
+            tcpSocket: {port: 8000}
             initialDelaySeconds: 10
 
 ---
