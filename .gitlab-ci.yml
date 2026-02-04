@@ -9,8 +9,9 @@ deploy-job:
     - |
         echo "Waiting for tvbo-odoo pod to be Running..."
         until POD="$(kubectl get pods \
+          -l app=tvbo-odoo \
           --field-selector=status.phase=Running \
-          -o jsonpath='{.items[?(@.metadata.name=~"^tvbo-odoo-")].metadata.name}' | awk '{print $1}')" \
+          -o jsonpath='{.items[0].metadata.name}' 2>/dev/null)" \
           && [ -n "$POD" ]; do
           sleep 1
         done
@@ -18,3 +19,4 @@ deploy-job:
         echo "Pod: $POD"
         kubectl logs -f "$POD"
   when: manual
+
