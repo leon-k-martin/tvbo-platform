@@ -1,5 +1,7 @@
 deploy-job:
   stage: deploy
+  tags:
+    - odoomoduleupdate
   script:
     - export KUBECONFIG=/home/gitlab-runner/kubeconfig.yaml
     - kubectl delete job coordinatef-module-loader --ignore-not-found
