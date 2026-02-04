@@ -16,7 +16,7 @@ deploy-job:
           sleep 1
         done
 
-        echo "Pod: $POD"
-        kubectl logs -f "$POD"
+        # follow logs for a while, then exit cleanly
+        timeout 10 kubectl logs -f "$POD" || true
   when: manual
 
