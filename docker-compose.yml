@@ -49,7 +49,6 @@ services:
       - "8169:8069"
     volumes:
       - tvbo-web-data:/var/lib/odoo
-      - ./odoo-config:/etc/odoo
       - ./init-odoo.sh:/init-odoo.sh:ro
       # Dev: Mount addon files for auto-reload (supports multiple addons)
       - ./odoo-addons:/mnt/extra-addons:ro

@@ -27,9 +27,8 @@ ARG TVBO_REF=dev
 RUN pip3 install --break-system-packages --ignore-installed typing-extensions \
     "tvbo @ git+https://github.com/virtual-twin/tvbo.git@${TVBO_REF}"
 
-# Copy the Odoo addons and config
+# Copy the Odoo addons
 COPY odoo-addons /mnt/extra-addons
-COPY odoo-config /etc/odoo
 
 # Copy init script
 COPY init-odoo.sh /init-odoo.sh
