@@ -31,18 +31,35 @@ until pg_isready -h "$DB_HOST" -U "$DB_USER" -d postgres > /dev/null 2>&1; do
 done
 log "✓ PostgreSQL is ready"
 
-# Check if database exists
+# Check if database exists AND is initialized
 if psql -h "$DB_HOST" -U "$DB_USER" -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname='${DB_NAME}'" | grep -q 1; then
   log "Database '$DB_NAME' exists"
-  # Only upgrade if explicitly requested via TVBO_UPGRADE=1
-  if [ "${TVBO_UPGRADE:-0}" = "1" ]; then
-    log "Upgrading TVBO module..."
-    odoo -d "$DB_NAME" -u tvbo --stop-after-init --without-demo=True \
+  
+  # Check if database is initialized by checking for ir_module_module table
+  if psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" -tAc "SELECT 1 FROM information_schema.tables WHERE table_name='ir_module_module'" | grep -q 1; then
+    log "Database is initialized"
+    # Only upgrade if explicitly requested via TVBO_UPGRADE=1
+    if [ "${TVBO_UPGRADE:-0}" = "1" ]; then
+      log "Upgrading TVBO module..."
+      odoo -d "$DB_NAME" -u tvbo --stop-after-init --without-demo=True \
+        --db_host="$DB_HOST" --db_user="$DB_USER" --db_password="$DB_PASSWORD" \
+        --log-level=warn > /dev/null 2>&1
+      log "✓ TVBO module upgraded"
+    else
+      log "Skipping upgrade (set TVBO_UPGRADE=1 to force)"
+    fi
+  else
+    log "Database exists but is not initialized - initializing..."
+    odoo -d "$DB_NAME" -i base,website --stop-after-init --without-demo=True \
       --db_host="$DB_HOST" --db_user="$DB_USER" --db_password="$DB_PASSWORD" \
       --log-level=warn > /dev/null 2>&1
-    log "✓ TVBO module upgraded"
-  else
-    log "Skipping upgrade (set TVBO_UPGRADE=1 to force)"
+    log "✓ Base modules installed"
+
+    log "Installing TVBO module..."
+    odoo -d "$DB_NAME" -i tvbo --stop-after-init --without-demo=True \
+      --db_host="$DB_HOST" --db_user="$DB_USER" --db_password="$DB_PASSWORD" \
+      --log-level=warn > /dev/null 2>&1
+    log "✓ TVBO module installed"
   fi
 else
   log "Creating database '$DB_NAME' and installing base modules..."
