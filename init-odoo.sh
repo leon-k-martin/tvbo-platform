@@ -34,7 +34,7 @@ log "✓ PostgreSQL is ready"
 # Check if database exists AND is initialized
 if psql -h "$DB_HOST" -U "$DB_USER" -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname='${DB_NAME}'" | grep -q 1; then
   log "Database '$DB_NAME' exists"
-  
+
   # Check if database is initialized by checking for ir_module_module table
   if psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" -tAc "SELECT 1 FROM information_schema.tables WHERE table_name='ir_module_module'" | grep -q 1; then
     log "Database is initialized"
