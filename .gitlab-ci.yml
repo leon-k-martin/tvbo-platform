@@ -1,18 +1,21 @@
 deploy-job:
   stage: deploy
+  tags:
+    - odoomoduleupdate
   script:
     - export KUBECONFIG=/home/gitlab-runner/kubeconfig.yaml
-    - kubectl delete job coordinatef-module-loader --ignore-not-found
     - kubectl apply -f tvboRunnerActions.yaml
     - |
         echo "Waiting for tvbo-odoo pod to be Running..."
         until POD="$(kubectl get pods \
+          -l app=tvbo-odoo \
           --field-selector=status.phase=Running \
-          -o jsonpath='{.items[?(@.metadata.name=~"^tvbo-odoo-")].metadata.name}' | awk '{print $1}')" \
+          -o jsonpath='{.items[0].metadata.name}' 2>/dev/null)" \
           && [ -n "$POD" ]; do
           sleep 1
         done
 
-        echo "Pod: $POD"
-        kubectl logs -f "$POD"
+        # follow logs for a while, then exit cleanly
+        timeout 10 kubectl logs -f "$POD" || true
   when: manual
+
