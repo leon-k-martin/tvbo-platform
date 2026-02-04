@@ -1,0 +1,53 @@
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tvbo-api
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      app: tvbo-api
+  template:
+    metadata:
+      labels:
+        app: tvbo-api
+    spec:
+      imagePullSecrets:
+        - name: github-credentials
+      containers:
+        - name: tvbo-api
+          image: leonmartin2/tvbo:dev
+          ports: [{containerPort: 8000}]
+          env: [{name: MODE, value: api}]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tvbo-odoo
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      app: tvbo-odoo
+  template:
+    metadata:
+      labels:
+        app: tvbo-odoo
+    spec:
+      imagePullSecrets:
+        - name: github-credentials
+      containers:
+        - name: tvbo-odoo
+          image: ghcr.io/leon-k-martin/tvbo-platform:2756122
+          ports: [{containerPort: 8069}]
+          env:
+            - {name: HOST, value: tvbo-postgres}
+            - {name: USER, value: tvbo_odoo}
+            - {name: PASSWORD, value: odoo} # dont worry we can make this a secret later :)
+          volumeMounts: [{name: data, mountPath: /var/lib/odoo}]
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: tvbo-odoo-pvc
