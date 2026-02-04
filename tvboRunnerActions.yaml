@@ -19,6 +19,7 @@ spec:
       containers:
         - name: tvbo-api
           image: leonmartin2/tvbo:dev
+          imagePullPolicy: Always
           ports: [{containerPort: 8000}]
           env: [{name: MODE, value: api}]
 ---
@@ -41,6 +42,7 @@ spec:
       containers:
         - name: tvbo-odoo
           image: ghcr.io/leon-k-martin/tvbo-platform:main
+          imagePullPolicy: Always
           ports: [{containerPort: 8069}]
           env:
             - {name: HOST, value: tvbo-postgres}
