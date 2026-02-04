@@ -120,7 +120,7 @@ spec:
         - name: github-credentials
       containers:
         - name: tvbo-api
-          image: ghcr.io/virtual-twin/tvbo:dev
+          image: leonmartin2/tvbo:dev
           ports: [{containerPort: 8000}]
           env: [{name: MODE, value: api}]
 
