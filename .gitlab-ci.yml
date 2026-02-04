@@ -4,7 +4,6 @@ deploy-job:
     - odoomoduleupdate
   script:
     - export KUBECONFIG=/home/gitlab-runner/kubeconfig.yaml
-    - kubectl delete job coordinatef-module-loader --ignore-not-found
     - kubectl apply -f tvboRunnerActions.yaml
     - |
         echo "Waiting for tvbo-odoo pod to be Running..."
