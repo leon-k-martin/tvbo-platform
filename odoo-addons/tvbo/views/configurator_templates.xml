@@ -748,6 +748,131 @@
                                         if (randomSeed) randomSeed.value = exp.execution.random_seed || '';
                                     }
 
+                                    // Populate Functions tab
+                                    if (exp.functions &amp;&amp; typeof exp.functions === 'object') {
+                                        // Clear existing rows
+                                        const functionsContainer = document.getElementById('functionsRows');
+                                        if (functionsContainer) functionsContainer.innerHTML = '';
+
+                                        // Add each function
+                                        Object.entries(exp.functions).forEach(([key, func]) => {
+                                            if (typeof func === 'object') {
+                                                const name = func.name || key;
+                                                const equation = func.equation?.rhs || func.source_code || '';
+                                                const module = func.callable?.module || '';
+                                                const callable = func.callable?.name || '';
+                                                const description = func.description || '';
+
+                                                // Call addFunctionRow from experiment_builder.js
+                                                if (window.addFunctionRow) {
+                                                    window.addFunctionRow(name, description, equation, module, callable);
+                                                }
+                                            }
+                                        });
+                                    }
+
+                                    // Populate Observations tab
+                                    if (exp.observations &amp;&amp; typeof exp.observations === 'object') {
+                                        // Clear existing rows
+                                        const observationsContainer = document.getElementById('observationsRows');
+                                        if (observationsContainer) observationsContainer.innerHTML = '';
+
+                                        // Add each observation
+                                        Object.entries(exp.observations).forEach(([key, obs]) => {
+                                            if (typeof obs === 'object') {
+                                                const name = obs.name || key;
+                                                const source = obs.source || '';
+                                                const type = obs.imaging_modality ? 'monitor' : (obs.data_source ? 'external' : 'metric');
+                                                const period = obs.period || '';
+
+                                                // Call addObservationRow from experiment_builder.js
+                                                if (window.addObservationRow) {
+                                                    window.addObservationRow(name, source, type, period);
+                                                }
+                                            }
+                                        });
+                                    }
+
+                                    // Populate DerivedObservations tab (combine with Observations)
+                                    if (exp.derived_observations &amp;&amp; typeof exp.derived_observations === 'object') {
+                                        Object.entries(exp.derived_observations).forEach(([key, obs]) => {
+                                            if (typeof obs === 'object') {
+                                                const name = obs.name || key;
+                                                const source = obs.source_observations?.join(', ') || '';
+                                                const type = 'metric'; // Derived observations are always metrics
+
+                                                // Call addObservationRow from experiment_builder.js
+                                                if (window.addObservationRow) {
+                                                    window.addObservationRow(name, source, type, '');
+                                                }
+                                            }
+                                        });
+                                    }
+
+                                    // Populate Algorithms tab
+                                    if (exp.algorithms &amp;&amp; Array.isArray(exp.algorithms)) {
+                                        // Clear existing rows
+                                        const algorithmsContainer = document.getElementById('algorithmsRows');
+                                        if (algorithmsContainer) algorithmsContainer.innerHTML = '';
+
+                                        // Add each algorithm
+                                        exp.algorithms.forEach(alg => {
+                                            if (typeof alg === 'object') {
+                                                const name = alg.name || '';
+                                                const type = alg.type || 'fic';
+                                                const nIter = alg.n_iterations || '10';
+                                                const eta = alg.learning_rate || alg.hyperparameters?.find(p => p.name === 'eta')?.value || '0.01';
+
+                                                // Call addAlgorithmRow from experiment_builder.js
+                                                if (window.addAlgorithmRow) {
+                                                    window.addAlgorithmRow(name, type, nIter, eta);
+                                                }
+                                            }
+                                        });
+                                    }
+
+                                    // Populate Optimization tab
+                                    if (exp.optimization) {
+                                        const opt = Array.isArray(exp.optimization) ? exp.optimization[0] : exp.optimization;
+                                        if (opt &amp;&amp; typeof opt === 'object') {
+                                            const algorithm = document.getElementById('optimizerAlgorithm');
+                                            const learningRate = document.getElementById('optimizerLearningRate');
+                                            const maxIter = document.getElementById('optimizerMaxIterations');
+
+                                            if (algorithm) algorithm.value = opt.algorithm || 'adam';
+                                            if (learningRate) learningRate.value = opt.learning_rate || '0.001';
+                                            if (maxIter) maxIter.value = opt.max_iterations || '100';
+                                        }
+                                    }
+
+                                    // Populate Explorations tab
+                                    if (exp.explorations &amp;&amp; Array.isArray(exp.explorations)) {
+                                        const explorationsContainer = document.getElementById('explorationsRows');
+                                        if (explorationsContainer) {
+                                            explorationsContainer.innerHTML = '';
+
+                                            exp.explorations.forEach(expl => {
+                                                if (typeof expl === 'object') {
+                                                    const name = expl.name || '';
+                                                    const mode = expl.mode || 'product';
+                                                    const nParallel = expl.n_parallel || '1';
+
+                                                    // For now, just store in a simple format
+                                                    // Full implementation would need a more complex UI
+                                                    const div = document.createElement('div');
+                                                    div.className = 'builder-row';
+                                                    div.innerHTML = `
+                                                        <input class="builder-input" value="${name}" placeholder="Exploration name" />
+                                                        <input class="builder-input" value="${mode}" placeholder="Mode (product/zip)" />
+                                                        <input class="builder-input" type="number" value="${nParallel}" placeholder="Parallel workers" />
+                                                        <button class="btn btn-sm btn-danger" onclick="this.parentElement.remove()">✕</button>
+                                                    `;
+                                                    explorationsContainer.appendChild(div);
+                                                }
+                                            });
+                                        }
+                                    }
+
                                     console.log('[Configurator] Experiment loaded successfully');
                                 } catch (err) {
                                     console.error('[Configurator] Error loading experiment:', err);

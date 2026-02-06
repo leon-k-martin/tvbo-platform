@@ -284,7 +284,7 @@
         modelsList.innerHTML = '<div class="text-muted text-center py-3 mb-3 border rounded">No dynamics models added yet. Click "Add Dynamics Model" to get started.</div>';
         return;
       }
-      
+
       modelsList.innerHTML = STATE.dynamicsModels.map((m, idx) => `
         <div class="card mb-2">
           <div class="card-body py-2">
@@ -308,7 +308,7 @@
           </div>
         </div>
       `).join('');
-      
+
       // Attach event listeners
       modelsList.querySelectorAll('.edit-model-btn').forEach(btn => {
         btn.addEventListener('click', () => openEditor(parseInt(btn.dataset.idx)));
@@ -425,32 +425,32 @@
       const paramsContainer = root.querySelector('#editorParamsContainer');
       paramsContainer.innerHTML = '';
       (model.parameters || []).forEach(p => paramsContainer.appendChild(createParamRow(p)));
-      
+
       // State Variables
       const svContainer = root.querySelector('#editorStateVarsContainer');
       svContainer.innerHTML = '';
       (model.state_variables || []).forEach(sv => svContainer.appendChild(createStateVarRow(sv)));
-      
+
       // Derived Parameters
       const dpContainer = root.querySelector('#editorDerivedParamsContainer');
       dpContainer.innerHTML = '';
       (model.derived_parameters || []).forEach(dp => dpContainer.appendChild(createDerivedParamRow(dp)));
-      
+
       // Derived Variables
       const dvContainer = root.querySelector('#editorDerivedVarsContainer');
       dvContainer.innerHTML = '';
       (model.derived_variables || []).forEach(dv => dvContainer.appendChild(createDerivedVarRow(dv)));
-      
+
       // Functions
       const fnContainer = root.querySelector('#editorFunctionsContainer');
       fnContainer.innerHTML = '';
       (model.functions || []).forEach(fn => fnContainer.appendChild(createFunctionRow(fn)));
-      
+
       // Coupling Inputs
       const ciContainer = root.querySelector('#editorCouplingInputsContainer');
       ciContainer.innerHTML = '';
       (model.coupling_inputs || []).forEach(ci => ciContainer.appendChild(createCouplingInputRow(ci)));
-      
+
       updateCounts();
     }
 
@@ -458,7 +458,7 @@
     function openEditor(index = null) {
       currentEditIndex = index;
       modelEditor.style.display = 'block';
-      
+
       const model = index !== null ? STATE.dynamicsModels[index] : {};
       root.querySelector('#editorTitle').textContent = index !== null ? 'Edit Model' : 'Add New Model';
       root.querySelector('#editorBaseModel').value = model.basedOn || '';
@@ -467,7 +467,7 @@
       root.querySelector('#editorSystemType').value = model.system_type || 'continuous';
       root.querySelector('#editorDescription').value = model.description || '';
       root.querySelector('#editorReferences').value = model.references || '';
-      
+
       renderEditorSections(model);
     }
 
@@ -551,32 +551,32 @@
     async function loadBaseModel(modelId) {
       log('Loading base model:', modelId);
       editorLoading.style.display = 'inline-block';
-      
+
       try {
         const response = await fetch(`/tvbo/api/configurator/dynamics/${modelId}`);
         const result = await response.json();
-        
+
         if (!result.success || !result.data) {
           console.error('Failed to load model details:', result.error);
           alert('Error loading model: ' + (result.error || 'Unknown error'));
           return;
         }
-        
+
         const model = result.data;
         log('Loaded model details:', model);
-        
+
         // Fill basic fields
         root.querySelector('#editorModelName').value = model.name || '';
         root.querySelector('#editorModelLabel').value = model.label || '';
         root.querySelector('#editorDescription').value = model.description || '';
         root.querySelector('#editorReferences').value = model.references || '';
-        
+
         // System type is a Many2one in Odoo, returns [id, name]
         if (model.system_type) {
           const stName = Array.isArray(model.system_type) ? model.system_type[1] : model.system_type;
           root.querySelector('#editorSystemType').value = String(stName).toLowerCase().includes('discrete') ? 'discrete' : 'continuous';
         }
-        
+
         // Transform the data to our internal format
         const transformedModel = {
           parameters: (model.parameters || []).map(p => ({
@@ -589,8 +589,8 @@
           })),
           state_variables: (model.state_variables || []).map(sv => ({
             name: sv.name,
-            equation: sv.equation && typeof sv.equation === 'object' 
-              ? { rhs: sv.equation.righthandside || '' } 
+            equation: sv.equation && typeof sv.equation === 'object'
+              ? { rhs: sv.equation.righthandside || '' }
               : { rhs: '' },
             initial_value: sv.initial_value,
             unit: sv.unit,
@@ -628,9 +628,9 @@
             description: ci.description,
           })),
         };
-        
+
         renderEditorSections(transformedModel);
-        
+
       } catch (err) {
         console.error('Error loading base model:', err);
         alert('Error loading model: ' + err.message);
@@ -643,7 +643,7 @@
     root.querySelector('#addDynamicsModel').addEventListener('click', () => openEditor(null));
     root.querySelector('#closeEditor').addEventListener('click', closeEditor);
     root.querySelector('#cancelEditorModel').addEventListener('click', closeEditor);
-    
+
     root.querySelector('#saveEditorModel').addEventListener('click', () => {
       const model = collectEditorModel();
       if (!model.name) {
@@ -1164,6 +1164,11 @@
   window.collectSpec = collectSpec;
   window.copyPythonCode = copyPythonCode;
   window.downloadYaml = downloadYaml;
+
+  // Expose helper functions for experiment loading
+  window.addFunctionRow = addFunctionRow;
+  window.addObservationRow = addObservationRow;
+  window.addAlgorithmRow = addAlgorithmRow;
 
   // Initialize tab content renderers
   function initializeIntegratorTab() {

@@ -14,14 +14,14 @@ DB_NAME=${DB_NAME:-tvbo}
 
 export PGPASSWORD="$DB_PASSWORD"
 
-# Only install tvbo if TVBO_REINSTALL=1 is set (for development)
-# The image already has tvbo pre-installed from the Dockerfile
-if [ "${TVBO_REINSTALL:-0}" = "1" ] && [ -d "/tmp/tvbo" ] && [ -f "/tmp/tvbo/pyproject.toml" ]; then
-  log "Reinstalling tvbo from /tmp/tvbo (development mode)..."
-  pip3 install --break-system-packages --ignore-installed typing-extensions -e /tmp/tvbo > /dev/null 2>&1
-  log "✓ tvbo reinstalled"
+# Install tvbo in editable mode from mounted source (for development)
+if [ -d "/tmp/tvbo" ] && [ -f "/tmp/tvbo/pyproject.toml" ]; then
+  log "Installing tvbo from /tmp/tvbo in editable mode..."
+  pip3 install --break-system-packages -e /tmp/tvbo > /dev/null 2>&1
+  log "✓ tvbo installed in editable mode"
 else
-  log "Using pre-installed tvbo from Docker image"
+  log "ERROR: /tmp/tvbo not found or invalid. Mount tvbo source as /tmp/tvbo"
+  exit 1
 fi
 
 # Wait for PostgreSQL to be ready

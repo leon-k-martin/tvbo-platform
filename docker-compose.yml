@@ -1,69 +1,68 @@
-# Copyright © 2025 Charité Universitätsmedizin Berlin. This software is licensed under the terms of the European Union Public Licence (EUPL) version 1.2 or later.
+# Docker Compose for LOCAL DEVELOPMENT
+# Code mounted as volumes for immediate updates (no rebuild needed)
 
 services:
-  tvbo-api:
-    build:
-      context: /Users/leonmartin_bih/tools/tvbo
-      dockerfile: Dockerfile
-    image: tvbo:latest
-    container_name: tvbo-api
-    environment:
-      - MODE=api
-    ports:
-      - "8100:8000"
-    networks:
-      - tvbo-network
-    restart: unless-stopped
-
   postgres:
     image: postgres:17
-    container_name: tvbo-db
+    container_name: tvbo-postgres-dev
     environment:
-      - POSTGRES_DB=postgres
-      - POSTGRES_USER=odoo
-      - POSTGRES_PASSWORD=odoo
+      POSTGRES_DB: tvbo_dev
+      POSTGRES_USER: odoo
+      POSTGRES_PASSWORD: odoo
     volumes:
-      - tvbo-db-data:/var/lib/postgresql/data
-    networks:
-      - tvbo-network
-    restart: unless-stopped
+      - tvbo-postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"  # Avoid conflict with other postgres instances
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U odoo"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  tvbo-api:
+    build:
+      context: /Users/leonmartin_bih/tools/tvbo/docker
+      dockerfile: Dockerfile.dev
+    container_name: tvbo-api-dev
+    image: tvbo:dev-local
+    environment:
+      MODE: api
+      PYTHONPATH: /app/tvbo-src
+    volumes:
+      # Mount local tvbo source in editable mode
+      - /Users/leonmartin_bih/tools/tvbo:/app/tvbo-src:ro
+    ports:
+      - "8001:8000"  # Avoid conflict with other APIs
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: sh -c "pip install -e '/app/tvbo-src[julia]' && /entrypoint.sh"
 
   odoo:
     build:
       context: .
-      dockerfile: Dockerfile.odoo
-      additional_contexts:
-        tvbo: /Users/leonmartin_bih/tools/tvbo
-    platform: linux/amd64
-    container_name: tvbo-odoo
+      dockerfile: Dockerfile.odoo.dev
+      args:
+        CACHE_BUST: ${CACHE_BUST:-1}
+    container_name: tvbo-odoo-dev
+    image: tvbo-platform:dev
+    environment:
+      HOST: postgres
+      USER: odoo
+      PASSWORD: odoo
+      DB_NAME: tvbo_dev
+    volumes:
+      # Mount code for immediate updates (no rebuild!)
+      - ./odoo-addons/tvbo:/mnt/extra-addons/tvbo:ro
+      - /Users/leonmartin_bih/tools/tvbo:/tmp/tvbo:ro
+      - tvbo-odoo-data:/var/lib/odoo
+    ports:
+      - "8071:8069"  # Different port to avoid conflicts
     depends_on:
       postgres:
-        condition: service_started
-    environment:
-      - HOST=postgres
-      - USER=odoo
-      - PASSWORD=odoo
-      - TVBO_TEMPDIR=/tmp/tvbo
-      - TVBO_UPGRADE=${TVBO_UPGRADE:-0}
-    ports:
-      - "8169:8069"
-    volumes:
-      - tvbo-web-data:/var/lib/odoo
-      - ./init-odoo.sh:/init-odoo.sh:ro
-      # Dev: Mount addon files for auto-reload (supports multiple addons)
-      - ./odoo-addons:/mnt/extra-addons:ro
-      # Dev: Mount tvbo source for live updates (editable install at /tmp/tvbo)
-      - /Users/leonmartin_bih/tools/tvbo:/tmp/tvbo:ro
-      - ../imgs:/mnt/imgs:ro
-    networks:
-      - tvbo-network
-    restart: unless-stopped
-    entrypoint: ["/bin/bash", "/init-odoo.sh"]
-
-networks:
-  tvbo-network:
-    driver: bridge
+        condition: service_healthy
+    command: ["odoo", "--dev=reload,qweb,werkzeug,xml"]
 
 volumes:
-  tvbo-db-data:
-  tvbo-web-data:
+  tvbo-postgres-data:
+  tvbo-odoo-data:

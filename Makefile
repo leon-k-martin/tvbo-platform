@@ -1,116 +1,172 @@
 # TVB-O Platform Makefile
-# Convenience commands for development
+# Supports both local development (docker-compose) and production (Kubernetes)
 
-.PHONY: help up down restart update-odoo logs logs-odoo logs-api build rebuild \
-        k8s-up k8s-down k8s-restart k8s-status k8s-logs k8s-logs-odoo k8s-forward k8s-forward-all
+.PHONY: help dev-up dev-down dev-restart dev-update dev-logs dev-logs-odoo dev-build dev-shell \
+        up down restart update-odoo logs logs-odoo logs-api status forward forward-all
 
-# Default database name
-DB_NAME ?= tvbo
-# Kubernetes namespace
-K8S_NAMESPACE ?= tvbo
+# ================================
+# DEVELOPMENT MODE (Docker Compose)
+# ================================
+# Fast iteration: code mounted as volumes, --dev mode, no registry push/pull
 
-help:
-	@echo "TVB-O Platform Commands:"
-	@echo ""
-	@echo "Docker Compose (Development):"
-	@echo "  make up           - Start all services"
-	@echo "  make down         - Stop all services"
-	@echo "  make restart      - Restart all services"
-	@echo "  make update-odoo  - Update/upgrade TVBO Odoo module (reloads XML templates)"
-	@echo "  make logs         - Follow logs for all services"
-	@echo "  make logs-odoo    - Follow Odoo logs only"
-	@echo "  make logs-api     - Follow API logs only"
-	@echo "  make build        - Build Docker images"
-	@echo "  make rebuild      - Rebuild Docker images (no cache)"
-	@echo ""
-	@echo "Kubernetes (Local Testing):"
-	@echo "  make k8s-up       - Deploy to local Kubernetes"
-	@echo "  make k8s-down     - Delete Kubernetes deployment"
-	@echo "  make k8s-restart  - Restart Odoo deployment (pull fresh image)"
-	@echo "  make k8s-status   - Show pod status"
-	@echo "  make k8s-logs     - Show all logs"
-	@echo "  make k8s-logs-odoo - Follow Odoo logs"
-	@echo "  make k8s-forward  - Port-forward Odoo (localhost:8069)"
-	@echo "  make k8s-forward-all - Port-forward Odoo + API"
-
-# Start services
-up:
+dev-up:
+	@echo "Starting LOCAL DEV environment..."
+	@echo "Code mounted as volumes - changes are immediate!"
 	docker compose up -d
+	@echo ""
+	@echo "✓ Development environment ready!"
+	@echo ""
+	@echo "Access Odoo:  http://localhost:8070"
+	@echo "Access API:   http://localhost:8001"
+	@echo "Postgres:     localhost:5433"
+	@echo ""
+	@echo "Dev mode features:"
+	@echo "  - Auto-reload on file changes"
+	@echo "  - No rebuild needed for code changes"
+	@echo "  - QWeb template debugging"
+	@echo ""
+	@echo "Useful commands:"
+	@echo "  make dev-logs         - Follow all logs"
+	@echo "  make dev-logs-odoo    - Follow Odoo logs"
+	@echo "  make dev-update       - Update TVBO module"
+	@echo "  make dev-shell        - Open Odoo shell"
 
-# Stop services
-down:
+dev-down:
+	@echo "Stopping LOCAL DEV environment..."
 	docker compose down
 
-# Restart services
-restart:
-	docker compose restart
-
-# Update/upgrade TVBO Odoo module - reloads XML templates from disk
-update-odoo:
-	@echo "Upgrading TVBO module..."
-	docker compose exec odoo odoo -d $(DB_NAME) -u tvbo --stop-after-init --without-demo=True \
-		--db_host=postgres --db_user=odoo --db_password=odoo
-	@echo "Restarting Odoo container..."
+dev-restart:
+	@echo "Restarting LOCAL DEV environment..."
 	docker compose restart odoo
-	@echo "Done! TVBO module updated."
 
-# View logs
-logs:
+dev-update:
+	@echo "Updating TVBO module in DEV environment..."
+	docker compose exec odoo odoo -d tvbo_dev -u tvbo --stop-after-init
+	@echo "Restarting Odoo..."
+	@$(MAKE) dev-restart
+	@echo "✓ Module updated"
+
+dev-logs:
 	docker compose logs -f
 
-logs-odoo:
+dev-logs-odoo:
 	docker compose logs -f odoo
 
-logs-api:
-	docker compose logs -f tvbo-api
-
-# Build images
-build:
+dev-build:
+	@echo "Building LOCAL DEV images (tvbo-platform:dev + tvbo:dev-local)..."
 	docker compose build
+	@echo "✓ Images built:"
+	@echo "  - tvbo-platform:dev (Odoo)"
+	@echo "  - tvbo:dev-local (API from /Users/leonmartin_bih/tools/tvbo)"
 
-rebuild:
-	docker compose build --no-cache
+dev-shell:
+	@echo "Opening Odoo shell (tvbo_dev database)..."
+	docker compose exec odoo odoo shell -d tvbo_dev
 
 # ================================
-# Kubernetes Commands
+# PRODUCTION MODE (Kubernetes)
 # ================================
+# Production deployment with registry images
 
-# Deploy to local Kubernetes
-k8s-up:
-	@echo "Deploying to Kubernetes namespace '$(K8S_NAMESPACE)'..."
+# Kubernetes namespace (production uses kube-system, local can use tvbo)
+K8S_NAMESPACE ?= kube-system
+# Local port forwarding (avoid conflicts with other Odoo projects)
+LOCAL_ODOO_PORT ?= 8070
+LOCAL_API_PORT ?= 8001
+
+help:
+	@echo "TVB-O Platform - Development & Production"
+	@echo ""
+	@echo "=== LOCAL DEVELOPMENT (Recommended) ==="
+	@echo "Fast iteration with docker-compose + volume mounts:"
+	@echo ""
+	@echo "  make dev-up           - Start dev environment (http://localhost:8070)"
+	@echo "  make dev-down         - Stop dev environment"
+	@echo "  make dev-restart      - Restart Odoo"
+	@echo "  make dev-update       - Update TVBO module"
+	@echo "  make dev-logs         - Follow all logs"
+	@echo "  make dev-logs-odoo    - Follow Odoo logs"
+	@echo "  make dev-build        - Rebuild local image"
+	@echo "  make dev-shell        - Open Odoo Python shell"
+	@echo ""
+	@echo "=== PRODUCTION (Kubernetes) ==="
+	@echo "Deploy to kube-system with registry images:"
+	@echo ""
+	@echo "  make up           - Deploy to Kubernetes"
+	@echo "  make down         - Delete deployment"
+	@echo "  make restart      - Restart Odoo (pulls fresh image)"
+	@echo "  make update-odoo  - Update Odoo module"
+	@echo "  make status       - Show pod status"
+	@echo "  make logs         - Show logs"
+	@echo "  make logs-odoo    - Follow Odoo logs"
+	@echo "  make forward      - Port-forward Odoo (localhost:$(LOCAL_ODOO_PORT))"
+	@echo "  make forward-all  - Port-forward Odoo + API"
+	@echo ""
+	@echo "Configuration:"
+	@echo "  K8S_NAMESPACE     - Kubernetes namespace (default: $(K8S_NAMESPACE))"
+	@echo "  LOCAL_ODOO_PORT   - Local Odoo port (default: $(LOCAL_ODOO_PORT))"
+	@echo "  LOCAL_API_PORT    - Local API port (default: $(LOCAL_API_PORT))"
+
+# Deploy to Kubernetes
+up:
+	@echo "Deploying TVBO Platform to Kubernetes..."
+	@echo "Namespace: $(K8S_NAMESPACE)"
 	kubectl apply -f k8s.yaml
+	@echo ""
 	@echo "Waiting for pods to be ready..."
-	@kubectl wait --for=condition=ready pod -l app=tvbo-postgres -n $(K8S_NAMESPACE) --timeout=60s
-	@kubectl wait --for=condition=ready pod -l app=tvbo-api -n $(K8S_NAMESPACE) --timeout=60s
-	@kubectl wait --for=condition=ready pod -l app=tvbo-odoo -n $(K8S_NAMESPACE) --timeout=120s
+	@kubectl wait --for=condition=ready pod -l app=tvbo-postgres -n $(K8S_NAMESPACE) --timeout=60s || true
+	@kubectl wait --for=condition=ready pod -l app=tvbo-api -n $(K8S_NAMESPACE) --timeout=60s || true
+	@kubectl wait --for=condition=ready pod -l app=tvbo-odoo -n $(K8S_NAMESPACE) --timeout=120s || true
 	@echo ""
 	@echo "✓ Deployment complete!"
 	@echo ""
-	@echo "Access Odoo: make k8s-forward"
-	@echo "View logs:   make k8s-logs-odoo"
+	@echo "Next steps:"
+	@echo "  make forward      - Access Odoo at http://localhost:$(LOCAL_ODOO_PORT)"
+	@echo "  make logs-odoo    - View logs"
+	@echo "  make status       - Check pod status"
 
-# Delete Kubernetes deployment
-k8s-down:
-	@echo "Deleting Kubernetes namespace '$(K8S_NAMESPACE)'..."
-	kubectl delete namespace $(K8S_NAMESPACE)
-	@echo "✓ Namespace deleted"
+# Delete deployment
+down:
+	@echo "Deleting TVBO Platform resources..."
+	@echo "Namespace: $(K8S_NAMESPACE)"
+	kubectl delete -f k8s.yaml
+	@echo "✓ Resources deleted"
 
-# Restart Odoo deployment (forces image pull)
-k8s-restart:
+# Restart Odoo (pulls fresh image)
+restart:
 	@echo "Restarting Odoo deployment..."
 	kubectl rollout restart deployment/tvbo-odoo -n $(K8S_NAMESPACE)
-	@echo "Waiting for new pod to be ready..."
+	@echo "Waiting for new pod..."
 	@kubectl wait --for=condition=ready pod -l app=tvbo-odoo -n $(K8S_NAMESPACE) --timeout=120s
 	@echo "✓ Odoo restarted"
 
+# Update/upgrade TVBO Odoo module
+update-odoo:
+	@echo "Upgrading TVBO module in Kubernetes..."
+	@POD=$$(kubectl get pod -n $(K8S_NAMESPACE) -l app=tvbo-odoo -o jsonpath='{.items[0].metadata.name}'); \
+	echo "Pod: $$POD"; \
+	kubectl exec -n $(K8S_NAMESPACE) $$POD -- odoo -d tvbo_postgres -u tvbo --stop-after-init --without-demo=True
+	@echo "Restarting Odoo..."
+	@$(MAKE) restart
+	@echo "✓ TVBO module updated"
+
 # Show pod status
-k8s-status:
-	@echo "Pods in namespace '$(K8S_NAMESPACE)':"
-	@kubectl get pods -n $(K8S_NAMESPACE) -o wide
+status:
+	@echo "TVBO Platform Status"
+	@echo "Namespace: $(K8S_NAMESPACE)"
+	@echo ""
+	@kubectl get pods -n $(K8S_NAMESPACE) -l app=tvbo-odoo -o wide
+	@kubectl get pods -n $(K8S_NAMESPACE) -l app=tvbo-api -o wide
+	@kubectl get pods -n $(K8S_NAMESPACE) -l app=tvbo-postgres -o wide
+	@echo ""
+	@echo "Services:"
+	@kubectl get svc -n $(K8S_NAMESPACE) -l app=tvbo-odoo
+	@kubectl get svc -n $(K8S_NAMESPACE) -l app=tvbo-api
 
 # Show all logs
-k8s-logs:
-	@echo "Recent logs from all pods:"
+logs:
+	@echo "Recent logs from TVBO Platform:"
+	@echo ""
 	@echo "=== Postgres ==="
 	@kubectl logs -n $(K8S_NAMESPACE) -l app=tvbo-postgres --tail=20 || true
 	@echo ""
@@ -121,23 +177,30 @@ k8s-logs:
 	@kubectl logs -n $(K8S_NAMESPACE) -l app=tvbo-odoo --tail=20 || true
 
 # Follow Odoo logs
-k8s-logs-odoo:
+logs-odoo:
+	@echo "Following Odoo logs (Ctrl+C to stop)..."
 	kubectl logs -n $(K8S_NAMESPACE) -l app=tvbo-odoo -f
 
-# Port-forward Odoo only
-k8s-forward:
-	@echo "Port-forwarding Odoo to localhost:8069"
-	@echo "Access at: http://localhost:8069"
-	@echo "Press Ctrl+C to stop"
-	kubectl port-forward -n $(K8S_NAMESPACE) svc/tvbo-odoo 8069:8069
+# Follow API logs
+logs-api:
+	@echo "Following API logs (Ctrl+C to stop)..."
+	kubectl logs -n $(K8S_NAMESPACE) -l app=tvbo-api -f
 
-# Port-forward both Odoo and API
-k8s-forward-all:
-	@echo "Port-forwarding Odoo (8069) and API (8000)"
-	@echo "Odoo: http://localhost:8069"
-	@echo "API:  http://localhost:8000"
+# Port-forward Odoo only (avoids conflict with other Odoo projects)
+forward:
+	@echo "Port-forwarding Odoo to localhost:$(LOCAL_ODOO_PORT)"
+	@echo "Access at: http://localhost:$(LOCAL_ODOO_PORT)"
 	@echo "Press Ctrl+C to stop"
 	@echo ""
-	kubectl port-forward -n $(K8S_NAMESPACE) svc/tvbo-odoo 8069:8069 & \
-	kubectl port-forward -n $(K8S_NAMESPACE) svc/tvbo-api 8000:8000 & \
+	kubectl port-forward -n $(K8S_NAMESPACE) svc/odoo $(LOCAL_ODOO_PORT):8069
+
+# Port-forward both Odoo and API
+forward-all:
+	@echo "Port-forwarding TVBO Platform..."
+	@echo "  Odoo: http://localhost:$(LOCAL_ODOO_PORT)"
+	@echo "  API:  http://localhost:$(LOCAL_API_PORT)"
+	@echo "Press Ctrl+C to stop"
+	@echo ""
+	kubectl port-forward -n $(K8S_NAMESPACE) svc/odoo $(LOCAL_ODOO_PORT):8069 & \
+	kubectl port-forward -n $(K8S_NAMESPACE) svc/tvbo-api $(LOCAL_API_PORT):8000 & \
 	wait
