@@ -1169,58 +1169,483 @@
   window.addFunctionRow = addFunctionRow;
   window.addObservationRow = addObservationRow;
   window.addAlgorithmRow = addAlgorithmRow;
+  window.addDerivedObservationRow = addDerivedObservationRow;
+  window.addOptimizationRow = addOptimizationRow;
+  window.addExplorationRow = addExplorationRow;
+
+  // ========================================================================
+  // SCHEMA-DRIVEN PREFILL ENGINE
+  // ========================================================================
+  // Instead of hardcoding field-to-element mappings, we use data-field
+  // attributes on form elements and data-section on containers.
+  // The API response drives the prefill — if a field exists in the API,
+  // it gets mapped to the matching [data-field] element automatically.
+  // Adding/removing schema fields requires ZERO loader code changes.
+  // ========================================================================
+
+  /**
+   * Resolve a raw API value to a displayable scalar.
+   * Handles Odoo conventions: false → '', [id, name] → name, {rhs/righthandside} → string, etc.
+   */
+  function resolveValue(val) {
+    if (val === false || val === null || val === undefined) return '';
+    if (Array.isArray(val)) {
+      // Odoo Many2one: [id, display_name] or list of scalars
+      if (val.length === 2 && typeof val[0] === 'number' && typeof val[1] === 'string') return val[1];
+      // List of objects with .name → comma-join
+      if (val.length > 0 && typeof val[0] === 'object' && val[0] !== null) {
+        return val.map(v => v.name || v.display_name || '').filter(Boolean).join(', ');
+      }
+      return val.join(', ');
+    }
+    if (typeof val === 'object' && val !== null) {
+      // Equation-like: {righthandside, rhs}
+      if ('righthandside' in val) return val.righthandside || '';
+      if ('rhs' in val) return val.rhs || '';
+      // Scalar-like: {value}
+      if ('value' in val) return val.value;
+      // Fallback: name
+      return val.name || val.display_name || val.label || JSON.stringify(val);
+    }
+    return val;
+  }
+
+  /**
+   * Prefill all [data-field] elements within a section container.
+   * @param {string} sectionName - matches data-section attribute on container
+   * @param {object} data - flat API response object for this section
+   */
+  function prefillSection(sectionName, data) {
+    if (!data || typeof data !== 'object') return;
+    const container = document.querySelector(`[data-section="${sectionName}"]`);
+    if (!container) {
+      console.warn(`[Prefill] No container found for section: ${sectionName}`);
+      return;
+    }
+    const fields = container.querySelectorAll('[data-field]');
+    const fieldNames = new Set();
+    fields.forEach(el => {
+      const fieldName = el.dataset.field;
+      fieldNames.add(fieldName);
+      const rawVal = data[fieldName];
+      if (rawVal === undefined) return; // field not in API response
+      const val = resolveValue(rawVal);
+      if (el.type === 'checkbox') {
+        el.checked = !!rawVal && rawVal !== false;
+      } else {
+        el.value = val;
+      }
+    });
+    // Log unmapped API fields for debugging (helps discover new fields)
+    const SKIP = new Set(['id', 'display_name', 'create_uid', 'create_date', 'write_uid', 'write_date']);
+    const unmapped = Object.keys(data).filter(k => !fieldNames.has(k) && !SKIP.has(k) && data[k] !== false && data[k] !== null);
+    if (unmapped.length > 0) {
+      console.info(`[Prefill] Section "${sectionName}": unmapped API fields:`, unmapped);
+    }
+  }
+
+  /**
+   * Array section handlers: define how to create rows from API array items.
+   * Each handler: { container: element ID, clear: bool, handler: (item) => void }
+   */
+  const ARRAY_HANDLERS = {
+    functions: {
+      containerId: 'functionsRows',
+      handler: (func) => {
+        const name = func.name || '';
+        const equation = func.equation ? resolveValue(func.equation) : (func.source_code || '');
+        const description = func.description || '';
+        const module = func.callable?.module || '';
+        const callable = func.callable?.name || '';
+        addFunctionRow(name, description, equation, module, callable);
+      }
+    },
+    observations: {
+      containerId: 'observationsRows',
+      handler: (obs) => {
+        const name = obs.name || '';
+        const source = obs.voi || obs.source || '';
+        const type = obs.imaging_modality ? 'monitor' : (obs.data_source ? 'external' : 'metric');
+        const period = obs.period || obs.downsample_period || '';
+        addObservationRow(name, source, type, String(period));
+      }
+    },
+    derived_observations: {
+      containerId: 'derivedObservationsRows',
+      handler: (obs) => {
+        const name = obs.name || '';
+        const sources = obs.source_observations ? resolveValue(obs.source_observations) : '';
+        const pipeline = obs.pipeline ? resolveValue(obs.pipeline) : '';
+        addDerivedObservationRow(name, sources, pipeline);
+      }
+    },
+    algorithms: {
+      containerId: 'algorithmsRows',
+      handler: (alg) => {
+        const name = alg.name || '';
+        const type = alg.type || 'fic';
+        const nIter = alg.n_iterations || '10';
+        const eta = alg.learning_rate || '0.01';
+        addAlgorithmRow(name, type, String(nIter), String(eta));
+      }
+    },
+    optimization: {
+      containerId: 'optimizationRows',
+      handler: (opt) => {
+        const name = opt.name || '';
+        const optimizer = opt.optimizer || opt.algorithm || 'adam';
+        const nIter = opt.n_iterations || opt.max_iterations || '100';
+        const lr = opt.learning_rate || '0.01';
+        addOptimizationRow(name, optimizer, String(nIter), String(lr));
+      }
+    },
+    explorations: {
+      containerId: 'explorationsRows',
+      handler: (expl) => {
+        const name = expl.name || '';
+        const mode = expl.mode || 'product';
+        let params = '';
+        if (expl.parameters && Array.isArray(expl.parameters)) {
+          params = expl.parameters.map(p => {
+            if (typeof p === 'object') {
+              const pName = p.name || '';
+              const lo = p.domain?.lo ?? '';
+              const hi = p.domain?.hi ?? '';
+              const n = p.domain?.n ?? '';
+              return `${pName}:${lo}:${hi}:${n}`;
+            }
+            return '';
+          }).filter(Boolean).join(', ');
+        }
+        addExplorationRow(name, params, mode);
+      }
+    }
+  };
+
+  /**
+   * Master prefill: schema-driven experiment loading.
+   * Maps API response sections → DOM sections using data-section/data-field attributes.
+   * Arrays use registered ARRAY_HANDLERS.
+   * NO hardcoded field names. Adding new fields = add data-field attribute to HTML.
+   */
+  function prefillExperiment(exp) {
+    if (!exp) return;
+    console.log('[Prefill] Loading experiment:', exp.display_name || exp.label);
+
+    // 1. General tab (data-section="general" on the general panel)
+    prefillSection('general', {
+      name: exp.name || exp.display_name,
+      label: exp.label,
+      description: exp.description,
+      references: exp.references
+    });
+
+    // 2. Object sections: auto-prefill using data-section containers
+    const OBJECT_SECTIONS = {
+      integration: exp.integration,
+      execution: exp.execution,
+      stimulation: exp.stimulation || exp.stimulus
+    };
+    for (const [section, data] of Object.entries(OBJECT_SECTIONS)) {
+      if (data && typeof data === 'object' && !Array.isArray(data)) {
+        prefillSection(section, data);
+      }
+    }
+
+    // 3. Network section: has nested coupling
+    const net = exp.network || exp.brain_network;
+    if (net && typeof net === 'object') {
+      prefillSection('network', net);
+      // Coupling is nested inside network
+      if (net.coupling && Array.isArray(net.coupling) && net.coupling.length > 0) {
+        const coupling = net.coupling[0];
+        if (typeof coupling === 'object') {
+          prefillCoupling(coupling);
+        }
+      }
+    }
+
+    // 4. Top-level coupling (legacy field on experiment)
+    if (exp.coupling && typeof exp.coupling === 'object' && !Array.isArray(exp.coupling)) {
+      prefillCoupling(exp.coupling);
+    }
+
+    // 5. Dynamics: load first dynamics model into the editor
+    const dynamics = Array.isArray(exp.dynamics) ? exp.dynamics : (exp.model ? [exp.model] : []);
+    if (dynamics.length > 0 && window.initializeBuilder) {
+      const dyn = dynamics[0];
+      const baseModelSelect = document.getElementById('editorBaseModel');
+      if (baseModelSelect) {
+        for (const opt of baseModelSelect.options) {
+          if (opt.dataset.name === dyn.name || opt.textContent.trim() === dyn.name) {
+            baseModelSelect.value = opt.value;
+            baseModelSelect.dispatchEvent(new Event('change'));
+            break;
+          }
+        }
+      }
+    }
+
+    // 6. Array sections: iterate API arrays, create rows via handlers
+    for (const [key, config] of Object.entries(ARRAY_HANDLERS)) {
+      const items = exp[key];
+      if (!items || !Array.isArray(items) || items.length === 0) continue;
+      // Clear existing rows
+      const container = document.getElementById(config.containerId);
+      if (container) container.innerHTML = '';
+      // Create rows from data
+      items.forEach(item => {
+        if (typeof item === 'object') {
+          config.handler(item);
+        }
+      });
+    }
+
+    // 7. Update YAML preview
+    setTimeout(() => {
+      if (window.initializePreviewTab) window.initializePreviewTab();
+      if (window.updateLiveYaml) window.updateLiveYaml();
+    }, 300);
+
+    console.log('[Prefill] Experiment loaded successfully');
+  }
+
+  window.prefillExperiment = prefillExperiment;
+  window.prefillSection = prefillSection;
+  window.collectSection = collectSection;
 
   // Initialize tab content renderers
   function initializeIntegratorTab() {
     const content = document.getElementById('integratorContent');
     if (!content) return;
+    // Don't re-initialize if already populated (preserves prefilled values)
+    if (content.dataset.initialized === 'true') return;
+    content.dataset.initialized = 'true';
 
     const integrators = window.integratorsData || [];
+    content.dataset.section = 'integration';
     content.innerHTML = `
       <div class="builder-field">
-        <label>Select Integrator</label>
+        <label>Load Existing Integrator</label>
         <select id="integratorSelect" class="builder-select">
           <option value="">— Create new or select existing —</option>
           ${integrators.map(i => `<option value="${i.id}">${escapeHtml(i.name || i.method)}</option>`).join('')}
         </select>
       </div>
-      <div class="builder-field">
-        <label>Method</label>
-        <input id="integratorMethod" class="builder-input" placeholder="HeunDeterministic" />
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label fw-bold">Method</label>
+          <select id="integratorMethod" class="form-select" data-field="method">
+            <option value="">— Select —</option>
+            <option value="Euler">Euler</option>
+            <option value="Heun">Heun</option>
+            <option value="RungeKutta4">Runge-Kutta 4</option>
+            <option value="Dopri5">Dormand-Prince 5</option>
+            <option value="Dopri853">Dormand-Prince 853</option>
+            <option value="EulerStochastic">Euler Stochastic</option>
+            <option value="HeunStochastic">Heun Stochastic</option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label fw-bold">Step Size (dt)</label>
+          <input id="integratorStepSize" type="number" step="0.001" class="form-control" placeholder="0.0122" data-field="step_size" />
+        </div>
+        <div class="col-md-4">
+          <label class="form-label fw-bold">Duration (ms)</label>
+          <input id="integratorDuration" type="number" class="form-control" placeholder="1000" data-field="duration" />
+        </div>
       </div>
-      <div class="builder-field">
-        <label>Step Size</label>
-        <input id="integratorStepSize" type="number" step="0.001" class="builder-input" placeholder="0.0122" />
+      <div class="row g-3 mt-2">
+        <div class="col-md-4">
+          <label class="form-label">Transient Time (ms)</label>
+          <input id="integratorTransientTime" type="number" class="form-control" placeholder="0" data-field="transient_time" />
+          <small class="text-muted">Warmup time to discard before recording</small>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Noise Seed</label>
+          <input id="integratorNoiseSeed" type="number" class="form-control" placeholder="0" data-field="noise_seed" />
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Number of Stages</label>
+          <input id="integratorNStages" type="number" class="form-control" placeholder="1" min="1" data-field="number_of_stages" />
+        </div>
       </div>
-      <div class="builder-field">
-        <label>Duration (ms)</label>
-        <input id="integratorDuration" type="number" class="builder-input" placeholder="1000" />
+      <div class="row g-3 mt-2">
+        <div class="col-md-4">
+          <label class="form-label">Time Scale</label>
+          <input id="integratorTimeScale" type="text" class="form-control" placeholder="ms" data-field="time_scale" />
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Time Unit</label>
+          <input id="integratorTimeUnit" type="text" class="form-control" placeholder="ms" data-field="unit" />
+        </div>
+        <div class="col-md-4 d-flex align-items-end">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="integratorDelayAware" data-field="delayed" />
+            <label class="form-check-label" for="integratorDelayAware">Delay-Aware</label>
+          </div>
+        </div>
+      </div>
+      <div class="mt-3">
+        <label class="form-label">Description</label>
+        <textarea id="integratorDescription" class="form-control" rows="2" placeholder="Integrator description..." data-field="description"></textarea>
       </div>
     `;
+
+    // Handle loading existing integrator
+    const select = content.querySelector('#integratorSelect');
+    select?.addEventListener('change', async (e) => {
+      if (!e.target.value) return;
+      try {
+        const resp = await fetch(`/tvbo/api/configurator/integrators`);
+        const result = await resp.json();
+        if (result.success) {
+          const integrator = result.data.find(i => i.id == e.target.value);
+          if (integrator) prefillIntegrator(integrator);
+        }
+      } catch (err) { console.error('Error loading integrator:', err); }
+    });
+  }
+
+  function prefillIntegrator(data) {
+    if (!data) return;
+    prefillSection('integration', data);
   }
 
   function initializeCouplingTab() {
     const content = document.getElementById('couplingContent');
     if (!content) return;
+    if (content.dataset.initialized === 'true') return;
+    content.dataset.initialized = 'true';
 
     const couplings = window.couplingsData || [];
+    content.dataset.section = 'coupling';
     content.innerHTML = `
       <div class="builder-field">
-        <label>Select Coupling Function</label>
-        <select id="couplingSelect" class="builder-select">
+        <label>Load Existing Coupling Function</label>
+        <select id="couplingSelect" class="form-select">
           <option value="">— Create new or select existing —</option>
           ${couplings.map(c => `<option value="${c.id}">${escapeHtml(c.label || c.name)}</option>`).join('')}
         </select>
       </div>
-      <div class="builder-field">
-        <label>Coupling Name</label>
-        <input id="couplingName" class="builder-input" placeholder="Linear" />
+      <div class="row g-3 mt-2">
+        <div class="col-md-6">
+          <label class="form-label fw-bold">Coupling Name</label>
+          <input id="couplingName" class="form-control" placeholder="Linear" data-field="name" />
+        </div>
+        <div class="col-md-3">
+          <label class="form-label fw-bold">Label</label>
+          <input id="couplingLabel" class="form-control" placeholder="Linear Coupling" data-field="label" />
+        </div>
+        <div class="col-md-3 d-flex align-items-end">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="couplingDelayed" data-field="delayed" />
+            <label class="form-check-label" for="couplingDelayed">Delayed (transmission delays)</label>
+          </div>
+        </div>
       </div>
-      <div class="builder-field">
-        <label>Coupling Strength</label>
-        <input id="couplingStrength" type="number" step="0.01" class="builder-input" placeholder="1.0" />
+      <div class="mt-3">
+        <label class="form-label">Description</label>
+        <textarea id="couplingDescription" class="form-control" rows="2" placeholder="Coupling function description..." data-field="description"></textarea>
       </div>
+      <div class="row g-3 mt-2">
+        <div class="col-md-6">
+          <label class="form-label fw-bold">Pre-Expression (before matrix multiply)</label>
+          <input id="couplingPreExpr" class="form-control font-monospace" placeholder="e.g., local_states" data-field="pre_expression" />
+          <small class="text-muted">Applied to state before matrix multiplication</small>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-bold">Post-Expression (after matrix multiply)</label>
+          <input id="couplingPostExpr" class="form-control font-monospace" placeholder="e.g., G * gx" data-field="post_expression" />
+          <small class="text-muted">Applied after matrix multiplication</small>
+        </div>
+      </div>
+      <div class="row g-3 mt-2">
+        <div class="col-md-4">
+          <label class="form-label">Source Variables (comma-sep)</label>
+          <input id="couplingSourceVars" class="form-control" placeholder="S_e" data-field="source_variables" />
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Target Variables (comma-sep)</label>
+          <input id="couplingTargetVars" class="form-control" placeholder="S_e, S_i" data-field="target_variables" />
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Aggregation</label>
+          <select id="couplingAggregation" class="form-select" data-field="aggregation_method">
+            <option value="">Default</option>
+            <option value="sum">Sum</option>
+            <option value="mean">Mean</option>
+            <option value="max">Max</option>
+          </select>
+        </div>
+      </div>
+
+      <h6 class="mt-4">Coupling Parameters</h6>
+      <div class="row g-2 mb-1 small text-muted fw-bold">
+        <div class="col-2">Name</div>
+        <div class="col-2">Value</div>
+        <div class="col-1">Unit</div>
+        <div class="col-1">Min</div>
+        <div class="col-1">Max</div>
+        <div class="col-1">Free</div>
+        <div class="col-3">Description</div>
+        <div class="col-1"></div>
+      </div>
+      <div id="couplingParamsContainer"></div>
+      <button class="btn btn-sm btn-outline-secondary mt-2" id="addCouplingParam">+ Add Parameter</button>
     `;
+
+    // Add coupling parameter row
+    function createCouplingParamRow(p = {}) {
+      const div = document.createElement('div');
+      div.className = 'row g-1 mb-2 cp-row align-items-center';
+      const lo = p.domain?.lo ?? '';
+      const hi = p.domain?.hi ?? '';
+      div.innerHTML = `
+        <div class="col-2"><input type="text" class="form-control form-control-sm cp-name" placeholder="G" value="${escapeAttr(p.name || '')}"/></div>
+        <div class="col-2"><input type="text" class="form-control form-control-sm cp-value" placeholder="1.0" value="${escapeAttr(p.value ?? '')}"/></div>
+        <div class="col-1"><input type="text" class="form-control form-control-sm cp-unit" placeholder="" value="${escapeAttr(p.unit || '')}"/></div>
+        <div class="col-1"><input type="text" class="form-control form-control-sm cp-lo" placeholder="-∞" value="${escapeAttr(lo)}"/></div>
+        <div class="col-1"><input type="text" class="form-control form-control-sm cp-hi" placeholder="∞" value="${escapeAttr(hi)}"/></div>
+        <div class="col-1"><input type="checkbox" class="form-check-input cp-free" ${p.free ? 'checked' : ''}/></div>
+        <div class="col-3"><input type="text" class="form-control form-control-sm cp-desc" placeholder="description" value="${escapeAttr(p.description || p.label || '')}"/></div>
+        <div class="col-1"><button class="btn btn-sm btn-outline-danger remove-row">✕</button></div>
+      `;
+      div.querySelector('.remove-row').addEventListener('click', () => div.remove());
+      return div;
+    }
+    // Expose for prefill
+    window._createCouplingParamRow = createCouplingParamRow;
+
+    content.querySelector('#addCouplingParam')?.addEventListener('click', () => {
+      content.querySelector('#couplingParamsContainer').appendChild(createCouplingParamRow());
+    });
+
+    // Handle loading existing coupling
+    const select = content.querySelector('#couplingSelect');
+    select?.addEventListener('change', async (e) => {
+      if (!e.target.value) return;
+      try {
+        const couplings = window.couplingsData || [];
+        const coupling = couplings.find(c => c.id == e.target.value);
+        if (coupling) prefillCoupling(coupling);
+      } catch (err) { console.error('Error loading coupling:', err); }
+    });
+  }
+
+  function prefillCoupling(data) {
+    if (!data) return;
+    prefillSection('coupling', data);
+    // Coupling parameters (array sub-section)
+    const container = document.getElementById('couplingParamsContainer');
+    if (container && data.parameters) {
+      container.innerHTML = '';
+      const params = Array.isArray(data.parameters) ? data.parameters : [];
+      params.forEach(p => {
+        const param = typeof p === 'object' ? p : { name: p };
+        container.appendChild(window._createCouplingParamRow(param));
+      });
+    }
   }
 
   function initializeMonitorsTab() {
@@ -2151,10 +2576,11 @@
     const content = document.getElementById('stimulusContent');
     if (!content) return;
 
+    content.dataset.section = 'stimulation';
     content.innerHTML = `
       <div class="builder-field">
         <label>Stimulus Type</label>
-        <select id="stimulusType" class="builder-select">
+        <select id="stimulusType" class="builder-select" data-field="type">
           <option value="">None</option>
           <option value="PulseTrain">Pulse Train</option>
           <option value="DC">DC (Constant)</option>
@@ -2163,11 +2589,11 @@
       </div>
       <div class="builder-field">
         <label>Amplitude</label>
-        <input id="stimulusAmplitude" type="number" step="0.01" class="builder-input" placeholder="1.0" />
+        <input id="stimulusAmplitude" type="number" step="0.01" class="builder-input" placeholder="1.0" data-field="amplitude" />
       </div>
       <div class="builder-field">
         <label>Target Regions (comma-separated indices)</label>
-        <input id="stimulusRegions" class="builder-input" placeholder="0,1,2" />
+        <input id="stimulusRegions" class="builder-input" placeholder="0,1,2" data-field="target_regions" />
       </div>
     `;
   }
@@ -2444,6 +2870,7 @@
     const content = document.getElementById('executionContent');
     if (!content) return;
 
+    content.dataset.section = 'execution';
     content.innerHTML = `
       <div class="builder-field">
         <div class="builder-subtitle">Execution Configuration</div>
@@ -2453,26 +2880,34 @@
       </div>
       <div class="builder-field">
         <label>Number of Workers</label>
-        <input id="execNWorkers" type="number" class="builder-input" placeholder="1" value="1" />
+        <input id="execNWorkers" type="number" class="builder-input" placeholder="1" value="1" data-field="n_workers" />
+      </div>
+      <div class="builder-field">
+        <label>Number of Threads</label>
+        <input id="execNThreads" type="number" class="builder-input" placeholder="-1" value="-1" data-field="n_threads" />
       </div>
       <div class="builder-field">
         <label>Precision</label>
-        <select id="execPrecision" class="builder-select">
+        <select id="execPrecision" class="builder-select" data-field="precision">
           <option value="float32">float32</option>
           <option value="float64" selected>float64</option>
         </select>
       </div>
       <div class="builder-field">
         <label>Accelerator</label>
-        <select id="execAccelerator" class="builder-select">
+        <select id="execAccelerator" class="builder-select" data-field="accelerator">
           <option value="cpu" selected>CPU</option>
           <option value="gpu">GPU</option>
           <option value="tpu">TPU</option>
         </select>
       </div>
       <div class="builder-field">
+        <label>Batch Size</label>
+        <input id="execBatchSize" type="number" class="builder-input" placeholder="0" value="0" data-field="batch_size" />
+      </div>
+      <div class="builder-field">
         <label>Random Seed</label>
-        <input id="execRandomSeed" type="number" class="builder-input" placeholder="42" value="42" />
+        <input id="execRandomSeed" type="number" class="builder-input" placeholder="42" value="42" data-field="random_seed" />
       </div>
     `;
   }
@@ -2481,19 +2916,16 @@
     const previewElement = document.getElementById('previewYaml');
     if (!previewElement) return;
 
-    // Get experiment-level fields from the new card above tabs
-    const expName = document.getElementById('experimentName')?.value?.trim();
-    const expLabel = document.getElementById('experimentLabel')?.value?.trim();
-    const expDescription = document.getElementById('experimentDescription')?.value?.trim();
-    const expReferences = document.getElementById('experimentReferences')?.value?.trim();
+    // Collect general fields using data-section/data-field
+    const general = collectSection('general') || {};
 
     // Collect configuration from all tabs
     const config = {
       simulation_experiment: {
-        name: expName || 'Simulation Experiment',
-        label: expLabel || undefined,
-        description: expDescription || undefined,
-        references: expReferences || undefined,
+        name: general.name || 'Simulation Experiment',
+        label: general.label || undefined,
+        description: general.description || undefined,
+        references: general.references || undefined,
         dynamics: collectDynamicsConfig(),
         network: collectNetworkConfig(),
         integration: collectIntegrationConfig(),
@@ -2727,18 +3159,34 @@
     return { mode: 'not configured' };
   }
 
-  function collectIntegrationConfig() {
-    const integratorMethod = document.getElementById('integratorMethod');
-    const stepSize = document.getElementById('integratorStepSize');
-    const duration = document.getElementById('integratorDuration');
-
-    // Only return configured values
+  /**
+   * Generic section collector: reads all [data-field] elements within a [data-section] container.
+   * Symmetrical to prefillSection(). Auto-parses numbers.
+   * NO hardcoded field names — adding a new field = add data-field attribute to HTML.
+   */
+  function collectSection(sectionName) {
+    const container = document.querySelector(`[data-section="${sectionName}"]`);
+    if (!container) return null;
     const config = {};
-    if (integratorMethod?.value) config.method = integratorMethod.value;
-    if (stepSize?.value) config.step_size = parseFloat(stepSize.value);
-    if (duration?.value) config.duration = parseFloat(duration.value);
+    container.querySelectorAll('[data-field]').forEach(el => {
+      const field = el.dataset.field;
+      let val;
+      if (el.type === 'checkbox') {
+        val = el.checked;
+        if (!val) return; // skip false checkboxes
+      } else {
+        val = el.value?.trim();
+        if (!val) return; // skip empty
+        // Auto-parse numeric inputs
+        if (el.type === 'number' && !isNaN(parseFloat(val))) val = parseFloat(val);
+      }
+      config[field] = val;
+    });
+    return Object.keys(config).length > 0 ? config : null;
+  }
 
-    return config;
+  function collectIntegrationConfig() {
+    return collectSection('integration') || {};
   }
 
   function collectObservationModelsConfig() {
@@ -2802,20 +3250,7 @@
   }
 
   function collectStimulusConfig() {
-    const stimulusType = document.getElementById('stimulusType');
-    const amplitude = document.getElementById('stimulusAmplitude');
-    const regions = document.getElementById('stimulusRegions');
-
-    // Only return configured values, skip if no stimulus type selected
-    if (!stimulusType?.value || stimulusType.value === '' || stimulusType.value === 'none') {
-      return null;
-    }
-
-    const config = { type: stimulusType.value };
-    if (amplitude?.value) config.amplitude = parseFloat(amplitude.value);
-    if (regions?.value) config.target_regions = regions.value.split(',').map(r => parseInt(r.trim())).filter(r => !isNaN(r));
-
-    return config;
+    return collectSection('stimulation');
   }
 
   // ========================================================================
@@ -2974,18 +3409,7 @@
   }
 
   function collectExecutionConfig() {
-    const nWorkers = document.getElementById('execNWorkers')?.value;
-    const precision = document.getElementById('execPrecision')?.value;
-    const accelerator = document.getElementById('execAccelerator')?.value;
-    const randomSeed = document.getElementById('execRandomSeed')?.value;
-
-    const config = {};
-    if (nWorkers) config.n_workers = parseInt(nWorkers);
-    if (precision) config.precision = precision;
-    if (accelerator) config.accelerator = accelerator;
-    if (randomSeed) config.random_seed = parseInt(randomSeed);
-
-    return Object.keys(config).length > 0 ? config : null;
+    return collectSection('execution');
   }
 
   function generateYamlPreview(config) {
@@ -4109,53 +4533,42 @@
   }
 
 
-  // Initialize all tabs on DOM ready
+  // Eagerly initialize all tabs so prefill from loaded experiments works.
+  // Also re-init preview each time the preview tab is shown.
+  function initializeAllTabs() {
+    initializeIntegratorTab();
+    initializeCouplingTab();
+    initializeNetworkTab();
+    initializeStimulusTab();
+    initializeFunctionsTab();
+    initializeObservationsTab();
+    initializeDerivedObservationsTab();
+    initializeAlgorithmsTab();
+    initializeOptimizationTab();
+    initializeExplorationsTab();
+    initializeExecutionTab();
+    initializeObservationModelsTab();
+    initializeRunTab();
+  }
+  window.initializeAllTabs = initializeAllTabs;
+  window.initializePreviewTab = initializePreviewTab;
+
   document.addEventListener('DOMContentLoaded', function() {
-    // Initialize tab content when tabs are clicked
-    document.getElementById('dynamics-tab')?.addEventListener('shown.bs.tab', function() {
-      if (window.initializeBuilder) {
-        window.initializeBuilder();
-      }
-    });
-    document.getElementById('network-tab')?.addEventListener('shown.bs.tab', function() {
-      initializeNetworkTab();
-      initializeCouplingTab();
-    });
-    document.getElementById('integration-tab')?.addEventListener('shown.bs.tab', function() {
-      initializeIntegratorTab();
-    });
-    document.getElementById('observation-tab')?.addEventListener('shown.bs.tab', function() {
-      initializeObservationModelsTab();
-    });
-    document.getElementById('functions-tab')?.addEventListener('shown.bs.tab', function() {
-      initializeFunctionsTab();
-    });
-    document.getElementById('observations-tab')?.addEventListener('shown.bs.tab', function() {
-      initializeObservationsTab();
-    });
-    document.getElementById('derived-observations-tab')?.addEventListener('shown.bs.tab', function() {
-      initializeDerivedObservationsTab();
-    });
-    document.getElementById('algorithms-tab')?.addEventListener('shown.bs.tab', function() {
-      initializeAlgorithmsTab();
-    });
-    document.getElementById('optimization-tab')?.addEventListener('shown.bs.tab', function() {
-      initializeOptimizationTab();
-    });
-    document.getElementById('explorations-tab')?.addEventListener('shown.bs.tab', function() {
-      initializeExplorationsTab();
-    });
-    document.getElementById('execution-tab')?.addEventListener('shown.bs.tab', function() {
-      initializeExecutionTab();
-    });
-    document.getElementById('stimulus-tab')?.addEventListener('shown.bs.tab', function() {
-      initializeStimulusTab();
-    });
+    // Initialize all tabs eagerly after a short delay to let data load
+    setTimeout(initializeAllTabs, 500);
+
+    // Re-initialize preview each time the tab is shown
     document.getElementById('preview-tab')?.addEventListener('shown.bs.tab', function() {
       initializePreviewTab();
     });
-    document.getElementById('run-tab')?.addEventListener('shown.bs.tab', function() {
-      initializeRunTab();
+    // Re-initialize preview for the live YAML panel too
+    document.getElementById('preview-tab')?.addEventListener('click', function() {
+      setTimeout(initializePreviewTab, 100);
+    });
+    // Re-init network 3D when tab is shown
+    document.getElementById('network-tab')?.addEventListener('shown.bs.tab', function() {
+      initializeNetworkTab();
+      initializeCouplingTab();
     });
   });
 })();

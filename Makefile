@@ -41,7 +41,7 @@ dev-restart:
 
 dev-update:
 	@echo "Updating TVBO module in DEV environment..."
-	docker compose exec odoo odoo -d tvbo_dev -u tvbo --stop-after-init
+	docker compose exec odoo odoo -d tvbo_dev -u tvbo --stop-after-init --db_host=postgres --db_user=odoo --db_password=odoo
 	@echo "Restarting Odoo..."
 	@$(MAKE) dev-restart
 	@echo "✓ Module updated"
