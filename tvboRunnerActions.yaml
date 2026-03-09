@@ -53,3 +53,56 @@ spec:
         - name: data
           persistentVolumeClaim:
             claimName: tvbo-odoo-pvc
+
+---
+# Services
+apiVersion: v1
+kind: Service
+metadata:
+  name: tvbo-api
+  namespace: kube-system
+spec:
+  selector:
+    app: tvbo-api
+  ports: [{port: 8000}]
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: odoo
+  namespace: kube-system
+spec:
+  selector:
+    app: tvbo-odoo
+  ports: [{port: 8069}]
+
+---
+# Ingress — Kong API Gateway routes
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: tvbo
+  namespace: kube-system
+  annotations:
+    konghq.com/strip-path: "false"
+spec:
+  ingressClassName: kong
+  rules:
+    - host: tvbo.charite.de
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: tvbo-api
+                port:
+                  number: 8000
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: odoo
+                port:
+                  number: 8069
