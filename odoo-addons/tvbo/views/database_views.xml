@@ -382,7 +382,7 @@
                         <field name="description"/>
                         <field name="record_id"/>
                         <field name="model"/>
-                        <field name="local_dynamics"/>
+                        <field name="dynamics"/>
                         <field name="dynamics"/>
                         <field name="integration"/>
                         <field name="connectivity"/>

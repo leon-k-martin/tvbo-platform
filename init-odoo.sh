@@ -14,13 +14,15 @@ DB_NAME=${DB_NAME:-tvbo}
 
 export PGPASSWORD="$DB_PASSWORD"
 
-# Install tvbo in editable mode from mounted source (for development)
+# Install tvbo: prefer mounted source (dev), fall back to pre-installed (production)
 if [ -d "/tmp/tvbo" ] && [ -f "/tmp/tvbo/pyproject.toml" ]; then
   log "Installing tvbo from /tmp/tvbo in editable mode..."
   pip3 install --break-system-packages -e /tmp/tvbo > /dev/null 2>&1
   log "✓ tvbo installed in editable mode"
+elif python3 -c "import tvbo" 2>/dev/null; then
+  log "✓ tvbo already installed (production image)"
 else
-  log "ERROR: /tmp/tvbo not found or invalid. Mount tvbo source as /tmp/tvbo"
+  log "ERROR: tvbo not available. Mount source at /tmp/tvbo or install in image."
   exit 1
 fi
 

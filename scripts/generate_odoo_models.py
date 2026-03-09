@@ -258,7 +258,7 @@ def generate_database_views(
             "list_fields": ["label", "model", "network"],
             "form_fields": [
                 "label", "description", "record_id",
-                "model", "local_dynamics", "dynamics",
+                "model", "dynamics", "dynamics",
                 "integration", "connectivity", "network", "coupling",
                 "observations", "derived_observations", "functions",
                 "stimulation", "field_dynamics",

@@ -197,8 +197,8 @@ class KnowledgeGraphAPI(http.Controller):
 
     def _serialize_experiment(self, record):
         tags = []
-        if record.local_dynamics:
-            tags.append(record.local_dynamics.name)
+        if record.dynamics:
+            tags.append(record.dynamics.name)
         if record.connectivity:
             tags.append(record.connectivity.label)
         if record.network and record.network.label not in tags:
@@ -369,8 +369,8 @@ class KnowledgeGraphAPI(http.Controller):
             return json_response({"error": "Not found"}, 404)
 
         data = self._serialize_experiment(record)
-        if record.local_dynamics:
-            data['local_dynamics'] = {"id": record.local_dynamics.id, "name": record.local_dynamics.name}
+        if record.dynamics:
+            data['dynamics'] = {"id": record.dynamics.id, "name": record.dynamics.name}
         if record.integration:
             data['integration'] = {"id": record.integration.id, "method": record.integration.method}
         if record.connectivity:

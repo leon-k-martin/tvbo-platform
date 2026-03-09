@@ -626,9 +626,9 @@ def generate_experiment_data_xml(yaml_files: List[Path], output_file: Path):
             integrator_id = None
             execution_id = None
 
-            # =============== DYNAMICS (local_dynamics) ===============
-            if 'local_dynamics' in data:
-                ld = data['local_dynamics']
+            # =============== DYNAMICS (dynamics) ===============
+            if 'dynamics' in data:
+                ld = data['dynamics']
                 ld_id = f"exp_{exp_id}_dynamics"
                 dynamics_refs.append(ld_id)
 

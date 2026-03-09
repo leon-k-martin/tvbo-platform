@@ -3433,7 +3433,7 @@
     // Dynamics - only show if configured
     const dynamics = exp.dynamics;
     if (dynamics && (dynamics.model || dynamics.name)) {
-      yaml += `\n\n  local_dynamics:`;
+      yaml += `\n\n  dynamics:`;
       if (dynamics.model) yaml += `\n    name: ${dynamics.model}`;
       else if (dynamics.name) yaml += `\n    name: ${dynamics.name}`;
 
@@ -3659,7 +3659,7 @@
    * Collect the full experiment configuration for running a simulation.
    *
    * REQUIRED fields (must be configured):
-   *   - local_dynamics.name: Model name (e.g., 'Generic2dOscillator', 'JansenRit')
+   *   - dynamics.name: Model name (e.g., 'Generic2dOscillator', 'JansenRit')
    *     Source: Model tab -> Base Model dropdown OR custom model name
    *
    *   - network.nodes: At least 2 nodes with positions
@@ -3671,7 +3671,7 @@
    *     Each edge needs: source, target, weight
    *
    * OPTIONAL fields (have sensible defaults):
-   *   - local_dynamics.parameters: Model parameters
+   *   - dynamics.parameters: Model parameters
    *     Default: Uses model's default parameter values
    *
    *   - integration.method: Integrator type
@@ -3712,14 +3712,14 @@
       throw new Error('No model selected. Please select or configure a model.');
     }
 
-    const local_dynamics = {
+    const dynamics = {
       name: dynamicsConfig.model || dynamicsConfig.name,
     };
 
     // Collect parameters from the model builder UI
     const paramRows = document.querySelectorAll('#modelParamsRows .builder-row');
     if (paramRows.length > 0) {
-      local_dynamics.parameters = [];
+      dynamics.parameters = [];
       paramRows.forEach(row => {
         const name = row.querySelector('.p-name')?.value;
         const value = row.querySelector('.p-value')?.value;
@@ -3737,7 +3737,7 @@
             if (domainLo) param.domain.lo = parseFloat(domainLo);
             if (domainHi) param.domain.hi = parseFloat(domainHi);
           }
-          local_dynamics.parameters.push(param);
+          dynamics.parameters.push(param);
         }
       });
     }
@@ -3746,7 +3746,7 @@
     // Classes: sv-name, sv-expr, sv-symbol, sv-unit, sv-initial, sv-voi, sv-coupling
     const svRows = document.querySelectorAll('#stateEqRows .builder-row');
     if (svRows.length > 0) {
-      local_dynamics.state_variables = [];
+      dynamics.state_variables = [];
       svRows.forEach(row => {
         const name = row.querySelector('.sv-name')?.value;
         const expr = row.querySelector('.sv-expr')?.value;
@@ -3763,7 +3763,7 @@
           if (initial) sv.initial_value = parseFloat(initial);
           if (voi !== undefined) sv.variable_of_interest = voi;
           if (coupling !== undefined) sv.coupling_variable = coupling;
-          local_dynamics.state_variables.push(sv);
+          dynamics.state_variables.push(sv);
         }
       });
     }
@@ -3772,7 +3772,7 @@
     // Classes: dp-name, dp-expr, dp-unit
     const dpRows = document.querySelectorAll('#derivedParamsRows .builder-row');
     if (dpRows.length > 0) {
-      local_dynamics.derived_parameters = [];
+      dynamics.derived_parameters = [];
       dpRows.forEach(row => {
         const name = row.querySelector('.dp-name')?.value;
         const expr = row.querySelector('.dp-expr')?.value;
@@ -3781,7 +3781,7 @@
           const dp = { name: name };
           if (expr) dp.equation = { rhs: expr };
           if (unit) dp.unit = unit;
-          local_dynamics.derived_parameters.push(dp);
+          dynamics.derived_parameters.push(dp);
         }
       });
     }
@@ -3790,7 +3790,7 @@
     // Classes: dv-name, dv-expr, dv-unit
     const dvRows = document.querySelectorAll('#derivedVarsRows .builder-row');
     if (dvRows.length > 0) {
-      local_dynamics.derived_variables = [];
+      dynamics.derived_variables = [];
       dvRows.forEach(row => {
         const name = row.querySelector('.dv-name')?.value;
         const expr = row.querySelector('.dv-expr')?.value;
@@ -3799,7 +3799,7 @@
           const dv = { name: name };
           if (expr) dv.equation = { rhs: expr };
           if (unit) dv.unit = unit;
-          local_dynamics.derived_variables.push(dv);
+          dynamics.derived_variables.push(dv);
         }
       });
     }
@@ -3808,14 +3808,14 @@
     // Classes: fn-name, fn-expr
     const fnRows = document.querySelectorAll('#functionsRows .builder-row');
     if (fnRows.length > 0) {
-      local_dynamics.functions = [];
+      dynamics.functions = [];
       fnRows.forEach(row => {
         const name = row.querySelector('.fn-name')?.value;
         const expr = row.querySelector('.fn-expr')?.value;
         if (name) {
           const fn = { name: name };
           if (expr) fn.equation = { rhs: expr };
-          local_dynamics.functions.push(fn);
+          dynamics.functions.push(fn);
         }
       });
     }
@@ -3824,7 +3824,7 @@
     const networkConfig = collectNetworkConfig();
     console.log('[ModelBuilder] networkConfig:', networkConfig);
 
-    const modelName = local_dynamics.name;
+    const modelName = dynamics.name;
     const couplingName = document.getElementById('couplingFunction')?.value;
 
     if (!networkConfig || networkConfig.mode === 'not configured') {
@@ -3906,7 +3906,7 @@
     // Build the full experiment object
     const experiment = {
       label: document.getElementById('builderSpecName')?.value || 'WebExperiment',
-      local_dynamics: local_dynamics,
+      dynamics: dynamics,
       network: network,
       integration: integration,
       coupling: coupling,
