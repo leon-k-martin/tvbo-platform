@@ -14,7 +14,7 @@ window.KGComponents = window.KGComponents || {};
 // ============================================================
 /**
  * Renders clean markdown-style detail content for any Knowledge Graph item
- * MVP: Simple, readable, no fancy colored boxes
+ * Uses renderMarkdownWithMath (from kg_browser.js) for proper LaTeX protection
  */
 KGComponents.DetailPanel = class {
     constructor(options = {}) {
@@ -63,6 +63,19 @@ KGComponents.DetailPanel = class {
         if (data.doi) md.push(`**DOI:** [${data.doi}](https://doi.org/${data.doi})`);
         if (data.journal) md.push(`**Journal:** ${data.journal}`);
 
+        // Coupling function
+        if (data.coupling_function) {
+            md.push('');
+            md.push('### Coupling Function');
+            const cf = data.coupling_function;
+            if (cf.label) md.push(`**${cf.label}**`);
+            if (cf.definition) {
+                md.push('');
+                md.push(`$$${cf.definition}$$`);
+            }
+            md.push('');
+        }
+
         // Parameters table
         if (data.parameters && data.parameters.length > 0) {
             md.push('');
@@ -72,10 +85,10 @@ KGComponents.DetailPanel = class {
             md.push('|------|--------|---------|-------------|');
             for (const p of data.parameters) {
                 const name = p.name || p.label || '';
-                const symbol = p.symbol || '';
-                const value = p.value !== undefined ? p.value : '';
-                const desc = (p.description || '').replace(/\|/g, '\\|').replace(/\n/g, ' ');
-                md.push(`| ${name} | ${symbol} | ${value} | ${desc} |`);
+                const symbol = p.symbol ? `$${p.symbol}$` : '';
+                const value = p.value !== undefined && p.value !== null ? p.value : '';
+                const pdesc = (p.description || '').replace(/\|/g, '\\|').replace(/\n/g, ' ');
+                md.push(`| ${name} | ${symbol} | ${value} | ${pdesc} |`);
             }
         }
 
@@ -88,13 +101,50 @@ KGComponents.DetailPanel = class {
                 const label = sv.label || sv.name || '';
                 const symbol = sv.symbol || '';
                 const eq = sv.equation?.definition || sv.equation?.rhs || '';
-                md.push(`**${label}**${symbol && symbol !== label ? ` (${symbol})` : ''}`);
+                md.push(`**${label}**${symbol && symbol !== label ? ` ($${symbol}$)` : ''}`);
+                if (sv.description) {
+                    md.push('');
+                    md.push(sv.description);
+                }
                 if (eq) {
                     md.push('');
-                    md.push(`$$${eq}$$`);
+                    md.push(`$$\\dot{${symbol || label}} = ${eq}$$`);
                 }
                 md.push('');
             }
+        }
+
+        // Ontology relationships
+        if (data.relationships) {
+            const rels = data.relationships;
+            if (rels.links && rels.links.length > 0) {
+                md.push('');
+                md.push('### Relationships');
+                md.push('');
+                for (const link of rels.links) {
+                    const relLabel = (link.relation || link.type || 'related to').replace(/_/g, ' ');
+                    const targetLabel = link.target_label || link.target_name || link.target || '';
+                    if (targetLabel) {
+                        md.push(`- **${relLabel}:** ${targetLabel}`);
+                    }
+                }
+                md.push('');
+            }
+        }
+
+        // Experiment components
+        if (data.dynamics && typeof data.dynamics === 'object') {
+            md.push('');
+            md.push(`**Dynamics Model:** ${data.dynamics.name || data.dynamics.label || ''}`);
+        }
+        if (data.integration && typeof data.integration === 'object') {
+            md.push(`**Integration:** ${data.integration.method || ''}`);
+        }
+        if (data.connectivity && typeof data.connectivity === 'object') {
+            md.push(`**Connectivity:** ${data.connectivity.label || ''}`);
+        }
+        if (data.parcellation && typeof data.parcellation === 'object') {
+            md.push(`**Parcellation:** ${data.parcellation.label || ''}`);
         }
 
         // References
@@ -111,8 +161,45 @@ KGComponents.DetailPanel = class {
             md.push(`**Tags:** ${data.tags.join(', ')}`);
         }
 
+        // Remaining fields not already displayed
+        const displayedKeys = new Set([
+            'id', 'storid', 'type', 'ontology_type', 'name', 'label', 'title',
+            'description', 'definition', 'desc', 'summary', 'abstract',
+            'iri', 'is_a', 'source', 'year', 'doi', 'journal',
+            'parameters', 'state_variables', 'tags', 'references',
+            'coupling_function', 'relationships', 'dynamics', 'integration',
+            'connectivity', 'parcellation', 'symbol', 'system_type',
+            'report_md', 'thumbnail', 'full_model'
+        ]);
+        const extraFields = Object.entries(data).filter(
+            ([k, v]) => !displayedKeys.has(k) && v !== undefined && v !== null && v !== ''
+                && !(Array.isArray(v) && v.length === 0)
+        );
+        if (extraFields.length > 0) {
+            md.push('');
+            md.push('### Details');
+            md.push('');
+            for (const [key, value] of extraFields) {
+                const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                if (Array.isArray(value)) {
+                    md.push(`**${label}:** ${value.join(', ')}`);
+                } else if (typeof value === 'object') {
+                    md.push(`**${label}:**`);
+                    md.push('');
+                    md.push('```');
+                    md.push(JSON.stringify(value, null, 2));
+                    md.push('```');
+                } else {
+                    md.push(`**${label}:** ${value}`);
+                }
+            }
+        }
+
         const markdown = md.join('\n');
-        return `<div class="kg-detail-content">${this.renderMarkdown(markdown)}</div>`;
+        const thumbHtml = item.thumbnail
+            ? `<div style="text-align:center; margin-bottom:16px;"><img src="${item.thumbnail}" alt="" style="max-width:100%; border-radius:6px; box-shadow:0 1px 3px rgba(0,0,0,0.15)" onerror="this.parentElement.style.display='none'"/></div>`
+            : '';
+        return `<div class="kg-detail-content">${thumbHtml}${this.renderMarkdown(markdown)}</div>`;
     }
 
     formatTypeLabel(data) {
@@ -123,33 +210,22 @@ KGComponents.DetailPanel = class {
     }
 
     renderMarkdown(md) {
-        if (!md || typeof md !== 'string') return '';
-        // Use marked.js if available
+        // Use the global renderMarkdownWithMath (protects LaTeX from markdown parser)
+        if (typeof renderMarkdownWithMath === 'function') {
+            return renderMarkdownWithMath(md);
+        }
+        // Fallback if renderMarkdownWithMath not available yet
         if (typeof marked !== 'undefined' && marked.parse) {
             return marked.parse(md);
         }
-        // Simple fallback: convert basic markdown
-        let html = md
+        // Minimal fallback
+        return md
             .replace(/^### (.+)$/gm, '<h4>$1</h4>')
             .replace(/^## (.+)$/gm, '<h3>$1</h3>')
             .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
             .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>')
-            .replace(/\$\$(.+?)\$\$/gs, '<div class="math-block">$$$1$$</div>')
-            .replace(/\$(.+?)\$/g, '<span class="math-inline">$$$1$$</span>')
             .replace(/\n\n/g, '</p><p>')
             .replace(/\n/g, '<br/>');
-        // Simple table parsing
-        if (html.includes('|---')) {
-            html = html.replace(/\|([^\n]+)\|\n\|[-|\s]+\|\n((?:\|[^\n]+\|\n?)+)/g, (match, header, rows) => {
-                const headers = header.split('|').filter(c => c.trim()).map(c => `<th>${c.trim()}</th>`).join('');
-                const bodyRows = rows.trim().split('\n').map(row => {
-                    const cells = row.split('|').filter(c => c.trim()).map(c => `<td>${c.trim()}</td>`).join('');
-                    return `<tr>${cells}</tr>`;
-                }).join('');
-                return `<table class="md-table"><thead><tr>${headers}</tr></thead><tbody>${bodyRows}</tbody></table>`;
-            });
-        }
-        return `<p>${html}</p>`;
     }
 
     /**

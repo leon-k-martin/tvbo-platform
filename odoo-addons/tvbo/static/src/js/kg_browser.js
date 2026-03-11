@@ -694,14 +694,20 @@ class KnowledgeGraphBrowser {
             const symbolDisplay = isOntology && item.symbol && item.symbol !== title
                 ? `<span class="ontology-symbol">${item.symbol}</span>` : '';
 
+            // Thumbnail
+            const thumb = item.thumbnail
+                ? `<img class="card-thumb" src="${item.thumbnail}" alt="" onerror="this.style.display='none'">`
+                : '';
+
             const header = `
                 <div class="field-display" style="margin-bottom:6px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
                     <span class="field-value" style="font-weight:700; color:#2d3748; font-size:1.05rem;">${this.escapeHtml(title)}</span>
                     ${symbolDisplay}
                     ${typeBadge}
                 </div>`;
-            const body = desc ? `
+            const body = desc || thumb ? `
                 <div class="card-body">
+                    ${thumb}
                     <div class="card-desc"><span class="field-value" style="color:#4a5568;">${this.escapeHtml(desc)}</span></div>
                 </div>` : '';
 
@@ -769,12 +775,17 @@ class KnowledgeGraphBrowser {
             let url = null;
             if (isOntology && item.storid) {
                 url = `/tvbo/api/kg/ontology/node/${item.storid}`;
-            } else if (item.type === 'model' && item.id) {
-                url = `/tvbo/api/kg/model/${item.id}`;
-            } else if (item.type === 'dynamics' && item.id) {
-                url = `/tvbo/api/kg/dynamics/${item.id}`;
-            } else if (item.type === 'network' && item.id) {
-                url = `/tvbo/api/kg/network/${item.id}`;
+            } else if (item.id) {
+                const typeRoutes = {
+                    'model': 'dynamics', 'dynamics': 'dynamics',
+                    'network': 'network', 'coupling': 'coupling',
+                    'integrator': 'integrator', 'experiment': 'experiment',
+                    'study': 'study'
+                };
+                const route = typeRoutes[item.type];
+                if (route) {
+                    url = `/tvbo/api/kg/${route}/${item.id}`;
+                }
             }
 
             if (url) {

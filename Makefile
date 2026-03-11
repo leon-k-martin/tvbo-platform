@@ -2,7 +2,8 @@
 # Supports both local development (docker-compose) and production (Kubernetes)
 
 .PHONY: help dev-up dev-down dev-restart dev-update dev-logs dev-logs-odoo dev-build dev-shell \
-        up down restart update-odoo logs logs-odoo logs-api status forward forward-all
+        up down restart update-odoo logs logs-odoo logs-api status forward forward-all \
+        render-thumbnails
 
 # ================================
 # DEVELOPMENT MODE (Docker Compose)
@@ -16,7 +17,7 @@ dev-up:
 	@echo ""
 	@echo "✓ Development environment ready!"
 	@echo ""
-	@echo "Access Odoo:  http://localhost:8070"
+	@echo "Access Odoo:  http://localhost:8169"
 	@echo "Access API:   http://localhost:8001"
 	@echo "Postgres:     localhost:5433"
 	@echo ""
@@ -64,6 +65,20 @@ dev-shell:
 	docker compose exec odoo odoo shell -d tvbo_dev
 
 # ================================
+# THUMBNAIL GENERATION
+# ================================
+
+render-thumbnails:
+	@echo "Rendering KG browser thumbnails..."
+	python scripts/render_thumbnails.py
+	@echo "✓ Thumbnails saved to odoo-addons/tvbo/static/src/img/thumbnails/"
+
+render-thumbnails-force:
+	@echo "Re-rendering ALL KG browser thumbnails..."
+	python scripts/render_thumbnails.py --force
+	@echo "✓ Thumbnails saved to odoo-addons/tvbo/static/src/img/thumbnails/"
+
+# ================================
 # PRODUCTION MODE (Kubernetes)
 # ================================
 # Production deployment with registry images
@@ -88,6 +103,8 @@ help:
 	@echo "  make dev-logs-odoo    - Follow Odoo logs"
 	@echo "  make dev-build        - Rebuild local image"
 	@echo "  make dev-shell        - Open Odoo Python shell"
+	@echo "  make render-thumbnails       - Generate KG browser thumbnails"
+	@echo "  make render-thumbnails-force - Re-generate all thumbnails"
 	@echo ""
 	@echo "=== PRODUCTION (Kubernetes) ==="
 	@echo "Deploy to kube-system with registry images:"

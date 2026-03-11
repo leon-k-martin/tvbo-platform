@@ -5,6 +5,7 @@ No fallbacks. Fails fast when something unexpected happens.
 """
 import json
 import logging
+import os
 
 from odoo import http
 from odoo.http import Response, request
@@ -21,6 +22,18 @@ _logger = logging.getLogger(__name__)
 
 # Singleton ontology API
 _ontology_api = None
+
+# Thumbnail directory (static files in the addon)
+_THUMB_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'static', 'src', 'img', 'thumbnails')
+_THUMB_URL = '/tvbo/static/src/img/thumbnails'
+
+
+def _thumbnail_url(category: str, name: str) -> str | None:
+    """Return the URL for a thumbnail if it exists on disk."""
+    png = os.path.join(_THUMB_DIR, category, f'{name}.png')
+    if os.path.isfile(png):
+        return f'{_THUMB_URL}/{category}/{name}.png'
+    return None
 
 
 def get_ontology_api():
@@ -138,6 +151,10 @@ class KnowledgeGraphAPI(http.Controller):
             'system_type': record.system_type.technical_name if record.system_type else '',
         })
 
+        thumb = _thumbnail_url('models', record.name or '')
+        if thumb:
+            result['thumbnail'] = thumb
+
         return get_ontology_api().enrich_database_item(result, 'dynamics')
 
     def _get_networks(self):
@@ -163,6 +180,11 @@ class KnowledgeGraphAPI(http.Controller):
             'title': record.label or f'Network {record.id}',
             'tags': tags,
         })
+
+        # Try thumbnail by label
+        thumb = _thumbnail_url('networks', record.label or '')
+        if thumb:
+            result['thumbnail'] = thumb
 
         return get_ontology_api().enrich_database_item(result, 'network')
 
@@ -318,9 +340,13 @@ class KnowledgeGraphAPI(http.Controller):
             return json_response({"error": "Not found"}, 404)
 
         data = self._serialize_dynamics(record)
-        data['parameters'] = [{"name": p.name, "label": p.label, "description": p.description} for p in record.parameters]
+        data['parameters'] = [{
+            "name": p.name, "label": p.label, "symbol": p.symbol or '',
+            "value": p.value, "description": p.description or ''
+        } for p in record.parameters]
         data['state_variables'] = [{
-            "name": sv.name, "label": sv.label, "description": sv.description,
+            "name": sv.name, "label": sv.label, "symbol": sv.symbol or '',
+            "description": sv.description or '',
             "equation": {"label": sv.equation.label, "definition": sv.equation.definition} if sv.equation else None
         } for sv in record.state_variables]
 
@@ -345,7 +371,10 @@ class KnowledgeGraphAPI(http.Controller):
             return json_response({"error": "Not found"}, 404)
 
         data = self._serialize_integrator(record)
-        data['parameters'] = [{"name": p.name, "label": p.label, "value": p.value} for p in record.parameters]
+        data['parameters'] = [{
+            "name": p.name, "label": p.label, "symbol": p.symbol or '',
+            "value": p.value, "description": p.description or ''
+        } for p in record.parameters]
 
         return json_response(data)
 
@@ -358,7 +387,10 @@ class KnowledgeGraphAPI(http.Controller):
         data = self._serialize_coupling(record)
         if record.coupling_function:
             data['coupling_function'] = {"label": record.coupling_function.label, "definition": record.coupling_function.definition}
-        data['parameters'] = [{"name": p.name, "label": p.label} for p in record.parameters]
+        data['parameters'] = [{
+            "name": p.name, "label": p.label, "symbol": p.symbol or '',
+            "value": p.value, "description": p.description or ''
+        } for p in record.parameters]
 
         return json_response(data)
 

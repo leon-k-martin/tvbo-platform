@@ -57,7 +57,7 @@ services:
       - /Users/leonmartin_bih/tools/tvbo:/tmp/tvbo:ro
       - tvbo-odoo-data:/var/lib/odoo
     ports:
-      - "8071:8069"  # Different port to avoid conflicts
+      - "8169:8069"  # TVBO platform port
     depends_on:
       postgres:
         condition: service_healthy
