@@ -70,7 +70,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: odoo
+  name: tvbo-odoo
   namespace: kube-system
 spec:
   selector:
@@ -103,6 +103,6 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: odoo
+                name: tvbo-odoo
                 port:
                   number: 8069
