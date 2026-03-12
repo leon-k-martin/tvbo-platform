@@ -46,8 +46,6 @@ make rebuild      # Rebuild containers
 2. **Deploy the platform:**
 ```bash
 make up
-# or choose a different namespace explicitly
-K8S_NAMESPACE=tvbo make up
 ```
 
 3. **Check pod status:**
