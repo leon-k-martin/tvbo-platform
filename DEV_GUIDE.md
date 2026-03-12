@@ -92,7 +92,7 @@ make logs-odoo
 
 - Images must be pushed to registry first:
   - `ghcr.io/leon-k-martin/tvbo-platform:main` (Odoo)
-  - `ghcr.io/virtual-twin/tvbo:main` (API)
+  - `ghcr.io/virtual-twin/tvbo:dev` (API)
 - Uses `imagePullPolicy: Always` to get latest
 - Deployed to `kube-system` namespace by default
 - Production database credentials via secret
@@ -102,8 +102,8 @@ make logs-odoo
 Set these variables to customize:
 
 ```bash
-# Change Kubernetes namespace
-K8S_NAMESPACE=tvbo make up
+# Namespace is currently fixed in k8s.yaml (kube-system).
+# To deploy elsewhere, update namespace fields in k8s.yaml first.
 
 # Change local port forwarding
 LOCAL_ODOO_PORT=9090 LOCAL_API_PORT=9091 make forward-all
