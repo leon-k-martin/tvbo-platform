@@ -18,10 +18,18 @@ spec:
         - name: github-credentials
       containers:
         - name: tvbo-api
-          image: leonmartin2/tvbo:dev
+          image: ghcr.io/virtual-twin/tvbo:main
           imagePullPolicy: Always
           ports: [{containerPort: 8000}]
           env: [{name: MODE, value: api}]
+          readinessProbe:
+            httpGet: {path: /api/health, port: 8000}
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: {path: /api/health, port: 8000}
+            initialDelaySeconds: 45
+            periodSeconds: 20
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -48,6 +56,7 @@ spec:
             - {name: HOST, value: tvbo-postgres}
             - {name: USER, value: tvbo_odoo}
             - {name: PASSWORD, value: odoo} # dont worry we can make this a secret later :)
+            - {name: TVBO_API_URL, value: http://tvbo-api:8000}
           volumeMounts: [{name: data, mountPath: /var/lib/odoo}]
       volumes:
         - name: data

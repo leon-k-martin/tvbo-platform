@@ -27,12 +27,24 @@ _ontology_api = None
 _THUMB_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'static', 'src', 'img', 'thumbnails')
 _THUMB_URL = '/tvbo/static/src/img/thumbnails'
 
+# Report directory (pre-rendered markdown)
+_REPORT_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'static', 'src', 'reports')
+_REPORT_URL = '/tvbo/static/src/reports'
+
 
 def _thumbnail_url(category: str, name: str) -> str | None:
     """Return the URL for a thumbnail if it exists on disk."""
     png = os.path.join(_THUMB_DIR, category, f'{name}.png')
     if os.path.isfile(png):
         return f'{_THUMB_URL}/{category}/{name}.png'
+    return None
+
+
+def _report_url(category: str, name: str) -> str | None:
+    """Return the URL for a pre-rendered report if it exists on disk."""
+    md = os.path.join(_REPORT_DIR, category, f'{name}.md')
+    if os.path.isfile(md):
+        return f'{_REPORT_URL}/{category}/{name}.md'
     return None
 
 
@@ -54,6 +66,55 @@ def json_response(data, status=200):
     )
 
 
+def _field_label(field_name):
+    """Convert field_name to a human-readable label."""
+    return field_name.replace('_', ' ').title()
+
+
+def _introspect_field(field_name, field_info):
+    """Return field schema dict if the field is filterable, None otherwise.
+
+    Filterable = simple scalar types (str, int, float, bool, enum).
+    Skips nested objects, lists, dicts, and internal fields.
+    """
+    from typing import get_origin, get_args, Union
+    from enum import Enum
+
+    annotation = field_info.annotation
+    base_type = annotation
+
+    # Unwrap Optional[T]
+    origin = get_origin(annotation)
+    if origin is Union:
+        args = get_args(annotation)
+        non_none = [a for a in args if a is not type(None)]
+        if len(non_none) == 1:
+            base_type = non_none[0]
+            origin = get_origin(base_type)
+        else:
+            return None
+
+    # Skip list, dict, and other generic container types
+    if origin in (list, dict, set, frozenset):
+        return None
+
+    # Extract description from field metadata
+    desc = field_info.description or ''
+
+    if base_type is str:
+        return {'type': 'string', 'label': _field_label(field_name), 'description': desc}
+    elif base_type in (int, float):
+        return {'type': 'number', 'label': _field_label(field_name), 'description': desc}
+    elif base_type is bool:
+        return {'type': 'boolean', 'label': _field_label(field_name), 'description': desc}
+    elif isinstance(base_type, type) and issubclass(base_type, Enum):
+        values = [{'value': v.value, 'label': v.name} for v in base_type]
+        return {'type': 'enum', 'label': _field_label(field_name), 'description': desc, 'values': values}
+
+    # Skip complex types (Pydantic models, etc.)
+    return None
+
+
 class KnowledgeGraphAPI(http.Controller):
     """Knowledge Graph API endpoints. Clean MVP."""
 
@@ -67,14 +128,54 @@ class KnowledgeGraphAPI(http.Controller):
         return json_response({
             "searchableFields": ["name", "label", "title", "description", "abstract", "doi", "method", "definition", "symbol"],
             "facets": [
-                {"field": "type", "label": "Type", "type": "string"},
-                {"field": "ontology_type", "label": "Ontology Class", "type": "string"},
-                {"field": "system_type", "label": "System Type", "type": "string"},
-                {"field": "year", "label": "Year", "type": "string"},
-                {"field": "tags", "label": "Tags", "type": "array"},
+                {"field": "type", "label": "Class", "type": "string"},
             ],
             "sources": ["database", "ontology"]
         })
+
+    @http.route('/tvbo/api/kg/schema/classes', type='http', auth='public', methods=['GET'], csrf=False)
+    def get_class_schemas(self, **kw):
+        """Get schemas for all datamodel classes represented in the KG.
+
+        Introspects Pydantic models (generated from tvbo_datamodel.yaml) to return
+        class names, descriptions, and filterable properties with types.
+        """
+        from tvbo.datamodel import tvbopydantic as dm
+        from typing import get_origin, get_args, Union
+        from enum import Enum
+
+        # Map KG type values to Pydantic classes — the only hardcoded part.
+        # Everything else is introspected from the schema.
+        type_class_map = {
+            'dynamics': dm.Dynamics,
+            'network': dm.Network,
+            'integrator': dm.Integrator,
+            'experiment': dm.SimulationExperiment,
+            'study': dm.SimulationStudy,
+            'coupling': dm.Coupling,
+        }
+
+        result = {}
+        for type_key, cls in type_class_map.items():
+            properties = {}
+            for field_name, field_info in cls.model_fields.items():
+                if field_name == 'linkml_meta':
+                    continue
+                prop = _introspect_field(field_name, field_info)
+                if prop:
+                    properties[field_name] = prop
+
+            # Use the class name as the label (not LinkML aliases, which may be deprecated)
+            class_label = cls.__name__
+
+            result[type_key] = {
+                'class_name': cls.__name__,
+                'label': class_label,
+                'description': (cls.__doc__ or '').strip(),
+                'properties': properties,
+            }
+
+        return json_response(result)
 
     # ===================
     # Main data endpoint
@@ -128,13 +229,6 @@ class KnowledgeGraphAPI(http.Controller):
         return [self._serialize_dynamics(r) for r in records]
 
     def _serialize_dynamics(self, record):
-        tags = []
-        if record.system_type:
-            tags.append(record.system_type.technical_name or record.system_type.name)
-        for sv in record.state_variables:
-            if sv.label:
-                tags.append(sv.label)
-
         result = PydanticDynamics(
             name=record.name or 'Unknown',
             label=record.label or None,
@@ -147,13 +241,16 @@ class KnowledgeGraphAPI(http.Controller):
             'id': record.id,
             'type': 'dynamics',
             'title': record.name or record.label or '',
-            'tags': tags,
             'system_type': record.system_type.technical_name if record.system_type else '',
         })
 
         thumb = _thumbnail_url('models', record.name or '')
         if thumb:
             result['thumbnail'] = thumb
+
+        report = _report_url('models', record.name or '')
+        if report:
+            result['report_url'] = report
 
         return get_ontology_api().enrich_database_item(result, 'dynamics')
 
@@ -162,15 +259,10 @@ class KnowledgeGraphAPI(http.Controller):
         return [self._serialize_network(r) for r in records]
 
     def _serialize_network(self, record):
-        tags = []
-        if record.parcellation:
-            tags.append(record.parcellation.label)
-
         result = PydanticNetwork(
             label=record.label or None,
             description=record.description or None,
-            number_of_regions=record.number_of_regions or 1,
-            number_of_nodes=record.number_of_nodes or 1,
+            number_of_nodes=record.number_of_nodes or record.number_of_regions or 1,
         ).model_dump(exclude_none=True)
 
         result.update({
@@ -178,7 +270,6 @@ class KnowledgeGraphAPI(http.Controller):
             'type': 'network',
             'name': record.label or f'Network {record.id}',
             'title': record.label or f'Network {record.id}',
-            'tags': tags,
         })
 
         # Try thumbnail by label
@@ -193,8 +284,6 @@ class KnowledgeGraphAPI(http.Controller):
         return [self._serialize_integrator(r) for r in records]
 
     def _serialize_integrator(self, record):
-        tags = [record.method] if record.method else []
-
         result = PydanticIntegrator(
             method=record.method or None,
             step_size=record.step_size or 0.01220703125,
@@ -208,8 +297,11 @@ class KnowledgeGraphAPI(http.Controller):
             'name': record.method or f'Integrator {record.id}',
             'title': record.method or f'Integrator {record.id}',
             'description': f"Method: {record.method}, Step: {record.step_size}, Duration: {record.duration}",
-            'tags': tags,
         })
+
+        report = _report_url('integrators', record.method or '')
+        if report:
+            result['report_url'] = report
 
         return get_ontology_api().enrich_database_item(result, 'integrator')
 
@@ -218,14 +310,6 @@ class KnowledgeGraphAPI(http.Controller):
         return [self._serialize_experiment(r) for r in records]
 
     def _serialize_experiment(self, record):
-        tags = []
-        if record.dynamics:
-            tags.append(record.dynamics.name)
-        if record.connectivity:
-            tags.append(record.connectivity.label)
-        if record.network and record.network.label not in tags:
-            tags.append(record.network.label)
-
         result = PydanticSimulationExperiment(
             id=str(record.id),
             label=record.label or None,
@@ -238,7 +322,6 @@ class KnowledgeGraphAPI(http.Controller):
             'name': record.label or f'Experiment {record.id}',
             'title': record.label or f'Experiment {record.id}',
             'abstract': record.description or '',
-            'tags': tags,
         })
 
         return get_ontology_api().enrich_database_item(result, 'experiment')
@@ -248,10 +331,6 @@ class KnowledgeGraphAPI(http.Controller):
         return [self._serialize_study(r) for r in records]
 
     def _serialize_study(self, record):
-        tags = []
-        if record.model:
-            tags.append(record.model.name)
-
         result = PydanticSimulationStudy(
             label=record.label or None,
             description=record.description or None,
@@ -267,7 +346,6 @@ class KnowledgeGraphAPI(http.Controller):
             'abstract': record.description or '',
             'year': str(record.year) if record.year else '',
             'doi': record.doi or '',
-            'tags': tags,
         })
 
         return get_ontology_api().enrich_database_item(result, 'study')
@@ -277,12 +355,6 @@ class KnowledgeGraphAPI(http.Controller):
         return [self._serialize_coupling(r) for r in records]
 
     def _serialize_coupling(self, record):
-        tags = []
-        if record.delayed:
-            tags.append('delayed')
-        if record.sparse:
-            tags.append('sparse')
-
         result = PydanticCoupling(
             name=record.name or 'Linear',
             label=record.label or None,
@@ -290,13 +362,28 @@ class KnowledgeGraphAPI(http.Controller):
             sparse=record.sparse,
         ).model_dump(exclude_none=True)
 
+        # Build equation display from pre/post expressions
+        eq_parts = []
+        if record.pre_expression and record.pre_expression.righthandside:
+            eq_parts.append(f'pre(x_j) = {record.pre_expression.righthandside}')
+        if record.post_expression and record.post_expression.righthandside:
+            eq_parts.append(f'post(gx) = {record.post_expression.righthandside}')
+
         result.update({
             'id': record.id,
             'type': 'coupling',
             'title': record.name or record.label or f'Coupling {record.id}',
             'description': record.coupling_function.definition if record.coupling_function else '',
-            'tags': tags,
+            'equation': ' ;  '.join(eq_parts) if eq_parts else '',
         })
+
+        thumb = _thumbnail_url('coupling_functions', record.name or '')
+        if thumb:
+            result['thumbnail'] = thumb
+
+        report = _report_url('coupling_functions', record.name or '')
+        if report:
+            result['report_url'] = report
 
         return get_ontology_api().enrich_database_item(result, 'coupling')
 

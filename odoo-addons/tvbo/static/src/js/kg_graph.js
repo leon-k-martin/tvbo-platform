@@ -19,17 +19,17 @@ class KnowledgeGraphVisualization {
         this.selectedNode = null;
         this.limit = 500; // Default limit - must be high enough to include core ontology classes
 
-        // Color scheme for node types
+        // Color scheme for node types — matches KnowledgeGraphBrowser.TYPE_ICONS
         this.colors = {
-            'Class': '#667eea',        // Ontology classes - blue
-            'instance': '#48bb78',     // Database instances - green
-            'dynamics': '#ed8936',     // Dynamics - orange
-            'network': '#9f7aea',      // Networks - purple
-            'integrator': '#38b2ac',   // Integrators - teal
-            'experiment': '#f56565',   // Experiments - red
-            'study': '#4299e1',        // Studies - light blue
-            'coupling': '#ed64a6',     // Couplings - pink
-            'ontology': '#667eea',     // Generic ontology - blue
+            'Class': '#667eea',
+            'instance': '#48bb78',
+            'dynamics': '#667eea',
+            'network': '#43e97b',
+            'integrator': '#4facfe',
+            'experiment': '#fa709a',
+            'study': '#f7971e',
+            'coupling': '#a18cd1',
+            'ontology': '#c471f5',
         };
     }
 
@@ -119,91 +119,42 @@ class KnowledgeGraphVisualization {
     }
 
     /**
-     * Find the largest connected component and center view on it
+     * Center and zoom to fit all visible nodes
      */
     resetToLargestCluster() {
         if (!this.nodes || this.nodes.length === 0) {
-            // Fallback to center
-            this.svg.transition().duration(500).call(
+            this.svg.transition().duration(300).call(
                 this.zoom.transform,
                 d3.zoomIdentity.translate(this.width / 2, this.height / 2).scale(0.5)
             );
             return;
         }
 
-        // Find connected components using Union-Find
-        const nodeMap = new Map();
-        this.nodes.forEach((n, i) => {
-            const id = n.storid || n.id;
-            nodeMap.set(id, i);
-        });
-
-        const parent = this.nodes.map((_, i) => i);
-        const find = (i) => {
-            if (parent[i] !== i) parent[i] = find(parent[i]);
-            return parent[i];
-        };
-        const union = (i, j) => {
-            const pi = find(i), pj = find(j);
-            if (pi !== pj) parent[pi] = pj;
-        };
-
-        // Union nodes connected by links
-        this.links.forEach(l => {
-            const srcId = l.source.storid || l.source.id || l.source;
-            const tgtId = l.target.storid || l.target.id || l.target;
-            const srcIdx = nodeMap.get(srcId);
-            const tgtIdx = nodeMap.get(tgtId);
-            if (srcIdx !== undefined && tgtIdx !== undefined) {
-                union(srcIdx, tgtIdx);
-            }
-        });
-
-        // Count component sizes
-        const compSize = new Map();
-        this.nodes.forEach((_, i) => {
-            const root = find(i);
-            compSize.set(root, (compSize.get(root) || 0) + 1);
-        });
-
-        // Find largest component
-        let largestRoot = 0, maxSize = 0;
-        compSize.forEach((size, root) => {
-            if (size > maxSize) {
-                maxSize = size;
-                largestRoot = root;
-            }
-        });
-
-        // Get nodes in largest component
-        const clusterNodes = this.nodes.filter((_, i) => find(i) === largestRoot);
-
-        // Calculate centroid of the cluster
+        // Calculate bounding box of all visible nodes
         let cx = 0, cy = 0;
-        clusterNodes.forEach(n => {
+        this.nodes.forEach(n => {
             cx += n.x || 0;
             cy += n.y || 0;
         });
-        cx /= clusterNodes.length;
-        cy /= clusterNodes.length;
+        cx /= this.nodes.length;
+        cy /= this.nodes.length;
 
-        // Calculate appropriate scale to fit the cluster
         let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-        clusterNodes.forEach(n => {
+        this.nodes.forEach(n => {
             minX = Math.min(minX, n.x || 0);
             maxX = Math.max(maxX, n.x || 0);
             minY = Math.min(minY, n.y || 0);
             maxY = Math.max(maxY, n.y || 0);
         });
 
-        const clusterWidth = maxX - minX + 100;  // Add padding
+        const clusterWidth = maxX - minX + 100;
         const clusterHeight = maxY - minY + 100;
         const scaleX = this.width / clusterWidth;
         const scaleY = this.height / clusterHeight;
-        const scale = Math.min(scaleX, scaleY, 1.5) * 0.9; // Cap at 1.5x, with 90% margin
+        const scale = Math.min(scaleX, scaleY, 1.5) * 0.9;
 
         // Transform to center on cluster
-        this.svg.transition().duration(500).call(
+        this.svg.transition().duration(300).call(
             this.zoom.transform,
             d3.zoomIdentity
                 .translate(this.width / 2, this.height / 2)
@@ -251,6 +202,12 @@ class KnowledgeGraphVisualization {
     applyFilters() {
         if (this.allNodes.length === 0) return; // Not loaded yet
 
+        // Stop old simulation before re-rendering
+        if (this.simulation) {
+            this.simulation.stop();
+            this.simulation = null;
+        }
+
         this.applyFiltersInternal();
 
         // Re-render with filtered data
@@ -268,7 +225,9 @@ class KnowledgeGraphVisualization {
     }
 
     /**
-     * Internal method to apply filter logic
+     * Internal method to apply filter logic.
+     * When filters are active, only shows matching DB items plus
+     * the ontology nodes they connect to (and their hierarchy ancestors).
      */
     applyFiltersInternal() {
         if (!this.filteredItemIds) {
@@ -278,24 +237,70 @@ class KnowledgeGraphVisualization {
             return;
         }
 
-        // Filter database items, but keep all ontology classes
-        const visibleNodeIds = new Set();
+        // Build lookup of all links by source/target storid for fast traversal
+        // Links use storid values (int for ontology, string for DB items)
+        const getLinkId = (end) => typeof end === 'object' ? (end.storid ?? end.id) : end;
 
-        this.nodes = this.allNodes.filter(node => {
-            // Always show ontology classes (they start with onto_)
+        // Step 1: Find matching DB nodes and directly matched ontology nodes
+        const matchedDbStorids = new Set();
+        const connectedOntoStorids = new Set();
+        this.allNodes.forEach(node => {
             if (node.id.startsWith('onto_')) {
-                visibleNodeIds.add(node.id);
-                return true;
+                // Ontology item explicitly in filter results (e.g. type=ontology facet)
+                if (this.filteredItemIds.has(node.id)) {
+                    connectedOntoStorids.add(node.storid);
+                    connectedOntoStorids.add(node.id);
+                }
+            } else if (this.filteredItemIds.has(node.id)) {
+                matchedDbStorids.add(node.storid);
+                matchedDbStorids.add(node.id);
             }
-            // Show database items only if they match the filter
+        });
+
+        // Step 2: Find ontology nodes directly linked to matched DB items
+        this.allLinks.forEach(link => {
+            const srcId = getLinkId(link.source);
+            const tgtId = getLinkId(link.target);
+            if (matchedDbStorids.has(srcId)) connectedOntoStorids.add(tgtId);
+            if (matchedDbStorids.has(tgtId)) connectedOntoStorids.add(srcId);
+        });
+
+        // Step 3: Walk up is_a hierarchy to include ancestor ontology classes
+        let changed = true;
+        while (changed) {
+            changed = false;
+            this.allLinks.forEach(link => {
+                if (link.type !== 'is_a') return;
+                const srcId = getLinkId(link.source);
+                const tgtId = getLinkId(link.target);
+                // is_a: source → target means source is subclass of target
+                if (connectedOntoStorids.has(srcId) && !connectedOntoStorids.has(tgtId)) {
+                    connectedOntoStorids.add(tgtId);
+                    changed = true;
+                }
+            });
+        }
+
+        // Step 4: Filter nodes — keep matched DB items + connected ontology nodes
+        const visibleNodeIds = new Set();
+        this.nodes = this.allNodes.filter(node => {
+            if (node.id.startsWith('onto_')) {
+                if (connectedOntoStorids.has(node.storid) || connectedOntoStorids.has(node.id)) {
+                    visibleNodeIds.add(node.id);
+                    visibleNodeIds.add(node.storid);
+                    return true;
+                }
+                return false;
+            }
             if (this.filteredItemIds.has(node.id)) {
                 visibleNodeIds.add(node.id);
+                visibleNodeIds.add(node.storid);
                 return true;
             }
             return false;
         });
 
-        // Filter links to only include visible nodes
+        // Step 5: Filter links to only include visible nodes
         this.links = this.allLinks.filter(link => {
             const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
             const targetId = typeof link.target === 'object' ? link.target.id : link.target;
@@ -369,11 +374,13 @@ class KnowledgeGraphVisualization {
                 .on('end', (event, d) => this.dragEnded(event, d)));
 
         // Add circles to nodes
+        // Ontology classes: filled with color, white stroke
+        // DB instances: hollow (white fill), colored stroke
         node.append('circle')
             .attr('r', d => this.getNodeRadius(d))
-            .attr('fill', d => this.getNodeColor(d))
-            .attr('stroke', '#fff')
-            .attr('stroke-width', 2);
+            .attr('fill', d => d.db_type ? '#fff' : this.getNodeColor(d))
+            .attr('stroke', d => d.db_type ? this.getNodeColor(d) : '#fff')
+            .attr('stroke-width', d => d.db_type ? 2.5 : 2);
 
         // Add labels
         node.append('text')
@@ -389,6 +396,32 @@ class KnowledgeGraphVisualization {
             .on('mouseout', () => this.hideTooltip())
             .on('click', (event, d) => this.handleNodeClick(event, d));
 
+        // Pre-position isolated nodes (no links) in a row below the center
+        // so they stay near the main cluster instead of flying off
+        const connectedNodeIds = new Set();
+        this.links.forEach(l => {
+            const srcId = typeof l.source === 'object' ? (l.source.storid || l.source.id) : l.source;
+            const tgtId = typeof l.target === 'object' ? (l.target.storid || l.target.id) : l.target;
+            connectedNodeIds.add(srcId);
+            connectedNodeIds.add(tgtId);
+        });
+        const isolatedNodes = this.nodes.filter(n => {
+            const nid = n.storid || n.id;
+            return !connectedNodeIds.has(nid);
+        });
+        if (isolatedNodes.length > 0) {
+            const cols = Math.ceil(Math.sqrt(isolatedNodes.length));
+            const spacing = 50;
+            const startX = this.width / 2 - ((cols - 1) * spacing) / 2;
+            const startY = this.height / 2 + 150; // Below center
+            isolatedNodes.forEach((n, i) => {
+                const col = i % cols;
+                const row = Math.floor(i / cols);
+                n.fx = startX + col * spacing;
+                n.fy = startY + row * spacing;
+            });
+        }
+
         // Create force simulation
         this.simulation = d3.forceSimulation(this.nodes)
             .force('link', d3.forceLink(this.links)
@@ -396,9 +429,11 @@ class KnowledgeGraphVisualization {
                 .distance(80))
             .force('charge', d3.forceManyBody().strength(-200))
             .force('center', d3.forceCenter(this.width / 2, this.height / 2))
-            .force('collision', d3.forceCollide().radius(d => this.getNodeRadius(d) + 5));
+            .force('collision', d3.forceCollide().radius(d => this.getNodeRadius(d) + 5))
+            .alphaDecay(0.05);  // Settle faster (~60 ticks instead of ~300)
 
         // Update positions on tick
+        let tickCount = 0;
         this.simulation.on('tick', () => {
             link
                 .attr('x1', d => d.source.x)
@@ -407,11 +442,14 @@ class KnowledgeGraphVisualization {
                 .attr('y2', d => d.target.y);
 
             node.attr('transform', d => `translate(${d.x},${d.y})`);
-        });
 
-        // Center on largest cluster when simulation stabilizes
-        this.simulation.on('end', () => {
-            this.resetToLargestCluster();
+            // Zoom to fit once layout has roughly stabilized
+            tickCount++;
+            if (tickCount === 30) {
+                // Release isolated node pins so they can be dragged
+                isolatedNodes.forEach(n => { n.fx = null; n.fy = null; });
+                this.resetToLargestCluster();
+            }
         });
     }
 
@@ -511,8 +549,7 @@ class KnowledgeGraphVisualization {
         const legend = document.getElementById('graphLegend');
         if (!legend) return;
 
-        const types = [
-            { label: 'Ontology Class', color: this.colors.Class },
+        const instanceTypes = [
             { label: 'Dynamics', color: this.colors.dynamics },
             { label: 'Network', color: this.colors.network },
             { label: 'Integrator', color: this.colors.integrator },
@@ -523,9 +560,17 @@ class KnowledgeGraphVisualization {
 
         legend.innerHTML = `
             <div class="legend-title">Legend</div>
-            ${types.map(t => `
-                <div class="legend-item">
-                    <span class="legend-color" style="background:${t.color}"></span>
+            <div class="legend-item">
+                <span class="legend-color" style="background:${this.colors.Class}"></span>
+                <span class="legend-label">Ontology Class</span>
+            </div>
+            <div class="legend-item">
+                <span class="legend-color" style="background:#fff;border:2.5px solid #718096"></span>
+                <span class="legend-label">Instance</span>
+            </div>
+            ${instanceTypes.map(t => `
+                <div class="legend-item" style="padding-left:18px">
+                    <span class="legend-color" style="background:#fff;border:2.5px solid ${t.color}"></span>
                     <span class="legend-label">${t.label}</span>
                 </div>
             `).join('')}

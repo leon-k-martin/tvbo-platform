@@ -3,7 +3,7 @@
 
 .PHONY: help dev-up dev-down dev-restart dev-update dev-logs dev-logs-odoo dev-build dev-shell \
         up down restart update-odoo logs logs-odoo logs-api status forward forward-all \
-        render-thumbnails
+        render-thumbnails render-reports
 
 # ================================
 # DEVELOPMENT MODE (Docker Compose)
@@ -77,6 +77,20 @@ render-thumbnails-force:
 	@echo "Re-rendering ALL KG browser thumbnails..."
 	python scripts/render_thumbnails.py --force
 	@echo "✓ Thumbnails saved to odoo-addons/tvbo/static/src/img/thumbnails/"
+
+# ================================
+# REPORT GENERATION
+# ================================
+
+render-reports:
+	@echo "Rendering KG browser reports..."
+	python scripts/render_reports.py
+	@echo "✓ Reports saved to odoo-addons/tvbo/static/src/reports/"
+
+render-reports-force:
+	@echo "Re-rendering ALL KG browser reports..."
+	python scripts/render_reports.py --force
+	@echo "✓ Reports saved to odoo-addons/tvbo/static/src/reports/"
 
 # ================================
 # PRODUCTION MODE (Kubernetes)

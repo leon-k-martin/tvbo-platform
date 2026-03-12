@@ -96,6 +96,7 @@ class KnowledgeGraphBrowser {
         console.log('🏗️ KnowledgeGraphBrowser constructor called');
         this.originalData = [];
         this.schema = null;
+        this.classSchemas = null; // Class schemas from Pydantic models
         this.currentFilters = {};
         this.currentQuery = '';
         this.collapsedFacets = new Set();
@@ -106,6 +107,7 @@ class KnowledgeGraphBrowser {
         this.facetIndex = {};
         this.currentView = 'list'; // 'list' or 'graph'
         this.graphViz = null;
+        this._previousSelectedTypes = []; // Track type selection changes
 
         // Initialize modular components (with fallbacks)
         if (window.KGComponents.DetailPanel) {
@@ -161,19 +163,26 @@ class KnowledgeGraphBrowser {
     }
 
     async loadData() {
-        // Fetch schema
-        const schemaResponse = await fetch('/tvbo/api/kg/schema');
-        if (!schemaResponse.ok) {
-            throw new Error('Failed to fetch schema');
-        }
+        // Fetch schema, class schemas, and data in parallel
+        const [schemaResponse, classSchemaResponse, dataResponse] = await Promise.all([
+            fetch('/tvbo/api/kg/schema'),
+            fetch('/tvbo/api/kg/schema/classes'),
+            fetch('/tvbo/api/kg/data'),
+        ]);
+
+        if (!schemaResponse.ok) throw new Error('Failed to fetch schema');
         this.schema = await schemaResponse.json();
         console.log('📊 Schema loaded:', this.schema);
 
-        // Fetch data
-        const dataResponse = await fetch('/tvbo/api/kg/data');
-        if (!dataResponse.ok) {
-            throw new Error('Failed to fetch data');
+        if (classSchemaResponse.ok) {
+            this.classSchemas = await classSchemaResponse.json();
+            console.log('🏛️ Class schemas loaded:', Object.keys(this.classSchemas));
+        } else {
+            console.warn('⚠️ Class schemas not available, property filters disabled');
+            this.classSchemas = {};
         }
+
+        if (!dataResponse.ok) throw new Error('Failed to fetch data');
         this.originalData = await dataResponse.json();
         console.log('📦 Data loaded:', this.originalData.length, 'items');
 
@@ -229,48 +238,51 @@ class KnowledgeGraphBrowser {
     }
 
     buildFacetIndex() {
-        console.log('Building facet index for fields:', this.schema.facets.map(f => f.field));
-        const index = {};
+        // Index all schema-defined facets AND all properties from class schemas
+        const fieldsToIndex = new Map(); // field -> type ('string' or 'array')
+
+        // Schema-defined facets
         this.schema.facets.forEach(facet => {
-            index[facet.field] = new Map();
-            console.log(`Processing facet: ${facet.field} (type: ${facet.type})`);
-            this.originalData.forEach((item, idx) => {
-                const value = item[facet.field];
-                if (value === undefined || value === null || value === '') {
-                    return;
-                }
-                if (facet.type === 'array') {
-                    if (!Array.isArray(value)) {
-                        const arrayValue = [value];
-                        arrayValue.forEach(val => {
-                            if (val !== undefined && val !== null && val !== '') {
-                                const key = String(val);
-                                if (!index[facet.field].has(key)) {
-                                    index[facet.field].set(key, new Set());
-                                }
-                                index[facet.field].get(key).add(idx);
-                            }
-                        });
-                        return;
+            fieldsToIndex.set(facet.field, facet.type);
+        });
+
+        // All property fields from class schemas
+        if (this.classSchemas) {
+            for (const schema of Object.values(this.classSchemas)) {
+                for (const fieldName of Object.keys(schema.properties)) {
+                    if (!fieldsToIndex.has(fieldName)) {
+                        fieldsToIndex.set(fieldName, 'string');
                     }
-                    value.forEach(val => {
+                }
+            }
+        }
+
+        console.log('Building facet index for fields:', [...fieldsToIndex.keys()]);
+        const index = {};
+        fieldsToIndex.forEach((type, field) => {
+            index[field] = new Map();
+            this.originalData.forEach((item, idx) => {
+                const value = item[field];
+                if (value === undefined || value === null || value === '') return;
+
+                if (type === 'array' || Array.isArray(value)) {
+                    const arr = Array.isArray(value) ? value : [value];
+                    arr.forEach(val => {
                         if (val !== undefined && val !== null && val !== '') {
                             const key = String(val);
-                            if (!index[facet.field].has(key)) {
-                                index[facet.field].set(key, new Set());
-                            }
-                            index[facet.field].get(key).add(idx);
+                            if (!index[field].has(key)) index[field].set(key, new Set());
+                            index[field].get(key).add(idx);
                         }
                     });
                 } else {
                     const key = String(value);
-                    if (!index[facet.field].has(key)) {
-                        index[facet.field].set(key, new Set());
-                    }
-                    index[facet.field].get(key).add(idx);
+                    if (!index[field].has(key)) index[field].set(key, new Set());
+                    index[field].get(key).add(idx);
                 }
             });
-            console.log(`Facet ${facet.field} indexed with`, index[facet.field].size, 'unique values');
+            if (index[field].size > 0) {
+                console.log(`Facet ${field} indexed with`, index[field].size, 'unique values');
+            }
         });
         return index;
     }
@@ -395,8 +407,9 @@ class KnowledgeGraphBrowser {
             // Initialize graph visualization with current filters
             if (window.KnowledgeGraphVisualization) {
                 this.graphViz = new window.KnowledgeGraphVisualization();
-                // Pass filtered item IDs to the graph
-                this.graphViz.setFilteredItems(this.getFilteredItemIds());
+                // Pass filtered item IDs to the graph (null = show all)
+                const hasActiveFilters = this.currentQuery || Object.keys(this.currentFilters).length > 0;
+                this.graphViz.setFilteredItems(hasActiveFilters ? this.getFilteredItemIds() : null);
                 await this.graphViz.init();
             }
         }
@@ -434,7 +447,50 @@ class KnowledgeGraphBrowser {
             this.currentFilters[filterKey].push(value);
         }
 
+        // When the type filter changes, clear property filters that no longer apply
+        if (filterKey === 'type') {
+            this._cleanupPropertyFilters();
+        }
+
         this.search();
+    }
+
+    /**
+     * Remove property filters that don't belong to any currently selected type.
+     */
+    _cleanupPropertyFilters() {
+        const selectedTypes = this.currentFilters['type'] || [];
+        if (selectedTypes.length === 0) {
+            // No types selected — remove all property filters
+            this._removeAllPropertyFilters();
+            return;
+        }
+        // Collect all valid property field names for selected types
+        const validFields = new Set();
+        selectedTypes.forEach(type => {
+            const schema = this.classSchemas?.[type];
+            if (schema) {
+                Object.keys(schema.properties).forEach(f => validFields.add(f));
+            }
+        });
+        // Remove filters for fields not in any selected type
+        Object.keys(this.currentFilters).forEach(key => {
+            if (key !== 'type' && key !== 'tags' && !this.schema.facets.some(f => f.field === key) && !validFields.has(key)) {
+                delete this.currentFilters[key];
+            }
+        });
+    }
+
+    /**
+     * Remove all property-level filters (keep only schema-defined facets).
+     */
+    _removeAllPropertyFilters() {
+        const schemaFields = new Set(this.schema.facets.map(f => f.field));
+        Object.keys(this.currentFilters).forEach(key => {
+            if (!schemaFields.has(key)) {
+                delete this.currentFilters[key];
+            }
+        });
     }
 
     handleFacetToggle(header) {
@@ -515,7 +571,12 @@ class KnowledgeGraphBrowser {
 
         // Update graph if it's currently visible
         if (this.currentView === 'graph' && this.graphViz) {
-            this.graphViz.setFilteredItems(this.getFilteredItemIds());
+            const hasActiveFilters = this.currentQuery || Object.keys(this.currentFilters).length > 0;
+            if (hasActiveFilters) {
+                this.graphViz.setFilteredItems(this.getFilteredItemIds());
+            } else {
+                this.graphViz.setFilteredItems(null); // Show all
+            }
             this.graphViz.applyFilters();
         }
 
@@ -530,100 +591,205 @@ class KnowledgeGraphBrowser {
         if (!facetsSidebar) return;
         facetsSidebar.innerHTML = '';
 
+        // Render standard schema-defined facets (Class, Tags, etc.)
         this.schema.facets.forEach(facet => {
-            // Get all possible values from the full dataset (not just filtered)
-            const allFacetValues = new Map();
-            this.originalData.forEach((item) => {
-                const value = item[facet.field];
-                if (facet.type === 'array' && Array.isArray(value)) {
-                    value.forEach(val => {
-                        if (val) {
-                            const key = String(val);
-                            if (!allFacetValues.has(key)) {
-                                allFacetValues.set(key, 0);
-                            }
-                        }
-                    });
-                } else if (value !== undefined && value !== null && value !== '') {
-                    const key = String(value);
-                    if (!allFacetValues.has(key)) {
-                        allFacetValues.set(key, 0);
+            const group = this._buildFacetGroup(facet, currentResults, this.originalData);
+            if (group) facetsSidebar.appendChild(group);
+        });
+
+        // Render dynamic property facets based on selected types
+        const selectedTypes = this.currentFilters['type'] || [];
+        if (selectedTypes.length > 0 && this.classSchemas) {
+            // Collect ALL items of the selected types (for facet value counting)
+            const allTypeItems = this.originalData.filter(item => selectedTypes.includes(item.type));
+            // Collect indices of filtered items matching selected types
+            const typeItemIndices = [];
+            currentResults.forEach(idx => {
+                const item = this.originalData[idx];
+                if (selectedTypes.includes(item.type)) {
+                    typeItemIndices.push(idx);
+                }
+            });
+
+            // For each selected type, build property facets
+            selectedTypes.forEach(typeKey => {
+                const classSchema = this.classSchemas[typeKey];
+                if (!classSchema) return;
+
+                const propsWithValues = this._getFilterableProperties(typeKey, classSchema, typeItemIndices);
+                if (propsWithValues.length === 0) return;
+
+                // Section header for this class
+                const sectionHeader = document.createElement('div');
+                sectionHeader.className = 'property-section-header';
+                const classLabel = this.formatClassName(classSchema.label || classSchema.class_name);
+                sectionHeader.innerHTML = `<span class="material-icons" style="font-size:16px;">tune</span> ${this.escapeHtml(classLabel)}`;
+                facetsSidebar.appendChild(sectionHeader);
+
+                propsWithValues.forEach(({ fieldName, propSchema, values }) => {
+                    const facetDef = {
+                        field: fieldName,
+                        label: propSchema.label,
+                        type: 'string',
+                    };
+                    // Pass only items of selected types for property facet counting
+                    const group = this._buildFacetGroup(facetDef, currentResults, allTypeItems);
+                    if (group) {
+                        group.classList.add('property-facet');
+                        facetsSidebar.appendChild(group);
+                    }
+                });
+            });
+        }
+    }
+
+    /**
+     * Determine which properties of a class are worth showing as facets.
+     * A property is filterable if it has 2+ unique values across items of this type,
+     * and at most 30 unique values (otherwise it's too unique to be useful).
+     */
+    _getFilterableProperties(typeKey, classSchema, typeItemIndices) {
+        const result = [];
+        // Fields already handled as top-level facets
+        const skipFields = new Set(this.schema.facets.map(f => f.field));
+        // Also skip fields that are identity-like
+        skipFields.add('id');
+        skipFields.add('title');
+        skipFields.add('thumbnail');
+        skipFields.add('ontology_class');
+        skipFields.add('ontology_instance');
+
+        for (const [fieldName, propSchema] of Object.entries(classSchema.properties)) {
+            if (skipFields.has(fieldName)) continue;
+            // Skip text-heavy fields (name, description, label, iri)
+            if (['name', 'description', 'label', 'iri', 'has_reference', 'abstract', 'doi', 'key', 'definition'].includes(fieldName)) continue;
+
+            // Count unique values
+            const uniqueValues = new Set();
+            typeItemIndices.forEach(idx => {
+                const item = this.originalData[idx];
+                const val = item[fieldName];
+                if (val !== undefined && val !== null && val !== '') {
+                    if (propSchema.type === 'boolean') {
+                        uniqueValues.add(String(val));
+                    } else {
+                        uniqueValues.add(String(val));
                     }
                 }
             });
 
-            // Count how many of the current results match each value
-            currentResults.forEach(idx => {
-                const item = this.originalData[idx];
-                const value = item[facet.field];
-
-                if (facet.type === 'array' && Array.isArray(value)) {
-                    value.forEach(val => {
-                        if (val) {
-                            const key = String(val);
-                            allFacetValues.set(key, (allFacetValues.get(key) || 0) + 1);
-                        }
-                    });
-                } else if (value !== undefined && value !== null && value !== '') {
-                    const key = String(value);
-                    allFacetValues.set(key, (allFacetValues.get(key) || 0) + 1);
-                }
-            });
-
-            if (allFacetValues.size === 0) return;
-
-            const facetGroup = document.createElement('div');
-            facetGroup.className = 'facet-group';
-            facetGroup.dataset.field = facet.field;
-            if (this.collapsedFacets.has(facet.field)) {
-                facetGroup.classList.add('collapsed');
+            // Show as facet if 1+ values exist (shows what data has) and not too many unique values
+            if (uniqueValues.size >= 1 && uniqueValues.size <= 30) {
+                result.push({ fieldName, propSchema, values: uniqueValues });
             }
+        }
+        return result;
+    }
 
-            const header = document.createElement('div');
-            header.className = 'facet-header';
-            header.innerHTML = `<span class="facet-title">${facet.label}</span>`;
-            facetGroup.appendChild(header);
-
-            const content = document.createElement('div');
-            content.className = 'facet-content';
-
-            // Sort by count (descending), but keep active filters at top
-            const sortedValues = [...allFacetValues.entries()].sort((a, b) => {
-                const aActive = this.currentFilters[facet.field]?.includes(a[0]) ? 1 : 0;
-                const bActive = this.currentFilters[facet.field]?.includes(b[0]) ? 1 : 0;
-                if (aActive !== bActive) return bActive - aActive; // Active items first
-                return b[1] - a[1]; // Then by count
-            });
-
-            sortedValues.forEach(([value, count]) => {
-                const facetItem = document.createElement('div');
-                facetItem.className = 'facet-item';
-                facetItem.dataset.filter = facet.field;
-                facetItem.dataset.value = value;
-
-                const isActive = this.currentFilters[facet.field] &&
-                                this.currentFilters[facet.field].includes(value);
-                if (isActive) {
-                    facetItem.classList.add('active');
-                }
-
-                // Dim items with 0 count (but still show them)
-                if (count === 0 && !isActive) {
-                    facetItem.classList.add('dimmed');
-                }
-
-                facetItem.innerHTML = `
-                    <input type="checkbox" class="facet-checkbox" ${isActive ? 'checked' : ''}>
-                    <span class="facet-label">${value}</span>
-                    <span class="facet-count">${count}</span>
-                `;
-
-                content.appendChild(facetItem);
-            });
-
-            facetGroup.appendChild(content);
-            facetsSidebar.appendChild(facetGroup);
+    /**
+     * Build a single facet group element.
+     */
+    _buildFacetGroup(facet, currentResults, allData) {
+        // Get all possible values from the full dataset
+        const allFacetValues = new Map();
+        allData.forEach((item) => {
+            const value = item[facet.field];
+            if (facet.type === 'array' && Array.isArray(value)) {
+                value.forEach(val => {
+                    if (val) {
+                        const key = String(val);
+                        if (!allFacetValues.has(key)) allFacetValues.set(key, 0);
+                    }
+                });
+            } else if (value !== undefined && value !== null && value !== '') {
+                const key = String(value);
+                if (!allFacetValues.has(key)) allFacetValues.set(key, 0);
+            }
         });
+
+        // Count matches in current results
+        currentResults.forEach(idx => {
+            const item = this.originalData[idx];
+            const value = item[facet.field];
+
+            if (facet.type === 'array' && Array.isArray(value)) {
+                value.forEach(val => {
+                    if (val) {
+                        const key = String(val);
+                        allFacetValues.set(key, (allFacetValues.get(key) || 0) + 1);
+                    }
+                });
+            } else if (value !== undefined && value !== null && value !== '') {
+                const key = String(value);
+                allFacetValues.set(key, (allFacetValues.get(key) || 0) + 1);
+            }
+        });
+
+        if (allFacetValues.size === 0) return null;
+
+        // For the type facet, use class labels from schema
+        const labelMap = {};
+        if (facet.field === 'type' && this.classSchemas) {
+            for (const [typeKey, schema] of Object.entries(this.classSchemas)) {
+                const raw = schema.label || schema.class_name || typeKey;
+                labelMap[typeKey] = this.formatClassName(raw);
+            }
+        }
+
+        const facetGroup = document.createElement('div');
+        facetGroup.className = 'facet-group';
+        facetGroup.dataset.field = facet.field;
+        if (this.collapsedFacets.has(facet.field)) {
+            facetGroup.classList.add('collapsed');
+        }
+
+        const header = document.createElement('div');
+        header.className = 'facet-header';
+        header.innerHTML = `<span class="facet-title">${facet.label}</span>`;
+        facetGroup.appendChild(header);
+
+        const content = document.createElement('div');
+        content.className = 'facet-content';
+
+        // Sort by total count from full dataset (stable order regardless of current filters)
+        const totalCounts = new Map();
+        allData.forEach((item) => {
+            const value = item[facet.field];
+            if (facet.type === 'array' && Array.isArray(value)) {
+                value.forEach(val => {
+                    if (val) { const key = String(val); totalCounts.set(key, (totalCounts.get(key) || 0) + 1); }
+                });
+            } else if (value !== undefined && value !== null && value !== '') {
+                const key = String(value);
+                totalCounts.set(key, (totalCounts.get(key) || 0) + 1);
+            }
+        });
+        const sortedValues = [...allFacetValues.entries()].sort((a, b) => (totalCounts.get(b[0]) || 0) - (totalCounts.get(a[0]) || 0));
+
+        sortedValues.forEach(([value, count]) => {
+            const facetItem = document.createElement('div');
+            facetItem.className = 'facet-item';
+            facetItem.dataset.filter = facet.field;
+            facetItem.dataset.value = value;
+
+            const isActive = this.currentFilters[facet.field] &&
+                            this.currentFilters[facet.field].includes(value);
+            if (isActive) facetItem.classList.add('active');
+            if (count === 0 && !isActive) facetItem.classList.add('dimmed');
+
+            const displayLabel = labelMap[value] || value;
+
+            facetItem.innerHTML = `
+                <input type="checkbox" class="facet-checkbox" ${isActive ? 'checked' : ''}>
+                <span class="facet-label">${this.escapeHtml(displayLabel)}</span>
+                <span class="facet-count">${count}</span>
+            `;
+
+            content.appendChild(facetItem);
+        });
+
+        facetGroup.appendChild(content);
+        return facetGroup;
     }
 
     renderResults(items) {
@@ -668,26 +834,13 @@ class KnowledgeGraphBrowser {
             const isOntology = type === 'ontology';
             const ontologyType = item.ontology_type || '';
 
-            // Determine icon and styling
-            let typeIcon, typeClass, typeLabel;
-            if (isOntology) {
-                typeIcon = 'schema';
-                typeClass = 'type-ontology';
-                typeLabel = ontologyType || 'Ontology';
-            } else {
-                typeIcon = type === 'model' ? 'functions'
-                             : type === 'dynamics' ? 'functions'
-                             : type === 'study' ? 'article'
-                             : type === 'network' ? 'device_hub'
-                             : type === 'coupling' ? 'compare_arrows'
-                             : type === 'integrator' ? 'speed'
-                             : type === 'experiment' ? 'science'
-                             : 'label';
-                typeClass = type ? `type-${type}` : '';
-                typeLabel = item.type ? item.type : '';
-            }
+            // Determine icon and styling from TVBO icon registry
+            const typeInfo = KnowledgeGraphBrowser.TYPE_ICONS[type] || KnowledgeGraphBrowser.TYPE_ICONS._default;
+            const typeLabel = isOntology ? (ontologyType || 'Ontology') : (item.type || '');
 
-            const typeBadge = typeLabel ? `<span class="badge ${typeClass}"><span class="material-icons">${typeIcon}</span>${typeLabel}</span>` : '';
+            const typeBadge = typeLabel
+                ? `<span class="badge type-badge" style="background:${typeInfo.gradient};"><i class="${typeInfo.icon}"></i>${typeLabel}</span>`
+                : '';
             const studyMeta = (item.type === 'study') ? this.getStudyMeta(item) : '';
 
             // Show symbol for ontology items
@@ -705,10 +858,15 @@ class KnowledgeGraphBrowser {
                     ${symbolDisplay}
                     ${typeBadge}
                 </div>`;
-            const body = desc || thumb ? `
+            // Show equation for coupling items
+            const eqDisplay = item.equation
+                ? `<div class="card-equation">${this.escapeHtml(item.equation)}</div>`
+                : '';
+
+            const body = desc || thumb || eqDisplay ? `
                 <div class="card-body">
                     ${thumb}
-                    <div class="card-desc"><span class="field-value" style="color:#4a5568;">${this.escapeHtml(desc)}</span></div>
+                    <div class="card-desc">${eqDisplay}<span class="field-value" style="color:#4a5568;">${this.escapeHtml(desc)}</span></div>
                 </div>` : '';
 
             // Show tags if available
@@ -762,15 +920,44 @@ class KnowledgeGraphBrowser {
         this.currentModalItem = item;
         const title = this.getItemTitle(item);
 
-        // Show modal IMMEDIATELY with basic data we already have
-        const initialContent = this.detailPanel ? this.detailPanel.render(item, null) : '';
+        // Show modal IMMEDIATELY with loading placeholder
+        const type = (item.type || '').toLowerCase();
+        const typeInfo = KnowledgeGraphBrowser.TYPE_ICONS[type] || KnowledgeGraphBrowser.TYPE_ICONS._default;
         if (this.modal) {
-            this.modal.open(title, initialContent, { item, detailData: null });
+            this.modal.open(title, `<div class="kg-detail-content"><p style="color:#a0aec0">Loading report...</p></div>`, { item, detailData: null }, item.thumbnail || null, typeInfo);
         }
 
-        // Fetch detailed data in background (optional enhancement, fails silently)
-        const isOntology = item.type === 'ontology';
+        // Strategy: try pre-rendered report first, fall back to detail API
+        if (item.report_url) {
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 5000);
+                const resp = await fetch(item.report_url, { signal: controller.signal });
+                clearTimeout(timeoutId);
 
+                if (resp.ok && this.currentModalItem === item) {
+                    const reportMd = await resp.text();
+                    const reportHtml = typeof renderMarkdownWithMath === 'function'
+                        ? renderMarkdownWithMath(reportMd)
+                        : (typeof marked !== 'undefined' ? marked.parse(reportMd) : reportMd);
+                    const content = `<div class="kg-detail-content"><div class="model-report">${reportHtml}</div></div>`;
+                    if (this.modal && this.modal.isOpen) {
+                        this.modal.updateContent(content, { item });
+                        // Typeset math
+                        const el = document.getElementById('modalContent') || document.querySelector('.modal-content');
+                        if (el && window.MathJax && window.MathJax.typesetPromise) {
+                            window.MathJax.typesetPromise([el]).catch(() => {});
+                        }
+                    }
+                    return;
+                }
+            } catch (e) {
+                // Fall through to detail API
+            }
+        }
+
+        // Fall back to detail API
+        const isOntology = item.type === 'ontology';
         try {
             let url = null;
             if (isOntology && item.storid) {
@@ -789,16 +976,13 @@ class KnowledgeGraphBrowser {
             }
 
             if (url) {
-                // Add timeout to prevent hanging
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 3000);
-
                 const resp = await fetch(url, { signal: controller.signal });
                 clearTimeout(timeoutId);
 
                 if (resp.ok && this.currentModalItem === item) {
                     const detailData = await resp.json();
-                    // Update modal content with full details
                     const fullContent = this.detailPanel ? this.detailPanel.render(item, detailData) : '';
                     if (this.modal && this.modal.isOpen) {
                         this.modal.updateContent(fullContent, { item, detailData });
@@ -870,12 +1054,32 @@ class KnowledgeGraphBrowser {
         return key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
     }
 
+    /**
+     * Split CamelCase into readable words: "SimulationExperiment" → "Simulation Experiment"
+     */
+    formatClassName(name) {
+        return name.replace(/([a-z])([A-Z])/g, '$1 $2');
+    }
+
     escapeHtml(text) {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
     }
 }
+
+// Icon & gradient registry — mirrors TVBO_ICONS from docs
+KnowledgeGraphBrowser.TYPE_ICONS = {
+    dynamics:    { icon: 'fa-solid fa-wave-square',          gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: '#667eea' },
+    model:       { icon: 'fa-solid fa-wave-square',          gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: '#667eea' },
+    network:     { icon: 'fa-solid fa-diagram-project',      gradient: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)', color: '#43e97b' },
+    coupling:    { icon: 'fa-solid fa-arrow-right-arrow-left', gradient: 'linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)', color: '#a18cd1' },
+    integrator:  { icon: 'fa-solid fa-gears',                gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', color: '#4facfe' },
+    experiment:  { icon: 'fa-solid fa-flask',                 gradient: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)', color: '#fa709a' },
+    study:       { icon: 'fa-solid fa-book-open',             gradient: 'linear-gradient(135deg, #f7971e 0%, #ffd200 100%)', color: '#f7971e' },
+    ontology:    { icon: 'fa-solid fa-share-nodes',           gradient: 'linear-gradient(135deg, #c471f5 0%, #fa71cd 100%)', color: '#c471f5' },
+    _default:    { icon: 'fa-solid fa-tag',                   gradient: 'linear-gradient(135deg, #a0aec0 0%, #718096 100%)', color: '#a0aec0' },
+};
 
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {

@@ -140,6 +140,41 @@
     opacity: 0.8;
 }
 
+/* Property Section Header — shown above property facets for a selected class */
+.tvbo-kg-container .property-section-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 16px 6px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #4a5568;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-top: 2px solid #e2e8f0;
+    margin-top: 8px;
+}
+
+/* Property Facets — visually subordinate to the main facets */
+.tvbo-kg-container .facet-group.property-facet {
+    border-color: #edf2f7;
+    margin-bottom: 10px;
+}
+
+.tvbo-kg-container .facet-group.property-facet .facet-header {
+    background: #f8f9fa;
+    padding: 8px 14px;
+}
+
+.tvbo-kg-container .facet-group.property-facet .facet-title {
+    font-size: 0.85rem;
+    color: #4a5568;
+}
+
+.tvbo-kg-container .facet-group.property-facet .facet-content {
+    max-height: 200px;
+}
+
 /* Results Area */
 .tvbo-kg-container .results-area {
     flex: 1;
@@ -259,6 +294,18 @@
     line-height: 1.5;
 }
 
+.tvbo-kg-container .card-equation {
+    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.8rem;
+    color: #553c9a;
+    background: #f7f5ff;
+    padding: 4px 8px;
+    border-radius: 6px;
+    margin-bottom: 6px;
+    line-height: 1.4;
+    word-break: break-word;
+}
+
 .tvbo-kg-container .card-tags {
     margin-top: 10px;
     display: flex;
@@ -289,57 +336,17 @@
     border: 1px solid transparent;
 }
 
-.tvbo-kg-container .badge .material-icons {
-    font-size: 14px;
+.tvbo-kg-container .badge.type-badge {
+    color: #fff;
+    font-weight: 600;
+    border: none;
+    padding: 3px 10px;
+    letter-spacing: 0.02em;
+}
+
+.tvbo-kg-container .badge.type-badge i {
+    font-size: 11px;
     line-height: 1;
-}
-
-.tvbo-kg-container .badge.type-model {
-    background: #e3f2fd;
-    color: #1565c0;
-    border-color: #bbdefb;
-}
-
-.tvbo-kg-container .badge.type-study {
-    background: #fff3e0;
-    color: #ef6c00;
-    border-color: #ffe0b2;
-}
-
-.tvbo-kg-container .badge.type-network {
-    background: #e0f7fa;
-    color: #006064;
-    border-color: #b2ebf2;
-}
-
-.tvbo-kg-container .badge.type-coupling {
-    background: #f3e5f5;
-    color: #6a1b9a;
-    border-color: #e1bee7;
-}
-
-.tvbo-kg-container .badge.type-integrator {
-    background: #e8f5e9;
-    color: #2e7d32;
-    border-color: #c8e6c9;
-}
-
-.tvbo-kg-container .badge.type-ontology {
-    background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
-    color: #5e35b1;
-    border-color: #d1c4e9;
-}
-
-.tvbo-kg-container .badge.type-dynamics {
-    background: #e3f2fd;
-    color: #1565c0;
-    border-color: #bbdefb;
-}
-
-.tvbo-kg-container .badge.type-experiment {
-    background: #fce4ec;
-    color: #c2185b;
-    border-color: #f8bbd0;
 }
 
 /* Ontology symbol display */

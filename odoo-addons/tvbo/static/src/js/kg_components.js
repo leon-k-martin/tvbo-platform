@@ -161,45 +161,8 @@ KGComponents.DetailPanel = class {
             md.push(`**Tags:** ${data.tags.join(', ')}`);
         }
 
-        // Remaining fields not already displayed
-        const displayedKeys = new Set([
-            'id', 'storid', 'type', 'ontology_type', 'name', 'label', 'title',
-            'description', 'definition', 'desc', 'summary', 'abstract',
-            'iri', 'is_a', 'source', 'year', 'doi', 'journal',
-            'parameters', 'state_variables', 'tags', 'references',
-            'coupling_function', 'relationships', 'dynamics', 'integration',
-            'connectivity', 'parcellation', 'symbol', 'system_type',
-            'report_md', 'thumbnail', 'full_model'
-        ]);
-        const extraFields = Object.entries(data).filter(
-            ([k, v]) => !displayedKeys.has(k) && v !== undefined && v !== null && v !== ''
-                && !(Array.isArray(v) && v.length === 0)
-        );
-        if (extraFields.length > 0) {
-            md.push('');
-            md.push('### Details');
-            md.push('');
-            for (const [key, value] of extraFields) {
-                const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-                if (Array.isArray(value)) {
-                    md.push(`**${label}:** ${value.join(', ')}`);
-                } else if (typeof value === 'object') {
-                    md.push(`**${label}:**`);
-                    md.push('');
-                    md.push('```');
-                    md.push(JSON.stringify(value, null, 2));
-                    md.push('```');
-                } else {
-                    md.push(`**${label}:** ${value}`);
-                }
-            }
-        }
-
         const markdown = md.join('\n');
-        const thumbHtml = item.thumbnail
-            ? `<div style="text-align:center; margin-bottom:16px;"><img src="${item.thumbnail}" alt="" style="max-width:100%; border-radius:6px; box-shadow:0 1px 3px rgba(0,0,0,0.15)" onerror="this.parentElement.style.display='none'"/></div>`
-            : '';
-        return `<div class="kg-detail-content">${thumbHtml}${this.renderMarkdown(markdown)}</div>`;
+        return `<div class="kg-detail-content">${this.renderMarkdown(markdown)}</div>`;
     }
 
     formatTypeLabel(data) {
@@ -269,6 +232,7 @@ KGComponents.Modal = class {
             <div class="kg-modal-backdrop"></div>
             <div class="kg-modal-dialog">
                 <div class="kg-modal-header">
+                    <div class="kg-modal-thumb-wrap"></div>
                     <h3 class="kg-modal-title"></h3>
                     <div class="kg-modal-actions">
                         <button class="kg-modal-action-btn" data-action="download" title="Download as YAML">
@@ -321,11 +285,21 @@ KGComponents.Modal = class {
      * @param {string} content - HTML content
      * @param {Object} data - Original data object (for actions)
      */
-    open(title, content, data = null) {
+    open(title, content, data = null, thumbnailUrl = null, typeInfo = null) {
         if (!this.element) this.create();
 
         this.currentData = data;
         this.element.querySelector('.kg-modal-title').textContent = title;
+        const thumbWrap = this.element.querySelector('.kg-modal-thumb-wrap');
+        if (thumbnailUrl) {
+            thumbWrap.innerHTML = `<img class="kg-modal-thumb" src="${thumbnailUrl}" alt="" onerror="this.parentElement.style.display='none'" />`;
+            thumbWrap.style.display = '';
+        } else if (typeInfo) {
+            thumbWrap.innerHTML = `<span class="kg-modal-type-icon" style="background:${typeInfo.gradient}"><i class="${typeInfo.icon}"></i></span>`;
+            thumbWrap.style.display = '';
+        } else {
+            thumbWrap.style.display = 'none';
+        }
         this.element.querySelector('.kg-modal-content').innerHTML = content;
 
         this.element.classList.remove('hidden');

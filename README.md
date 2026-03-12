@@ -45,28 +45,29 @@ make rebuild      # Rebuild containers
 
 2. **Deploy the platform:**
 ```bash
-kubectl apply -f k8s.yaml
+make up
+# or choose a different namespace explicitly
+K8S_NAMESPACE=tvbo make up
 ```
 
 3. **Check pod status:**
 ```bash
-kubectl get pods -n tvbo
+make status
 # Wait until all pods are 1/1 Ready (~60s for Odoo initialization)
 ```
 
 4. **Expose services locally:**
 ```bash
-kubectl port-forward -n tvbo svc/odoo 8069:8069 &
-kubectl port-forward -n tvbo svc/tvbo-api 8000:8000 &
+make forward-all
 ```
 
 5. **Access:**
-- Odoo: http://localhost:8069 (login: admin/admin)
-- API: http://localhost:8000
+- Odoo: http://localhost:8070 (login: admin/admin)
+- API: http://localhost:8001
 
 6. **Clean up:**
 ```bash
-kubectl delete -f k8s.yaml
+make down
 ```
 
 ## CI/CD
