@@ -92,4 +92,5 @@ log "Starting Odoo server on port 8069..."
 exec odoo -d "$DB_NAME" \
   --db_host="$DB_HOST" --db_user="$DB_USER" --db_password="$DB_PASSWORD" \
   --db-filter="^${DB_NAME}$" \
-  --log-level=info
+  --log-level=info \
+  "$@"

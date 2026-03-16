@@ -14,20 +14,18 @@ spec:
       labels:
         app: tvbo-api
     spec:
-      imagePullSecrets:
-        - name: github-credentials
       containers:
         - name: tvbo-api
-          image: ghcr.io/virtual-twin/tvbo:dev
+          image: leonmartin2/tvbo:dev
           imagePullPolicy: Always
           ports: [{containerPort: 8000}]
           env: [{name: MODE, value: api}]
           readinessProbe:
-            httpGet: {path: /api/health, port: 8000}
-            initialDelaySeconds: 20
+            httpGet: {path: /health, port: 8000}
+            initialDelaySeconds: 60
             periodSeconds: 10
           livenessProbe:
-            httpGet: {path: /api/health, port: 8000}
+            httpGet: {path: /health, port: 8000}
             initialDelaySeconds: 45
             periodSeconds: 20
 ---

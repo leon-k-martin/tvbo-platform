@@ -59,9 +59,9 @@ for _c in _candidates:
 if DEFAULT_DB is None:
     try:
         import tvbo
-        DEFAULT_DB = os.path.join(os.path.dirname(os.path.dirname(tvbo.__file__)), "database")
-    except ImportError:
-        DEFAULT_DB = os.path.join(os.path.expanduser("~"), "tools", "tvbo", "database")
+        DEFAULT_DB = str(tvbo.database_path)
+    except (ImportError, AttributeError):
+        DEFAULT_DB = os.path.join(os.path.expanduser("~"), "tools", "tvbo", "tvbo", "database")
 
 
 # ------------------------------------------------------------------ helpers

@@ -116,7 +116,11 @@ def create_integrator_data(yaml_files: List[Path]) -> ET.Element:
 def main():
     """Main entry point."""
     project_root = Path(__file__).parent.parent
-    database_dir = project_root / 'database'
+    try:
+        import tvbo
+        database_dir = tvbo.database_path
+    except (ImportError, AttributeError):
+        database_dir = project_root / 'tvbo' / 'database'
     output_dir = project_root / 'odoo-addons' / 'tvbo' / 'data'
 
     output_dir.mkdir(exist_ok=True)

@@ -14,7 +14,7 @@ services:
     ports:
       - "5433:5432"  # Avoid conflict with other postgres instances
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U odoo"]
+      test: ["CMD-SHELL", "pg_isready -U odoo -d tvbo_dev"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -29,14 +29,15 @@ services:
       MODE: api
       PYTHONPATH: /app/tvbo-src
     volumes:
-      # Mount local tvbo source in editable mode
-      - /Users/leonmartin_bih/tools/tvbo:/app/tvbo-src:ro
+      # Mount local tvbo source (writable for editable install)
+      - /Users/leonmartin_bih/tools/tvbo:/app/tvbo-src
     ports:
       - "8001:8000"  # Avoid conflict with other APIs
     depends_on:
       postgres:
         condition: service_healthy
-    command: sh -c "pip install -e '/app/tvbo-src[julia]' && /entrypoint.sh"
+    entrypoint: ["sh", "-c"]
+    command: ["pip install -e '/app/tvbo-src[api,julia]' && exec /entrypoint.sh"]
 
   odoo:
     build:
@@ -61,7 +62,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    command: ["odoo", "--dev=reload,qweb,werkzeug,xml"]
+    command: ["--dev=reload,qweb,werkzeug,xml"]
 
 volumes:
   tvbo-postgres-data:

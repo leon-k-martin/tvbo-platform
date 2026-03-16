@@ -99,8 +99,8 @@ render-reports-force:
 
 # Kubernetes namespace (production uses kube-system, local can use tvbo)
 K8S_NAMESPACE ?= kube-system
-# Local port forwarding (avoid conflicts with other Odoo projects)
-LOCAL_ODOO_PORT ?= 8070
+# Local port forwarding (matches docker-compose dev port)
+LOCAL_ODOO_PORT ?= 8169
 LOCAL_API_PORT ?= 8001
 
 help:
@@ -109,7 +109,7 @@ help:
 	@echo "=== LOCAL DEVELOPMENT (Recommended) ==="
 	@echo "Fast iteration with docker-compose + volume mounts:"
 	@echo ""
-	@echo "  make dev-up           - Start dev environment (http://localhost:8070)"
+	@echo "  make dev-up           - Start dev environment (http://localhost:8169)"
 	@echo "  make dev-down         - Stop dev environment"
 	@echo "  make dev-restart      - Restart Odoo"
 	@echo "  make dev-update       - Update TVBO module"

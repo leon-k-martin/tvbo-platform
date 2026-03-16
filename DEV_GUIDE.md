@@ -92,7 +92,7 @@ make logs-odoo
 
 - Images must be pushed to registry first:
   - `ghcr.io/leon-k-martin/tvbo-platform:main` (Odoo)
-  - `ghcr.io/virtual-twin/tvbo:dev` (API)
+  - `leonmartin2/tvbo:dev` (API, Docker Hub)
 - Uses `imagePullPolicy: Always` to get latest
 - Deployed to `kube-system` namespace by default
 - Production database credentials via secret

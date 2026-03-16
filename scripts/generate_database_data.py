@@ -1235,8 +1235,12 @@ def generate_coupling_function_data_xml(yaml_files: List[Path], output_file: Pat
 def main():
     """Main entry point."""
     project_root = Path(__file__).parent.parent
-    # Database is in tools/tvbo/database
-    database_dir = Path('/Users/leonmartin_bih/tools/tvbo/database')
+    # Database is inside tvbo package
+    try:
+        import tvbo
+        database_dir = tvbo.database_path
+    except (ImportError, AttributeError):
+        database_dir = Path('/Users/leonmartin_bih/tools/tvbo/tvbo/database')
     # Output to odoo-addons structure for multiple addons support
     output_dir = project_root / 'odoo-addons' / 'tvbo' / 'data'
 
