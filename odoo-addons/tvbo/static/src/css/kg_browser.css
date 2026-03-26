@@ -305,6 +305,12 @@
     word-break: break-word;
 }
 
+.tvbo-kg-container .card-equation-latex {
+    font-family: inherit;
+    font-size: 0.85rem;
+    overflow-x: auto;
+}
+
 .tvbo-kg-container .card-tags {
     margin-top: 10px;
     display: flex;

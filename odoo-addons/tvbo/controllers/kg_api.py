@@ -121,6 +121,20 @@ def _report_url(category: str, name: str) -> str | None:
     return None
 
 
+def _extract_equation_latex(category: str, name: str) -> str | None:
+    """Extract the first LaTeX equation from a report markdown file."""
+    safe = _safe_asset_name(name)
+    md_path = os.path.join(_REPORT_DIR, category, f'{safe}.md')
+    if not os.path.isfile(md_path):
+        return None
+    with open(md_path, 'r') as f:
+        content = f.read()
+    match = re.search(r'\$\$(.+?)\$\$', content, re.DOTALL)
+    if match:
+        return match.group(1).strip()
+    return None
+
+
 def get_ontology_api():
     """Get DirectOntologyAPI singleton. Fails if unavailable."""
     global _ontology_api
@@ -462,6 +476,11 @@ class KnowledgeGraphAPI(http.Controller):
                 report = _report_url(report_category, asset_name)
                 if report:
                     data['report_url'] = report
+
+                # Extract LaTeX equation from report for card preview
+                eq_latex = _extract_equation_latex(report_category, asset_name)
+                if eq_latex:
+                    data['equation_latex'] = eq_latex
 
         return get_ontology_api().enrich_database_item(data, entity_type)
 

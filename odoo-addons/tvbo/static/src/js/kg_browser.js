@@ -866,10 +866,12 @@ class KnowledgeGraphBrowser {
                     ${symbolDisplay}
                     ${typeBadge}
                 </div>`;
-            // Show equation for coupling items
-            const eqDisplay = item.equation
-                ? `<div class="card-equation">${this.escapeHtml(item.equation)}</div>`
-                : '';
+            // Show equation for coupling items (prefer LaTeX, fall back to code)
+            const eqDisplay = item.equation_latex
+                ? `<div class="card-equation card-equation-latex">$$${item.equation_latex}$$</div>`
+                : item.equation
+                    ? `<div class="card-equation">${this.escapeHtml(item.equation)}</div>`
+                    : '';
 
             const body = desc || thumb || eqDisplay ? `
                 <div class="card-body">
@@ -891,6 +893,11 @@ class KnowledgeGraphBrowser {
                 </div>
             `;
         }).join('');
+
+        // Typeset LaTeX equations in cards
+        if (window.MathJax && window.MathJax.typesetPromise) {
+            window.MathJax.typesetPromise([resultsGrid]).catch(() => {});
+        }
     }
 
     getStudyMeta(item) {
