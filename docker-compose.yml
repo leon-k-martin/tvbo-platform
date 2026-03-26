@@ -56,6 +56,7 @@ services:
       # Mount code for immediate updates (no rebuild!)
       - ./odoo-addons/tvbo:/mnt/extra-addons/tvbo:ro
       - /Users/leonmartin_bih/tools/tvbo:/tmp/tvbo:ro
+      - ./init-odoo.sh:/init-odoo.sh:ro
       - tvbo-odoo-data:/var/lib/odoo
     ports:
       - "8169:8069"  # TVBO platform port

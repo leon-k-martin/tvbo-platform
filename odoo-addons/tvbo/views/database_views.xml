@@ -109,7 +109,7 @@
         <field name="arch" type="xml">
             <list string="Connectivity Networks">
                 <field name="label"/>
-                <field name="number_of_regions"/>
+                <field name="number_of_nodes"/>
                 <field name="tractogram"/>
                 <field name="parcellation"/>
             </list>
@@ -125,16 +125,12 @@
                     <group>
                         <field name="label"/>
                         <field name="description"/>
-                        <field name="number_of_regions"/>
                         <field name="number_of_nodes"/>
                         <field name="tractogram"/>
                         <field name="parcellation"/>
                         <field name="nodes"/>
                         <field name="edges"/>
                         <field name="coupling"/>
-                        <field name="normalization"/>
-                        <field name="global_coupling_strength"/>
-                        <field name="conduction_speed"/>
                         <field name="bids_dir"/>
                         <field name="structural_measures"/>
                         <field name="observational_measures"/>
@@ -344,8 +340,6 @@
                         <field name="label"/>
                         <field name="atlas"/>
                         <field name="data_source"/>
-                        <field name="region_labels"/>
-                        <field name="center_coordinates"/>
                     </group>
                 </sheet>
             </form>
@@ -393,7 +387,7 @@
                         <field name="functions"/>
                         <field name="stimulation"/>
                         <field name="field_dynamics"/>
-                        <field name="optimization"/>
+                        <field name="optimizations"/>
                         <field name="explorations"/>
                         <field name="algorithms"/>
                         <field name="environment"/>

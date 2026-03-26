@@ -31,7 +31,7 @@
         </record>
         <record id="param_observation_fc_fisher_z" model="tvbo.parameter">
             <field name="name">fisher_z</field>
-            <field name="value">True</field>
+            <field name="value">1.0</field>
             <field name="description">Apply Fisher z-transformation to correlations</field>
         </record>
         <record id="observation_fc" model="tvbo.observation">
@@ -42,7 +42,7 @@
             <field name="name">BOLD_Gamma</field>
             <field name="label">BOLD (Gamma HRF)</field>
             <field name="description">BOLD fMRI observation model using a Gamma-shaped hemodynamic response function. Provides a simpler, unimodal HRF shape.</field>
-            <field name="imaging_modality" ref="imaging_modality_bold"/>
+            <field name="imaging_modality" ref="imaging_modality_BOLD"/>
         </record>
         <record id="classref_observation_bold_gamma" model="tvbo.class_reference">
             <field name="name">Bold</field>
@@ -65,7 +65,7 @@
             <field name="label">MEG</field>
             <field name="description">Forward solution for magnetoencephalography. Projects source neural activity through a lead field matrix to MEG sensor locations using oriented gradiometers. If no precomputed gain is available, uses the single-sphere analytic formula (Sarvas 1987, Eq. 25) for the magnetic field produced by current dipoles in a conducting sphere.</field>
             <field name="period">0.9765625</field>
-            <field name="imaging_modality" ref="imaging_modality_meg"/>
+            <field name="imaging_modality" ref="imaging_modality_MEG"/>
         </record>
         <record id="classref_observation_meg" model="tvbo.class_reference">
             <field name="name">MEG</field>
@@ -102,7 +102,7 @@
             <field name="label">Scalp EEG</field>
             <field name="description">Forward solution for scalp electroencephalography. Projects source neural activity through a lead field (gain) matrix to electrode locations on the scalp. If no precomputed gain is available, uses a single-sphere analytic approximation (Sarvas 1987, Eq. 12). Supports re-referencing: common average, single-electrode, or ideal reference-free recording.</field>
             <field name="period">0.9765625</field>
-            <field name="imaging_modality" ref="imaging_modality_eeg"/>
+            <field name="imaging_modality" ref="imaging_modality_EEG"/>
         </record>
         <record id="classref_observation_eeg" model="tvbo.class_reference">
             <field name="name">EEG</field>
@@ -132,7 +132,7 @@
             <field name="label">BOLD (Region ROI)</field>
             <field name="description">BOLD fMRI observation model that computes the hemodynamic response at each source location and spatially averages within brain regions using a parcellation mapping. Produces per-region BOLD signals suitable for comparison with parcellated empirical data.</field>
             <field name="period">2000.0</field>
-            <field name="imaging_modality" ref="imaging_modality_bold"/>
+            <field name="imaging_modality" ref="imaging_modality_BOLD"/>
         </record>
         <record id="classref_observation_bold_region_roi" model="tvbo.class_reference">
             <field name="name">BoldRegionROI</field>
@@ -196,7 +196,7 @@
             <field name="label">Intracranial EEG (SEEG)</field>
             <field name="description">Forward solution for intracranial/stereoelectroencephalography (SEEG). Projects source activity through a lead field matrix to implanted depth electrode contacts. Uses the same single-sphere analytic formula as scalp EEG (Sarvas 1987, Eq. 12), but with electrode positions inside the brain volume.</field>
             <field name="period">0.9765625</field>
-            <field name="imaging_modality" ref="imaging_modality_seeg"/>
+            <field name="imaging_modality" ref="imaging_modality_SEEG"/>
         </record>
         <record id="classref_observation_ieeg" model="tvbo.class_reference">
             <field name="name">iEEG</field>
@@ -219,7 +219,7 @@
             <field name="name">BOLD_TVB</field>
             <field name="label">BOLD (First Order Volterra)</field>
             <field name="description">BOLD fMRI observation model using the Balloon-Windkessel hemodynamic model. Transforms neural activity into simulated BOLD signal via convolution with a hemodynamic response function (First Order Volterra kernel), followed by a nonlinear Volterra transformation.</field>
-            <field name="imaging_modality" ref="imaging_modality_bold"/>
+            <field name="imaging_modality" ref="imaging_modality_BOLD"/>
         </record>
         <record id="classref_observation_bold_tvb" model="tvbo.class_reference">
             <field name="name">Bold</field>
@@ -242,7 +242,7 @@
             <field name="name">BOLD_MixtureOfGammas</field>
             <field name="label">BOLD (Mixture of Gammas HRF)</field>
             <field name="description">BOLD fMRI observation model using the canonical double-gamma hemodynamic response function (Glover 1999). Standard HRF used in most fMRI analysis packages (SPM, FSL, AFNI).</field>
-            <field name="imaging_modality" ref="imaging_modality_bold"/>
+            <field name="imaging_modality" ref="imaging_modality_BOLD"/>
         </record>
         <record id="classref_observation_bold_mixture_of_gammas" model="tvbo.class_reference">
             <field name="name">Bold</field>
@@ -299,7 +299,7 @@
             <field name="name">BOLD_DoubleExponential</field>
             <field name="label">BOLD (Double Exponential HRF)</field>
             <field name="description">BOLD fMRI observation model using a Double Exponential hemodynamic response function.</field>
-            <field name="imaging_modality" ref="imaging_modality_bold"/>
+            <field name="imaging_modality" ref="imaging_modality_BOLD"/>
         </record>
         <record id="classref_observation_bold_double_exponential" model="tvbo.class_reference">
             <field name="name">Bold</field>

@@ -23,9 +23,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # Install tvbo Python package (for model loading, not heavy compute)
-ARG TVBO_REF=dev
-RUN pip3 install --break-system-packages --ignore-installed typing-extensions \
-    "tvbo @ git+https://github.com/virtual-twin/tvbo.git@${TVBO_REF}"
+RUN pip3 install --break-system-packages --ignore-installed typing-extensions tvbo
 
 # Copy the Odoo addons
 COPY odoo-addons /mnt/extra-addons

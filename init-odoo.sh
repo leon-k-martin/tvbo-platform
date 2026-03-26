@@ -1,9 +1,30 @@
 #!/bin/bash
 set -euo pipefail
 
+# Ensure Python exceptions are visible (no output buffering)
+export PYTHONUNBUFFERED=1
+
 # Logging helper
 log() {
   echo "[$(date -u +"%Y-%m-%d %H:%M:%S UTC")] $*"
+}
+
+# Run odoo command with error capture (set -e would hide the traceback)
+run_odoo() {
+  set +e
+  odoo "$@" 2>&1
+  local rc=$?
+  set -e
+  if [ $rc -ne 0 ]; then
+    log "ERROR: odoo command failed with exit code $rc"
+    log "Command was: odoo $*"
+    # Check for OOM kill
+    if [ $rc -eq 137 ] || [ $rc -eq 255 ]; then
+      log "Checking dmesg for OOM..."
+      dmesg 2>/dev/null | tail -20 || true
+    fi
+    exit $rc
+  fi
 }
 
 # Support both Odoo's standard env vars (HOST, USER, PASSWORD) and DB_* variants
@@ -14,16 +35,17 @@ DB_NAME=${DB_NAME:-tvbo}
 
 export PGPASSWORD="$DB_PASSWORD"
 
-# Install tvbo: prefer mounted source (dev), fall back to pre-installed (production)
+# Install tvbo: prefer mounted source (dev), fall back to pip, then pre-installed (production)
 if [ -d "/tmp/tvbo" ] && [ -f "/tmp/tvbo/pyproject.toml" ]; then
   log "Installing tvbo from /tmp/tvbo in editable mode..."
   pip3 install --break-system-packages -e /tmp/tvbo > /dev/null 2>&1
   log "✓ tvbo installed in editable mode"
 elif python3 -c "import tvbo" 2>/dev/null; then
-  log "✓ tvbo already installed (production image)"
+  log "✓ tvbo already installed"
 else
-  log "ERROR: tvbo not available. Mount source at /tmp/tvbo or install in image."
-  exit 1
+  log "Installing tvbo from PyPI..."
+  pip3 install --break-system-packages tvbo > /dev/null 2>&1
+  log "✓ tvbo installed from PyPI"
 fi
 
 # Wait for PostgreSQL to be ready
@@ -43,37 +65,37 @@ if psql -h "$DB_HOST" -U "$DB_USER" -d postgres -tAc "SELECT 1 FROM pg_database 
     # Only upgrade if explicitly requested via TVBO_UPGRADE=1
     if [ "${TVBO_UPGRADE:-0}" = "1" ]; then
       log "Upgrading TVBO module..."
-      odoo -d "$DB_NAME" -u tvbo --stop-after-init --without-demo=True \
+      run_odoo -d "$DB_NAME" -u tvbo --stop-after-init --without-demo=True \
         --db_host="$DB_HOST" --db_user="$DB_USER" --db_password="$DB_PASSWORD" \
-        --log-level=warn > /dev/null 2>&1
+        --log-level=info
       log "✓ TVBO module upgraded"
     else
       log "Skipping upgrade (set TVBO_UPGRADE=1 to force)"
     fi
   else
     log "Database exists but is not initialized - initializing..."
-    odoo -d "$DB_NAME" -i base,website --stop-after-init --without-demo=True \
+    run_odoo -d "$DB_NAME" -i base,website --stop-after-init --without-demo=True \
       --db_host="$DB_HOST" --db_user="$DB_USER" --db_password="$DB_PASSWORD" \
-      --log-level=warn > /dev/null 2>&1
+      --log-level=warn
     log "✓ Base modules installed"
 
     log "Installing TVBO module..."
-    odoo -d "$DB_NAME" -i tvbo --stop-after-init --without-demo=True \
+    run_odoo -d "$DB_NAME" -i tvbo --stop-after-init --without-demo=True \
       --db_host="$DB_HOST" --db_user="$DB_USER" --db_password="$DB_PASSWORD" \
-      --log-level=warn > /dev/null 2>&1
+      --log-level=info
     log "✓ TVBO module installed"
   fi
 else
   log "Creating database '$DB_NAME' and installing base modules..."
-  odoo -d "$DB_NAME" -i base,website --stop-after-init --without-demo=True \
+  run_odoo -d "$DB_NAME" -i base,website --stop-after-init --without-demo=True \
     --db_host="$DB_HOST" --db_user="$DB_USER" --db_password="$DB_PASSWORD" \
-    --log-level=warn > /dev/null 2>&1
+    --log-level=warn
   log "✓ Base modules installed"
 
   log "Installing TVBO module..."
-  odoo -d "$DB_NAME" -i tvbo --stop-after-init --without-demo=True \
+  run_odoo -d "$DB_NAME" -i tvbo --stop-after-init --without-demo=True \
     --db_host="$DB_HOST" --db_user="$DB_USER" --db_password="$DB_PASSWORD" \
-    --log-level=warn > /dev/null 2>&1
+    --log-level=info
   log "✓ TVBO module installed"
 fi
 
