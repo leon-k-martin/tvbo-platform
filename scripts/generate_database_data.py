@@ -1125,6 +1125,105 @@ def generate_experiment_data_xml(yaml_files: List[Path], output_file: Path):
     output_file.write_text('\n'.join(lines))
 
 
+def generate_observation_data_xml(yaml_files: List[Path], output_file: Path):
+    """Generate XML data file for standalone observation models."""
+    lines = [
+        '<?xml version="1.0" encoding="utf-8"?>',
+        '<odoo>',
+        '    <data noupdate="0">',
+        ''
+    ]
+
+    for yaml_file in yaml_files:
+        try:
+            with open(yaml_file) as f:
+                data = yaml.safe_load(f)
+
+            if not data or 'name' not in data:
+                continue
+
+            name = data['name']
+            xml_id = f"observation_{sanitize_xml_id(yaml_file.stem)}"
+
+            lines.append(f'        <record id="{xml_id}" model="tvbo.observation">')
+            lines.append(f'            <field name="name">{escape_xml(name)}</field>')
+
+            if 'label' in data:
+                lines.append(f'            <field name="label">{escape_xml(data["label"])}</field>')
+
+            if 'description' in data:
+                lines.append(f'            <field name="description">{escape_xml(data["description"])}</field>')
+
+            if 'acronym' in data:
+                lines.append(f'            <field name="acronym">{escape_xml(data["acronym"])}</field>')
+
+            if 'period' in data:
+                lines.append(f'            <field name="period">{data["period"]}</field>')
+
+            # imaging_modality is a Many2one to tvbo.imaging_modality enum
+            if 'imaging_modality' in data:
+                modality = data['imaging_modality']
+                modality_ref = f"imaging_modality_{sanitize_xml_id(modality)}"
+                lines.append(f'            <field name="imaging_modality" ref="{modality_ref}"/>')
+
+            # Store pipeline summary as description supplement
+            if 'pipeline' in data and data['pipeline']:
+                pipeline_names = [step.get('name', '') for step in data['pipeline'] if isinstance(step, dict)]
+                if pipeline_names:
+                    pipeline_str = ' -> '.join(pipeline_names)
+                    # Append pipeline info to description if not already present
+                    if 'description' not in data or not data.get('description'):
+                        lines.append(f'            <field name="description">Pipeline: {escape_xml(pipeline_str)}</field>')
+
+            # class_reference as a related record
+            if 'class_reference' in data and isinstance(data['class_reference'], dict):
+                cr = data['class_reference']
+                cr_id = f"classref_{xml_id}"
+                lines.append(f'        </record>')
+                lines.append(f'        <record id="{cr_id}" model="tvbo.class_reference">')
+                if 'name' in cr:
+                    lines.append(f'            <field name="name">{escape_xml(cr["name"])}</field>')
+                if 'module' in cr:
+                    lines.append(f'            <field name="module">{escape_xml(cr["module"])}</field>')
+                lines.append(f'        </record>')
+                # Re-open observation record to link class_reference
+                lines.append(f'        <record id="{xml_id}" model="tvbo.observation">')
+                lines.append(f'            <field name="class_reference" ref="{cr_id}"/>')
+
+            # Store parameters
+            if 'parameters' in data and isinstance(data['parameters'], dict):
+                param_refs = []
+                for pname, pdata in data['parameters'].items():
+                    pid = f"param_{xml_id}_{sanitize_xml_id(pname)}"
+                    param_refs.append(pid)
+                    lines.append(f'        </record>')
+                    lines.append(f'        <record id="{pid}" model="tvbo.parameter">')
+                    lines.append(f'            <field name="name">{escape_xml(pname)}</field>')
+                    if isinstance(pdata, dict):
+                        if 'value' in pdata:
+                            lines.append(f'            <field name="value">{pdata["value"]}</field>')
+                        if 'unit' in pdata:
+                            lines.append(f'            <field name="unit">{escape_xml(pdata["unit"])}</field>')
+                        if 'description' in pdata:
+                            lines.append(f'            <field name="description">{escape_xml(pdata["description"])}</field>')
+                    lines.append(f'        </record>')
+                    # Re-open observation to continue
+                    lines.append(f'        <record id="{xml_id}" model="tvbo.observation">')
+
+                if param_refs:
+                    refs_str = ', '.join(f"ref('{r}')" for r in param_refs)
+                    lines.append(f'            <field name="parameters" eval="[(6, 0, [{refs_str}])]"/>')
+
+            lines.append('        </record>')
+            lines.append('')
+
+        except Exception as e:
+            print(f"  \u2717 Error processing {yaml_file.name}: {e}")
+
+    lines.extend(['    </data>', '</odoo>'])
+    output_file.write_text('\n'.join(lines))
+
+
 def generate_coupling_function_data_xml(yaml_files: List[Path], output_file: Path):
     """Generate XML data file for coupling functions."""
     lines = [
@@ -1318,6 +1417,16 @@ def main():
             generate_coupling_function_data_xml(yaml_files, output_file)
             data_files.append('data/database_coupling_functions.xml')
             print(f"✓ Generated {output_file.name} with {len(yaml_files)} coupling functions")
+
+    # Process observation models
+    observations_dir = database_dir / 'observation_models'
+    if observations_dir.exists():
+        yaml_files = list(observations_dir.glob('*.yaml'))
+        if yaml_files:
+            output_file = output_dir / 'database_observations.xml'
+            generate_observation_data_xml(yaml_files, output_file)
+            data_files.append('data/database_observations.xml')
+            print(f"\u2713 Generated {output_file.name} with {len(yaml_files)} observation models")
 
     # Process experiments
     experiments_dir = database_dir / 'experiments'

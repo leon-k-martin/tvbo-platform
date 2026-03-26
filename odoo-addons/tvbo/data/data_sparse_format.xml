@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+
+        <record id="sparse_format_dense" model="tvbo.sparse_format">
+            <field name="name">Dense</field>
+            <field name="technical_name">dense</field>
+            <field name="description">Dense N×N array with gzip compression</field>
+        </record>
+
+        <record id="sparse_format_csr" model="tvbo.sparse_format">
+            <field name="name">Csr</field>
+            <field name="technical_name">csr</field>
+            <field name="description">Compressed Sparse Row (data, indices, indptr)</field>
+        </record>
+
+        <record id="sparse_format_coo" model="tvbo.sparse_format">
+            <field name="name">Coo</field>
+            <field name="technical_name">coo</field>
+            <field name="description">Coordinate list (data, row, col)</field>
+        </record>
+
+    </data>
+</odoo>

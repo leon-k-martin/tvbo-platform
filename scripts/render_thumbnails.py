@@ -69,6 +69,11 @@ def _canon(s: str) -> str:
     return re.sub(r"[^a-z0-9]", "", (s or "").lower())
 
 
+def _safe_filename(name: str) -> str:
+    """Sanitize a name for use as a filename (no colons, slashes, etc.)."""
+    return re.sub(r'[<>:"/\\|?*]', '_', name).strip()
+
+
 def _ensure_dir(path: str):
     os.makedirs(path, exist_ok=True)
 
@@ -289,6 +294,223 @@ def render_atlases(db_root: str, force: bool = False, name_filter: str | None = 
     print(f"  Atlases: {ok} ok, {fail} failed")
 
 
+# ----------------------------------------------------- integrator thumbnails
+def render_integrator_thumbnail(yaml_path: str, out_path: str) -> bool:
+    """Plot integrator scheme visualization (Butcher tableau style)."""
+    import numpy as np
+
+    with open(yaml_path, "r", encoding="utf-8") as f:
+        raw = yaml.safe_load(f)
+    if not isinstance(raw, dict):
+        return False
+
+    method = raw.get("method", "")
+    n_stages = raw.get("number_of_stages", 1)
+    step_size = raw.get("step_size", 1.0)
+
+    # Simple visualization: solve dy/dt = -y with the integrator's number of stages
+    # shown as colored dots on an exponential decay curve
+    fig, ax = plt.subplots(figsize=(2.0, 2.0), dpi=150)
+    t = np.linspace(0, 4, 200)
+    y = np.exp(-t)
+    ax.plot(t, y, color="#3498DB", linewidth=2, alpha=0.8)
+
+    # Show stage evaluations as dots
+    if n_stages and isinstance(n_stages, (int, float)) and n_stages > 0:
+        stage_t = np.linspace(0, 4, int(n_stages) + 1)
+        stage_y = np.exp(-stage_t)
+        ax.scatter(stage_t, stage_y, color="#2C3E50", s=30, zorder=5)
+
+    ax.set_axis_off()
+    fig.patch.set_alpha(0)
+    ax.patch.set_alpha(0)
+    fig.savefig(out_path, bbox_inches="tight", transparent=True, pad_inches=0)
+    plt.close(fig)
+    return True
+
+
+def render_integrators(db_root: str, force: bool = False, name_filter: str | None = None):
+    """Render thumbnails for all integrators."""
+    int_dir = os.path.join(db_root, "integrators")
+    out_dir = os.path.join(STATIC_IMG, "integrators")
+    _ensure_dir(out_dir)
+
+    yaml_files = []
+    for ext in ("*.yaml", "*.yml"):
+        yaml_files.extend(glob.glob(os.path.join(int_dir, "**", ext), recursive=True))
+
+    ok, fail = 0, 0
+    for path in sorted(yaml_files):
+        with open(path, "r", encoding="utf-8") as f:
+            raw = yaml.safe_load(f)
+        if not isinstance(raw, dict):
+            continue
+        name = raw.get("method", os.path.splitext(os.path.basename(path))[0])
+
+        if name_filter and _canon(name_filter) != _canon(name):
+            continue
+
+        out_path = os.path.join(out_dir, f"{name}.png")
+        if not force and os.path.isfile(out_path):
+            print(f"  [skip] {name}.png (exists)")
+            ok += 1
+            continue
+
+        try:
+            if render_integrator_thumbnail(path, out_path):
+                print(f"  [ok]   {name}.png")
+                ok += 1
+            else:
+                print(f"  [FAIL] {name}: invalid YAML")
+                fail += 1
+        except Exception as e:
+            print(f"  [FAIL] {name}: {e}")
+            fail += 1
+
+    print(f"  Integrators: {ok} ok, {fail} failed")
+
+
+# --------------------------------------------------- experiment thumbnails
+def render_experiment_thumbnail(yaml_path: str, out_path: str) -> bool:
+    """Generate a summary card-style thumbnail for an experiment.
+
+    Shows a schematic diagram of the experiment components:
+    dynamics, observations, algorithms, optimizations, etc.
+    """
+    import numpy as np
+
+    with open(yaml_path, "r", encoding="utf-8") as f:
+        raw = yaml.safe_load(f)
+    if not isinstance(raw, dict):
+        return False
+
+    # Collect components
+    components = []
+
+    # Dynamics: check multiple locations
+    dyn = raw.get("dynamics") or raw.get("model") or raw.get("network", {}).get("dynamics")
+    if dyn:
+        if isinstance(dyn, dict):
+            names = []
+            for k, v in dyn.items():
+                if isinstance(v, dict) and v.get("name"):
+                    names.append(v["name"])
+            if names:
+                components.append(("Dynamics", ", ".join(names[:2])))
+            elif dyn.get("name"):
+                components.append(("Dynamics", dyn["name"]))
+            else:
+                components.append(("Dynamics", ""))
+        elif isinstance(dyn, str):
+            components.append(("Dynamics", dyn))
+        else:
+            components.append(("Dynamics", str(dyn)))
+
+    if raw.get("network"):
+        components.append(("Network", ""))
+
+    obs = raw.get("observations") or raw.get("observation_models")
+    if obs:
+        if isinstance(obs, dict):
+            obs_names = [v.get("name", k) for k, v in obs.items() if isinstance(v, dict)]
+        elif isinstance(obs, list):
+            obs_names = [o.get("name", "") for o in obs if isinstance(o, dict)]
+        else:
+            obs_names = []
+        components.append(("Observations", ", ".join(obs_names[:3])))
+
+    for key, label in [("algorithms", "Algorithms"), ("explorations", "Explorations"),
+                       ("optimizations", "Optimizations"), ("continuations", "Continuations")]:
+        section = raw.get(key)
+        if section:
+            if isinstance(section, dict):
+                names = list(section.keys())[:3]
+            elif isinstance(section, list):
+                names = [s.get("name", "") for s in section if isinstance(s, dict)][:3]
+            else:
+                names = []
+            components.append((label, ", ".join(names)))
+
+    if not components:
+        return False
+
+    # Draw a clean component diagram
+    fig, ax = plt.subplots(figsize=(2.5, 2.0), dpi=150)
+    n = len(components)
+    colors = plt.cm.Set2(np.linspace(0, 0.8, max(n, 1)))
+
+    for i, (comp_type, comp_detail) in enumerate(components):
+        y = 1.0 - (i / max(n - 1, 1)) * 0.8 if n > 1 else 0.6
+        rect = plt.Rectangle((0.05, y - 0.06), 0.9, 0.11,
+                              facecolor=colors[i], edgecolor="#2C3E50",
+                              linewidth=0.8, alpha=0.85, transform=ax.transAxes)
+        ax.add_patch(rect)
+        text = comp_type
+        if comp_detail:
+            text += f": {comp_detail[:20]}"
+        ax.text(0.5, y, text, transform=ax.transAxes, ha="center", va="center",
+                fontsize=5, fontweight="bold", color="#2C3E50")
+
+    # Draw arrows between components
+    for i in range(n - 1):
+        y_top = 1.0 - (i / max(n - 1, 1)) * 0.8 if n > 1 else 0.6
+        y_bot = 1.0 - ((i + 1) / max(n - 1, 1)) * 0.8 if n > 1 else 0.6
+        ax.annotate("", xy=(0.5, y_bot + 0.06), xytext=(0.5, y_top - 0.06),
+                     xycoords="axes fraction", textcoords="axes fraction",
+                     arrowprops=dict(arrowstyle="->", color="#718096", lw=0.8))
+
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, 1)
+    ax.set_axis_off()
+    fig.patch.set_alpha(0)
+    ax.patch.set_alpha(0)
+    fig.savefig(out_path, bbox_inches="tight", transparent=True, pad_inches=0)
+    plt.close(fig)
+    return True
+
+
+def render_experiments(db_root: str, force: bool = False, name_filter: str | None = None):
+    """Render thumbnails for all experiments."""
+    exp_dir = os.path.join(db_root, "experiments")
+    out_dir = os.path.join(STATIC_IMG, "experiments")
+    _ensure_dir(out_dir)
+
+    yaml_files = []
+    for ext in ("*.yaml", "*.yml"):
+        yaml_files.extend(glob.glob(os.path.join(exp_dir, "**", ext), recursive=True))
+
+    ok, fail = 0, 0
+    for path in sorted(yaml_files):
+        with open(path, "r", encoding="utf-8") as f:
+            raw = yaml.safe_load(f)
+        if not isinstance(raw, dict):
+            continue
+        name = raw.get("label", raw.get("name", os.path.splitext(os.path.basename(path))[0]))
+        safe_name = _safe_filename(name)
+
+        if name_filter and _canon(name_filter) != _canon(name):
+            continue
+
+        out_path = os.path.join(out_dir, f"{safe_name}.png")
+        if not force and os.path.isfile(out_path):
+            print(f"  [skip] {safe_name}.png (exists)")
+            ok += 1
+            continue
+
+        try:
+            if render_experiment_thumbnail(path, out_path):
+                print(f"  [ok]   {safe_name}.png")
+                ok += 1
+            else:
+                print(f"  [FAIL] {safe_name}: no components found")
+                fail += 1
+        except Exception as e:
+            print(f"  [FAIL] {safe_name}: {e}")
+            fail += 1
+
+    print(f"  Experiments: {ok} ok, {fail} failed")
+
+
 # ----------------------------------------------------------------------- main
 def main():
     parser = argparse.ArgumentParser(
@@ -303,7 +525,8 @@ def main():
         help="Re-render even if thumbnail already exists"
     )
     parser.add_argument(
-        "--only", choices=["models", "networks", "atlases"],
+        "--only", choices=["models", "networks", "atlases", "integrators",
+                           "coupling_functions", "experiments"],
         help="Render only one category"
     )
     parser.add_argument(
@@ -320,7 +543,9 @@ def main():
     print(f"Output:   {STATIC_IMG}")
     print()
 
-    categories = [args.only] if args.only else ["models", "networks", "atlases"]
+    categories = [args.only] if args.only else [
+        "models", "networks", "atlases", "integrators", "experiments"
+    ]
 
     if "models" in categories:
         print("Rendering model thumbnails...")
@@ -335,6 +560,16 @@ def main():
     if "atlases" in categories:
         print("Rendering atlas thumbnails...")
         render_atlases(db_root, force=args.force, name_filter=args.name)
+        print()
+
+    if "integrators" in categories:
+        print("Rendering integrator thumbnails...")
+        render_integrators(db_root, force=args.force, name_filter=args.name)
+        print()
+
+    if "experiments" in categories:
+        print("Rendering experiment thumbnails...")
+        render_experiments(db_root, force=args.force, name_filter=args.name)
         print()
 
     print("Done.")

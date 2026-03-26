@@ -78,8 +78,6 @@
 
 .tvbo-kg-container .facet-content {
     padding: 10px 14px;
-    max-height: 300px;
-    overflow-y: auto;
 }
 
 .tvbo-kg-container .facet-group.collapsed .facet-content {
@@ -173,6 +171,7 @@
 
 .tvbo-kg-container .facet-group.property-facet .facet-content {
     max-height: 200px;
+    overflow-y: auto;
 }
 
 /* Results Area */

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+
+        <record id="initial_state_method_time_integration" model="tvbo.initial_state_method">
+            <field name="name">Time Integration</field>
+            <field name="technical_name">time_integration</field>
+            <field name="description">Integrate the ODE forward until convergence (robust, default).</field>
+        </record>
+
+        <record id="initial_state_method_newton" model="tvbo.initial_state_method">
+            <field name="name">Newton</field>
+            <field name="technical_name">newton</field>
+            <field name="description">Use Newton's method to find the nearest fixed point.</field>
+        </record>
+
+        <record id="initial_state_method_given" model="tvbo.initial_state_method">
+            <field name="name">Given</field>
+            <field name="technical_name">given</field>
+            <field name="description">Use the model's default initial values directly.</field>
+        </record>
+
+        <record id="initial_state_method_from_branch" model="tvbo.initial_state_method">
+            <field name="name">From Branch</field>
+            <field name="technical_name">from_branch</field>
+            <field name="description">Start from a point on a previously computed branch.</field>
+        </record>
+
+    </data>
+</odoo>

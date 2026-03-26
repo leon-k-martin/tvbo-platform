@@ -95,10 +95,6 @@
             <field name="boundaries" ref="range_boundaries_state_var_coombesbyrne2d_r"/>
         </record>
 
-        <record id="coupling_coombesbyrne2d_c_pop0" model="tvbo.parameter">
-            <field name="name">c_pop0</field>
-        </record>
-
         <record id="dynamics_coombesbyrne2d" model="tvbo.dynamics">
             <field name="name">CoombesByrne2D</field>
             <field name="label">CoombesByrne2D</field>
@@ -106,7 +102,6 @@
             <field name="number_of_modes">1</field>
             <field name="parameters" eval="[(6, 0, [ref('param_coombesbyrne2d_delta'),ref('param_coombesbyrne2d_eta'),ref('param_coombesbyrne2d_k'),ref('param_coombesbyrne2d_v_syn')])]"/>
             <field name="state_variables" eval="[(6, 0, [ref('state_var_coombesbyrne2d_v'),ref('state_var_coombesbyrne2d_r')])]"/>
-            <field name="coupling_terms" eval="[(6, 0, [ref('coupling_coombesbyrne2d_c_pop0')])]"/>
             <field name="references">Byrne2020</field>
         </record>
 
@@ -141,10 +136,6 @@
             <field name="domain" ref="range_domain_state_var_genericlinear_x"/>
         </record>
 
-        <record id="coupling_genericlinear_c_pop0" model="tvbo.parameter">
-            <field name="name">c_pop0</field>
-        </record>
-
         <record id="dynamics_genericlinear" model="tvbo.dynamics">
             <field name="name">GenericLinear</field>
             <field name="label">GenericLinear</field>
@@ -152,7 +143,6 @@
             <field name="number_of_modes">1</field>
             <field name="parameters" eval="[(6, 0, [ref('param_genericlinear_gamma')])]"/>
             <field name="state_variables" eval="[(6, 0, [ref('state_var_genericlinear_x')])]"/>
-            <field name="coupling_terms" eval="[(6, 0, [ref('coupling_genericlinear_c_pop0')])]"/>
             <field name="references">Galan2008</field>
         </record>
 
@@ -530,14 +520,6 @@
             <field name="equation" ref="eq_derived_var_reducedwongwangexcinh_h_i"/>
         </record>
 
-        <record id="coupling_reducedwongwangexcinh_c_glob" model="tvbo.parameter">
-            <field name="name">c_glob</field>
-        </record>
-
-        <record id="coupling_reducedwongwangexcinh_local_coupling" model="tvbo.parameter">
-            <field name="name">local_coupling</field>
-        </record>
-
         <record id="dynamics_reducedwongwangexcinh" model="tvbo.dynamics">
             <field name="name">ReducedWongWangExcInh</field>
             <field name="label">ReducedWongWangExcInh</field>
@@ -546,7 +528,6 @@
             <field name="parameters" eval="[(6, 0, [ref('param_reducedwongwangexcinh_g'),ref('param_reducedwongwangexcinh_i_ext'),ref('param_reducedwongwangexcinh_i_o'),ref('param_reducedwongwangexcinh_j_n'),ref('param_reducedwongwangexcinh_j_i'),ref('param_reducedwongwangexcinh_w_e'),ref('param_reducedwongwangexcinh_w_i'),ref('param_reducedwongwangexcinh_a_e'),ref('param_reducedwongwangexcinh_a_i'),ref('param_reducedwongwangexcinh_b_e'),ref('param_reducedwongwangexcinh_b_i'),ref('param_reducedwongwangexcinh_d_e'),ref('param_reducedwongwangexcinh_d_i'),ref('param_reducedwongwangexcinh_gamma_e'),ref('param_reducedwongwangexcinh_gamma_i'),ref('param_reducedwongwangexcinh_lamda'),ref('param_reducedwongwangexcinh_tau_e'),ref('param_reducedwongwangexcinh_tau_i'),ref('param_reducedwongwangexcinh_w_p')])]"/>
             <field name="state_variables" eval="[(6, 0, [ref('state_var_reducedwongwangexcinh_s_e'),ref('state_var_reducedwongwangexcinh_s_i')])]"/>
             <field name="derived_variables" eval="[(6, 0, [ref('derived_var_reducedwongwangexcinh_j_n_s_e'),ref('derived_var_reducedwongwangexcinh_coupling'),ref('derived_var_reducedwongwangexcinh_x_e'),ref('derived_var_reducedwongwangexcinh_x_i'),ref('derived_var_reducedwongwangexcinh_h_e'),ref('derived_var_reducedwongwangexcinh_h_i')])]"/>
-            <field name="coupling_terms" eval="[(6, 0, [ref('coupling_reducedwongwangexcinh_c_glob'),ref('coupling_reducedwongwangexcinh_local_coupling')])]"/>
             <field name="references">Deco2014</field>
         </record>
 
@@ -872,10 +853,6 @@ into an average firing rate to the PCs.</field>
             <field name="equation" ref="eq_derived_var_jansenrit_sigma_y1_y2"/>
         </record>
 
-        <record id="coupling_jansenrit_c_pop0" model="tvbo.parameter">
-            <field name="name">c_pop0</field>
-        </record>
-
         <record id="dynamics_jansenrit" model="tvbo.dynamics">
             <field name="name">JansenRit</field>
             <field name="label">JansenRit</field>
@@ -884,8 +861,150 @@ into an average firing rate to the PCs.</field>
             <field name="parameters" eval="[(6, 0, [ref('param_jansenrit_a'),ref('param_jansenrit_b'),ref('param_jansenrit_j'),ref('param_jansenrit_a_1'),ref('param_jansenrit_a_2'),ref('param_jansenrit_a_3'),ref('param_jansenrit_a_4'),ref('param_jansenrit_a'),ref('param_jansenrit_b'),ref('param_jansenrit_mu'),ref('param_jansenrit_nu_max'),ref('param_jansenrit_r'),ref('param_jansenrit_v0')])]"/>
             <field name="state_variables" eval="[(6, 0, [ref('state_var_jansenrit_y0'),ref('state_var_jansenrit_y1'),ref('state_var_jansenrit_y2'),ref('state_var_jansenrit_y3'),ref('state_var_jansenrit_y4'),ref('state_var_jansenrit_y5')])]"/>
             <field name="derived_variables" eval="[(6, 0, [ref('derived_var_jansenrit_sigma_y0_1'),ref('derived_var_jansenrit_sigma_y0_3'),ref('derived_var_jansenrit_sigma_y1_y2')])]"/>
-            <field name="coupling_terms" eval="[(6, 0, [ref('coupling_jansenrit_c_pop0')])]"/>
             <field name="references">Jansen1995, Jansen1993</field>
+        </record>
+
+        <record id="param_jansenrit1995_a" model="tvbo.parameter">
+            <field name="name">A</field>
+            <field name="value">3.25</field>
+            <field name="description">Maximum amplitude of excitatory PSP (EPSP)</field>
+            <field name="unit">mV</field>
+        </record>
+
+        <record id="param_jansenrit1995_b" model="tvbo.parameter">
+            <field name="name">B</field>
+            <field name="value">22</field>
+            <field name="description">Maximum amplitude of inhibitory PSP (IPSP)</field>
+            <field name="unit">mV</field>
+        </record>
+
+        <record id="param_jansenrit1995_c" model="tvbo.parameter">
+            <field name="name">C</field>
+            <field name="value">135</field>
+            <field name="description">Lumped connectivity constant (C = C1)</field>
+        </record>
+
+        <record id="param_jansenrit1995_a" model="tvbo.parameter">
+            <field name="name">a</field>
+            <field name="value">100</field>
+            <field name="description">Reciprocal of EPSP time constant</field>
+            <field name="unit">s^-1</field>
+        </record>
+
+        <record id="param_jansenrit1995_b" model="tvbo.parameter">
+            <field name="name">b</field>
+            <field name="value">50</field>
+            <field name="description">Reciprocal of IPSP time constant</field>
+            <field name="unit">s^-1</field>
+        </record>
+
+        <record id="param_jansenrit1995_v0" model="tvbo.parameter">
+            <field name="name">v0</field>
+            <field name="value">6</field>
+            <field name="description">PSP for 50% firing rate (sigmoid midpoint)</field>
+            <field name="unit">mV</field>
+        </record>
+
+        <record id="param_jansenrit1995_e0" model="tvbo.parameter">
+            <field name="name">e0</field>
+            <field name="value">2.5</field>
+            <field name="description">Half of maximum firing rate (2*e0 = max rate)</field>
+            <field name="unit">s^-1</field>
+        </record>
+
+        <record id="param_jansenrit1995_r" model="tvbo.parameter">
+            <field name="name">r</field>
+            <field name="value">0.56</field>
+            <field name="description">Steepness of sigmoid transformation</field>
+            <field name="unit">mV^-1</field>
+        </record>
+
+        <record id="param_jansenrit1995_p" model="tvbo.parameter">
+            <field name="name">p</field>
+            <field name="value">220</field>
+            <field name="description">Mean external input (afferent pulse density)</field>
+            <field name="unit">s^-1</field>
+        </record>
+
+        <record id="eq_state_var_jansenrit1995_y0" model="tvbo.equation">
+            <field name="righthandside">y3</field>
+        </record>
+
+        <record id="state_var_jansenrit1995_y0" model="tvbo.state_variable">
+            <field name="name">y0</field>
+            <field name="unit">mV</field>
+            <field name="equation" ref="eq_state_var_jansenrit1995_y0"/>
+        </record>
+
+        <record id="eq_state_var_jansenrit1995_y3" model="tvbo.equation">
+            <field name="righthandside">A*a*Sigm(y1 - y2) - 2*a*y3 - a**2*y0</field>
+        </record>
+
+        <record id="state_var_jansenrit1995_y3" model="tvbo.state_variable">
+            <field name="name">y3</field>
+            <field name="unit">mV/s</field>
+            <field name="equation" ref="eq_state_var_jansenrit1995_y3"/>
+        </record>
+
+        <record id="eq_state_var_jansenrit1995_y1" model="tvbo.equation">
+            <field name="righthandside">y4</field>
+        </record>
+
+        <record id="state_var_jansenrit1995_y1" model="tvbo.state_variable">
+            <field name="name">y1</field>
+            <field name="unit">mV</field>
+            <field name="equation" ref="eq_state_var_jansenrit1995_y1"/>
+        </record>
+
+        <record id="eq_state_var_jansenrit1995_y4" model="tvbo.equation">
+            <field name="righthandside">A*a*(p + C2*Sigm(C1*y0) + c_intercolumn) - 2*a*y4 - a**2*y1</field>
+        </record>
+
+        <record id="state_var_jansenrit1995_y4" model="tvbo.state_variable">
+            <field name="name">y4</field>
+            <field name="unit">mV/s</field>
+            <field name="equation" ref="eq_state_var_jansenrit1995_y4"/>
+        </record>
+
+        <record id="eq_state_var_jansenrit1995_y2" model="tvbo.equation">
+            <field name="righthandside">y5</field>
+        </record>
+
+        <record id="state_var_jansenrit1995_y2" model="tvbo.state_variable">
+            <field name="name">y2</field>
+            <field name="unit">mV</field>
+            <field name="equation" ref="eq_state_var_jansenrit1995_y2"/>
+        </record>
+
+        <record id="eq_state_var_jansenrit1995_y5" model="tvbo.equation">
+            <field name="righthandside">B*b*(C4*Sigm(C3*y0)) - 2*b*y5 - b**2*y2</field>
+        </record>
+
+        <record id="state_var_jansenrit1995_y5" model="tvbo.state_variable">
+            <field name="name">y5</field>
+            <field name="unit">mV/s</field>
+            <field name="equation" ref="eq_state_var_jansenrit1995_y5"/>
+        </record>
+
+        <record id="derived_var_jansenrit1995_v_pyr" model="tvbo.derived_variable">
+            <field name="name">v_pyr</field>
+            <field name="description">Aggregate pyramidal PSP (EEG-like output)</field>
+            <field name="unit">mV</field>
+        </record>
+        <record id="eq_derived_var_jansenrit1995_v_pyr" model="tvbo.equation">
+            <field name="righthandside">y1 - y2</field>
+        </record>
+        <record id="derived_var_jansenrit1995_v_pyr" model="tvbo.derived_variable">
+            <field name="equation" ref="eq_derived_var_jansenrit1995_v_pyr"/>
+        </record>
+
+        <record id="dynamics_jansenrit1995" model="tvbo.dynamics">
+            <field name="name">JansenRit1995</field>
+            <field name="label">JansenRit1995</field>
+            <field name="description">Lumped-parameter cortical column model with three neural populations: pyramidal cells, excitatory interneurons, and inhibitory interneurons. Each population is modeled by a PSP block (2nd-order linear filter) and a sigmoidal potential-to-firing-rate transformation. The model produces EEG-like output as the pyramidal PSP difference v_pyr = y1 - y2. Based on Lopes da Silva et al. (1974, 1976) and Jansen et al. (1993).</field>
+            <field name="parameters" eval="[(6, 0, [ref('param_jansenrit1995_a'),ref('param_jansenrit1995_b'),ref('param_jansenrit1995_c'),ref('param_jansenrit1995_a'),ref('param_jansenrit1995_b'),ref('param_jansenrit1995_v0'),ref('param_jansenrit1995_e0'),ref('param_jansenrit1995_r'),ref('param_jansenrit1995_p')])]"/>
+            <field name="state_variables" eval="[(6, 0, [ref('state_var_jansenrit1995_y0'),ref('state_var_jansenrit1995_y3'),ref('state_var_jansenrit1995_y1'),ref('state_var_jansenrit1995_y4'),ref('state_var_jansenrit1995_y2'),ref('state_var_jansenrit1995_y5')])]"/>
+            <field name="derived_variables" eval="[(6, 0, [ref('derived_var_jansenrit1995_v_pyr')])]"/>
         </record>
 
         <record id="range_param_kionex_cm" model="tvbo.range">
@@ -1728,10 +1847,6 @@ into an average firing rate to the PCs.</field>
             <field name="equation" ref="eq_derived_var_kionex_vcond"/>
         </record>
 
-        <record id="coupling_kionex_c_pop0" model="tvbo.parameter">
-            <field name="name">c_pop0</field>
-        </record>
-
         <record id="dynamics_kionex" model="tvbo.dynamics">
             <field name="name">KIonEx</field>
             <field name="label">KIonEx</field>
@@ -1747,7 +1862,6 @@ The model is derived as the mathematical limit of an infinite number of all-to-a
             <field name="parameters" eval="[(6, 0, [ref('param_kionex_cm'),ref('param_kionex_delta'),ref('param_kionex_e'),ref('param_kionex_j'),ref('param_kionex_k_bath'),ref('param_kionex_r_minus'),ref('param_kionex_r_plus'),ref('param_kionex_vstar'),ref('param_kionex_c_minus'),ref('param_kionex_c_plus'),ref('param_kionex_epsilon'),ref('param_kionex_eta'),ref('param_kionex_gamma'),ref('param_kionex_tau_n'),ref('param_kionex_chn'),ref('param_kionex_ckp'),ref('param_kionex_cl_i0'),ref('param_kionex_cl_o0'),ref('param_kionex_cmna'),ref('param_kionex_cnap'),ref('param_kionex_cnk'),ref('param_kionex_dchn'),ref('param_kionex_dckp'),ref('param_kionex_dcmna'),ref('param_kionex_dcnap'),ref('param_kionex_dcnk'),ref('param_kionex_k_i0'),ref('param_kionex_k_o0'),ref('param_kionex_na_i0'),ref('param_kionex_na_o0'),ref('param_kionex_g_cl'),ref('param_kionex_g_k'),ref('param_kionex_g_kl'),ref('param_kionex_g_na'),ref('param_kionex_g_nal'),ref('param_kionex_rho'),ref('param_kionex_w_i'),ref('param_kionex_w_o')])]"/>
             <field name="state_variables" eval="[(6, 0, [ref('state_var_kionex_dki'),ref('state_var_kionex_kg'),ref('state_var_kionex_v'),ref('state_var_kionex_n'),ref('state_var_kionex_x')])]"/>
             <field name="derived_variables" eval="[(6, 0, [ref('derived_var_kionex_dna_i'),ref('derived_var_kionex_i_cl'),ref('derived_var_kionex_k_i'),ref('derived_var_kionex_beta'),ref('derived_var_kionex_h'),ref('derived_var_kionex_minf'),ref('derived_var_kionex_ninf'),ref('derived_var_kionex_r'),ref('derived_var_kionex_dk_o'),ref('derived_var_kionex_dna_o'),ref('derived_var_kionex_na_i'),ref('derived_var_kionex_xcond'),ref('derived_var_kionex_k_o'),ref('derived_var_kionex_na_o'),ref('derived_var_kionex_i_k'),ref('derived_var_kionex_i_na'),ref('derived_var_kionex_i_pump'),ref('derived_var_kionex_v_temp'),ref('derived_var_kionex_vcond')])]"/>
-            <field name="coupling_terms" eval="[(6, 0, [ref('coupling_kionex_c_pop0')])]"/>
             <field name="references">Rabuffo2024, Depannemaecker2023</field>
         </record>
 
@@ -2074,14 +2188,6 @@ The model is derived as the mathematical limit of an infinite number of all-to-a
             <field name="equation" ref="eq_derived_var_epileptor5d_h"/>
         </record>
 
-        <record id="coupling_epileptor5d_c_pop0" model="tvbo.parameter">
-            <field name="name">c_pop0</field>
-        </record>
-
-        <record id="coupling_epileptor5d_c_pop1" model="tvbo.parameter">
-            <field name="name">c_pop1</field>
-        </record>
-
         <record id="dynamics_epileptor5d" model="tvbo.dynamics">
             <field name="name">Epileptor5D</field>
             <field name="label">Epileptor5D</field>
@@ -2102,7 +2208,6 @@ Note:
             <field name="parameters" eval="[(6, 0, [ref('param_epileptor5d_iext2'),ref('param_epileptor5d_iext'),ref('param_epileptor5d_kf'),ref('param_epileptor5d_ks'),ref('param_epileptor5d_kvf'),ref('param_epileptor5d_a'),ref('param_epileptor5d_aa'),ref('param_epileptor5d_b'),ref('param_epileptor5d_bb'),ref('param_epileptor5d_c'),ref('param_epileptor5d_d'),ref('param_epileptor5d_modification'),ref('param_epileptor5d_r'),ref('param_epileptor5d_s'),ref('param_epileptor5d_slope'),ref('param_epileptor5d_tau'),ref('param_epileptor5d_tt'),ref('param_epileptor5d_x0')])]"/>
             <field name="state_variables" eval="[(6, 0, [ref('state_var_epileptor5d_g'),ref('state_var_epileptor5d_x1'),ref('state_var_epileptor5d_x2'),ref('state_var_epileptor5d_y1'),ref('state_var_epileptor5d_y2'),ref('state_var_epileptor5d_z')])]"/>
             <field name="derived_variables" eval="[(6, 0, [ref('derived_var_epileptor5d_x1cond'),ref('derived_var_epileptor5d_y2cond'),ref('derived_var_epileptor5d_zcond'),ref('derived_var_epileptor5d_h')])]"/>
-            <field name="coupling_terms" eval="[(6, 0, [ref('coupling_epileptor5d_c_pop0'),ref('coupling_epileptor5d_c_pop1')])]"/>
             <field name="references">Proix2014, Jirsa2014</field>
         </record>
 
@@ -2161,14 +2266,6 @@ Note:
             <field name="equation" ref="eq_derived_var_kuramoto_i"/>
         </record>
 
-        <record id="coupling_kuramoto_c_pop0" model="tvbo.parameter">
-            <field name="name">c_pop0</field>
-        </record>
-
-        <record id="coupling_kuramoto_local_coupling" model="tvbo.parameter">
-            <field name="name">local_coupling</field>
-        </record>
-
         <record id="dynamics_kuramoto" model="tvbo.dynamics">
             <field name="name">Kuramoto</field>
             <field name="label">Kuramoto</field>
@@ -2177,7 +2274,6 @@ Note:
             <field name="parameters" eval="[(6, 0, [ref('param_kuramoto_omega')])]"/>
             <field name="state_variables" eval="[(6, 0, [ref('state_var_kuramoto_theta')])]"/>
             <field name="derived_variables" eval="[(6, 0, [ref('derived_var_kuramoto_lc_0'),ref('derived_var_kuramoto_i')])]"/>
-            <field name="coupling_terms" eval="[(6, 0, [ref('coupling_kuramoto_c_pop0'),ref('coupling_kuramoto_local_coupling')])]"/>
             <field name="references">Cabral2011, Strogatz2000, Kuramoto1975</field>
         </record>
 
@@ -2254,18 +2350,6 @@ Note:
             <field name="equation" ref="eq_derived_var_suphopf_lc_0"/>
         </record>
 
-        <record id="coupling_suphopf_c_pop0" model="tvbo.parameter">
-            <field name="name">c_pop0</field>
-        </record>
-
-        <record id="coupling_suphopf_c_pop1" model="tvbo.parameter">
-            <field name="name">c_pop1</field>
-        </record>
-
-        <record id="coupling_suphopf_local_coupling" model="tvbo.parameter">
-            <field name="name">local_coupling</field>
-        </record>
-
         <record id="dynamics_suphopf" model="tvbo.dynamics">
             <field name="name">SupHopf</field>
             <field name="label">SupHopf</field>
@@ -2276,7 +2360,6 @@ This normal form has a supercritical bifurcation at &apos;a=0&apos; with &apos;a
             <field name="parameters" eval="[(6, 0, [ref('param_suphopf_a'),ref('param_suphopf_omega')])]"/>
             <field name="state_variables" eval="[(6, 0, [ref('state_var_suphopf_x'),ref('state_var_suphopf_y')])]"/>
             <field name="derived_variables" eval="[(6, 0, [ref('derived_var_suphopf_lc_0')])]"/>
-            <field name="coupling_terms" eval="[(6, 0, [ref('coupling_suphopf_c_pop0'),ref('coupling_suphopf_c_pop1'),ref('coupling_suphopf_local_coupling')])]"/>
             <field name="references">Deco2017</field>
         </record>
 
@@ -2474,14 +2557,6 @@ This normal form has a supercritical bifurcation at &apos;a=0&apos; with &apos;a
             <field name="boundaries" ref="range_boundaries_state_var_gastschmidtknosche_sd_r"/>
         </record>
 
-        <record id="coupling_gastschmidtknosche_sd_c_pop0" model="tvbo.parameter">
-            <field name="name">c_pop0</field>
-        </record>
-
-        <record id="coupling_gastschmidtknosche_sd_c_pop1" model="tvbo.parameter">
-            <field name="name">c_pop1</field>
-        </record>
-
         <record id="dynamics_gastschmidtknosche_sd" model="tvbo.dynamics">
             <field name="name">GastSchmidtKnosche_SD</field>
             <field name="label">GastSchmidtKnosche_SD</field>
@@ -2505,7 +2580,6 @@ This normal form has a supercritical bifurcation at &apos;a=0&apos; with &apos;a
             <field name="number_of_modes">1</field>
             <field name="parameters" eval="[(6, 0, [ref('param_gastschmidtknosche_sd_delta'),ref('param_gastschmidtknosche_sd_i'),ref('param_gastschmidtknosche_sd_j'),ref('param_gastschmidtknosche_sd_alpha'),ref('param_gastschmidtknosche_sd_cr'),ref('param_gastschmidtknosche_sd_cv'),ref('param_gastschmidtknosche_sd_eta'),ref('param_gastschmidtknosche_sd_tau_a'),ref('param_gastschmidtknosche_sd_tau')])]"/>
             <field name="state_variables" eval="[(6, 0, [ref('state_var_gastschmidtknosche_sd_a'),ref('state_var_gastschmidtknosche_sd_b'),ref('state_var_gastschmidtknosche_sd_v'),ref('state_var_gastschmidtknosche_sd_r')])]"/>
-            <field name="coupling_terms" eval="[(6, 0, [ref('coupling_gastschmidtknosche_sd_c_pop0'),ref('coupling_gastschmidtknosche_sd_c_pop1')])]"/>
             <field name="references">Gast2020</field>
         </record>
 
@@ -2699,10 +2773,6 @@ This normal form has a supercritical bifurcation at &apos;a=0&apos; with &apos;a
             <field name="equation" ref="eq_derived_var_epileptor2d_h"/>
         </record>
 
-        <record id="coupling_epileptor2d_c_pop0" model="tvbo.parameter">
-            <field name="name">c_pop0</field>
-        </record>
-
         <record id="dynamics_epileptor2d" model="tvbo.dynamics">
             <field name="name">Epileptor2D</field>
             <field name="label">Epileptor2D</field>
@@ -2716,7 +2786,6 @@ Note:
             <field name="parameters" eval="[(6, 0, [ref('param_epileptor2d_iext'),ref('param_epileptor2d_ks'),ref('param_epileptor2d_kvf'),ref('param_epileptor2d_a'),ref('param_epileptor2d_b'),ref('param_epileptor2d_c'),ref('param_epileptor2d_d'),ref('param_epileptor2d_modification'),ref('param_epileptor2d_r'),ref('param_epileptor2d_slope'),ref('param_epileptor2d_tt'),ref('param_epileptor2d_x0')])]"/>
             <field name="state_variables" eval="[(6, 0, [ref('state_var_epileptor2d_x1'),ref('state_var_epileptor2d_z')])]"/>
             <field name="derived_variables" eval="[(6, 0, [ref('derived_var_epileptor2d_x1cond'),ref('derived_var_epileptor2d_zcond'),ref('derived_var_epileptor2d_h')])]"/>
-            <field name="coupling_terms" eval="[(6, 0, [ref('coupling_epileptor2d_c_pop0')])]"/>
             <field name="references">Proix2017, Proix2014</field>
         </record>
 
@@ -3118,14 +3187,6 @@ Note:
             <field name="equation" ref="eq_derived_var_wilsoncowan_s_i"/>
         </record>
 
-        <record id="coupling_wilsoncowan_c_pop0" model="tvbo.parameter">
-            <field name="name">c_pop0</field>
-        </record>
-
-        <record id="coupling_wilsoncowan_local_coupling" model="tvbo.parameter">
-            <field name="name">local_coupling</field>
-        </record>
-
         <record id="dynamics_wilsoncowan" model="tvbo.dynamics">
             <field name="name">WilsonCowan</field>
             <field name="label">WilsonCowan</field>
@@ -3146,7 +3207,6 @@ Note:
             <field name="parameters" eval="[(6, 0, [ref('param_wilsoncowan_p'),ref('param_wilsoncowan_q'),ref('param_wilsoncowan_a_e'),ref('param_wilsoncowan_a_i'),ref('param_wilsoncowan_alpha_e'),ref('param_wilsoncowan_alpha_i'),ref('param_wilsoncowan_b_e'),ref('param_wilsoncowan_b_i'),ref('param_wilsoncowan_c_e'),ref('param_wilsoncowan_c_ee'),ref('param_wilsoncowan_c_ei'),ref('param_wilsoncowan_c_i'),ref('param_wilsoncowan_c_ie'),ref('param_wilsoncowan_c_ii'),ref('param_wilsoncowan_k_e'),ref('param_wilsoncowan_k_i'),ref('param_wilsoncowan_r_e'),ref('param_wilsoncowan_r_i'),ref('param_wilsoncowan_shift_sigmoid'),ref('param_wilsoncowan_tau_e'),ref('param_wilsoncowan_tau_i'),ref('param_wilsoncowan_theta_e'),ref('param_wilsoncowan_theta_i')])]"/>
             <field name="state_variables" eval="[(6, 0, [ref('state_var_wilsoncowan_e'),ref('state_var_wilsoncowan_i')])]"/>
             <field name="derived_variables" eval="[(6, 0, [ref('derived_var_wilsoncowan_lc_0'),ref('derived_var_wilsoncowan_lc_1'),ref('derived_var_wilsoncowan_x_e'),ref('derived_var_wilsoncowan_x_i'),ref('derived_var_wilsoncowan_s_e'),ref('derived_var_wilsoncowan_s_i')])]"/>
-            <field name="coupling_terms" eval="[(6, 0, [ref('coupling_wilsoncowan_c_pop0'),ref('coupling_wilsoncowan_local_coupling')])]"/>
             <field name="references">Wilson1972, Wilson1973</field>
         </record>
 
@@ -4206,14 +4266,6 @@ Note:
             <field name="equation" ref="eq_derived_var_zerlautadaptationfirstorder_f_out_i"/>
         </record>
 
-        <record id="coupling_zerlautadaptationfirstorder_c_pop0" model="tvbo.parameter">
-            <field name="name">c_pop0</field>
-        </record>
-
-        <record id="coupling_zerlautadaptationfirstorder_local_coupling" model="tvbo.parameter">
-            <field name="name">local_coupling</field>
-        </record>
-
         <record id="dynamics_zerlautadaptationfirstorder" model="tvbo.dynamics">
             <field name="name">ZerlautAdaptationFirstOrder</field>
             <field name="label">ZerlautAdaptationFirstOrder</field>
@@ -4222,7 +4274,6 @@ Note:
             <field name="parameters" eval="[(6, 0, [ref('param_zerlautadaptationfirstorder_c_m'),ref('param_zerlautadaptationfirstorder_dtvn0'),ref('param_zerlautadaptationfirstorder_dmuv0'),ref('param_zerlautadaptationfirstorder_dsv0'),ref('param_zerlautadaptationfirstorder_e_l_e'),ref('param_zerlautadaptationfirstorder_e_l_i'),ref('param_zerlautadaptationfirstorder_e_e'),ref('param_zerlautadaptationfirstorder_e_i'),ref('param_zerlautadaptationfirstorder_k_ext_e'),ref('param_zerlautadaptationfirstorder_k_ext_i'),ref('param_zerlautadaptationfirstorder_n_tot'),ref('param_zerlautadaptationfirstorder_p0_e'),ref('param_zerlautadaptationfirstorder_p0_i'),ref('param_zerlautadaptationfirstorder_p1_e'),ref('param_zerlautadaptationfirstorder_p1_i'),ref('param_zerlautadaptationfirstorder_p2_e'),ref('param_zerlautadaptationfirstorder_p2_i'),ref('param_zerlautadaptationfirstorder_p3_e'),ref('param_zerlautadaptationfirstorder_p3_i'),ref('param_zerlautadaptationfirstorder_p4_e'),ref('param_zerlautadaptationfirstorder_p4_i'),ref('param_zerlautadaptationfirstorder_p5_e'),ref('param_zerlautadaptationfirstorder_p5_i'),ref('param_zerlautadaptationfirstorder_p6_e'),ref('param_zerlautadaptationfirstorder_p6_i'),ref('param_zerlautadaptationfirstorder_p7_e'),ref('param_zerlautadaptationfirstorder_p7_i'),ref('param_zerlautadaptationfirstorder_p8_e'),ref('param_zerlautadaptationfirstorder_p8_i'),ref('param_zerlautadaptationfirstorder_p9_e'),ref('param_zerlautadaptationfirstorder_p9_i'),ref('param_zerlautadaptationfirstorder_p_e'),ref('param_zerlautadaptationfirstorder_p_i'),ref('param_zerlautadaptationfirstorder_q_e'),ref('param_zerlautadaptationfirstorder_q_i'),ref('param_zerlautadaptationfirstorder_s_i'),ref('param_zerlautadaptationfirstorder_t'),ref('param_zerlautadaptationfirstorder_tvn0'),ref('param_zerlautadaptationfirstorder_a_e'),ref('param_zerlautadaptationfirstorder_a_i'),ref('param_zerlautadaptationfirstorder_b_e'),ref('param_zerlautadaptationfirstorder_b_i'),ref('param_zerlautadaptationfirstorder_external_input_ex_ex'),ref('param_zerlautadaptationfirstorder_external_input_ex_in'),ref('param_zerlautadaptationfirstorder_external_input_in_ex'),ref('param_zerlautadaptationfirstorder_external_input_in_in'),ref('param_zerlautadaptationfirstorder_g_l'),ref('param_zerlautadaptationfirstorder_g'),ref('param_zerlautadaptationfirstorder_muv0'),ref('param_zerlautadaptationfirstorder_p_connect_e'),ref('param_zerlautadaptationfirstorder_p_connect_i'),ref('param_zerlautadaptationfirstorder_sv0'),ref('param_zerlautadaptationfirstorder_tau_ou'),ref('param_zerlautadaptationfirstorder_tau_e'),ref('param_zerlautadaptationfirstorder_tau_i'),ref('param_zerlautadaptationfirstorder_tau_w_e'),ref('param_zerlautadaptationfirstorder_tau_w_i'),ref('param_zerlautadaptationfirstorder_weight_noise')])]"/>
             <field name="state_variables" eval="[(6, 0, [ref('state_var_zerlautadaptationfirstorder_e'),ref('state_var_zerlautadaptationfirstorder_i'),ref('state_var_zerlautadaptationfirstorder_w_e'),ref('state_var_zerlautadaptationfirstorder_w_i'),ref('state_var_zerlautadaptationfirstorder_ou_drift')])]"/>
             <field name="derived_variables" eval="[(6, 0, [ref('derived_var_zerlautadaptationfirstorder_lc_e'),ref('derived_var_zerlautadaptationfirstorder_lc_i'),ref('derived_var_zerlautadaptationfirstorder_fe_ext'),ref('derived_var_zerlautadaptationfirstorder_fi_ext'),ref('derived_var_zerlautadaptationfirstorder_fe_e'),ref('derived_var_zerlautadaptationfirstorder_fe_i'),ref('derived_var_zerlautadaptationfirstorder_fi_e'),ref('derived_var_zerlautadaptationfirstorder_fi_i'),ref('derived_var_zerlautadaptationfirstorder_mu_ge_e'),ref('derived_var_zerlautadaptationfirstorder_mu_ge_i'),ref('derived_var_zerlautadaptationfirstorder_mu_gi_e'),ref('derived_var_zerlautadaptationfirstorder_mu_gi_i'),ref('derived_var_zerlautadaptationfirstorder_mu_g_e'),ref('derived_var_zerlautadaptationfirstorder_mu_g_i'),ref('derived_var_zerlautadaptationfirstorder_t_m_e'),ref('derived_var_zerlautadaptationfirstorder_t_m_i'),ref('derived_var_zerlautadaptationfirstorder_mu_v_e'),ref('derived_var_zerlautadaptationfirstorder_mu_v_i'),ref('derived_var_zerlautadaptationfirstorder_u_e_e'),ref('derived_var_zerlautadaptationfirstorder_u_e_i'),ref('derived_var_zerlautadaptationfirstorder_u_i_e'),ref('derived_var_zerlautadaptationfirstorder_u_i_i'),ref('derived_var_zerlautadaptationfirstorder_v_e'),ref('derived_var_zerlautadaptationfirstorder_v_i'),ref('derived_var_zerlautadaptationfirstorder_t_v_e'),ref('derived_var_zerlautadaptationfirstorder_t_v_i'),ref('derived_var_zerlautadaptationfirstorder_sigma_v_e'),ref('derived_var_zerlautadaptationfirstorder_sigma_v_i'),ref('derived_var_zerlautadaptationfirstorder_s_e'),ref('derived_var_zerlautadaptationfirstorder_s_i'),ref('derived_var_zerlautadaptationfirstorder_t_e'),ref('derived_var_zerlautadaptationfirstorder_t_i'),ref('derived_var_zerlautadaptationfirstorder_v_thre_e'),ref('derived_var_zerlautadaptationfirstorder_v_thre_i'),ref('derived_var_zerlautadaptationfirstorder_f_out_e'),ref('derived_var_zerlautadaptationfirstorder_f_out_i')])]"/>
-            <field name="coupling_terms" eval="[(6, 0, [ref('coupling_zerlautadaptationfirstorder_c_pop0'),ref('coupling_zerlautadaptationfirstorder_local_coupling')])]"/>
             <field name="references">Zerlaut2018, diVolo2019</field>
         </record>
 
@@ -4775,14 +4826,6 @@ Describes relationship between membrane voltage and channel conductance.</field>
             <field name="equation" ref="eq_derived_var_larterbreakspear_lc_0"/>
         </record>
 
-        <record id="coupling_larterbreakspear_c_pop0" model="tvbo.parameter">
-            <field name="name">c_pop0</field>
-        </record>
-
-        <record id="coupling_larterbreakspear_local_coupling" model="tvbo.parameter">
-            <field name="name">local_coupling</field>
-        </record>
-
         <record id="dynamics_larterbreakspear" model="tvbo.dynamics">
             <field name="name">LarterBreakspear</field>
             <field name="label">LarterBreakspear</field>
@@ -4802,7 +4845,6 @@ Note:
             <field name="parameters" eval="[(6, 0, [ref('param_larterbreakspear_c'),ref('param_larterbreakspear_i_ext'),ref('param_larterbreakspear_q_vmax'),ref('param_larterbreakspear_q_zmax'),ref('param_larterbreakspear_t_ca'),ref('param_larterbreakspear_t_k'),ref('param_larterbreakspear_t_na'),ref('param_larterbreakspear_v_ca'),ref('param_larterbreakspear_v_k'),ref('param_larterbreakspear_v_l'),ref('param_larterbreakspear_v_na'),ref('param_larterbreakspear_v_t'),ref('param_larterbreakspear_z_t'),ref('param_larterbreakspear_a_ee'),ref('param_larterbreakspear_a_ei'),ref('param_larterbreakspear_a_ie'),ref('param_larterbreakspear_a_ne'),ref('param_larterbreakspear_a_ni'),ref('param_larterbreakspear_b'),ref('param_larterbreakspear_delta_ca'),ref('param_larterbreakspear_delta_k'),ref('param_larterbreakspear_delta_na'),ref('param_larterbreakspear_delta_v'),ref('param_larterbreakspear_delta_z'),ref('param_larterbreakspear_g_ca'),ref('param_larterbreakspear_g_k'),ref('param_larterbreakspear_g_l'),ref('param_larterbreakspear_g_na'),ref('param_larterbreakspear_phi'),ref('param_larterbreakspear_r_nmda'),ref('param_larterbreakspear_t_scale'),ref('param_larterbreakspear_tau_k')])]"/>
             <field name="state_variables" eval="[(6, 0, [ref('state_var_larterbreakspear_v'),ref('state_var_larterbreakspear_w'),ref('state_var_larterbreakspear_z')])]"/>
             <field name="derived_variables" eval="[(6, 0, [ref('derived_var_larterbreakspear_q_v'),ref('derived_var_larterbreakspear_q_z'),ref('derived_var_larterbreakspear_m_ca'),ref('derived_var_larterbreakspear_m_k'),ref('derived_var_larterbreakspear_m_na'),ref('derived_var_larterbreakspear_lc_0')])]"/>
-            <field name="coupling_terms" eval="[(6, 0, [ref('coupling_larterbreakspear_c_pop0'),ref('coupling_larterbreakspear_local_coupling')])]"/>
             <field name="references">Breakspear2003, Larter1999, Breakspear2003a</field>
         </record>
 
@@ -5000,14 +5042,6 @@ Note:
             <field name="boundaries" ref="range_boundaries_state_var_gastschmidtknosche_sf_r"/>
         </record>
 
-        <record id="coupling_gastschmidtknosche_sf_c_pop0" model="tvbo.parameter">
-            <field name="name">c_pop0</field>
-        </record>
-
-        <record id="coupling_gastschmidtknosche_sf_c_pop1" model="tvbo.parameter">
-            <field name="name">c_pop1</field>
-        </record>
-
         <record id="dynamics_gastschmidtknosche_sf" model="tvbo.dynamics">
             <field name="name">GastSchmidtKnosche_SF</field>
             <field name="label">GastSchmidtKnosche_SF</field>
@@ -5015,7 +5049,6 @@ Note:
             <field name="number_of_modes">1</field>
             <field name="parameters" eval="[(6, 0, [ref('param_gastschmidtknosche_sf_delta'),ref('param_gastschmidtknosche_sf_i'),ref('param_gastschmidtknosche_sf_j'),ref('param_gastschmidtknosche_sf_alpha'),ref('param_gastschmidtknosche_sf_cr'),ref('param_gastschmidtknosche_sf_cv'),ref('param_gastschmidtknosche_sf_eta'),ref('param_gastschmidtknosche_sf_tau_a'),ref('param_gastschmidtknosche_sf_tau')])]"/>
             <field name="state_variables" eval="[(6, 0, [ref('state_var_gastschmidtknosche_sf_a'),ref('state_var_gastschmidtknosche_sf_b'),ref('state_var_gastschmidtknosche_sf_v'),ref('state_var_gastschmidtknosche_sf_r')])]"/>
-            <field name="coupling_terms" eval="[(6, 0, [ref('coupling_gastschmidtknosche_sf_c_pop0'),ref('coupling_gastschmidtknosche_sf_c_pop1')])]"/>
             <field name="references">Gast2020</field>
         </record>
 
@@ -5081,14 +5114,6 @@ Note:
             <field name="domain" ref="range_domain_state_var_hopfield_x"/>
         </record>
 
-        <record id="coupling_hopfield_c_pop0" model="tvbo.parameter">
-            <field name="name">c_pop0</field>
-        </record>
-
-        <record id="coupling_hopfield_c_pop1" model="tvbo.parameter">
-            <field name="name">c_pop1</field>
-        </record>
-
         <record id="dynamics_hopfield" model="tvbo.dynamics">
             <field name="name">Hopfield</field>
             <field name="label">Hopfield</field>
@@ -5102,7 +5127,6 @@ Note:
             <field name="number_of_modes">1</field>
             <field name="parameters" eval="[(6, 0, [ref('param_hopfield_taut'),ref('param_hopfield_taux')])]"/>
             <field name="state_variables" eval="[(6, 0, [ref('state_var_hopfield_theta'),ref('state_var_hopfield_x')])]"/>
-            <field name="coupling_terms" eval="[(6, 0, [ref('coupling_hopfield_c_pop0'),ref('coupling_hopfield_c_pop1')])]"/>
             <field name="references">Hopfield1984, Hopfield1982</field>
         </record>
 
@@ -5298,14 +5322,6 @@ Note:
             <field name="domain" ref="range_domain_state_var_generic2doscillator_w"/>
         </record>
 
-        <record id="coupling_generic2doscillator_c_glob" model="tvbo.parameter">
-            <field name="name">c_glob</field>
-        </record>
-
-        <record id="coupling_generic2doscillator_c_pop0" model="tvbo.parameter">
-            <field name="name">c_pop0</field>
-        </record>
-
         <record id="dynamics_generic2doscillator" model="tvbo.dynamics">
             <field name="name">Generic2dOscillator</field>
             <field name="label">Generic2dOscillator</field>
@@ -5313,7 +5329,6 @@ Note:
             <field name="number_of_modes">1</field>
             <field name="parameters" eval="[(6, 0, [ref('param_generic2doscillator_i'),ref('param_generic2doscillator_a'),ref('param_generic2doscillator_alpha'),ref('param_generic2doscillator_b'),ref('param_generic2doscillator_beta'),ref('param_generic2doscillator_c'),ref('param_generic2doscillator_d'),ref('param_generic2doscillator_e'),ref('param_generic2doscillator_f'),ref('param_generic2doscillator_g'),ref('param_generic2doscillator_gamma'),ref('param_generic2doscillator_tau')])]"/>
             <field name="state_variables" eval="[(6, 0, [ref('state_var_generic2doscillator_v'),ref('state_var_generic2doscillator_w')])]"/>
-            <field name="coupling_terms" eval="[(6, 0, [ref('coupling_generic2doscillator_c_glob'),ref('coupling_generic2doscillator_c_pop0')])]"/>
             <field name="references">Nagumo1962, Fitzhugh1961</field>
         </record>
 
@@ -5476,14 +5491,6 @@ Note:
             <field name="equation" ref="eq_derived_var_reducedwongwang_h"/>
         </record>
 
-        <record id="coupling_reducedwongwang_c_pop0" model="tvbo.parameter">
-            <field name="name">c_pop0</field>
-        </record>
-
-        <record id="coupling_reducedwongwang_local_coupling" model="tvbo.parameter">
-            <field name="name">local_coupling</field>
-        </record>
-
         <record id="dynamics_reducedwongwang" model="tvbo.dynamics">
             <field name="name">ReducedWongWang</field>
             <field name="label">ReducedWongWang</field>
@@ -5494,8 +5501,180 @@ RWW is the dynamical mean-field (DMF) reduction of the Reduced WongWang Exc-Inh 
             <field name="parameters" eval="[(6, 0, [ref('param_reducedwongwang_i_o'),ref('param_reducedwongwang_j_n'),ref('param_reducedwongwang_a'),ref('param_reducedwongwang_b'),ref('param_reducedwongwang_d'),ref('param_reducedwongwang_gamma'),ref('param_reducedwongwang_tau_s'),ref('param_reducedwongwang_w')])]"/>
             <field name="state_variables" eval="[(6, 0, [ref('state_var_reducedwongwang_s')])]"/>
             <field name="derived_variables" eval="[(6, 0, [ref('derived_var_reducedwongwang_x'),ref('derived_var_reducedwongwang_h')])]"/>
-            <field name="coupling_terms" eval="[(6, 0, [ref('coupling_reducedwongwang_c_pop0'),ref('coupling_reducedwongwang_local_coupling')])]"/>
             <field name="references">WongWang2006, Deco2013</field>
+        </record>
+
+        <record id="range_param_tsodyksmarkram_j" model="tvbo.range">
+            <field name="lo">0.0</field>
+            <field name="hi">10.0</field>
+        </record>
+
+        <record id="param_tsodyksmarkram_j" model="tvbo.parameter">
+            <field name="name">J</field>
+            <field name="value">3.07</field>
+            <field name="description">Synaptic coupling strength</field>
+            <field name="domain" ref="range_param_tsodyksmarkram_j"/>
+        </record>
+
+        <record id="range_param_tsodyksmarkram_alpha" model="tvbo.range">
+            <field name="lo">0.1</field>
+            <field name="hi">5.0</field>
+        </record>
+
+        <record id="param_tsodyksmarkram_alpha" model="tvbo.parameter">
+            <field name="name">alpha</field>
+            <field name="value">1.5</field>
+            <field name="description">Softplus nonlinearity steepness (smoothed threshold gain)</field>
+            <field name="domain" ref="range_param_tsodyksmarkram_alpha"/>
+        </record>
+
+        <record id="range_param_tsodyksmarkram_e0" model="tvbo.range">
+            <field name="lo">-10.0</field>
+            <field name="hi">2.0</field>
+        </record>
+
+        <record id="param_tsodyksmarkram_e0" model="tvbo.parameter">
+            <field name="name">E0</field>
+            <field name="value">-2.0</field>
+            <field name="description">External input (baseline excitability)</field>
+            <field name="domain" ref="range_param_tsodyksmarkram_e0"/>
+        </record>
+
+        <record id="range_param_tsodyksmarkram_tau" model="tvbo.range">
+            <field name="lo">0.001</field>
+            <field name="hi">0.1</field>
+        </record>
+
+        <record id="param_tsodyksmarkram_tau" model="tvbo.parameter">
+            <field name="name">tau</field>
+            <field name="value">0.013</field>
+            <field name="description">Membrane time constant (firing rate relaxation)</field>
+            <field name="domain" ref="range_param_tsodyksmarkram_tau"/>
+        </record>
+
+        <record id="range_param_tsodyksmarkram_taud" model="tvbo.range">
+            <field name="lo">0.01</field>
+            <field name="hi">1.0</field>
+        </record>
+
+        <record id="param_tsodyksmarkram_taud" model="tvbo.parameter">
+            <field name="name">tauD</field>
+            <field name="value">0.2</field>
+            <field name="description">Synaptic depression recovery time constant</field>
+            <field name="domain" ref="range_param_tsodyksmarkram_taud"/>
+        </record>
+
+        <record id="range_param_tsodyksmarkram_tauf" model="tvbo.range">
+            <field name="lo">0.1</field>
+            <field name="hi">5.0</field>
+        </record>
+
+        <record id="param_tsodyksmarkram_tauf" model="tvbo.parameter">
+            <field name="name">tauF</field>
+            <field name="value">1.5</field>
+            <field name="description">Synaptic facilitation decay time constant</field>
+            <field name="domain" ref="range_param_tsodyksmarkram_tauf"/>
+        </record>
+
+        <record id="range_param_tsodyksmarkram_u0" model="tvbo.range">
+            <field name="lo">0.0</field>
+            <field name="hi">1.0</field>
+        </record>
+
+        <record id="param_tsodyksmarkram_u0" model="tvbo.parameter">
+            <field name="name">U0</field>
+            <field name="value">0.3</field>
+            <field name="description">Baseline release probability</field>
+            <field name="domain" ref="range_param_tsodyksmarkram_u0"/>
+        </record>
+
+        <record id="eq_state_var_tsodyksmarkram_e" model="tvbo.equation">
+            <field name="lefthandside">Derivative(E, t)</field>
+            <field name="righthandside">(-E + SS1)/tau</field>
+        </record>
+
+        <record id="range_domain_state_var_tsodyksmarkram_e" model="tvbo.range">
+            <field name="lo">0.0</field>
+            <field name="hi">5.0</field>
+        </record>
+
+        <record id="state_var_tsodyksmarkram_e" model="tvbo.state_variable">
+            <field name="name">E</field>
+            <field name="description">Mean firing rate of the excitatory population</field>
+            <field name="initial_value">0.238616</field>
+            <field name="equation" ref="eq_state_var_tsodyksmarkram_e"/>
+            <field name="domain" ref="range_domain_state_var_tsodyksmarkram_e"/>
+        </record>
+
+        <record id="eq_state_var_tsodyksmarkram_x" model="tvbo.equation">
+            <field name="lefthandside">Derivative(x, t)</field>
+            <field name="righthandside">(1 - x)/tauD - u*x*E</field>
+        </record>
+
+        <record id="range_domain_state_var_tsodyksmarkram_x" model="tvbo.range">
+            <field name="lo">0.0</field>
+            <field name="hi">1.0</field>
+        </record>
+
+        <record id="state_var_tsodyksmarkram_x" model="tvbo.state_variable">
+            <field name="name">x</field>
+            <field name="description">Synaptic depression variable (fraction of available neurotransmitter). Recovers to 1 with time constant tauD and is depleted proportionally to firing.</field>
+            <field name="initial_value">0.982747</field>
+            <field name="equation" ref="eq_state_var_tsodyksmarkram_x"/>
+            <field name="domain" ref="range_domain_state_var_tsodyksmarkram_x"/>
+        </record>
+
+        <record id="eq_state_var_tsodyksmarkram_u" model="tvbo.equation">
+            <field name="lefthandside">Derivative(u, t)</field>
+            <field name="righthandside">(U0 - u)/tauF + U0*(1 - u)*E</field>
+        </record>
+
+        <record id="range_domain_state_var_tsodyksmarkram_u" model="tvbo.range">
+            <field name="lo">0.0</field>
+            <field name="hi">1.0</field>
+        </record>
+
+        <record id="state_var_tsodyksmarkram_u" model="tvbo.state_variable">
+            <field name="name">u</field>
+            <field name="description">Synaptic facilitation variable (release probability). Decays to U0 with time constant tauF and is enhanced proportionally to firing.</field>
+            <field name="initial_value">0.367876</field>
+            <field name="equation" ref="eq_state_var_tsodyksmarkram_u"/>
+            <field name="domain" ref="range_domain_state_var_tsodyksmarkram_u"/>
+        </record>
+
+        <record id="derived_var_tsodyksmarkram_ss0" model="tvbo.derived_variable">
+            <field name="name">SS0</field>
+            <field name="description">Total synaptic input (recurrent + external)</field>
+        </record>
+        <record id="eq_derived_var_tsodyksmarkram_ss0" model="tvbo.equation">
+            <field name="lefthandside">SS0</field>
+            <field name="righthandside">J*u*x*E + E0</field>
+        </record>
+        <record id="derived_var_tsodyksmarkram_ss0" model="tvbo.derived_variable">
+            <field name="equation" ref="eq_derived_var_tsodyksmarkram_ss0"/>
+        </record>
+
+        <record id="derived_var_tsodyksmarkram_ss1" model="tvbo.derived_variable">
+            <field name="name">SS1</field>
+            <field name="description">Softplus transfer function output</field>
+        </record>
+        <record id="eq_derived_var_tsodyksmarkram_ss1" model="tvbo.equation">
+            <field name="lefthandside">SS1</field>
+            <field name="righthandside">alpha*log(1 + exp(SS0/alpha))</field>
+        </record>
+        <record id="derived_var_tsodyksmarkram_ss1" model="tvbo.derived_variable">
+            <field name="equation" ref="eq_derived_var_tsodyksmarkram_ss1"/>
+        </record>
+
+        <record id="dynamics_tsodyksmarkram" model="tvbo.dynamics">
+            <field name="name">TsodyksMarkram</field>
+            <field name="label">TsodyksMarkram</field>
+            <field name="description">Tsodyks-Markram mean-field model of short-term synaptic plasticity. A three-variable neural mass model with firing rate E, synaptic depression variable x, and facilitation variable u. The transfer function uses a softplus nonlinearity α·log(1 + exp(s/α)). Reproduces the dynamics from BifurcationKit.jl/examples/TMModel.jl.</field>
+            <field name="number_of_modes">1</field>
+            <field name="parameters" eval="[(6, 0, [ref('param_tsodyksmarkram_j'),ref('param_tsodyksmarkram_alpha'),ref('param_tsodyksmarkram_e0'),ref('param_tsodyksmarkram_tau'),ref('param_tsodyksmarkram_taud'),ref('param_tsodyksmarkram_tauf'),ref('param_tsodyksmarkram_u0')])]"/>
+            <field name="state_variables" eval="[(6, 0, [ref('state_var_tsodyksmarkram_e'),ref('state_var_tsodyksmarkram_x'),ref('state_var_tsodyksmarkram_u')])]"/>
+            <field name="derived_variables" eval="[(6, 0, [ref('derived_var_tsodyksmarkram_ss0'),ref('derived_var_tsodyksmarkram_ss1')])]"/>
+            <field name="references">Tsodyks1997, Tsodyks1998</field>
         </record>
 
         <record id="range_param_zetterbergjansen_he" model="tvbo.range">
@@ -5992,14 +6171,6 @@ RWW is the dynamical mean-field (DMF) reduction of the Reduced WongWang Exc-Inh 
             <field name="equation" ref="eq_derived_var_zetterbergjansen_sigma_v45"/>
         </record>
 
-        <record id="coupling_zetterbergjansen_c_pop0" model="tvbo.parameter">
-            <field name="name">c_pop0</field>
-        </record>
-
-        <record id="coupling_zetterbergjansen_local_coupling" model="tvbo.parameter">
-            <field name="name">local_coupling</field>
-        </record>
-
         <record id="dynamics_zetterbergjansen" model="tvbo.dynamics">
             <field name="name">ZetterbergJansen</field>
             <field name="label">ZetterbergJansen</field>
@@ -6008,7 +6179,6 @@ RWW is the dynamical mean-field (DMF) reduction of the Reduced WongWang Exc-Inh 
             <field name="parameters" eval="[(6, 0, [ref('param_zetterbergjansen_he'),ref('param_zetterbergjansen_hi'),ref('param_zetterbergjansen_p'),ref('param_zetterbergjansen_q'),ref('param_zetterbergjansen_u'),ref('param_zetterbergjansen_e0'),ref('param_zetterbergjansen_gamma_1t'),ref('param_zetterbergjansen_gamma_1'),ref('param_zetterbergjansen_gamma_2t'),ref('param_zetterbergjansen_gamma_2'),ref('param_zetterbergjansen_gamma_3t'),ref('param_zetterbergjansen_gamma_3'),ref('param_zetterbergjansen_gamma_4'),ref('param_zetterbergjansen_gamma_5'),ref('param_zetterbergjansen_ke'),ref('param_zetterbergjansen_ki'),ref('param_zetterbergjansen_rho_1'),ref('param_zetterbergjansen_rho_2')])]"/>
             <field name="state_variables" eval="[(6, 0, [ref('state_var_zetterbergjansen_v1'),ref('state_var_zetterbergjansen_v2'),ref('state_var_zetterbergjansen_v3'),ref('state_var_zetterbergjansen_v4'),ref('state_var_zetterbergjansen_v5'),ref('state_var_zetterbergjansen_v6'),ref('state_var_zetterbergjansen_v7'),ref('state_var_zetterbergjansen_y1'),ref('state_var_zetterbergjansen_y2'),ref('state_var_zetterbergjansen_y3'),ref('state_var_zetterbergjansen_y4'),ref('state_var_zetterbergjansen_y5')])]"/>
             <field name="derived_variables" eval="[(6, 0, [ref('derived_var_zetterbergjansen_coupled_input'),ref('derived_var_zetterbergjansen_sigma_v1'),ref('derived_var_zetterbergjansen_sigma_v23'),ref('derived_var_zetterbergjansen_sigma_v45')])]"/>
-            <field name="coupling_terms" eval="[(6, 0, [ref('coupling_zetterbergjansen_c_pop0'),ref('coupling_zetterbergjansen_local_coupling')])]"/>
             <field name="references">Zetterberg1978</field>
         </record>
 
@@ -6087,21 +6257,12 @@ RWW is the dynamical mean-field (DMF) reduction of the Reduced WongWang Exc-Inh 
             <field name="equation" ref="eq_derived_var_kuramotomodel2_signal"/>
         </record>
 
-        <record id="coupling_kuramotomodel2_c_glob" model="tvbo.parameter">
-            <field name="name">c_glob</field>
-        </record>
-
-        <record id="coupling_kuramotomodel2_local_coupling" model="tvbo.parameter">
-            <field name="name">local_coupling</field>
-        </record>
-
         <record id="dynamics_kuramotomodel2" model="tvbo.dynamics">
             <field name="name">KuramotoModel2</field>
             <field name="label">KuramotoModel2</field>
             <field name="parameters" eval="[(6, 0, [ref('param_kuramotomodel2_omega')])]"/>
             <field name="state_variables" eval="[(6, 0, [ref('state_var_kuramotomodel2_theta')])]"/>
             <field name="derived_variables" eval="[(6, 0, [ref('derived_var_kuramotomodel2_lc_0'),ref('derived_var_kuramotomodel2_i'),ref('derived_var_kuramotomodel2_phase'),ref('derived_var_kuramotomodel2_signal')])]"/>
-            <field name="coupling_terms" eval="[(6, 0, [ref('coupling_kuramotomodel2_c_glob'),ref('coupling_kuramotomodel2_local_coupling')])]"/>
         </record>
 
         <record id="param_modeljansen1995_a" model="tvbo.parameter">
@@ -6229,11 +6390,6 @@ RWW is the dynamical mean-field (DMF) reduction of the Reduced WongWang Exc-Inh 
             <field name="equation" ref="eq_derived_var_modeljansen1995_v_pyr"/>
         </record>
 
-        <record id="coupling_modeljansen1995_c_glob" model="tvbo.parameter">
-            <field name="name">c_glob</field>
-            <field name="description">Long-range input to the pyramidal population (pre-filter).</field>
-        </record>
-
         <record id="dynamics_modeljansen1995" model="tvbo.dynamics">
             <field name="name">ModelJansen1995</field>
             <field name="label">ModelJansen1995</field>
@@ -6241,7 +6397,6 @@ RWW is the dynamical mean-field (DMF) reduction of the Reduced WongWang Exc-Inh 
             <field name="parameters" eval="[(6, 0, [ref('param_modeljansen1995_a'),ref('param_modeljansen1995_b'),ref('param_modeljansen1995_c'),ref('param_modeljansen1995_a'),ref('param_modeljansen1995_b'),ref('param_modeljansen1995_v0'),ref('param_modeljansen1995_e0'),ref('param_modeljansen1995_r'),ref('param_modeljansen1995_p')])]"/>
             <field name="state_variables" eval="[(6, 0, [ref('state_var_modeljansen1995_y0'),ref('state_var_modeljansen1995_y3'),ref('state_var_modeljansen1995_y1'),ref('state_var_modeljansen1995_y4'),ref('state_var_modeljansen1995_y2'),ref('state_var_modeljansen1995_y5')])]"/>
             <field name="derived_variables" eval="[(6, 0, [ref('derived_var_modeljansen1995_v_pyr')])]"/>
-            <field name="coupling_terms" eval="[(6, 0, [ref('coupling_modeljansen1995_c_glob')])]"/>
         </record>
 
         <record id="range_param_epileptorrestingstate_i_rs" model="tvbo.range">
@@ -6758,18 +6913,6 @@ RWW is the dynamical mean-field (DMF) reduction of the Reduced WongWang Exc-Inh 
             <field name="equation" ref="eq_derived_var_epileptorrestingstate_zcond"/>
         </record>
 
-        <record id="coupling_epileptorrestingstate_c_pop0" model="tvbo.parameter">
-            <field name="name">c_pop0</field>
-        </record>
-
-        <record id="coupling_epileptorrestingstate_c_pop1" model="tvbo.parameter">
-            <field name="name">c_pop1</field>
-        </record>
-
-        <record id="coupling_epileptorrestingstate_c_pop2" model="tvbo.parameter">
-            <field name="name">c_pop2</field>
-        </record>
-
         <record id="dynamics_epileptorrestingstate" model="tvbo.dynamics">
             <field name="name">EpileptorRestingState</field>
             <field name="label">EpileptorRestingState</field>
@@ -6780,7 +6923,6 @@ This model, its motivation and derivation can be found in the published article 
             <field name="parameters" eval="[(6, 0, [ref('param_epileptorrestingstate_i_rs'),ref('param_epileptorrestingstate_iext2'),ref('param_epileptorrestingstate_iext'),ref('param_epileptorrestingstate_k_rs'),ref('param_epileptorrestingstate_kf'),ref('param_epileptorrestingstate_ks'),ref('param_epileptorrestingstate_kvf'),ref('param_epileptorrestingstate_a'),ref('param_epileptorrestingstate_a_rs'),ref('param_epileptorrestingstate_aa'),ref('param_epileptorrestingstate_alpha_rs'),ref('param_epileptorrestingstate_b'),ref('param_epileptorrestingstate_b_rs'),ref('param_epileptorrestingstate_bb'),ref('param_epileptorrestingstate_beta_rs'),ref('param_epileptorrestingstate_c'),ref('param_epileptorrestingstate_d'),ref('param_epileptorrestingstate_d_rs'),ref('param_epileptorrestingstate_e_rs'),ref('param_epileptorrestingstate_f_rs'),ref('param_epileptorrestingstate_gamma_rs'),ref('param_epileptorrestingstate_p'),ref('param_epileptorrestingstate_r'),ref('param_epileptorrestingstate_slope'),ref('param_epileptorrestingstate_tau'),ref('param_epileptorrestingstate_tau_rs'),ref('param_epileptorrestingstate_tt'),ref('param_epileptorrestingstate_x0')])]"/>
             <field name="state_variables" eval="[(6, 0, [ref('state_var_epileptorrestingstate_g'),ref('state_var_epileptorrestingstate_x1'),ref('state_var_epileptorrestingstate_x2'),ref('state_var_epileptorrestingstate_x_rs'),ref('state_var_epileptorrestingstate_y1'),ref('state_var_epileptorrestingstate_y2'),ref('state_var_epileptorrestingstate_y_rs'),ref('state_var_epileptorrestingstate_z')])]"/>
             <field name="derived_variables" eval="[(6, 0, [ref('derived_var_epileptorrestingstate_lc_1'),ref('derived_var_epileptorrestingstate_output'),ref('derived_var_epileptorrestingstate_x1cond'),ref('derived_var_epileptorrestingstate_y2cond'),ref('derived_var_epileptorrestingstate_zcond')])]"/>
-            <field name="coupling_terms" eval="[(6, 0, [ref('coupling_epileptorrestingstate_c_pop0'),ref('coupling_epileptorrestingstate_c_pop1'),ref('coupling_epileptorrestingstate_c_pop2')])]"/>
             <field name="references">Courtiol2020, Jirsa2014</field>
         </record>
 
@@ -6916,14 +7058,6 @@ This model, its motivation and derivation can be found in the published article 
             <field name="boundaries" ref="range_boundaries_state_var_montbriopazoroxin_r"/>
         </record>
 
-        <record id="coupling_montbriopazoroxin_c_pop0" model="tvbo.parameter">
-            <field name="name">c_pop0</field>
-        </record>
-
-        <record id="coupling_montbriopazoroxin_c_pop1" model="tvbo.parameter">
-            <field name="name">c_pop1</field>
-        </record>
-
         <record id="dynamics_montbriopazoroxin" model="tvbo.dynamics">
             <field name="name">MontbrioPazoRoxin</field>
             <field name="label">MontbrioPazoRoxin</field>
@@ -6931,7 +7065,6 @@ This model, its motivation and derivation can be found in the published article 
             <field name="number_of_modes">1</field>
             <field name="parameters" eval="[(6, 0, [ref('param_montbriopazoroxin_delta'),ref('param_montbriopazoroxin_i'),ref('param_montbriopazoroxin_j'),ref('param_montbriopazoroxin_cr'),ref('param_montbriopazoroxin_cv'),ref('param_montbriopazoroxin_eta'),ref('param_montbriopazoroxin_tau')])]"/>
             <field name="state_variables" eval="[(6, 0, [ref('state_var_montbriopazoroxin_v'),ref('state_var_montbriopazoroxin_r')])]"/>
-            <field name="coupling_terms" eval="[(6, 0, [ref('coupling_montbriopazoroxin_c_pop0'),ref('coupling_montbriopazoroxin_c_pop1')])]"/>
             <field name="references">Montbrio2015</field>
         </record>
 
@@ -7077,10 +7210,6 @@ This model, its motivation and derivation can be found in the published article 
             <field name="boundaries" ref="range_boundaries_state_var_coombesbyrne_r"/>
         </record>
 
-        <record id="coupling_coombesbyrne_c_pop0" model="tvbo.parameter">
-            <field name="name">c_pop0</field>
-        </record>
-
         <record id="dynamics_coombesbyrne" model="tvbo.dynamics">
             <field name="name">CoombesByrne</field>
             <field name="label">CoombesByrne</field>
@@ -7093,7 +7222,6 @@ $Z$. Using the conformal transformation $Z=(1-W^\star)/(1+W^\star)$ and $W= \pi 
             <field name="number_of_modes">1</field>
             <field name="parameters" eval="[(6, 0, [ref('param_coombesbyrne_delta'),ref('param_coombesbyrne_alpha'),ref('param_coombesbyrne_eta'),ref('param_coombesbyrne_k'),ref('param_coombesbyrne_v_syn')])]"/>
             <field name="state_variables" eval="[(6, 0, [ref('state_var_coombesbyrne_v'),ref('state_var_coombesbyrne_g'),ref('state_var_coombesbyrne_q'),ref('state_var_coombesbyrne_r')])]"/>
-            <field name="coupling_terms" eval="[(6, 0, [ref('coupling_coombesbyrne_c_pop0')])]"/>
             <field name="references">Byrne2020</field>
         </record>
 
@@ -7433,10 +7561,6 @@ $Z$. Using the conformal transformation $Z=(1-W^\star)/(1+W^\star)$ and $W= \pi 
             <field name="domain" ref="range_domain_state_var_dumontgutkin_s_ii"/>
         </record>
 
-        <record id="coupling_dumontgutkin_c_pop0" model="tvbo.parameter">
-            <field name="name">c_pop0</field>
-        </record>
-
         <record id="dynamics_dumontgutkin" model="tvbo.dynamics">
             <field name="name">DumontGutkin</field>
             <field name="label">DumontGutkin</field>
@@ -7444,7 +7568,6 @@ $Z$. Using the conformal transformation $Z=(1-W^\star)/(1+W^\star)$ and $W= \pi 
             <field name="number_of_modes">1</field>
             <field name="parameters" eval="[(6, 0, [ref('param_dumontgutkin_delta_e'),ref('param_dumontgutkin_delta_i'),ref('param_dumontgutkin_gamma'),ref('param_dumontgutkin_i_e'),ref('param_dumontgutkin_i_i'),ref('param_dumontgutkin_j_ee'),ref('param_dumontgutkin_j_ei'),ref('param_dumontgutkin_j_ie'),ref('param_dumontgutkin_j_ii'),ref('param_dumontgutkin_eta_e'),ref('param_dumontgutkin_eta_i'),ref('param_dumontgutkin_tau_e'),ref('param_dumontgutkin_tau_i'),ref('param_dumontgutkin_tau_s')])]"/>
             <field name="state_variables" eval="[(6, 0, [ref('state_var_dumontgutkin_v_e'),ref('state_var_dumontgutkin_v_i'),ref('state_var_dumontgutkin_r_e'),ref('state_var_dumontgutkin_r_i'),ref('state_var_dumontgutkin_s_ee'),ref('state_var_dumontgutkin_s_ei'),ref('state_var_dumontgutkin_s_ie'),ref('state_var_dumontgutkin_s_ii')])]"/>
-            <field name="coupling_terms" eval="[(6, 0, [ref('coupling_dumontgutkin_c_pop0')])]"/>
             <field name="references">Dumont2019</field>
         </record>
 

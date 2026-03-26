@@ -1,0 +1,321 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+
+        <record id="observation_subsample" model="tvbo.observation">
+            <field name="name">SubSample</field>
+            <field name="label">Temporal Decimation</field>
+            <field name="description">Temporal decimation of selected state variables. Records every N-th integration step without any averaging or smoothing.</field>
+            <field name="period">0.9765625</field>
+        </record>
+        <record id="classref_observation_subsample" model="tvbo.class_reference">
+            <field name="name">SubSample</field>
+            <field name="module">tvb.simulator.monitors</field>
+        </record>
+        <record id="observation_subsample" model="tvbo.observation">
+            <field name="class_reference" ref="classref_observation_subsample"/>
+        </record>
+
+        <record id="observation_fc" model="tvbo.observation">
+            <field name="name">FunctionalConnectivity</field>
+            <field name="description">Functional Connectivity (FC) observation model that computes pairwise Pearson correlation coefficients between regional time series. Commonly used to characterize the statistical dependencies between brain regions from fMRI or simulated neural activity.</field>
+            <field name="period">720.0</field>
+        </record>
+        <record id="param_observation_fc_tr" model="tvbo.parameter">
+            <field name="name">TR</field>
+            <field name="value">720.0</field>
+            <field name="unit">ms</field>
+            <field name="description">Repetition time</field>
+        </record>
+        <record id="observation_fc" model="tvbo.observation">
+        </record>
+        <record id="param_observation_fc_fisher_z" model="tvbo.parameter">
+            <field name="name">fisher_z</field>
+            <field name="value">True</field>
+            <field name="description">Apply Fisher z-transformation to correlations</field>
+        </record>
+        <record id="observation_fc" model="tvbo.observation">
+            <field name="parameters" eval="[(6, 0, [ref('param_observation_fc_tr'), ref('param_observation_fc_fisher_z')])]"/>
+        </record>
+
+        <record id="observation_bold_gamma" model="tvbo.observation">
+            <field name="name">BOLD_Gamma</field>
+            <field name="label">BOLD (Gamma HRF)</field>
+            <field name="description">BOLD fMRI observation model using a Gamma-shaped hemodynamic response function. Provides a simpler, unimodal HRF shape.</field>
+            <field name="imaging_modality" ref="imaging_modality_bold"/>
+        </record>
+        <record id="classref_observation_bold_gamma" model="tvbo.class_reference">
+            <field name="name">Bold</field>
+            <field name="module">tvb.simulator.monitors</field>
+        </record>
+        <record id="observation_bold_gamma" model="tvbo.observation">
+            <field name="class_reference" ref="classref_observation_bold_gamma"/>
+        </record>
+        <record id="param_observation_bold_gamma_tr" model="tvbo.parameter">
+            <field name="name">TR</field>
+            <field name="value">2000.0</field>
+            <field name="unit">ms</field>
+        </record>
+        <record id="observation_bold_gamma" model="tvbo.observation">
+            <field name="parameters" eval="[(6, 0, [ref('param_observation_bold_gamma_tr')])]"/>
+        </record>
+
+        <record id="observation_meg" model="tvbo.observation">
+            <field name="name">MEG</field>
+            <field name="label">MEG</field>
+            <field name="description">Forward solution for magnetoencephalography. Projects source neural activity through a lead field matrix to MEG sensor locations using oriented gradiometers. If no precomputed gain is available, uses the single-sphere analytic formula (Sarvas 1987, Eq. 25) for the magnetic field produced by current dipoles in a conducting sphere.</field>
+            <field name="period">0.9765625</field>
+            <field name="imaging_modality" ref="imaging_modality_meg"/>
+        </record>
+        <record id="classref_observation_meg" model="tvbo.class_reference">
+            <field name="name">MEG</field>
+            <field name="module">tvb.simulator.monitors</field>
+        </record>
+        <record id="observation_meg" model="tvbo.observation">
+            <field name="class_reference" ref="classref_observation_meg"/>
+        </record>
+        <record id="param_observation_meg_permeability" model="tvbo.parameter">
+            <field name="name">permeability</field>
+            <field name="value">1.25663706e-06</field>
+            <field name="unit">H/m</field>
+            <field name="description">Magnetic constant (permeability of free space)</field>
+        </record>
+        <record id="observation_meg" model="tvbo.observation">
+            <field name="parameters" eval="[(6, 0, [ref('param_observation_meg_permeability')])]"/>
+        </record>
+
+        <record id="observation_afferent_coupling" model="tvbo.observation">
+            <field name="name">AfferentCoupling</field>
+            <field name="label">Afferent Coupling Recording</field>
+            <field name="description">Records the afferent (incoming) coupling term at each network node at every integration step. Records the coupling input that drives the dynamics rather than the model state itself.</field>
+        </record>
+        <record id="classref_observation_afferent_coupling" model="tvbo.class_reference">
+            <field name="name">AfferentCoupling</field>
+            <field name="module">tvb.simulator.monitors</field>
+        </record>
+        <record id="observation_afferent_coupling" model="tvbo.observation">
+            <field name="class_reference" ref="classref_observation_afferent_coupling"/>
+        </record>
+
+        <record id="observation_eeg" model="tvbo.observation">
+            <field name="name">EEG</field>
+            <field name="label">Scalp EEG</field>
+            <field name="description">Forward solution for scalp electroencephalography. Projects source neural activity through a lead field (gain) matrix to electrode locations on the scalp. If no precomputed gain is available, uses a single-sphere analytic approximation (Sarvas 1987, Eq. 12). Supports re-referencing: common average, single-electrode, or ideal reference-free recording.</field>
+            <field name="period">0.9765625</field>
+            <field name="imaging_modality" ref="imaging_modality_eeg"/>
+        </record>
+        <record id="classref_observation_eeg" model="tvbo.class_reference">
+            <field name="name">EEG</field>
+            <field name="module">tvb.simulator.monitors</field>
+        </record>
+        <record id="observation_eeg" model="tvbo.observation">
+            <field name="class_reference" ref="classref_observation_eeg"/>
+        </record>
+        <record id="param_observation_eeg_conductivity" model="tvbo.parameter">
+            <field name="name">conductivity</field>
+            <field name="value">1.0</field>
+            <field name="unit">S/m</field>
+            <field name="description">Volume conductor conductivity for the single-sphere analytic approximation. Only used when no precomputed gain is available.</field>
+        </record>
+        <record id="observation_eeg" model="tvbo.observation">
+        </record>
+        <record id="param_observation_eeg_reference_electrode" model="tvbo.parameter">
+            <field name="name">reference_electrode</field>
+            <field name="description">Re-referencing scheme. Options: - Electrode label (e.g. &quot;Cz&quot;): subtract that electrode signal - &quot;average&quot;: subtract mean across all channels - null: ideal reference-free recording</field>
+        </record>
+        <record id="observation_eeg" model="tvbo.observation">
+            <field name="parameters" eval="[(6, 0, [ref('param_observation_eeg_conductivity'), ref('param_observation_eeg_reference_electrode')])]"/>
+        </record>
+
+        <record id="observation_bold_region_roi" model="tvbo.observation">
+            <field name="name">BOLD_RegionROI</field>
+            <field name="label">BOLD (Region ROI)</field>
+            <field name="description">BOLD fMRI observation model that computes the hemodynamic response at each source location and spatially averages within brain regions using a parcellation mapping. Produces per-region BOLD signals suitable for comparison with parcellated empirical data.</field>
+            <field name="period">2000.0</field>
+            <field name="imaging_modality" ref="imaging_modality_bold"/>
+        </record>
+        <record id="classref_observation_bold_region_roi" model="tvbo.class_reference">
+            <field name="name">BoldRegionROI</field>
+            <field name="module">tvb.simulator.monitors</field>
+        </record>
+        <record id="observation_bold_region_roi" model="tvbo.observation">
+            <field name="class_reference" ref="classref_observation_bold_region_roi"/>
+        </record>
+        <record id="param_observation_bold_region_roi_hrf_length" model="tvbo.parameter">
+            <field name="name">hrf_length</field>
+            <field name="value">20000.0</field>
+            <field name="unit">ms</field>
+        </record>
+        <record id="observation_bold_region_roi" model="tvbo.observation">
+            <field name="parameters" eval="[(6, 0, [ref('param_observation_bold_region_roi_hrf_length')])]"/>
+        </record>
+
+        <record id="observation_raw" model="tvbo.observation">
+            <field name="name">Raw</field>
+            <field name="label">Raw State Recording</field>
+            <field name="description">Records all state variables at every integration step without any transformation. Identity passthrough of the full simulation state.</field>
+        </record>
+        <record id="classref_observation_raw" model="tvbo.class_reference">
+            <field name="name">Raw</field>
+            <field name="module">tvb.simulator.monitors</field>
+        </record>
+        <record id="observation_raw" model="tvbo.observation">
+            <field name="class_reference" ref="classref_observation_raw"/>
+        </record>
+
+        <record id="observation_temporal_average" model="tvbo.observation">
+            <field name="name">TemporalAverage</field>
+            <field name="label">Temporal Average</field>
+            <field name="description">Running temporal mean over a sliding window of configurable length. Returns one averaged sample per period.</field>
+            <field name="period">0.9765625</field>
+        </record>
+        <record id="classref_observation_temporal_average" model="tvbo.class_reference">
+            <field name="name">TemporalAverage</field>
+            <field name="module">tvb.simulator.monitors</field>
+        </record>
+        <record id="observation_temporal_average" model="tvbo.observation">
+            <field name="class_reference" ref="classref_observation_temporal_average"/>
+        </record>
+
+        <record id="observation_global_average" model="tvbo.observation">
+            <field name="name">GlobalAverage</field>
+            <field name="label">Global Spatial Average</field>
+            <field name="description">Spatial mean across all network nodes at each sampling period. Reduces spatial dimension to a single global signal per state variable.</field>
+            <field name="period">0.9765625</field>
+        </record>
+        <record id="classref_observation_global_average" model="tvbo.class_reference">
+            <field name="name">GlobalAverage</field>
+            <field name="module">tvb.simulator.monitors</field>
+        </record>
+        <record id="observation_global_average" model="tvbo.observation">
+            <field name="class_reference" ref="classref_observation_global_average"/>
+        </record>
+
+        <record id="observation_ieeg" model="tvbo.observation">
+            <field name="name">iEEG</field>
+            <field name="label">Intracranial EEG (SEEG)</field>
+            <field name="description">Forward solution for intracranial/stereoelectroencephalography (SEEG). Projects source activity through a lead field matrix to implanted depth electrode contacts. Uses the same single-sphere analytic formula as scalp EEG (Sarvas 1987, Eq. 12), but with electrode positions inside the brain volume.</field>
+            <field name="period">0.9765625</field>
+            <field name="imaging_modality" ref="imaging_modality_seeg"/>
+        </record>
+        <record id="classref_observation_ieeg" model="tvbo.class_reference">
+            <field name="name">iEEG</field>
+            <field name="module">tvb.simulator.monitors</field>
+        </record>
+        <record id="observation_ieeg" model="tvbo.observation">
+            <field name="class_reference" ref="classref_observation_ieeg"/>
+        </record>
+        <record id="param_observation_ieeg_conductivity" model="tvbo.parameter">
+            <field name="name">conductivity</field>
+            <field name="value">1.0</field>
+            <field name="unit">S/m</field>
+            <field name="description">Tissue conductivity for the analytic point-dipole approximation. Only used when no precomputed gain is available.</field>
+        </record>
+        <record id="observation_ieeg" model="tvbo.observation">
+            <field name="parameters" eval="[(6, 0, [ref('param_observation_ieeg_conductivity')])]"/>
+        </record>
+
+        <record id="observation_bold_tvb" model="tvbo.observation">
+            <field name="name">BOLD_TVB</field>
+            <field name="label">BOLD (First Order Volterra)</field>
+            <field name="description">BOLD fMRI observation model using the Balloon-Windkessel hemodynamic model. Transforms neural activity into simulated BOLD signal via convolution with a hemodynamic response function (First Order Volterra kernel), followed by a nonlinear Volterra transformation.</field>
+            <field name="imaging_modality" ref="imaging_modality_bold"/>
+        </record>
+        <record id="classref_observation_bold_tvb" model="tvbo.class_reference">
+            <field name="name">Bold</field>
+            <field name="module">tvb.simulator.monitors</field>
+        </record>
+        <record id="observation_bold_tvb" model="tvbo.observation">
+            <field name="class_reference" ref="classref_observation_bold_tvb"/>
+        </record>
+        <record id="param_observation_bold_tvb_tr" model="tvbo.parameter">
+            <field name="name">TR</field>
+            <field name="value">720.0</field>
+            <field name="unit">ms</field>
+            <field name="description">Repetition time (sampling period)</field>
+        </record>
+        <record id="observation_bold_tvb" model="tvbo.observation">
+            <field name="parameters" eval="[(6, 0, [ref('param_observation_bold_tvb_tr')])]"/>
+        </record>
+
+        <record id="observation_bold_mixture_of_gammas" model="tvbo.observation">
+            <field name="name">BOLD_MixtureOfGammas</field>
+            <field name="label">BOLD (Mixture of Gammas HRF)</field>
+            <field name="description">BOLD fMRI observation model using the canonical double-gamma hemodynamic response function (Glover 1999). Standard HRF used in most fMRI analysis packages (SPM, FSL, AFNI).</field>
+            <field name="imaging_modality" ref="imaging_modality_bold"/>
+        </record>
+        <record id="classref_observation_bold_mixture_of_gammas" model="tvbo.class_reference">
+            <field name="name">Bold</field>
+            <field name="module">tvb.simulator.monitors</field>
+        </record>
+        <record id="observation_bold_mixture_of_gammas" model="tvbo.observation">
+            <field name="class_reference" ref="classref_observation_bold_mixture_of_gammas"/>
+        </record>
+        <record id="param_observation_bold_mixture_of_gammas_tr" model="tvbo.parameter">
+            <field name="name">TR</field>
+            <field name="value">2000.0</field>
+            <field name="unit">ms</field>
+        </record>
+        <record id="observation_bold_mixture_of_gammas" model="tvbo.observation">
+            <field name="parameters" eval="[(6, 0, [ref('param_observation_bold_mixture_of_gammas_tr')])]"/>
+        </record>
+
+        <record id="observation_spatial_average" model="tvbo.observation">
+            <field name="name">SpatialAverage</field>
+            <field name="label">Spatial Region Average</field>
+            <field name="description">Computes spatially averaged signals within regions defined by a spatial mask (node-to-region assignment). The mask assigns each node to a region index, and the output is the mean signal per region.</field>
+            <field name="period">0.9765625</field>
+        </record>
+        <record id="classref_observation_spatial_average" model="tvbo.class_reference">
+            <field name="name">SpatialAverage</field>
+            <field name="module">tvb.simulator.monitors</field>
+        </record>
+        <record id="observation_spatial_average" model="tvbo.observation">
+            <field name="class_reference" ref="classref_observation_spatial_average"/>
+        </record>
+        <record id="param_observation_spatial_average_spatial_mask" model="tvbo.parameter">
+            <field name="name">spatial_mask</field>
+            <field name="description">Vector of length N_nodes mapping each node to a region index (0-indexed). Inferred from network topology if not provided.</field>
+        </record>
+        <record id="observation_spatial_average" model="tvbo.observation">
+            <field name="parameters" eval="[(6, 0, [ref('param_observation_spatial_average_spatial_mask')])]"/>
+        </record>
+
+        <record id="observation_afferent_coupling_temporal_average" model="tvbo.observation">
+            <field name="name">AfferentCouplingTemporalAverage</field>
+            <field name="label">Afferent Coupling Temporal Average</field>
+            <field name="description">Temporally averaged afferent coupling input at each node. Combines coupling input recording with temporal averaging.</field>
+            <field name="period">0.9765625</field>
+        </record>
+        <record id="classref_observation_afferent_coupling_temporal_average" model="tvbo.class_reference">
+            <field name="name">AfferentCouplingTemporalAverage</field>
+            <field name="module">tvb.simulator.monitors</field>
+        </record>
+        <record id="observation_afferent_coupling_temporal_average" model="tvbo.observation">
+            <field name="class_reference" ref="classref_observation_afferent_coupling_temporal_average"/>
+        </record>
+
+        <record id="observation_bold_double_exponential" model="tvbo.observation">
+            <field name="name">BOLD_DoubleExponential</field>
+            <field name="label">BOLD (Double Exponential HRF)</field>
+            <field name="description">BOLD fMRI observation model using a Double Exponential hemodynamic response function.</field>
+            <field name="imaging_modality" ref="imaging_modality_bold"/>
+        </record>
+        <record id="classref_observation_bold_double_exponential" model="tvbo.class_reference">
+            <field name="name">Bold</field>
+            <field name="module">tvb.simulator.monitors</field>
+        </record>
+        <record id="observation_bold_double_exponential" model="tvbo.observation">
+            <field name="class_reference" ref="classref_observation_bold_double_exponential"/>
+        </record>
+        <record id="param_observation_bold_double_exponential_tr" model="tvbo.parameter">
+            <field name="name">TR</field>
+            <field name="value">2000.0</field>
+            <field name="unit">ms</field>
+        </record>
+        <record id="observation_bold_double_exponential" model="tvbo.observation">
+            <field name="parameters" eval="[(6, 0, [ref('param_observation_bold_double_exponential_tr')])]"/>
+        </record>
+
+    </data>
+</odoo>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+
+        <record id="sampling_axis_space" model="tvbo.sampling_axis">
+            <field name="name">Space</field>
+            <field name="technical_name">space</field>
+            <field name="description">Sample once per node (heterogeneous parameter or spatially varying IC).</field>
+        </record>
+
+        <record id="sampling_axis_time" model="tvbo.sampling_axis">
+            <field name="name">Time</field>
+            <field name="technical_name">time</field>
+            <field name="description">Resample every integration timestep (stochastic time-varying input).</field>
+        </record>
+
+    </data>
+</odoo>

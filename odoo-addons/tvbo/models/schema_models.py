@@ -64,6 +64,16 @@ class OperatorType(models.Model):
     description = fields.Text()
 
 
+class SamplingAxis(models.Model):
+    _name = 'tvbo.sampling_axis'
+    _description = 'Dimension along which a distribution is sampled.'
+    _rec_name = 'name'
+
+    name = fields.Char(required=True, index=True)
+    technical_name = fields.Char(required=True, index=True)
+    description = fields.Text()
+
+
 class NoiseType(models.Model):
     _name = 'tvbo.noise_type'
     _description = 'NoiseType'
@@ -77,6 +87,26 @@ class NoiseType(models.Model):
 class AggregationType(models.Model):
     _name = 'tvbo.aggregation_type'
     _description = 'How to aggregate time series data'
+    _rec_name = 'name'
+
+    name = fields.Char(required=True, index=True)
+    technical_name = fields.Char(required=True, index=True)
+    description = fields.Text()
+
+
+class EventType(models.Model):
+    _name = 'tvbo.event_type'
+    _description = 'Type of event triggering mechanism.'
+    _rec_name = 'name'
+
+    name = fields.Char(required=True, index=True)
+    technical_name = fields.Char(required=True, index=True)
+    description = fields.Text()
+
+
+class StandardGraphType(models.Model):
+    _name = 'tvbo.standard_graph_type'
+    _description = 'Well-known graph generator families with automatic backend mapping. The type field on GraphGenerator is a free string; this enum lists common types that get automatic code generation for Julia (Gra...'
     _rec_name = 'name'
 
     name = fields.Char(required=True, index=True)
@@ -124,6 +154,46 @@ class ReductionType(models.Model):
     description = fields.Text()
 
 
+class ContinuationAlgorithm(models.Model):
+    _name = 'tvbo.continuation_algorithm'
+    _description = 'Predictor-corrector algorithm for numerical continuation.'
+    _rec_name = 'name'
+
+    name = fields.Char(required=True, index=True)
+    technical_name = fields.Char(required=True, index=True)
+    description = fields.Text()
+
+
+class NumericalDiscretizationMethod(models.Model):
+    _name = 'tvbo.numerical_discretization_method'
+    _description = 'Numerical discretization method for boundary value problems (periodic orbits, connecting orbits, quasi-periodic tori).'
+    _rec_name = 'name'
+
+    name = fields.Char(required=True, index=True)
+    technical_name = fields.Char(required=True, index=True)
+    description = fields.Text()
+
+
+class InitialStateMethod(models.Model):
+    _name = 'tvbo.initial_state_method'
+    _description = 'Strategy for obtaining the starting equilibrium or periodic orbit.'
+    _rec_name = 'name'
+
+    name = fields.Char(required=True, index=True)
+    technical_name = fields.Char(required=True, index=True)
+    description = fields.Text()
+
+
+class SparseFormat(models.Model):
+    _name = 'tvbo.sparse_format'
+    _description = 'SparseFormat'
+    _rec_name = 'name'
+
+    name = fields.Char(required=True, index=True)
+    technical_name = fields.Char(required=True, index=True)
+    description = fields.Text()
+
+
 class SpecimenEnum(models.Model):
     _name = 'tvbo.specimen_enum'
     _description = 'A set of permissible types for specimens used in brain atlas creation.'
@@ -154,6 +224,8 @@ class Range(models.Model):
     step = fields.Char(string='Step size. Can be: number, argument name, or expression.')
     n = fields.Integer(string='Number of points (alternative to step for grid exploration).')
     log_scale = fields.Boolean(string='Whether to use logarithmic spacing.')
+    explored_values = fields.Text(string="Explicit explored values for this element. When set on an element_domain entry, overrides the parent parameter's explored_values for this specific element.")
+    element = fields.Integer(string='Element/node index this range applies to. Used in element_domains to explicitly link a domain to a specific element of a heterogeneous parameter (e.g., element: 0 for node 0). Required when used in element_domains to avoid ambiguous positional indexing.')
 
 
 class Equation(models.Model):
@@ -199,6 +271,32 @@ class Stimulus(models.Model):
     weighting = fields.Text()
 
 
+class Event(models.Model):
+    _name = 'tvbo.event'
+    _description = 'A discrete or continuous event that modifies the system during simulation. Generalizes Stimulus: can represent external inputs (stimulus type), threshold-triggered state changes (continuous/discret...'
+
+    _rec_name = 'name'
+
+    name = fields.Char(required=True, index=True)
+    label = fields.Char(index=True)
+    description = fields.Text()
+    parameters = fields.Many2many(comodel_name='tvbo.parameter', relation='tvbo_event_parameters_rel')
+    event_type = fields.Many2one(comodel_name='tvbo.event_type', string='Type of event trigger mechanism.')
+    condition = fields.Many2one(comodel_name='tvbo.equation', string='Condition function. For continuous events: triggers when expression crosses zero. For discrete events: triggers when expression evaluates to true. Not used for preset_time or stimulus types.')
+    condition_states = fields.Text(string='State variable symbols accessible in the condition function. For edges, can include source/destination vertex outputs.')
+    condition_parameters = fields.Text(string='Parameter symbols accessible in the condition function.')
+    affect = fields.Many2one(comodel_name='tvbo.equation', string='Affect function: what happens when the event triggers. Can modify state variables and/or parameters. For stimulus type, this is the stimulus equation.')
+    affect_states = fields.Text(string='State variable symbols modifiable in the affect function.')
+    affect_parameters = fields.Text(string='Parameter symbols modifiable in the affect function.')
+    affect_negative = fields.Many2one(comodel_name='tvbo.equation', string='Affect on downcrossing (continuous events only). If not specified, uses the same affect for both crossings.')
+    trigger_times = fields.Text(string='Predetermined trigger times for preset_time events. The solver will step exactly to these times.')
+    target_component = fields.Char(string="Component to attach this event to. Can be a node label, edge label, or 'all_edges'/'all_vertices' for broadcast. If not specified, event is experiment-level.")
+    equation = fields.Many2one(comodel_name='tvbo.equation', string='Stimulus equation for stimulus-type events. Legacy compatibility with Stimulus class.')
+    regions = fields.Text(string='Target regions for stimulus-type events.')
+    weighting = fields.Text(string='Per-region weighting for stimulus-type events.')
+    duration = fields.Float(string='Duration of stimulus-type events.')
+
+
 class TemporalApplicableEquation(models.Model):
     _name = 'tvbo.temporal_applicable_equation'
     _description = 'TemporalApplicableEquation'
@@ -218,8 +316,6 @@ class Parcellation(models.Model):
     _rec_name = 'label'
 
     label = fields.Char(index=True)
-    region_labels = fields.Text()
-    center_coordinates = fields.Text()
     data_source = fields.Char()
     atlas = fields.Many2one(comodel_name='tvbo.brain_atlas', required=True)
 
@@ -252,6 +348,9 @@ class Matrix(models.Model):
     x = fields.Many2one(comodel_name='tvbo.brain_region_series')
     y = fields.Many2one(comodel_name='tvbo.brain_region_series')
     values = fields.Text()
+    format = fields.Many2one(comodel_name='tvbo.sparse_format', string='Storage format in binary companion (dense, csr, coo)')
+    shape = fields.Text(string='Matrix dimensions [N, M]')
+    dtype = fields.Char(string='Data type for matrix values', default='float32')
 
 
 class BrainRegionSeries(models.Model):
@@ -262,6 +361,30 @@ class BrainRegionSeries(models.Model):
     values = fields.Text()
 
 
+class Provenance(models.Model):
+    _name = 'tvbo.provenance'
+    _description = 'W3C PROV-O aligned provenance. Reusable on any entity (Network, TimeSeries, Dynamics, etc.).'
+
+
+    references = fields.Text()
+    date_created = fields.Char(string='ISO 8601 (prov:generatedAtTime)')
+    license = fields.Char()
+    generated_by = fields.Char(string='Software/agent identifier (prov:wasGeneratedBy)')
+
+
+class BidsEntities(models.Model):
+    _name = 'tvbo.bids_entities'
+    _description = 'BIDS filename entities (BEP017-aligned) for provenance and data discovery. Reusable on Network, BrainAtlas, Tractogram, or any dataset with BIDS-conformant naming.'
+
+
+    template = fields.Char(string='BIDS tpl- entity (e.g., FSLMNI152, MNI152NLin2009cAsym)')
+    cohort = fields.Char(string='BIDS cohort- entity (e.g., HCPYA, PPMI85)')
+    reconstruction = fields.Char(string='BIDS rec- entity (e.g., dTOR)')
+    segmentation = fields.Char(string='BIDS seg- entity (e.g., ordered, ranked, 17Networks)')
+    scale = fields.Char(string='BIDS scale- entity (BEP017, e.g., 1000)')
+    atlas = fields.Char(string='BIDS atlas- entity (e.g., Schaefer2018, HCPMMP1)')
+
+
 class Network(models.Model):
     _name = 'tvbo.network'
     _description = 'Network specification with nodes, edges, and reusable coupling configurations. Supports both explicit node/edge representation and matrix-based connectivity (Connectome compatibility).'
@@ -270,22 +393,42 @@ class Network(models.Model):
 
     label = fields.Char(index=True)
     description = fields.Text()
+    parameters = fields.Many2many(comodel_name='tvbo.parameter', relation='tvbo_network_parameters_rel')
     nodes = fields.Many2many(comodel_name='tvbo.node', relation='tvbo_network_nodes_rel', string='List of nodes with individual dynamics (optional, for heterogeneous networks)')
     edges = fields.Many2many(comodel_name='tvbo.edge', relation='tvbo_network_edges_rel', string='List of directed edges with coupling references (optional, for explicit edge definition)')
     coupling = fields.Many2many(comodel_name='tvbo.coupling', relation='tvbo_network_coupling_rel', string="Reusable coupling configurations referenced by edges (e.g., 'instant', 'delayed', 'inhibitory')")
-    number_of_regions = fields.Integer(string='Number of regions (derived from nodes if not set)', default=1)
+    dynamics = fields.Many2many(comodel_name='tvbo.dynamics', relation='tvbo_network_dynamics_rel', string='Dictionary of dynamics models keyed by name. Nodes reference these by name. For heterogeneous networks with per-node dynamics.')
     number_of_nodes = fields.Integer(string='Number of nodes in the network (derived from nodes if not set)', default=1)
     parcellation = fields.Many2one(comodel_name='tvbo.parcellation', string='Brain parcellation/atlas reference')
-    tractogram = fields.Char(string='Reference to tractography data')
-    normalization = fields.Many2one(comodel_name='tvbo.equation', string='Normalization equation for connectivity weights')
-    global_coupling_strength = fields.Many2one(comodel_name='tvbo.parameter', string='Global scaling factor for all coupling weights')
-    conduction_speed = fields.Many2one(comodel_name='tvbo.parameter', string='Conduction speed for computing delays from distances')
+    tractogram = fields.Many2one(comodel_name='tvbo.tractogram', string='Reference to tractography data')
+    transforms = fields.Many2many(comodel_name='tvbo.function', relation='tvbo_network_transforms_rel', string="Ordered list of transforms applied to edge property matrices. Each Function's name identifies the target edge property (e.g. 'weight', 'length'). Supports equation-based (symbolic) or callable-based (software) transforms. Multiple transforms on the same target are applied sequentially.")
+    data_file = fields.Char(string='Path to companion data file. Supported extensions: .h5 (HDF5), .zarr/ (Zarr), .csv (legacy single-matrix). Null if no companion data needed.')
+    descriptor = fields.Char(string="Short alphanumeric identifier for the BIDS desc- filename entity (e.g., SC, FC, EC, SCFC). Classifies the connectivity modality of the network's edge measures.")
     bids_dir = fields.Char(string='Path to BEP017-compliant BIDS directory for loading connectivity matrices')
+    bids = fields.Many2one(comodel_name='tvbo.bids_entities', string='BIDS filename entities for this dataset')
     structural_measures = fields.Text(string='BEP017 measure names for structural connectivity (e.g., streamlineCount, tractLength)')
     observational_measures = fields.Text(string='BEP017 measure names for observational targets (e.g., BoldCorrelation)')
+    provenance = fields.Many2one(comodel_name='tvbo.provenance', string='W3C PROV-O aligned provenance')
+    parent_network = fields.Char(string='Path/URI to parent (coarser) Network. When set, this network is a refinement where each node maps to exactly one parent node via node_mapping.')
+    node_mapping = fields.Char(string='HDF5 dataset path for node-to-parent mapping. Int32 array of shape (N,) where entry i is the parent node ID. Required when parent_network is set.')
     distance_unit = fields.Char(string="Unit for distances/lengths in the network (e.g., 'mm', 'm', 'cm')", default='mm')
     time_unit = fields.Char(string="Default time unit for the network (e.g., 'ms', 's')", default='ms')
     edge_matrix_files = fields.Many2many(comodel_name='tvbo.file', relation='tvbo_network_edge_matrix_files_rel')
+    graph_generator = fields.Many2one(comodel_name='tvbo.graph_generator', string='Graph generator specification.  When set, overrides explicit edges/nodes for graph construction.  The type field is a free string; StandardGraphType lists well-known types that get automatic code generation across backends.')
+
+
+class GraphGenerator(models.Model):
+    _name = 'tvbo.graph_generator'
+    _description = 'Backend-agnostic graph generator specification.  Captures the mathematical family (type) and its parameters so that each backend can emit the correct constructor call (Graphs.jl, NetworkX, etc.). T...'
+
+    _rec_name = 'name'
+
+    name = fields.Char(required=True, index=True)
+    description = fields.Text()
+    type = fields.Char(string='Graph family name.  Use a StandardGraphType value for automatic backend mapping, or any custom string for documentation purposes.', required=True)
+    seed = fields.Integer(string='Random seed for reproducible graph generation.')
+    directed = fields.Boolean(string='Whether to generate a directed graph.')
+    parameters = fields.Many2many(comodel_name='tvbo.parameter', relation='tvbo_graph_generator_parameters_rel', string='Generator parameters (e.g. k, p, dims).  Names are matched by the backend mapping to construct the call.')
 
 
 class File(models.Model):
@@ -309,34 +452,52 @@ class Node(models.Model):
 
     label = fields.Char(index=True)
     description = fields.Text()
+    parameters = fields.Many2many(comodel_name='tvbo.parameter', relation='tvbo_node_parameters_rel')
     record_id = fields.Integer(string='Unique node identifier', required=True)
     dynamics = fields.Many2one(comodel_name='tvbo.dynamics', string="Dynamics model governing this node's behavior. Can be a reference (by name) or inline definition. If not provided, uses experiment's dynamics.")
     position = fields.Many2one(comodel_name='tvbo.coordinate', string='Spatial coordinates (x, y, z) of the node')
     region = fields.Char(string='Brain region or anatomical label')
-    parameters = fields.Many2many(comodel_name='tvbo.parameter', relation='tvbo_node_parameters_rel', string='Node-specific parameter overrides')
-    initial_state = fields.Text(string='Initial values for state variables')
+    state = fields.Many2many(comodel_name='tvbo.state_value', relation='tvbo_node_state_rel', string='Per-node initial state variable values, keyed by state variable name.')
+    events = fields.Many2many(comodel_name='tvbo.event', relation='tvbo_node_events_rel', string='Events attached to this node (e.g., threshold-based state changes).')
+
+
+class StateValue(models.Model):
+    _name = 'tvbo.state_value'
+    _description = 'A named state variable value for per-node initialization.'
+
+    _rec_name = 'name'
+
+    name = fields.Char(required=True, index=True)
+    value = fields.Float()
 
 
 class Edge(models.Model):
     _name = 'tvbo.edge'
-    _description = 'A directed edge in a network with coupling and connectivity properties. Edge properties (weight, delay, distance) are stored in the parameters slot with optional units.'
+    _description = 'An edge in a network. Two modes: explicit (source+target set, scalar parameters in YAML) or template (no source/target, N×N matrix measure in HDF5). Both coexist in the same edges list.'
 
     _rec_name = 'label'
 
     label = fields.Char(index=True)
     description = fields.Text()
     parameters = fields.Many2many(comodel_name='tvbo.parameter', relation='tvbo_edge_parameters_rel')
-    source = fields.Integer(string='Source node ID', required=True)
-    target = fields.Integer(string='Target node ID', required=True)
+    source = fields.Integer(string='Source node ID (set for explicit edges, absent for template edges)')
+    target = fields.Integer(string='Target node ID (set for explicit edges, absent for template edges)')
+    unit = fields.Char(string='Unit for matrix values (template edges only)')
+    format = fields.Many2one(comodel_name='tvbo.sparse_format', string='Storage format in HDF5 (template edges only)')
+    weighted = fields.Boolean(string='Matrix entries carry weights (not just 0/1)')
+    valid_diagonal = fields.Boolean(string='Self-connections are meaningful')
+    non_negative = fields.Boolean(string='All values >= 0')
     source_var = fields.Char(string="Output variable from source node to use (e.g., 'x_out'). If not specified, uses first output variable from source dynamics.")
     target_var = fields.Char(string="Input variable on target node to connect to (e.g., 'c_in'). If not specified, uses first coupling input from target dynamics.")
     coupling = fields.Many2one(comodel_name='tvbo.coupling', string="Coupling function for this edge. Can be a reference (by name) to coupling or inline definition. If not provided, uses experiment's default coupling.")
     directed = fields.Boolean(string='Whether the edge is directed. If false, represents a symmetric/bidirectional connection.')
+    dynamics = fields.Many2one(comodel_name='tvbo.dynamics', string='Dynamics model for this edge. When specified, the edge has its own state variables and ODE (EdgeModel with f in ND.jl). Uses the same Dynamics class as nodes — state_variables define edge states, derived_variables define observables, output defines what is visible for plotting/analysis. The coupling_function on Coupling still defines how vertex outputs map to edge outputs for aggregation at vertices.')
+    events = fields.Many2many(comodel_name='tvbo.event', relation='tvbo_edge_events_rel', string='Events attached to this edge (e.g., threshold-based line tripping).')
 
 
 class Observation(models.Model):
     _name = 'tvbo.observation'
-    _description = 'Unified class for all observation/measurement specifications. Covers monitors (BOLD, EEG), tuning observables, and derived quantities. Pipeline is a sequence of Functions with input → output flow.'
+    _description = 'Unified class for all observation/measurement specifications. Covers monitors (BOLD, EEG), tuning observables, and derived quantities. Pipeline is a sequence of Functions with input -> output flow.'
 
     _rec_name = 'name'
 
@@ -359,7 +520,7 @@ class Observation(models.Model):
     tail_samples = fields.Integer(string='Number of samples from the end to use. Takes the last N samples before aggregation. E.g., tail_samples: 500 means use data[-500:].')
     aggregation = fields.Many2one(comodel_name='tvbo.aggregation_type', string='How to aggregate over time')
     window_size = fields.Integer(string='Number of samples for windowed aggregation')
-    pipeline = fields.Many2many(comodel_name='tvbo.function_call', relation='tvbo_observation_pipeline_rel', string='Ordered sequence of Functions. Each Function transforms input → output.')
+    pipeline = fields.Many2many(comodel_name='tvbo.function_call', relation='tvbo_observation_pipeline_rel', string='Ordered sequence of Functions. Each Function transforms input -> output.')
     class_reference = fields.Many2one(comodel_name='tvbo.class_reference', string='Direct class reference (alternative to pipeline). Use for external library classes like tvboptim.Bold, custom monitors, or any callable class. The class is instantiated with constructor_args and called with call_args. Example: {name: Bold, module: tvboptim.observations.tvb_monitors.bold, constructor_args: [{name: period, value: 1000.0}]}')
 
 
@@ -402,6 +563,8 @@ class Dynamics(models.Model):
     stimulus = fields.Many2one(comodel_name='tvbo.stimulus')
     modes = fields.Many2many(comodel_name='tvbo.dynamics', relation='tvbo_dynamics_modes_rel', column1='dynamics_id', column2='modes_id')
     system_type = fields.Many2one(comodel_name='tvbo.system_type')
+    autonomous = fields.Boolean(string='Whether the system is autonomous (equations do not depend explicitly on time t). Non-autonomous systems have explicit time dependence, e.g. f*cos(omega*t).')
+    observed = fields.Many2many(comodel_name='tvbo.derived_variable', relation='tvbo_dynamics_observed_rel', string='Observable functions computed from states, inputs, and parameters after simulation. Unlike derived_variables (which are intermediate algebraic expressions used within the ODE), observed variables are post-hoc quantities recoverable from the solution. Maps to obsf/obssym in ND.jl EdgeModel/VertexModel. Example: absolute force magnitude computed from force components.')
 
 
 class StateVariable(models.Model):
@@ -420,23 +583,29 @@ class StateVariable(models.Model):
     unit = fields.Char()
     variable_of_interest = fields.Boolean()
     coupling_variable = fields.Boolean()
+    equation_type = fields.Char(string="Type of equation: 'differential' (default) means dx/dt = rhs, 'algebraic' means 0 = rhs or x ~ rhs (DAE constraint). Algebraic equations are used by ModelingToolkit.jl backend.", default='differential')
+    equation_order = fields.Integer(string='Order of the time derivative on the LHS. Default 1 means dx/dt = rhs (first-order ODE). Order 2 means d²x/dt² = rhs (second-order ODE), etc. Higher-order ODEs are automatically lowered to coupled first-order systems by backends like ModelingToolkit.jl via mtkcompile.')
     noise = fields.Many2one(comodel_name='tvbo.noise')
     stimulation_variable = fields.Boolean()
     boundaries = fields.Many2one(comodel_name='tvbo.range')
     initial_value = fields.Float(default=0.1)
+    derivative_initial_value = fields.Float(string='Initial value for the first time derivative, used when equation_order > 1. For a second-order ODE d²x/dt² = f, this sets dx/dt(0). Required by ModelingToolkit.jl to fully specify higher-order initial value problems.')
+    distribution = fields.Many2one(comodel_name='tvbo.distribution', string='Distribution for sampling initial conditions per node. If present, initial_value is used as fallback/mean.')
     history = fields.Many2one(comodel_name='tvbo.time_series')
 
 
 class Distribution(models.Model):
     _name = 'tvbo.distribution'
-    _description = 'Distribution'
+    _description = 'A probability distribution for sampling parameters or initial conditions. Standard distributions (Uniform, Gaussian) are specified by name and domain/parameters. Custom distributions use a Function...'
 
     _rec_name = 'name'
 
     name = fields.Char(required=True, index=True)
-    equation = fields.Many2one(comodel_name='tvbo.equation')
     parameters = fields.Many2many(comodel_name='tvbo.parameter', relation='tvbo_distribution_parameters_rel')
-    dependencies = fields.Many2many(comodel_name='tvbo.parameter', relation='tvbo_distribution_dependencies_rel')
+    domain = fields.Many2one(comodel_name='tvbo.range', string='Support of the distribution (sampling bounds). For Uniform this fully defines the distribution.')
+    function = fields.Many2one(comodel_name='tvbo.function', string='Custom distribution function (PDF or sampling callable). Only needed for non-standard distributions.')
+    seed = fields.Integer(string='Random seed for reproducible sampling.')
+    axis = fields.Many2one(comodel_name='tvbo.sampling_axis', string="Dimension along which the distribution is sampled. 'space' = per-node (default), 'time' = per-timestep (stochastic input).")
     correlation = fields.Many2one(comodel_name='tvbo.matrix')
 
 
@@ -457,11 +626,14 @@ class Parameter(models.Model):
     description = fields.Text()
     equation = fields.Many2one(comodel_name='tvbo.equation')
     unit = fields.Char()
+    dataset_path = fields.Char(string='Dataset path for array-valued parameters. When set, the parameter value is stored in the binary companion file (HDF5 or Zarr) at this path. The value slot is omitted.')
     comment = fields.Char()
     heterogeneous = fields.Boolean()
+    distribution = fields.Many2one(comodel_name='tvbo.distribution', string='Distribution for heterogeneous per-node parameter sampling. Implies heterogeneous=true.')
     free = fields.Boolean()
     shape = fields.Char()
     explored_values = fields.Text()
+    element_domains = fields.Many2many(comodel_name='tvbo.range', relation='tvbo_parameter_element_domains_rel', string='Per-element domain overrides for heterogeneous parameters. When specified, element_domains[i] overrides domain for element i during exploration auto-expansion. Length must match parameter shape (e.g., n_nodes for shape "(n_nodes,)"). If not set, all elements share the same domain.')
 
 
 class CouplingInput(models.Model):
@@ -490,7 +662,7 @@ class Argument(models.Model):
 
 class Function(models.Model):
     _name = 'tvbo.function'
-    _description = 'A function with explicit input → transformation → output flow. Can be equation-based (symbolic) or software-based (callable). In a pipeline, functions are chained: output of one becomes input of next.'
+    _description = 'A function with explicit input -> transformation -> output flow. Can be equation-based (symbolic) or software-based (callable). In a pipeline, functions are chained: output of one becomes input of ...'
 
     _rec_name = 'name'
 
@@ -534,16 +706,25 @@ class LossFunction(models.Model):
 
 class FunctionCall(models.Model):
     _name = 'tvbo.function_call'
-    _description = 'Invocation of a function in a pipeline. Can reference a defined Function by name, OR inline a callable directly for external library functions. OR inline a class_call for classes that need instanti...'
+    _description = 'Invocation of a function in a pipeline. Can reference a defined Function by name, OR inline a callable directly for external library functions, OR inline an equation, OR use class_call for class in...'
 
+    _rec_name = 'name'
 
+    acronym = fields.Char()
+    label = fields.Char(index=True)
+    equation = fields.Many2one(comodel_name='tvbo.equation')
+    description = fields.Text()
+    name = fields.Char(required=True, index=True, string='Optional name for this pipeline step')
     function = fields.Many2one(comodel_name='tvbo.function', string='Reference to a defined Function (by name)')
     callable = fields.Many2one(comodel_name='tvbo.callable', string='Direct callable specification (alternative to function reference)')
     class_call = fields.Many2one(comodel_name='tvbo.class_reference', string='Class instantiation and call (alternative to callable/function). Use for external library classes that need __init__ then __call__. Example: Bold monitor from tvboptim.')
+    input = fields.Char(string="Reference to previous function's output in pipeline (by name)")
     output = fields.Char(string="Name for this step's output (referenced by subsequent functions)")
     apply_on_dimension = fields.Many2one(comodel_name='tvbo.dimension_type', string="Dimension to apply function over (generates vmap in code). E.g., 'node' applies per-node.")
     aggregate = fields.Many2one(comodel_name='tvbo.aggregation', string='How to aggregate the result across dimensions. Example: aggregate.over=node, aggregate.type=mean applies function per node, then averages. Used in loss functions.')
     arguments = fields.Many2many(comodel_name='tvbo.argument', relation='tvbo_function_call_arguments_rel')
+    time_range = fields.Many2one(comodel_name='tvbo.range', string='Time range for generated TimeSeries (for kernel generators)')
+    source_code = fields.Char()
 
 
 class Callable(models.Model):
@@ -552,7 +733,7 @@ class Callable(models.Model):
 
     _rec_name = 'name'
 
-    name = fields.Char(required=True, index=True)
+    name = fields.Char(required=True, index=True, string='Optional name for this pipeline step')
     description = fields.Text()
     module = fields.Char()
     software = fields.Many2one(comodel_name='tvbo.software_requirement')
@@ -588,7 +769,7 @@ class DerivedParameter(models.Model):
 
     parameter_id = fields.Many2one('tvbo.parameter', required=True, ondelete='cascade')
 
-    name = fields.Char(required=True, index=True)
+    name = fields.Char(required=True, index=True, string='Optional name for this pipeline step')
     symbol = fields.Char()
     description = fields.Text()
     equation = fields.Many2one(comodel_name='tvbo.equation')
@@ -601,7 +782,7 @@ class DerivedVariable(models.Model):
 
     _rec_name = 'name'
 
-    name = fields.Char(required=True, index=True)
+    name = fields.Char(required=True, index=True, string='Optional name for this pipeline step')
     label = fields.Char(index=True)
     symbol = fields.Char()
     description = fields.Text()
@@ -647,7 +828,7 @@ class DataSource(models.Model):
 
     _rec_name = 'name'
 
-    name = fields.Char(required=True, index=True)
+    name = fields.Char(required=True, index=True, string='Optional name for this pipeline step')
     label = fields.Char(index=True)
     description = fields.Text()
     path = fields.Char(string='File path or URI to the data')
@@ -663,7 +844,7 @@ class OptimizationStage(models.Model):
 
     _rec_name = 'name'
 
-    name = fields.Char(required=True, index=True)
+    name = fields.Char(required=True, index=True, string='Optional name for this pipeline step')
     label = fields.Char(index=True)
     description = fields.Text()
     free_parameters = fields.Many2many(comodel_name='tvbo.parameter', relation='tvbo_optimization_stage_free_parameters_rel', string='Parameters to optimize in this stage. Use \'shape\' attribute to specify scalar vs regional. Example: {name: w, shape: "(n_nodes,)"} for heterogeneous.')
@@ -696,7 +877,7 @@ class Exploration(models.Model):
 
     _rec_name = 'name'
 
-    name = fields.Char(required=True, index=True)
+    name = fields.Char(required=True, index=True, string='Optional name for this pipeline step')
     label = fields.Char(index=True)
     description = fields.Text()
     execution = fields.Many2one(comodel_name='tvbo.execution_config', string='Per-exploration execution configuration (overrides experiment-level defaults). Useful for setting random_seed, n_workers for parallel grid search.')
@@ -704,6 +885,8 @@ class Exploration(models.Model):
     mode = fields.Char(string="Combination mode: 'product' (full grid), 'zip' (paired)", default='product')
     observable = fields.Many2one(comodel_name='tvbo.function_call', string='Observable to compute at each point. Use function: obs_name for simple observation, or function: func_name + arguments for FunctionCall.')
     n_parallel = fields.Integer(string='Parallel evaluations', default=1)
+    n_trials = fields.Integer(string='Number of independent trials per grid point. Each trial uses a different noise seed. Used for averaging stochastic simulations (e.g., VEP = average of 20 trials).', default=1)
+    average = fields.Char(string="Averaging mode across trials. 'trials' = average over n_trials independent runs (evoked potential paradigm). None = return all trials.")
 
 
 class UpdateRule(models.Model):
@@ -712,7 +895,7 @@ class UpdateRule(models.Model):
 
     _rec_name = 'name'
 
-    name = fields.Char(required=True, index=True)
+    name = fields.Char(required=True, index=True, string='Optional name for this pipeline step')
     description = fields.Text()
     target_parameter = fields.Many2one(comodel_name='tvbo.parameter', string='The parameter to update (e.g., J_i, wLRE)', required=True)
     equation = fields.Many2one(comodel_name='tvbo.equation', string="Update equation (e.g., 'J_i + eta * delta'). Can use functions defined in experiment.functions section.", required=True)
@@ -751,7 +934,7 @@ class Algorithm(models.Model):
 
     _rec_name = 'name'
 
-    name = fields.Char(required=True, index=True)
+    name = fields.Char(required=True, index=True, string='Optional name for this pipeline step')
     description = fields.Text()
     execution = fields.Many2one(comodel_name='tvbo.execution_config', string='Per-algorithm execution configuration (overrides experiment-level defaults). Useful for setting random_seed per algorithm to ensure reproducibility.')
     type = fields.Char(string="Algorithm type: 'fic', 'eib', 'homeostatic', 'custom'")
@@ -770,17 +953,117 @@ class Algorithm(models.Model):
     depends_on = fields.Many2many(comodel_name='tvbo.algorithm', relation='tvbo_algorithm_depends_on_rel', column1='algorithm_id', column2='depends_on_id', string='Other algorithms that must run first (e.g., EIB depends on FIC)')
 
 
+class Option(models.Model):
+    _name = 'tvbo.option'
+    _description = 'A toolkit-specific key-value option (string name + string value). Used for backend settings that are not universal numeric parameters (e.g., solver name, tangent method, jacobian type).'
+
+    _rec_name = 'name'
+
+    name = fields.Char(required=True, index=True, string='Option name (key).')
+    value = fields.Char(string='Option value.', required=True)
+
+
+class Discretization(models.Model):
+    _name = 'tvbo.discretization'
+    _description = 'Discretization method for boundary value problems in continuation (periodic orbits, connecting orbits, quasi-periodic tori). Specifies the method; method-specific numerics go in parameters.'
+
+
+    parameters = fields.Many2many(comodel_name='tvbo.parameter', relation='tvbo_discretization_parameters_rel')
+    method = fields.Many2one(comodel_name='tvbo.numerical_discretization_method', string='Discretization method.', default='collocation')
+    ode_solver = fields.Many2one(comodel_name='tvbo.solver', string='ODE solver for flow-based methods (shooting, poincaré). Specifies algorithm (e.g. Vern9, Rodas5) and tolerances. Not needed for collocation or trapezoid.')
+    linear_solver = fields.Many2one(comodel_name='tvbo.solver', string='Linear solver for the Newton bordered system. E.g. COPBLS (collocation), MatrixBLS (shooting/poincaré).')
+    mesh_intervals = fields.Integer(string='Number of mesh intervals (time slices) for collocation or trapezoid methods. Collocation: N in PeriodicOrbitOCollProblem(N, m). Trapezoid: M in PeriodicOrbitTrapProblem(M=...).')
+    degree = fields.Integer(string='Polynomial degree per mesh interval for collocation. The m in PeriodicOrbitOCollProblem(N, m).')
+    n_sections = fields.Integer(string='Number of shooting sections for shooting or Poincaré methods.')
+    options = fields.Many2many(comodel_name='tvbo.option', relation='tvbo_discretization_options_rel', string='Toolkit-specific string options (jacobian type, etc.).')
+
+
+class InitialState(models.Model):
+    _name = 'tvbo.initial_state'
+    _description = 'How to obtain the starting equilibrium or periodic orbit for continuation. Most robust: time-integrate to steady state.'
+
+
+    method = fields.Many2one(comodel_name='tvbo.initial_state_method', string='Strategy for finding the initial state.', default='time_integration')
+    duration = fields.Float(string='Integration duration for time_integration method.', default=2000.0)
+    abs_tol = fields.Float(string='Absolute tolerance for ODE integration.', default=1e-10)
+    rel_tol = fields.Float(string='Relative tolerance for ODE integration.', default=1e-10)
+    solver = fields.Many2one(comodel_name='tvbo.solver', string='ODE solver for time_integration method. Specify method (e.g., Tsit5, Heun, RK4) and tolerances.')
+    source_branch = fields.Char(string='Name of a previously computed branch (for from_branch method).')
+    source_point = fields.Char(string="Which point on the source branch: 'endpoint', 'hopf:1', 'fold:2', a step number, etc.")
+
+
+class BranchSwitch(models.Model):
+    _name = 'tvbo.branch_switch'
+    _description = 'Specification for switching from a detected bifurcation point to a new branch (periodic orbits from Hopf, fold continuation, etc.). Each BranchSwitch says: "from which special point on the parent b...'
+
+    _rec_name = 'name'
+
+    name = fields.Char(required=True, index=True, string='Option name (key).')
+    description = fields.Text()
+    parameters = fields.Many2many(comodel_name='tvbo.parameter', relation='tvbo_branch_switch_parameters_rel')
+    source_point = fields.Char(string="Which bifurcation point to start from. Syntax: - 'hopf:-1' = last Hopf (default) - 'hopf:all' = all Hopf points - 'hopf:1' = first Hopf - 'fold:2' = second fold - integer = specific special point index")
+    delta_p = fields.Float(string='Initial parameter offset from the bifurcation point.')
+    continuation = fields.Many2one(comodel_name='tvbo.continuation', string="Override solver settings for this branch. Uses the same Continuation type — only explicitly set attributes override the parent's values.")
+    discretization = fields.Many2one(comodel_name='tvbo.discretization', string='Discretization method for the branch solution. Required for periodic orbit branches (Hopf → PO). Not needed for codim-2 branches (fold/Hopf continuation).')
+    bothside = fields.Boolean(string='Continue branch in both directions.')
+    options = fields.Many2many(comodel_name='tvbo.option', relation='tvbo_branch_switch_options_rel', string='Toolkit-specific string options for this branch (linear solver, etc.).')
+
+
+class Continuation(models.Model):
+    _name = 'tvbo.continuation'
+    _description = 'Complete specification of a numerical continuation / bifurcation analysis. All universal solver settings live directly here. Toolkit-specific string options go in the options slot. When used inside...'
+
+    _rec_name = 'name'
+
+    name = fields.Char(required=True, index=True, string='Option name (key).')
+    label = fields.Char(index=True)
+    description = fields.Text()
+    dynamics = fields.Many2one(comodel_name='tvbo.dynamics', string="Reference to the dynamical system model (by name). Resolved from the experiment's dynamics dict at runtime.")
+    free_parameters = fields.Many2many(comodel_name='tvbo.parameter', relation='tvbo_continuation_free_parameters_rel', string='Parameters to vary. First parameter is primary (codim-1); second enables codim-2 continuation. Each Parameter has name + domain (Range with lo/hi bounds).')
+    ds = fields.Float(string='Initial arc-length step size.')
+    ds_min = fields.Float(string='Minimum adaptive step size.')
+    ds_max = fields.Float(string='Maximum adaptive step size.')
+    max_steps = fields.Integer(string='Maximum continuation steps.')
+    newton_tol = fields.Float(string='Absolute tolerance for Newton corrector convergence.')
+    newton_max_iterations = fields.Integer(string='Maximum Newton corrector iterations per step.')
+    nev = fields.Integer(string='Number of eigenvalues to compute. Must be >= number of state variables for reliable Hopf detection.')
+    tol_stability = fields.Float(string='Tolerance on real part of eigenvalue for stability boundary.')
+    detect_bifurcation = fields.Integer(string='Bifurcation detection level. 0 = off, 1 = eigenvalues only, 2 = detect, 3 = locate precisely.')
+    detect_fold = fields.Boolean(string='Enable fold (limit point) detection.')
+    n_inversion = fields.Integer(string='Number of eigenvalue sign inversions to flag a bifurcation. Must be even. Higher = fewer false positives.')
+    max_bisection_steps = fields.Integer(string='Maximum bisection steps for bifurcation point localization.')
+    algorithm = fields.Many2one(comodel_name='tvbo.continuation_algorithm', string='Predictor-corrector algorithm.', default='PALC')
+    initial_state = fields.Many2one(comodel_name='tvbo.initial_state', string='How to obtain the initial equilibrium. Default: time integration to steady state.')
+    branches = fields.Many2many(comodel_name='tvbo.branch_switch', relation='tvbo_continuation_branches_rel', string='Child branches to continue from detected bifurcation points (PO from Hopf, fold continuation, etc.).')
+    bothside = fields.Boolean(string='Continue in both directions from the starting point.')
+    execution = fields.Many2one(comodel_name='tvbo.execution_config', string='Per-analysis execution configuration.')
+    software = fields.Many2one(comodel_name='tvbo.software_requirement', string='Backend engine (BifurcationKit, AUTO-07p, MatCont, etc.).')
+    options = fields.Many2many(comodel_name='tvbo.option', relation='tvbo_continuation_options_rel', string='Toolkit-specific string options (tangent method, solver name, etc.).')
+
+
+class Solver(models.Model):
+    _name = 'tvbo.solver'
+    _description = 'Lightweight specification of a numerical ODE solver / integrator. Covers adaptive solvers (Vern9, Rodas5, Tsit5, etc.) used in shooting methods, initial-state integration, and other contexts where ...'
+
+
+    method = fields.Char(string='Solver algorithm name (e.g., Vern9, Rodas5, Tsit5, euler, heun, rk4).', default='Tsit5')
+    abs_tol = fields.Float(string='Absolute tolerance for adaptive solvers.', default=1e-10)
+    rel_tol = fields.Float(string='Relative tolerance for adaptive solvers.', default=1e-10)
+
+
 class Integrator(models.Model):
     _name = 'tvbo.integrator'
-    _description = 'Integrator'
+    _description = 'Fixed-step or adaptive ODE integrator with TVB-specific extensions (noise, transient time, etc.). Inherits abs_tol, rel_tol from Solver. Overrides method default to \'euler\'.'
 
+    _inherits = {'tvbo.solver': 'solver_id'}
+
+    solver_id = fields.Many2one('tvbo.solver', required=True, ondelete='cascade')
 
     time_scale = fields.Char()
     unit = fields.Char()
     parameters = fields.Many2many(comodel_name='tvbo.parameter', relation='tvbo_integrator_parameters_rel')
     duration = fields.Float(default=1000.0)
     description = fields.Text()
-    method = fields.Char(string='Integration method (euler, heun, rk4, etc.)', default='euler')
     step_size = fields.Float(default=0.01220703125)
     steps = fields.Integer()
     noise = fields.Many2one(comodel_name='tvbo.noise')
@@ -799,8 +1082,9 @@ class Coupling(models.Model):
 
     _rec_name = 'name'
 
-    name = fields.Char(required=True, index=True)
+    name = fields.Char(required=True, index=True, string='Option name (key).')
     label = fields.Char(index=True)
+    iri = fields.Char()
     parameters = fields.Many2many(comodel_name='tvbo.parameter', relation='tvbo_coupling_parameters_rel')
     description = fields.Text()
     coupling_function = fields.Many2one(comodel_name='tvbo.equation', string='Mathematical function defining the coupling')
@@ -810,6 +1094,9 @@ class Coupling(models.Model):
     incoming_states = fields.Many2many(comodel_name='tvbo.state_variable', relation='tvbo_coupling_incoming_states_rel', string='References to state variables from connected nodes (source)')
     local_states = fields.Many2many(comodel_name='tvbo.state_variable', relation='tvbo_coupling_local_states_rel', string='References to state variables from local node (target)')
     delayed = fields.Boolean(string='Whether coupling includes transmission delays')
+    symmetry = fields.Char(string="Edge symmetry type for NetworkDynamics.jl EdgeModel: 'directed' (default), 'antisymmetric', or 'symmetric'. AntiSymmetric edges flip sign for the reverse direction.", default='directed')
+    outsym = fields.Text(string="Output symbol names for the edge model. E.g. ['P'] for a scalar power flow, ['Fx', 'Fy'] for 2D forces. Maps directly to outsym in ND.jl EdgeModel. If not specified, derived from coupling variables of the connected vertex dynamics.")
+    observed = fields.Many2many(comodel_name='tvbo.derived_variable', relation='tvbo_coupling_observed_rel', string='Observable functions computed from edge inputs and parameters after simulation. Maps to obsf/obssym in ND.jl EdgeModel. Example: absolute force magnitude computed from force components.')
     inner_coupling = fields.Many2one(comodel_name='tvbo.coupling', string='For hierarchical coupling: inner coupling applied at regional level')
     region_mapping = fields.Many2one(comodel_name='tvbo.region_mapping', string='For hierarchical coupling: vertex-to-region mapping for aggregation')
     regional_connectivity = fields.Many2one(comodel_name='tvbo.network', string='For hierarchical coupling: region-to-region connectivity with weights and delays')
@@ -851,6 +1138,7 @@ class ExecutionConfig(models.Model):
     accelerator = fields.Char(string="Hardware accelerator: 'cpu', 'gpu', 'tpu'", default='cpu')
     batch_size = fields.Integer(string='Batch size for vectorized operations (None = auto)')
     random_seed = fields.Integer(string='Base random seed for reproducibility', default=42)
+    find_fixpoint = fields.Boolean(string='Whether to find a fixed point (steady state) before time integration. Used as initial condition for ODEProblem. Maps to NLsolve.fixpoint! in ND.jl or similar in other backends.')
 
 
 class SimulationExperiment(models.Model):
@@ -864,8 +1152,7 @@ class SimulationExperiment(models.Model):
     description = fields.Text()
     additional_equations = fields.Many2many(comodel_name='tvbo.equation', relation='tvbo_simulation_experiment_additional_equations_rel')
     label = fields.Char(index=True)
-    dynamics = fields.Many2one(comodel_name='tvbo.dynamics', string='Default dynamics model for all nodes (used when node.dynamics not specified or as fallback)')
-    dynamics = fields.Many2many(comodel_name='tvbo.dynamics', relation='tvbo_simulation_experiment_dynamics_rel', string='Dictionary of dynamics models keyed by name. Nodes reference these by name.')
+    dynamics = fields.Many2one(comodel_name='tvbo.dynamics', string='Default dynamics model for all nodes. For heterogeneous networks with multiple dynamics, use network.dynamics instead.')
     integration = fields.Many2one(comodel_name='tvbo.integrator')
     connectivity = fields.Many2one(comodel_name='tvbo.network')
     network = fields.Many2one(comodel_name='tvbo.network')
@@ -874,10 +1161,12 @@ class SimulationExperiment(models.Model):
     derived_observations = fields.Many2many(comodel_name='tvbo.derived_observation', relation='tvbo_simulation_experiment_derived_observations_rel', string='Observations derived from combining other observations. Computed after all regular observations are available. Examples: fc_corr (from fc, fc_target), rmse, etc.')
     functions = fields.Many2many(comodel_name='tvbo.function', relation='tvbo_simulation_experiment_functions_rel', string='Reusable function definitions. Referenced by name in observation pipelines. Enables DRY: define compute_fc once, use in both simulated and empirical paths.')
     stimulation = fields.Many2one(comodel_name='tvbo.stimulus')
+    events = fields.Many2many(comodel_name='tvbo.event', relation='tvbo_simulation_experiment_events_rel', string='Events that apply at the experiment level. For component-level events, attach them to individual nodes or edges instead.')
     field_dynamics = fields.Many2one(comodel_name='tvbo.pde')
-    optimization = fields.Many2many(comodel_name='tvbo.optimization', relation='tvbo_simulation_experiment_optimization_rel', string='Parameter optimization configurations')
+    optimizations = fields.Many2many(comodel_name='tvbo.optimization', relation='tvbo_simulation_experiment_optimizations_rel', string='Parameter optimization configurations')
     explorations = fields.Many2many(comodel_name='tvbo.exploration', relation='tvbo_simulation_experiment_explorations_rel', string='Parameter exploration/grid search specifications')
     algorithms = fields.Many2many(comodel_name='tvbo.algorithm', relation='tvbo_simulation_experiment_algorithms_rel', string='Iterative parameter tuning algorithms (FIC, EIB, etc.)')
+    continuations = fields.Many2many(comodel_name='tvbo.continuation', relation='tvbo_simulation_experiment_continuations_rel', string='Numerical continuation and bifurcation analysis specifications. Each entry defines a continuation experiment (equilibrium branch, codim-2 curve, periodic orbit family, etc.).')
     environment = fields.Many2one(comodel_name='tvbo.software_environment', string='Execution environment (collection of requirements).')
     execution = fields.Many2one(comodel_name='tvbo.execution_config', string='Computational execution configuration (parallelization, devices).')
     software = fields.Many2one(comodel_name='tvbo.software_requirement', string="(Deprecated) Single software requirement; prefer 'environment' with aggregated requirements.")
@@ -1025,6 +1314,10 @@ class Mesh(models.Model):
     coordinates = fields.Many2many(comodel_name='tvbo.coordinate', relation='tvbo_mesh_coordinates_rel', string='Node coordinates (x,y,z) in the given coordinate space.')
     elements = fields.Char(string='Connectivity (indices) or file reference to topology.')
     coordinate_space = fields.Many2one(comodel_name='tvbo.common_coordinate_space')
+    mesh_file = fields.Char(string='Path to external mesh file (GIFTI, VTK, MSH, FreeSurfer, etc.).')
+    mesh_format = fields.Char(string='Explicit format override (gifti, freesurfer, meshio, vtk, gmsh). Auto-detected from extension if null.')
+    number_of_vertices = fields.Integer(string='Number of vertices in the mesh.')
+    number_of_elements = fields.Integer(string='Number of elements (triangles, quads, tetrahedra, etc.).')
 
 
 class SpatialField(models.Model):
@@ -1098,7 +1391,7 @@ class PDESolver(models.Model):
     requirements = fields.Many2many(comodel_name='tvbo.software_requirement', relation='tvbo_pde_solver_requirements_rel')
     environment = fields.Many2one(comodel_name='tvbo.software_environment')
     discretization = fields.Many2one(comodel_name='tvbo.discretization_method')
-    time_integrator = fields.Char(string='e.g., implicit Euler, Crank–Nicolson.')
+    time_integrator = fields.Char(string='e.g., implicit Euler, Crank-Nicolson.')
     dt = fields.Float(string='Time step (s).')
     tolerances = fields.Char(string='Abs/rel tolerances.')
     preconditioner = fields.Char()

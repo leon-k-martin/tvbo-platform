@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+
+        <record id="standard_graph_type_BarabasiAlbert" model="tvbo.standard_graph_type">
+            <field name="name">Barabasialbert</field>
+            <field name="technical_name">BarabasiAlbert</field>
+            <field name="description">Barabasi-Albert preferential attachment (params: k)</field>
+        </record>
+
+        <record id="standard_graph_type_WattsStrogatz" model="tvbo.standard_graph_type">
+            <field name="name">Wattsstrogatz</field>
+            <field name="technical_name">WattsStrogatz</field>
+            <field name="description">Watts-Strogatz small-world (params: k, p)</field>
+        </record>
+
+        <record id="standard_graph_type_ErdosRenyi" model="tvbo.standard_graph_type">
+            <field name="name">Erdosrenyi</field>
+            <field name="technical_name">ErdosRenyi</field>
+            <field name="description">Erdos-Renyi random graph (params: p)</field>
+        </record>
+
+        <record id="standard_graph_type_Complete" model="tvbo.standard_graph_type">
+            <field name="name">Complete</field>
+            <field name="technical_name">Complete</field>
+            <field name="description">Complete graph (all-to-all)</field>
+        </record>
+
+        <record id="standard_graph_type_Cycle" model="tvbo.standard_graph_type">
+            <field name="name">Cycle</field>
+            <field name="technical_name">Cycle</field>
+            <field name="description">Cycle graph (ring)</field>
+        </record>
+
+        <record id="standard_graph_type_Star" model="tvbo.standard_graph_type">
+            <field name="name">Star</field>
+            <field name="technical_name">Star</field>
+            <field name="description">Star graph</field>
+        </record>
+
+        <record id="standard_graph_type_RandomRegular" model="tvbo.standard_graph_type">
+            <field name="name">Randomregular</field>
+            <field name="technical_name">RandomRegular</field>
+            <field name="description">Random regular graph (params: k)</field>
+        </record>
+
+        <record id="standard_graph_type_Grid" model="tvbo.standard_graph_type">
+            <field name="name">Grid</field>
+            <field name="technical_name">Grid</field>
+            <field name="description">Grid/lattice graph (params: dims)</field>
+        </record>
+
+    </data>
+</odoo>

@@ -7,10 +7,35 @@ Usage:
     python scripts/generate_odoo_models.py
 """
 
+import json
 import yaml
 from pathlib import Path
 from typing import Dict, List, Any, Set
 import re
+
+
+def format_manifest(manifest: dict) -> str:
+    """Format an Odoo __manifest__.py dict as a readable Python file."""
+    lines = ["# -*- coding: utf-8 -*-", "{"]
+    items = list(manifest.items())
+    for i, (key, value) in enumerate(items):
+        comma = "," if i < len(items) - 1 else ""
+        if key == "data" and isinstance(value, list):
+            lines.append(f"    {key!r}: [")
+            for j, item in enumerate(value):
+                item_comma = "," if j < len(value) - 1 else ""
+                lines.append(f"        {item!r}{item_comma}")
+            lines.append(f"    ]{comma}")
+        elif key == "description":
+            # Multi-line description
+            lines.append(f"    {key!r}: {value!r}{comma}")
+        elif isinstance(value, list):
+            lines.append(f"    {key!r}: {value!r}{comma}")
+        else:
+            lines.append(f"    {key!r}: {value!r}{comma}")
+    lines.append("}")
+    lines.append("")
+    return "\n".join(lines)
 
 
 # Models that are manually defined in database_models.py (do not auto-generate)
@@ -521,6 +546,10 @@ def generate_enum_model(class_name: str, class_def: Dict[str, Any]) -> str:
     """Generate Odoo model for an enum type."""
     model_name = camel_to_snake(class_name)
     description = class_def.get("description", class_name)
+    if description:
+        description = description.replace('\n', ' ').replace("'", "\\'").strip()
+        if len(description) > 200:
+            description = description[:197] + '...'
 
     lines = [
         f"class {class_name}(models.Model):",
@@ -695,8 +724,7 @@ def generate_odoo_module(schema_path: Path, output_dir: Path):
         "auto_install": False,
     }
 
-    manifest_content = "# -*- coding: utf-8 -*-\n" + str(manifest)
-    (module_dir / "__manifest__.py").write_text(manifest_content)
+    (module_dir / "__manifest__.py").write_text(format_manifest(manifest))
 
     # Generate __init__.py files
     (module_dir / "__init__.py").write_text("from . import models\n")
@@ -796,8 +824,7 @@ def main():
         "auto_install": False,
     }
 
-    manifest_content = "# -*- coding: utf-8 -*-\n" + str(manifest)
-    (module_dir / "__manifest__.py").write_text(manifest_content)
+    (module_dir / "__manifest__.py").write_text(format_manifest(manifest))
 
     # Generate __init__.py files
     (module_dir / "__init__.py").write_text(
@@ -916,6 +943,7 @@ def main():
         "database_networks.xml",
         "database_studies.xml",
         "database_coupling_functions.xml",
+        "database_observations.xml",
         "database_experiments.xml",
     ]:
         if (module_dir / "data" / db_file).exists():
@@ -948,8 +976,7 @@ def main():
         + website_files
         + view_files
     )
-    manifest_content = "# -*- coding: utf-8 -*-\n" + str(manifest)
-    (module_dir / "__manifest__.py").write_text(manifest_content)
+    (module_dir / "__manifest__.py").write_text(format_manifest(manifest))
 
     # Generate security file for all auto-generated classes
     security_lines = [

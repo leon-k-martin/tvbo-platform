@@ -4,13 +4,13 @@
 
         <record id="param_coupling_hyperbolictangent_b" model="tvbo.parameter">
             <field name="name">b</field>
-            <field name="value">0.0</field>
+            <field name="value">1.0</field>
             <field name="description">Scaling factor for the variable</field>
         </record>
 
         <record id="param_coupling_hyperbolictangent_a" model="tvbo.parameter">
             <field name="name">a</field>
-            <field name="value">0.0</field>
+            <field name="value">1.0</field>
             <field name="description">Minimum of the sigmoid function</field>
         </record>
 
@@ -36,7 +36,7 @@
 
         <record id="coupling_hyperbolictangent" model="tvbo.coupling">
             <field name="name">HyperbolicTangent</field>
-            <field name="sparse">false</field>
+            <field name="sparse">true</field>
             <field name="delayed">true</field>
             <field name="parameters" eval="[(6, 0, [ref('param_coupling_hyperbolictangent_b'),ref('param_coupling_hyperbolictangent_a'),ref('param_coupling_hyperbolictangent_sigma'),ref('param_coupling_hyperbolictangent_midpoint')])]"/>
             <field name="pre_expression" ref="pre_expr_hyperbolictangent"/>

@@ -460,6 +460,7 @@ class KnowledgeGraphBrowser {
      */
     _cleanupPropertyFilters() {
         const selectedTypes = this.currentFilters['type'] || [];
+        const schemaFacetFields = new Set(this.schema.facets.map(f => f.field));
         if (selectedTypes.length === 0) {
             // No types selected — remove all property filters
             this._removeAllPropertyFilters();
@@ -475,7 +476,7 @@ class KnowledgeGraphBrowser {
         });
         // Remove filters for fields not in any selected type
         Object.keys(this.currentFilters).forEach(key => {
-            if (key !== 'type' && key !== 'tags' && !this.schema.facets.some(f => f.field === key) && !validFields.has(key)) {
+            if (!schemaFacetFields.has(key) && !validFields.has(key)) {
                 delete this.currentFilters[key];
             }
         });
@@ -600,40 +601,39 @@ class KnowledgeGraphBrowser {
         // Render dynamic property facets based on selected types
         const selectedTypes = this.currentFilters['type'] || [];
         if (selectedTypes.length > 0 && this.classSchemas) {
-            // Collect ALL items of the selected types (for facet value counting)
-            const allTypeItems = this.originalData.filter(item => selectedTypes.includes(item.type));
-            // Collect indices of filtered items matching selected types
-            const typeItemIndices = [];
-            currentResults.forEach(idx => {
-                const item = this.originalData[idx];
-                if (selectedTypes.includes(item.type)) {
-                    typeItemIndices.push(idx);
-                }
-            });
-
             // For each selected type, build property facets
             selectedTypes.forEach(typeKey => {
                 const classSchema = this.classSchemas[typeKey];
                 if (!classSchema) return;
 
-                const propsWithValues = this._getFilterableProperties(typeKey, classSchema, typeItemIndices);
+                const classAllItems = [];
+                const classAllIndices = [];
+                this.originalData.forEach((item, idx) => {
+                    if (item.type === typeKey) {
+                        classAllItems.push(item);
+                        classAllIndices.push(idx);
+                    }
+                });
+                if (classAllItems.length === 0) return;
+
+                const propsWithValues = this._getFilterableProperties(typeKey, classSchema, classAllIndices);
                 if (propsWithValues.length === 0) return;
 
                 // Section header for this class
                 const sectionHeader = document.createElement('div');
                 sectionHeader.className = 'property-section-header';
-                const classLabel = this.formatClassName(classSchema.label || classSchema.class_name);
+                const classLabel = this.getClassFacetDisplayName(typeKey, classSchema);
                 sectionHeader.innerHTML = `<span class="material-icons" style="font-size:16px;">tune</span> ${this.escapeHtml(classLabel)}`;
                 facetsSidebar.appendChild(sectionHeader);
 
-                propsWithValues.forEach(({ fieldName, propSchema, values }) => {
+                propsWithValues.forEach(({ fieldName, propSchema }) => {
                     const facetDef = {
                         field: fieldName,
-                        label: propSchema.label,
+                        label: this.formatLabel(fieldName),
                         type: 'string',
                     };
-                    // Pass only items of selected types for property facet counting
-                    const group = this._buildFacetGroup(facetDef, currentResults, allTypeItems);
+                    // Count facet values only within this class.
+                    const group = this._buildFacetGroup(facetDef, currentResults, classAllItems);
                     if (group) {
                         group.classList.add('property-facet');
                         facetsSidebar.appendChild(group);
@@ -645,24 +645,24 @@ class KnowledgeGraphBrowser {
 
     /**
      * Determine which properties of a class are worth showing as facets.
-     * A property is filterable if it has 2+ unique values across items of this type,
-     * and at most 30 unique values (otherwise it's too unique to be useful).
+     * A property is filterable if the selected class has values for it.
      */
     _getFilterableProperties(typeKey, classSchema, typeItemIndices) {
         const result = [];
         // Fields already handled as top-level facets
         const skipFields = new Set(this.schema.facets.map(f => f.field));
-        // Also skip fields that are identity-like
-        skipFields.add('id');
-        skipFields.add('title');
-        skipFields.add('thumbnail');
-        skipFields.add('ontology_class');
-        skipFields.add('ontology_instance');
+        // Fields that are inherently non-filterable (unique per record or displayed elsewhere)
+        const blacklist = new Set([
+            'description', 'label', 'name', 'record_id', 'id',
+            'title', 'summary', 'notes', 'comment', 'url', 'uri',
+            'image', 'icon', 'thumbnail', 'path', 'filename',
+        ]);
+
+        const totalItems = typeItemIndices.length;
 
         for (const [fieldName, propSchema] of Object.entries(classSchema.properties)) {
             if (skipFields.has(fieldName)) continue;
-            // Skip text-heavy fields (name, description, label, iri)
-            if (['name', 'description', 'label', 'iri', 'has_reference', 'abstract', 'doi', 'key', 'definition'].includes(fieldName)) continue;
+            if (blacklist.has(fieldName)) continue;
 
             // Count unique values
             const uniqueValues = new Set();
@@ -670,18 +670,15 @@ class KnowledgeGraphBrowser {
                 const item = this.originalData[idx];
                 const val = item[fieldName];
                 if (val !== undefined && val !== null && val !== '') {
-                    if (propSchema.type === 'boolean') {
-                        uniqueValues.add(String(val));
-                    } else {
-                        uniqueValues.add(String(val));
-                    }
+                    uniqueValues.add(String(val));
                 }
             });
 
-            // Show as facet if 1+ values exist (shows what data has) and not too many unique values
-            if (uniqueValues.size >= 1 && uniqueValues.size <= 30) {
-                result.push({ fieldName, propSchema, values: uniqueValues });
-            }
+            // Skip if no values, only one distinct value, or mostly unique (>80% unique)
+            if (uniqueValues.size <= 1) continue;
+            if (totalItems > 5 && uniqueValues.size / totalItems > 0.8) continue;
+
+            result.push({ fieldName, propSchema, values: uniqueValues });
         }
         return result;
     }
@@ -727,13 +724,19 @@ class KnowledgeGraphBrowser {
 
         if (allFacetValues.size === 0) return null;
 
-        // For the type facet, use class labels from schema
+        // For the type facet, use class names (not class labels).
         const labelMap = {};
-        if (facet.field === 'type' && this.classSchemas) {
-            for (const [typeKey, schema] of Object.entries(this.classSchemas)) {
-                const raw = schema.label || schema.class_name || typeKey;
-                labelMap[typeKey] = this.formatClassName(raw);
+        if (facet.field === 'type') {
+            if (this.classSchemas) {
+                for (const [typeKey, schema] of Object.entries(this.classSchemas)) {
+                    labelMap[typeKey] = this.getClassFacetDisplayName(typeKey, schema);
+                }
             }
+            allFacetValues.forEach((_, typeKey) => {
+                if (!labelMap[typeKey]) {
+                    labelMap[typeKey] = this.getClassFacetDisplayName(typeKey, null);
+                }
+            });
         }
 
         const facetGroup = document.createElement('div');
@@ -779,9 +782,14 @@ class KnowledgeGraphBrowser {
 
             const displayLabel = labelMap[value] || value;
 
+            // Add type icon for 'type' facet
+            const typeIcon = facet.field === 'type'
+                ? (() => { const ti = KnowledgeGraphBrowser.TYPE_ICONS[value] || KnowledgeGraphBrowser.TYPE_ICONS._default; return `<i class="${ti.icon}" style="color:${ti.color}; width:16px; text-align:center; margin-right:4px;"></i>`; })()
+                : '';
+
             facetItem.innerHTML = `
                 <input type="checkbox" class="facet-checkbox" ${isActive ? 'checked' : ''}>
-                <span class="facet-label">${this.escapeHtml(displayLabel)}</span>
+                ${typeIcon}<span class="facet-label">${this.escapeHtml(displayLabel)}</span>
                 <span class="facet-count">${count}</span>
             `;
 
@@ -963,13 +971,10 @@ class KnowledgeGraphBrowser {
             if (isOntology && item.storid) {
                 url = `/tvbo/api/kg/ontology/node/${item.storid}`;
             } else if (item.id) {
-                const typeRoutes = {
-                    'model': 'dynamics', 'dynamics': 'dynamics',
-                    'network': 'network', 'coupling': 'coupling',
-                    'integrator': 'integrator', 'experiment': 'experiment',
-                    'study': 'study'
+                const routeAliases = {
+                    model: 'dynamics',
                 };
-                const route = typeRoutes[item.type];
+                const route = routeAliases[item.type] || item.type;
                 if (route) {
                     url = `/tvbo/api/kg/${route}/${item.id}`;
                 }
@@ -977,7 +982,7 @@ class KnowledgeGraphBrowser {
 
             if (url) {
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 3000);
+                const timeoutId = setTimeout(() => controller.abort(), 8000);
                 const resp = await fetch(url, { signal: controller.signal });
                 clearTimeout(timeoutId);
 
@@ -987,10 +992,18 @@ class KnowledgeGraphBrowser {
                     if (this.modal && this.modal.isOpen) {
                         this.modal.updateContent(fullContent, { item, detailData });
                     }
+                    return;
                 }
             }
         } catch (e) {
-            // Silently ignore - modal already shows basic data
+            console.warn('Detail API failed for', item.type, item.id, e);
+        }
+
+        // Fallback: show item properties directly
+        if (this.currentModalItem === item && this.modal && this.modal.isOpen) {
+            const fallback = this.detailPanel ? this.detailPanel.render(item, null) : '';
+            const content = fallback || this._renderBasicItemContent(item);
+            this.modal.updateContent(content, { item, detailData: null });
         }
     }
 
@@ -998,6 +1011,24 @@ class KnowledgeGraphBrowser {
         if (action === 'download' && data) {
             this.downloadItem(data.item);
         }
+    }
+
+    _renderBasicItemContent(item) {
+        const desc = this.getItemDescription(item);
+        const skip = new Set(['type', 'id', 'name', 'title', 'label', 'description', 'desc',
+            'summary', 'abstract', 'thumbnail', 'report_url', 'record_id', 'tags',
+            'ontology_classes', 'ontology_properties']);
+        let propsHtml = '';
+        for (const [key, val] of Object.entries(item)) {
+            if (skip.has(key) || val === null || val === undefined || val === '') continue;
+            const display = Array.isArray(val) ? val.join(', ') : String(val);
+            if (!display) continue;
+            propsHtml += `<tr><td style="padding:4px 12px 4px 0;font-weight:600;color:#4a5568;white-space:nowrap;vertical-align:top">${this.escapeHtml(this.formatLabel(key))}</td><td style="padding:4px 0">${this.escapeHtml(display)}</td></tr>`;
+        }
+        return `<div class="kg-detail-content">
+            ${desc ? `<p style="margin-bottom:16px">${this.escapeHtml(desc)}</p>` : ''}
+            ${propsHtml ? `<table style="width:100%;border-collapse:collapse">${propsHtml}</table>` : '<p style="color:#a0aec0">No additional details available.</p>'}
+        </div>`;
     }
 
     closeModal() {
@@ -1058,7 +1089,19 @@ class KnowledgeGraphBrowser {
      * Split CamelCase into readable words: "SimulationExperiment" → "Simulation Experiment"
      */
     formatClassName(name) {
-        return name.replace(/([a-z])([A-Z])/g, '$1 $2');
+        return String(name)
+            .split('.').pop()
+            .replace(/_/g, ' ')
+            .replace(/([a-z])([A-Z])/g, '$1 $2')
+            .replace(/\b\w/g, l => l.toUpperCase());
+    }
+
+    /**
+     * Display class names in facets/headers using schema keys, not labels.
+     */
+    getClassFacetDisplayName(typeKey, classSchema) {
+        const rawName = (classSchema && classSchema.name) || typeKey;
+        return this.formatClassName(rawName);
     }
 
     escapeHtml(text) {
@@ -1077,6 +1120,7 @@ KnowledgeGraphBrowser.TYPE_ICONS = {
     integrator:  { icon: 'fa-solid fa-gears',                gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', color: '#4facfe' },
     experiment:  { icon: 'fa-solid fa-flask',                 gradient: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)', color: '#fa709a' },
     study:       { icon: 'fa-solid fa-book-open',             gradient: 'linear-gradient(135deg, #f7971e 0%, #ffd200 100%)', color: '#f7971e' },
+    observation: { icon: 'fa-solid fa-binoculars',            gradient: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)', color: '#11998e' },
     ontology:    { icon: 'fa-solid fa-share-nodes',           gradient: 'linear-gradient(135deg, #c471f5 0%, #fa71cd 100%)', color: '#c471f5' },
     _default:    { icon: 'fa-solid fa-tag',                   gradient: 'linear-gradient(135deg, #a0aec0 0%, #718096 100%)', color: '#a0aec0' },
 };

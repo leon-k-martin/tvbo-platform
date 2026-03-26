@@ -29,6 +29,7 @@ class KnowledgeGraphVisualization {
             'experiment': '#fa709a',
             'study': '#f7971e',
             'coupling': '#a18cd1',
+            'observation': '#11998e',
             'ontology': '#c471f5',
         };
     }

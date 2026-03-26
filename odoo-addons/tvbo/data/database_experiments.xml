@@ -1141,6 +1141,301 @@ Note: No alpha scaling - both terms contribute equally as in original.
 - Deco et al. (2014) J Neurosci 34:7886-7898 - Resting-state FC modeling</field>
         </record>
 
+        <record id="exp_schirner2023_multiscalebnm_dm_cp_eibcoupling_wlre_range" model="tvbo.range">
+            <field name="lo">0.0</field>
+        </record>
+
+        <record id="exp_schirner2023_multiscalebnm_dm_cp_eibcoupling_wlre" model="tvbo.parameter">
+            <field name="name">wLRE</field>
+            <field name="label">Long-range excitation weights</field>
+            <field name="value">1.0</field>
+            <field name="description">Multiplier for SC weights in LRE pathway</field>
+            <field name="free">True</field>
+            <field name="domain" ref="exp_schirner2023_multiscalebnm_dm_cp_eibcoupling_wlre_range"/>
+        </record>
+
+        <record id="exp_schirner2023_multiscalebnm_dm_cp_eibcoupling_wffi_range" model="tvbo.range">
+            <field name="lo">0.0</field>
+        </record>
+
+        <record id="exp_schirner2023_multiscalebnm_dm_cp_eibcoupling_wffi" model="tvbo.parameter">
+            <field name="name">wFFI</field>
+            <field name="label">Feedforward inhibition weights</field>
+            <field name="value">1.0</field>
+            <field name="description">Multiplier for SC weights in FFI pathway</field>
+            <field name="free">True</field>
+            <field name="domain" ref="exp_schirner2023_multiscalebnm_dm_cp_eibcoupling_wffi_range"/>
+        </record>
+
+        <record id="exp_schirner2023_multiscalebnm_dm_coupling_eibcoupling_pre_expr" model="tvbo.equation">
+            <field name="righthandside">[sum_j(C_ij * wLRE_ij * S_E_j(t - delay_ij)), sum_j(C_ij * wFFI_ij * S_E_j(t - delay_ij))]</field>
+        </record>
+
+        <record id="exp_schirner2023_multiscalebnm_dm_coupling_eibcoupling_post_expr" model="tvbo.equation">
+            <field name="righthandside">[c_lre, c_ffi]</field>
+        </record>
+
+        <record id="exp_schirner2023_multiscalebnm_dm_coupling_eibcoupling" model="tvbo.coupling">
+            <field name="name">EIBCoupling</field>
+            <field name="label">EI-Balance Coupling</field>
+            <field name="description">Dual-weight coupling producing two outputs from excitatory activity: long-range excitation (wLRE) to distant excitatory populations and feedforward inhibition (wFFI) to distant inhibitory populations. E/I ratio = wLRE / wFFI controls functional connectivity.
+</field>
+            <field name="delayed">True"</field>
+            <field name="pre_expression" ref="exp_schirner2023_multiscalebnm_dm_coupling_eibcoupling_pre_expr"/>
+            <field name="post_expression" ref="exp_schirner2023_multiscalebnm_dm_coupling_eibcoupling_post_expr"/>
+            <field name="parameters" eval="[(6, 0, [ref('exp_schirner2023_multiscalebnm_dm_cp_eibcoupling_wlre'), ref('exp_schirner2023_multiscalebnm_dm_cp_eibcoupling_wffi')])]"/>
+        </record>
+
+        <record id="exp_schirner2023_multiscalebnm_dm_network" model="tvbo.network">
+            <field name="label">HCP MMP Connectome (379 regions)</field>
+            <field name="description">Structural connectivity from Human Connectome Project dwMRI tractography. Uses the HCP multimodal parcellation (Glasser et al., 2016) with 379 regions. Connectivity matrices include streamline counts and tract lengths for delays.
+</field>
+            <field name="coupling" eval="[(6, 0, [ref('exp_schirner2023_multiscalebnm_dm_coupling_eibcoupling')])]"/>
+        </record>
+
+        <record id="exp_schirner2023_multiscalebnm_dm_integrator" model="tvbo.integrator">
+            <field name="method">euler</field>
+            <field name="step_size">1.0</field>
+            <field name="duration">30000.0</field>
+            <field name="transient_time">25000.0</field>
+        </record>
+
+        <record id="exp_schirner2023_multiscalebnm_dm_execution" model="tvbo.execution_config">
+            <field name="n_workers">1</field>
+            <field name="precision">float32</field>
+            <field name="accelerator">cpu</field>
+            <field name="random_seed">1403</field>
+        </record>
+
+        <record id="exp_schirner2023_multiscalebnm_dm_func_mw_noise" model="tvbo.function">
+            <field name="name">MW_noise</field>
+            <field name="description">Ornstein-Uhlenbeck noise process for AMPA synapses.
+Generates temporally correlated noise with tau_AMPA time constant.
+</field>
+            <field name="definition">I_noise + dt * ((-I_noise + randn() * sqrt(tau_AMPA * sigma_noise**2)) / tau_AMPA)</field>
+        </record>
+
+        <record id="exp_schirner2023_multiscalebnm_dm_func_transfer_function_e" model="tvbo.function">
+            <field name="name">transfer_function_E</field>
+            <field name="description">Sigmoidal transfer function for excitatory population.
+Converts input current to firing rate.
+</field>
+            <field name="definition">(a_E * I - b_E) / (1 - exp(-d_E * (a_E * I - b_E)))</field>
+        </record>
+
+        <record id="exp_schirner2023_multiscalebnm_dm_func_transfer_function_i" model="tvbo.function">
+            <field name="name">transfer_function_I</field>
+            <field name="description">Sigmoidal transfer function for inhibitory population.
+Converts input current to firing rate.
+</field>
+            <field name="definition">(a_I * I - b_I) / (1 - exp(-d_I * (a_I * I - b_I)))</field>
+        </record>
+
+        <record id="exp_schirner2023_multiscalebnm_dm_func_transfer_function_mw" model="tvbo.function">
+            <field name="name">transfer_function_MW</field>
+            <field name="description">Transfer function for Murray-Wang DM circuit populations.
+</field>
+            <field name="definition">(a * I - b) / (1 - exp(-c * (a * I - b)))</field>
+        </record>
+
+        <record id="exp_schirner2023_multiscalebnm_dm_func_normalize_input" model="tvbo.function">
+            <field name="name">normalize_input</field>
+            <field name="description">Normalize large-scale BNM input for coupling to DM circuit.
+Range normalization from [a_old, b_old] to [a_new, b_new].
+</field>
+            <field name="definition">(b_new - a_new) * (I_E - a_old) / (b_old - a_old) + a_new</field>
+        </record>
+
+        <record id="exp_schirner2023_multiscalebnm_dm_func_compute_fc" model="tvbo.function">
+            <field name="name">compute_fc</field>
+            <field name="description">Compute functional connectivity as Pearson correlations between
+node time series. Diagonal is set to 0.
+</field>
+        </record>
+
+        <record id="exp_schirner2023_multiscalebnm_dm_func_corr" model="tvbo.function">
+            <field name="name">corr</field>
+            <field name="description">Pearson correlation coefficient between two vectors.
+</field>
+            <field name="definition">Sum((x[t] - mean_x) * (y[t] - mean_y), (t, 0, n-1)) / (sqrt(Sum((x[t] - mean_x)**2, (t, 0, n-1))) * sqrt(Sum((y[t] - mean_y)**2, (t, 0, n-1))))</field>
+        </record>
+
+        <record id="exp_schirner2023_multiscalebnm_dm_func_rmse" model="tvbo.function">
+            <field name="name">rmse</field>
+            <field name="description">Root mean squared error between two vectors or matrices.
+</field>
+            <field name="definition">sqrt(Sum((x[i] - y[i])**2, (i, 0, n-1)) / n)</field>
+        </record>
+
+        <record id="exp_schirner2023_multiscalebnm_dm_func_fic_update_rule" model="tvbo.function">
+            <field name="name">FIC_update_rule</field>
+            <field name="description">Feedback Inhibition Control update rule.
+Adjusts local inhibitory weight J_i to maintain target firing rate.
+Based on Vogels et al. (2011) inhibitory plasticity rule.
+</field>
+            <field name="definition">J_i + eta_FIC * (r_I * r_E - rho_0 * r_I)</field>
+        </record>
+
+        <record id="exp_schirner2023_multiscalebnm_dm_func_eib_update_wlre" model="tvbo.function">
+            <field name="name">EIB_update_wLRE</field>
+            <field name="description">E/I balance update rule for long-range excitation weights.
+Increases wLRE where simulated FC is below target FC.
+</field>
+            <field name="definition">wLRE_ij + eta_EI * (FC_target_ij - FC_sim_ij) * rmse_i</field>
+        </record>
+
+        <record id="exp_schirner2023_multiscalebnm_dm_func_eib_update_wffi" model="tvbo.function">
+            <field name="name">EIB_update_wFFI</field>
+            <field name="description">E/I balance update rule for feedforward inhibition weights.
+Decreases wFFI where simulated FC is below target FC.
+</field>
+            <field name="definition">wFFI_ij - eta_EI * (FC_target_ij - FC_sim_ij) * rmse_i</field>
+        </record>
+
+        <record id="exp_schirner2023_multiscalebnm_dm_func_decision_threshold" model="tvbo.function">
+            <field name="name">decision_threshold</field>
+            <field name="description">Detect when firing rate crosses decision threshold.
+Returns time step when threshold is first crossed.
+</field>
+            <field name="source_code">for i in range(len(r)):
+    if r[i] &gt; threshold:
+        return i
+return -1
+</field>
+        </record>
+
+        <record id="exp_schirner2023_multiscalebnm_dm_obs_s_e_timeseries" model="tvbo.observation">
+            <field name="name">S_E_timeseries</field>
+            <field name="label">Excitatory Synaptic Activity</field>
+            <field name="description">Time series of S_E for all nodes</field>
+        </record>
+
+        <record id="exp_schirner2023_multiscalebnm_dm_obs_i_e_timeseries" model="tvbo.observation">
+            <field name="name">I_E_timeseries</field>
+            <field name="label">Excitatory Input Current</field>
+            <field name="description">Time series of I_E for all nodes</field>
+        </record>
+
+        <record id="exp_schirner2023_multiscalebnm_dm_obs_mean_s_e" model="tvbo.observation">
+            <field name="name">mean_S_E</field>
+            <field name="label">Mean Excitatory Activity</field>
+            <field name="description">Temporal mean of S_E over simulation window</field>
+        </record>
+
+        <record id="exp_schirner2023_multiscalebnm_dm_obs_mean_r_e" model="tvbo.observation">
+            <field name="name">mean_r_E</field>
+            <field name="label">Mean Excitatory Firing Rate</field>
+            <field name="description">Temporal mean of r_E (target: 4 Hz)</field>
+        </record>
+
+        <record id="exp_schirner2023_multiscalebnm_dm_obs_input_correlation" model="tvbo.observation">
+            <field name="name">input_correlation</field>
+            <field name="label">Input Current Correlation</field>
+            <field name="description">Correlation between I_E time series across nodes</field>
+        </record>
+
+        <record id="exp_schirner2023_multiscalebnm_dm_obs_input_amplitude" model="tvbo.observation">
+            <field name="name">input_amplitude</field>
+            <field name="label">Mean Input Amplitude</field>
+            <field name="description">Mean amplitude of I_E across time</field>
+        </record>
+
+        <record id="exp_schirner2023_multiscalebnm_dm_obs_r_a1_timeseries" model="tvbo.observation">
+            <field name="name">r_A1_timeseries</field>
+            <field name="label">PPC-A Firing Rate</field>
+            <field name="description">Firing rate of PPC population A (evidence for option A)</field>
+        </record>
+
+        <record id="exp_schirner2023_multiscalebnm_dm_obs_r_b1_timeseries" model="tvbo.observation">
+            <field name="name">r_B1_timeseries</field>
+            <field name="label">PPC-B Firing Rate</field>
+            <field name="description">Firing rate of PPC population B (evidence for option B)</field>
+        </record>
+
+        <record id="exp_schirner2023_multiscalebnm_dm_obs_r_a2_timeseries" model="tvbo.observation">
+            <field name="name">r_A2_timeseries</field>
+            <field name="label">PFC-A Firing Rate</field>
+            <field name="description">Firing rate of PFC population A (action for option A)</field>
+        </record>
+
+        <record id="exp_schirner2023_multiscalebnm_dm_obs_r_b2_timeseries" model="tvbo.observation">
+            <field name="name">r_B2_timeseries</field>
+            <field name="label">PFC-B Firing Rate</field>
+            <field name="description">Firing rate of PFC population B (action for option B)</field>
+        </record>
+
+        <record id="exp_schirner2023_multiscalebnm_dm_dobs_fc_sim" model="tvbo.derived_observation">
+            <field name="name">fc_sim</field>
+            <field name="label">Simulated Functional Connectivity</field>
+            <field name="description">Pearson correlation matrix from S_E time series</field>
+        </record>
+
+        <record id="exp_schirner2023_multiscalebnm_dm_dobs_correct_response" model="tvbo.derived_observation">
+            <field name="name">correct_response</field>
+            <field name="label">Decision Accuracy</field>
+            <field name="description">Whether the correct decision was made: mean(r_A2[-200:]) &gt; 30 and mean(r_B2[-200:]) &lt; 30 when A is the correct choice.
+</field>
+        </record>
+
+        <record id="exp_schirner2023_multiscalebnm_dm_dobs_decision_time_a" model="tvbo.derived_observation">
+            <field name="name">decision_time_A</field>
+            <field name="label">Decision Time for A</field>
+            <field name="description">Time when r_A1 first exceeds threshold (25 Hz)</field>
+        </record>
+
+        <record id="exp_schirner2023_multiscalebnm_dm_algo_fic" model="tvbo.algorithm">
+            <field name="name">fic</field>
+            <field name="description">Feedback Inhibition Control (Deco et al., 2014) adjusts local inhibitory weight J_i to maintain excitatory firing rate at target (4 Hz). Applied once per BOLD TR (720 ms in this study).
+</field>
+            <field name="n_iterations">-1</field>
+        </record>
+
+        <record id="exp_schirner2023_multiscalebnm_dm_algo_eib" model="tvbo.algorithm">
+            <field name="name">eib</field>
+            <field name="description">E/I Balance tuning algorithm that adjusts wLRE and wFFI to match simulated FC with empirical FC. Uses online learning during simulation with a Hebbian-like rule: increase wLRE (decrease wFFI) where FC is too low, decrease wLRE (increase wFFI) where FC is too high.
+</field>
+            <field name="n_iterations">6</field>
+        </record>
+
+        <record id="exp_schirner2023_multiscalebnm_dm_explr_ei_ratio_sweep" model="tvbo.exploration">
+            <field name="name">EI_ratio_sweep</field>
+            <field name="label">E/I Ratio Parameter Sweep</field>
+            <field name="description">Sweep E/I ratio from 0.01 to 100 (50 log-spaced values) to study effect on functional connectivity and decision-making performance. Uses simplified 2-node network.
+</field>
+            <field name="mode">product</field>
+        </record>
+
+        <record id="exp_schirner2023_multiscalebnm_dm_explr_contrast_sweep" model="tvbo.exploration">
+            <field name="name">contrast_sweep</field>
+            <field name="label">Stimulus Contrast Sweep</field>
+            <field name="description">Sweep stimulus contrast from 0.8% to 6.4% to study decision-making accuracy and response times.
+</field>
+        </record>
+
+        <record id="experiment_schirner2023_multiscalebnm_dm" model="tvbo.simulation_experiment">
+            <field name="label">Multiscale BNM: Decision-Making with E/I Balance Tuning</field>
+            <field name="description">Multiscale brain network model coupling large-scale structural connectivity with a small-scale frontoparietal circuit for decision-making (DM) and working memory (WM). The large-scale model uses the Reduced Wong-Wang model (Deco et al., 2014, JNeurosci) with explicit excitatory and inhibitory populations. The functional circuit implements winner-take-all DM and persistent-activity WM based on Murray, Jaramillo &amp; Wang (2017, JNeurosci).
+Key innovation: The ratio of long-range excitation (LRE) to feedforward inhibition (FFI) controls functional connectivity between brain regions. This E/I balance tuning enables fitting personalized brain network models to empirical functional connectivity and explains individual differences in cognitive performance (speed-accuracy trade-off in intelligence tests).
+</field>
+            <field name="network" ref="exp_schirner2023_multiscalebnm_dm_network"/>
+            <field name="integration" ref="exp_schirner2023_multiscalebnm_dm_integrator"/>
+            <field name="functions" eval="[(6, 0, [ref('exp_schirner2023_multiscalebnm_dm_func_mw_noise'), ref('exp_schirner2023_multiscalebnm_dm_func_transfer_function_e'), ref('exp_schirner2023_multiscalebnm_dm_func_transfer_function_i'), ref('exp_schirner2023_multiscalebnm_dm_func_transfer_function_mw'), ref('exp_schirner2023_multiscalebnm_dm_func_normalize_input'), ref('exp_schirner2023_multiscalebnm_dm_func_compute_fc'), ref('exp_schirner2023_multiscalebnm_dm_func_corr'), ref('exp_schirner2023_multiscalebnm_dm_func_rmse'), ref('exp_schirner2023_multiscalebnm_dm_func_fic_update_rule'), ref('exp_schirner2023_multiscalebnm_dm_func_eib_update_wlre'), ref('exp_schirner2023_multiscalebnm_dm_func_eib_update_wffi'), ref('exp_schirner2023_multiscalebnm_dm_func_decision_threshold')])]"/>
+            <field name="observations" eval="[(6, 0, [ref('exp_schirner2023_multiscalebnm_dm_obs_s_e_timeseries'), ref('exp_schirner2023_multiscalebnm_dm_obs_i_e_timeseries'), ref('exp_schirner2023_multiscalebnm_dm_obs_mean_s_e'), ref('exp_schirner2023_multiscalebnm_dm_obs_mean_r_e'), ref('exp_schirner2023_multiscalebnm_dm_obs_input_correlation'), ref('exp_schirner2023_multiscalebnm_dm_obs_input_amplitude'), ref('exp_schirner2023_multiscalebnm_dm_obs_r_a1_timeseries'), ref('exp_schirner2023_multiscalebnm_dm_obs_r_b1_timeseries'), ref('exp_schirner2023_multiscalebnm_dm_obs_r_a2_timeseries'), ref('exp_schirner2023_multiscalebnm_dm_obs_r_b2_timeseries')])]"/>
+            <field name="derived_observations" eval="[(6, 0, [ref('exp_schirner2023_multiscalebnm_dm_dobs_fc_sim'), ref('exp_schirner2023_multiscalebnm_dm_dobs_correct_response'), ref('exp_schirner2023_multiscalebnm_dm_dobs_decision_time_a')])]"/>
+            <field name="algorithms" eval="[(6, 0, [ref('exp_schirner2023_multiscalebnm_dm_algo_fic'), ref('exp_schirner2023_multiscalebnm_dm_algo_eib')])]"/>
+            <field name="explorations" eval="[(6, 0, [ref('exp_schirner2023_multiscalebnm_dm_explr_ei_ratio_sweep'), ref('exp_schirner2023_multiscalebnm_dm_explr_contrast_sweep')])]"/>
+            <field name="execution" ref="exp_schirner2023_multiscalebnm_dm_execution"/>
+            <field name="references">- Schirner, M., Deco, G., &amp; Ritter, P. (2023). Learning how network structure shapes decision-making for bio-inspired computing. Nature Communications, 14(1), Article 2963. https://doi.org/10.1038/s41467-023-38626-y
+- Murray, J.D., Jaramillo, J., &amp; Wang, X.J. (2017). Working memory and decision-making in a frontoparietal circuit model. Journal of Neuroscience, 37(50), 12167-12186.
+- Deco, G., Ponce-Alvarez, A., Hagmann, P., Romani, G.L., Mantini, D., &amp; Corbetta, M. (2014). How local excitation-inhibition ratio impacts the whole brain dynamics. Journal of Neuroscience, 34(23), 7886-7898.
+- Wong, K.F. &amp; Wang, X.J. (2006). A recurrent network mechanism of time integration in perceptual decisions. Journal of Neuroscience, 26(4), 1314-1328.
+- Vogels, T.P., Sprekeler, H., Zenke, F., Clopath, C., &amp; Gerstner, W. (2011). Inhibitory plasticity balances excitation and inhibition in sensory pathways and memory networks. Science, 334(6062), 1569-1573.</field>
+        </record>
+
+        <record id="exp_rateml_reducedwongwang_dynamics" model="tvbo.dynamics">
+            <field name="name">RateML_ReducedWongWang</field>
+        </record>
+
         <record id="exp_rateml_reducedwongwang_network" model="tvbo.network">
         </record>
 
@@ -1157,6 +1452,7 @@ Note: No alpha scaling - both terms contribute equally as in original.
 
         <record id="experiment_rateml_reducedwongwang" model="tvbo.simulation_experiment">
             <field name="label">RateML rwongwang ground truth</field>
+            <field name="dynamics" eval="[(6, 0, [ref('exp_rateml_reducedwongwang_dynamics')])]"/>
             <field name="network" ref="exp_rateml_reducedwongwang_network"/>
             <field name="integration" ref="exp_rateml_reducedwongwang_integrator"/>
             <field name="observations" eval="[(6, 0, [ref('exp_rateml_reducedwongwang_obs_bold')])]"/>

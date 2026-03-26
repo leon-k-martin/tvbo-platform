@@ -49,6 +49,11 @@ def _canon(s: str) -> str:
     return re.sub(r"[^a-z0-9]", "", (s or "").lower())
 
 
+def _safe_filename(name: str) -> str:
+    """Sanitize a name for use as a filename."""
+    return re.sub(r'[<>:"/\\|?*]', '_', name).strip()
+
+
 def _ensure_dir(path: str):
     os.makedirs(path, exist_ok=True)
 
@@ -416,6 +421,10 @@ def render_observation_model_reports(db_root: str, force: bool = False, name_fil
     out_dir = os.path.join(REPORTS_DIR, "observation_models")
     _ensure_dir(out_dir)
 
+    # Also generate thumbnails
+    thumb_dir = os.path.join(ADDON_DIR, "static", "src", "img", "thumbnails", "observation_models")
+    _ensure_dir(thumb_dir)
+
     yaml_files = []
     for ext in ("*.yaml", "*.yml"):
         yaml_files.extend(glob.glob(os.path.join(obs_dir, "**", ext), recursive=True))
@@ -525,6 +534,472 @@ def _observation_model_report_md(raw: dict) -> str:
     return "\n".join(md)
 
 
+# --------------------------------------------------- network reports
+def render_network_reports(db_root: str, force: bool = False, name_filter: str | None = None):
+    """Generate markdown reports for all networks."""
+    net_dir = os.path.join(db_root, "networks")
+    out_dir = os.path.join(REPORTS_DIR, "networks")
+    _ensure_dir(out_dir)
+
+    yaml_files = []
+    for ext in ("*.yaml", "*.yml"):
+        yaml_files.extend(glob.glob(os.path.join(net_dir, "**", ext), recursive=True))
+
+    ok, fail = 0, 0
+    for path in sorted(yaml_files):
+        stem = os.path.splitext(os.path.basename(path))[0]
+        if name_filter and _canon(name_filter) != _canon(stem):
+            continue
+
+        out_path = os.path.join(out_dir, f"{stem}.md")
+        if not force and os.path.isfile(out_path):
+            print(f"  [skip] {stem}.md (exists)")
+            ok += 1
+            continue
+
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                raw = yaml.safe_load(f)
+            if not isinstance(raw, dict):
+                continue
+            md = _network_report_md(raw, stem)
+            with open(out_path, "w", encoding="utf-8") as f:
+                f.write(md)
+            print(f"  [ok]   {stem}.md")
+            ok += 1
+        except Exception as e:
+            print(f"  [FAIL] {stem}: {e}")
+            fail += 1
+
+    print(f"  Networks: {ok} ok, {fail} failed")
+
+
+def _network_report_md(raw: dict, stem: str) -> str:
+    """Generate markdown report for a network from its YAML dict."""
+    label = raw.get("label", raw.get("name", stem))
+    desc = raw.get("description", "")
+    atlas = raw.get("atlas", "")
+    n_nodes = raw.get("number_of_nodes", "")
+    cohort = raw.get("cohort", "")
+    reconstruction = raw.get("reconstruction", "")
+
+    md = [f"## {label}", ""]
+    if desc:
+        md.append(desc)
+        md.append("")
+
+    md.append("### Properties")
+    md.append("")
+    if n_nodes:
+        md.append(f"- **Number of nodes:** {n_nodes}")
+    if atlas:
+        if isinstance(atlas, dict):
+            md.append(f"- **Atlas:** {atlas.get('name', atlas.get('label', ''))}")
+        else:
+            md.append(f"- **Atlas:** {atlas}")
+    if cohort:
+        md.append(f"- **Cohort:** {cohort}")
+    if reconstruction:
+        md.append(f"- **Reconstruction:** {reconstruction}")
+    md.append("")
+
+    # Show any additional fields
+    skip = {'label', 'name', 'description', 'atlas', 'number_of_nodes',
+            'cohort', 'reconstruction', 'id', 'weights', 'tract_lengths',
+            'centres', 'cortical', 'hemispheres', 'areas', 'orientations'}
+    extras = [(k, v) for k, v in raw.items()
+              if k not in skip and not isinstance(v, (dict, list)) and v]
+    if extras:
+        md.append("### Metadata")
+        md.append("")
+        for k, v in extras:
+            md.append(f"- **{k.replace('_', ' ').title()}:** {v}")
+        md.append("")
+
+    return "\n".join(md)
+
+
+# --------------------------------------------------- atlas reports
+def render_atlas_reports(db_root: str, force: bool = False, name_filter: str | None = None):
+    """Generate markdown reports for all atlases with SANDS metadata."""
+    atlas_dir = os.path.join(db_root, "atlases")
+    out_dir = os.path.join(REPORTS_DIR, "atlases")
+    _ensure_dir(out_dir)
+
+    yaml_files = []
+    for ext in ("*.yaml", "*.yml"):
+        yaml_files.extend(glob.glob(os.path.join(atlas_dir, "**", ext), recursive=True))
+
+    ok, fail = 0, 0
+    for path in sorted(yaml_files):
+        with open(path, "r", encoding="utf-8") as f:
+            raw = yaml.safe_load(f)
+        if not isinstance(raw, dict):
+            continue
+        atlas_name = raw.get("name", os.path.splitext(os.path.basename(path))[0])
+        safe_name = _safe_filename(atlas_name)
+
+        if name_filter and _canon(name_filter) != _canon(atlas_name):
+            continue
+
+        out_path = os.path.join(out_dir, f"{safe_name}.md")
+        if not force and os.path.isfile(out_path):
+            print(f"  [skip] {safe_name}.md (exists)")
+            ok += 1
+            continue
+
+        try:
+            md = _atlas_report_md(raw, os.path.basename(path))
+            with open(out_path, "w", encoding="utf-8") as f:
+                f.write(md)
+            print(f"  [ok]   {safe_name}.md")
+            ok += 1
+        except Exception as e:
+            print(f"  [FAIL] {safe_name}: {e}")
+            fail += 1
+
+    print(f"  Atlases: {ok} ok, {fail} failed")
+
+
+def _atlas_report_md(raw: dict, filename: str) -> str:
+    """Generate markdown report for a brain atlas with SANDS metadata mapping.
+
+    Maps tvbo atlas YAML fields to openMINDS SANDS types:
+      BrainAtlas → sands:BrainAtlas (name, abbreviation, terminology)
+      coordinateSpace → sands:CommonCoordinateSpace (abbreviation)
+      terminology.entities → sands:ParcellationEntity (name, lookupLabel, center)
+      terminology.label → sands:ParcellationTerminology (label)
+    """
+    name = raw.get("name", "Unknown")
+
+    md = [f"## {name}", ""]
+
+    # SANDS type mapping header
+    md.append("> **openMINDS type:** `sands:BrainAtlas`  ")
+    md.append("> **Schema:** openMINDS SANDS — Spatial Anchoring of Neural Data Structures")
+    md.append("")
+
+    # Coordinate space → sands:CommonCoordinateSpace
+    coord_space = raw.get("coordinateSpace", {})
+    if isinstance(coord_space, dict):
+        cs_abbrev = coord_space.get("abbreviation", "")
+    elif isinstance(coord_space, str):
+        cs_abbrev = coord_space
+    else:
+        cs_abbrev = ""
+
+    md.append("### Properties")
+    md.append("")
+    md.append(f"- **Atlas name:** {name}")
+    if cs_abbrev:
+        md.append(f"- **Coordinate space:** {cs_abbrev} (`sands:CommonCoordinateSpace`)")
+
+    # Terminology → sands:ParcellationTerminology
+    terminology = raw.get("terminology", {})
+    term_label = terminology.get("label", "")
+    if term_label and term_label != "empty":
+        md.append(f"- **Terminology:** {term_label} (`sands:ParcellationTerminology`)")
+
+    # Count entities
+    entities = terminology.get("entities", {})
+    if isinstance(entities, dict):
+        entity_list = list(entities.values())
+    elif isinstance(entities, list):
+        entity_list = entities
+    else:
+        entity_list = []
+
+    n_entities = len(entity_list)
+    md.append(f"- **Number of regions:** {n_entities}")
+
+    # Check for coordinate data
+    has_coords = any(
+        isinstance(e, dict) and e.get("center")
+        for e in entity_list
+    )
+    md.append(f"- **Has coordinates:** {'Yes' if has_coords else 'No'}")
+
+    # Check for originalLookupLabel (FreeSurfer mapping)
+    has_original_labels = any(
+        isinstance(e, dict) and e.get("originalLookupLabel") is not None
+        for e in entity_list
+    )
+    if has_original_labels:
+        md.append(f"- **Source label mapping:** Yes (e.g., FreeSurfer lookup labels)")
+
+    # Detect hemispheres
+    left = [e for e in entity_list if isinstance(e, dict) and
+            (str(e.get("name", "")).startswith("left-") or str(e.get("name", "")).startswith("L_"))]
+    right = [e for e in entity_list if isinstance(e, dict) and
+             (str(e.get("name", "")).startswith("right-") or str(e.get("name", "")).startswith("R_"))]
+    if left or right:
+        md.append(f"- **Hemispheres:** {len(left)} left, {len(right)} right"
+                   + (f", {n_entities - len(left) - len(right)} other" if n_entities > len(left) + len(right) else ""))
+    md.append("")
+
+    # BIDS provenance from filename
+    bids_info = _parse_bids_filename(filename)
+    if bids_info:
+        md.append("### BIDS Provenance")
+        md.append("")
+        for key, val in bids_info.items():
+            md.append(f"- **{key}:** {val}")
+        md.append("")
+
+    # SANDS type mapping table
+    md.append("### openMINDS SANDS Mapping")
+    md.append("")
+    md.append("| TVBO Field | SANDS Type | SANDS Property |")
+    md.append("|------------|------------|----------------|")
+    md.append("| `name` | `sands:BrainAtlas` | `name` |")
+    if cs_abbrev:
+        md.append("| `coordinateSpace` | `sands:CommonCoordinateSpace` | `abbreviation` |")
+    md.append("| `terminology` | `sands:ParcellationTerminology` | `hasEntity` |")
+    md.append("| `terminology.entities[*]` | `sands:ParcellationEntity` | `name`, `lookupLabel` |")
+    if has_coords:
+        md.append("| `terminology.entities[*].center` | `sands:CoordinatePoint` | `x`, `y`, `z` |")
+    if has_original_labels:
+        md.append("| `terminology.entities[*].originalLookupLabel` | `sands:ParcellationEntity` | `lookupLabel` (source) |")
+    md.append("")
+
+    # Parcellation entities table (first 20 + summary)
+    if entity_list:
+        md.append("### Parcellation Entities")
+        md.append(f"*`sands:ParcellationEntity` — {n_entities} regions*")
+        md.append("")
+
+        # Build table header based on available fields
+        headers = ["Index", "Name"]
+        if has_original_labels:
+            headers.append("Source Label")
+        if has_coords:
+            headers.extend(["x", "y", "z"])
+
+        md.append("| " + " | ".join(headers) + " |")
+        md.append("|" + "|".join(["------"] * len(headers)) + "|")
+
+        show = entity_list[:20]
+        for e in show:
+            if not isinstance(e, dict):
+                continue
+            row = [str(e.get("lookupLabel", "")), str(e.get("name", ""))]
+            if has_original_labels:
+                row.append(str(e.get("originalLookupLabel", "")))
+            if has_coords:
+                center = e.get("center", {})
+                if isinstance(center, dict):
+                    row.extend([
+                        f"{center.get('x', 0):.1f}",
+                        f"{center.get('y', 0):.1f}",
+                        f"{center.get('z', 0):.1f}",
+                    ])
+                else:
+                    row.extend(["—", "—", "—"])
+            md.append("| " + " | ".join(row) + " |")
+
+        if n_entities > 20:
+            md.append(f"| ... | *{n_entities - 20} more regions* |"
+                       + " |" * (len(headers) - 2))
+        md.append("")
+
+    return "\n".join(md)
+
+
+def _parse_bids_filename(filename: str) -> dict:
+    """Extract BIDS entities from atlas filename (BEP017-style)."""
+    # Remove extension
+    stem = os.path.splitext(filename)[0]
+
+    bids_map = {
+        "tpl": "Template",
+        "space": "Space",
+        "atlas": "Atlas",
+        "res": "Resolution",
+        "desc": "Description",
+    }
+
+    result = {}
+    # Match key-value pairs separated by underscores
+    for part in stem.split("_"):
+        if "-" in part:
+            key, val = part.split("-", 1)
+            if key in bids_map:
+                result[bids_map[key]] = val
+
+    # Suffix (last part without a key-value pair)
+    parts = stem.split("_")
+    last = parts[-1]
+    if "-" not in last:
+        result["Suffix"] = last
+
+    return result
+
+
+# --------------------------------------------------- experiment reports
+def render_experiment_reports(db_root: str, force: bool = False, name_filter: str | None = None):
+    """Generate markdown reports for all experiments."""
+    exp_dir = os.path.join(db_root, "experiments")
+    out_dir = os.path.join(REPORTS_DIR, "experiments")
+    _ensure_dir(out_dir)
+
+    yaml_files = []
+    for ext in ("*.yaml", "*.yml"):
+        yaml_files.extend(glob.glob(os.path.join(exp_dir, "**", ext), recursive=True))
+
+    ok, fail = 0, 0
+    for path in sorted(yaml_files):
+        with open(path, "r", encoding="utf-8") as f:
+            raw = yaml.safe_load(f)
+        if not isinstance(raw, dict):
+            continue
+        name = raw.get("label", raw.get("name", os.path.splitext(os.path.basename(path))[0]))
+        safe_name = _safe_filename(name)
+
+        if name_filter and _canon(name_filter) != _canon(name):
+            continue
+
+        out_path = os.path.join(out_dir, f"{safe_name}.md")
+        if not force and os.path.isfile(out_path):
+            print(f"  [skip] {safe_name}.md (exists)")
+            ok += 1
+            continue
+
+        try:
+            md = _experiment_report_md(raw)
+            with open(out_path, "w", encoding="utf-8") as f:
+                f.write(md)
+            print(f"  [ok]   {safe_name}.md")
+            ok += 1
+        except Exception as e:
+            print(f"  [FAIL] {safe_name}: {e}")
+            fail += 1
+
+    print(f"  Experiments: {ok} ok, {fail} failed")
+
+
+def _experiment_report_md(raw: dict) -> str:
+    """Generate markdown report for an experiment from its YAML dict."""
+    label = raw.get("label", raw.get("name", "Experiment"))
+    desc = raw.get("description", "")
+
+    md = [f"## {label}", ""]
+    if desc:
+        md.append(desc)
+        md.append("")
+
+    # Dynamics (or model for bifurcation experiments)
+    dynamics = raw.get("dynamics") or raw.get("network", {}).get("dynamics")
+    model_ref = raw.get("model")
+    if dynamics and isinstance(dynamics, dict):
+        md.append("### Dynamics")
+        md.append("")
+        for key, val in dynamics.items():
+            if isinstance(val, dict):
+                dyn_name = val.get("name", key)
+                dyn_desc = val.get("description", "")
+                outputs = val.get("output", [])
+                md.append(f"**{dyn_name}**")
+                if dyn_desc:
+                    md.append(f": {dyn_desc.strip()}")
+                if outputs:
+                    md.append(f"  - Outputs: {', '.join(outputs)}")
+                md.append("")
+            elif key == "name":
+                md.append(f"**{val}**")
+                dyn_desc = dynamics.get("description", "")
+                if dyn_desc:
+                    md.append(f": {dyn_desc.strip()}")
+                outputs = dynamics.get("output", [])
+                if outputs:
+                    md.append(f"  - Outputs: {', '.join(outputs)}")
+                md.append("")
+                break
+    elif model_ref:
+        md.append("### Model")
+        md.append("")
+        md.append(f"**{model_ref}**")
+        md.append("")
+
+    # Network
+    network = raw.get("network")
+    if network and isinstance(network, dict):
+        net_keys_of_interest = {k: v for k, v in network.items()
+                                if k != "dynamics" and not isinstance(v, (dict, list))}
+        if net_keys_of_interest:
+            md.append("### Network")
+            md.append("")
+            for k, v in net_keys_of_interest.items():
+                if v:
+                    md.append(f"- **{k.replace('_', ' ').title()}:** {v}")
+            md.append("")
+
+    # Observations
+    obs = raw.get("observations") or raw.get("observation_models")
+    if obs:
+        md.append("### Observations")
+        md.append("")
+        if isinstance(obs, dict):
+            for oname, odata in obs.items():
+                if isinstance(odata, dict):
+                    md.append(f"- **{odata.get('name', oname)}**"
+                              + (f" ({odata.get('imaging_modality', '')})" if odata.get('imaging_modality') else ""))
+        elif isinstance(obs, list):
+            for o in obs:
+                if isinstance(o, dict):
+                    md.append(f"- **{o.get('name', '')}**"
+                              + (f" ({o.get('imaging_modality', '')})" if o.get('imaging_modality') else ""))
+        md.append("")
+
+    # Algorithms / Explorations / Optimizations / Continuations
+    for section, title in [("algorithms", "Algorithms"), ("explorations", "Explorations"),
+                           ("optimizations", "Optimizations"), ("continuations", "Continuations")]:
+        data = raw.get(section)
+        if not data:
+            continue
+        md.append(f"### {title}")
+        md.append("")
+        if isinstance(data, dict):
+            for aname, adata in data.items():
+                if isinstance(adata, dict):
+                    alabel = adata.get("label", adata.get("name", aname))
+                    adesc = adata.get("description", "")
+                    md.append(f"**{alabel}**")
+                    if adesc:
+                        md.append(f": {adesc.strip()}")
+                else:
+                    md.append(f"- **{aname}:** {adata}")
+            md.append("")
+        elif isinstance(data, list):
+            for entry in data:
+                if isinstance(entry, dict):
+                    md.append(f"- **{entry.get('name', entry.get('label', ''))}**")
+            md.append("")
+
+    # Integration settings
+    integration = raw.get("integration")
+    if integration and isinstance(integration, dict):
+        md.append("### Integration")
+        md.append("")
+        for k, v in integration.items():
+            if not isinstance(v, (dict, list)) and v:
+                md.append(f"- **{k.replace('_', ' ').title()}:** {v}")
+        md.append("")
+
+    # References
+    refs = raw.get("references")
+    if refs:
+        md.append("### References")
+        md.append("")
+        if isinstance(refs, list):
+            for ref in refs:
+                md.append(f"- {ref}")
+        elif isinstance(refs, str):
+            md.append(refs)
+        md.append("")
+
+    return "\n".join(md)
+
+
 def main():
     parser = argparse.ArgumentParser(description="Pre-render reports for the KG browser")
     parser.add_argument("--database", default=DEFAULT_DB,
@@ -532,7 +1007,9 @@ def main():
     parser.add_argument("--force", action="store_true",
                         help="Re-render even if report already exists")
     parser.add_argument("--name", help="Render only a specific item (by name)")
-    parser.add_argument("--category", choices=["models", "coupling_functions", "integrators", "observation_models"],
+    parser.add_argument("--category", choices=["models", "coupling_functions", "integrators",
+                                                "observation_models", "networks", "atlases",
+                                                "experiments"],
                         help="Render only a specific category")
     args = parser.parse_args()
 
@@ -550,6 +1027,9 @@ def main():
         "coupling_functions": ("Rendering coupling function reports...", render_coupling_reports),
         "integrators": ("Rendering integrator reports...", render_integrator_reports),
         "observation_models": ("Rendering observation model reports...", render_observation_model_reports),
+        "networks": ("Rendering network reports...", render_network_reports),
+        "atlases": ("Rendering atlas reports...", render_atlas_reports),
+        "experiments": ("Rendering experiment reports...", render_experiment_reports),
     }
 
     for key, (msg, fn) in categories.items():

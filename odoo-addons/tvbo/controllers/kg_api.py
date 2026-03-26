@@ -6,16 +6,11 @@ No fallbacks. Fails fast when something unexpected happens.
 import json
 import logging
 import os
+import re
 
 from odoo import http
 from odoo.http import Response, request
 
-from tvbo.datamodel.tvbopydantic import Coupling as PydanticCoupling
-from tvbo.datamodel.tvbopydantic import Dynamics as PydanticDynamics
-from tvbo.datamodel.tvbopydantic import Integrator as PydanticIntegrator
-from tvbo.datamodel.tvbopydantic import Network as PydanticNetwork
-from tvbo.datamodel.tvbopydantic import SimulationExperiment as PydanticSimulationExperiment
-from tvbo.datamodel.tvbopydantic import SimulationStudy as PydanticSimulationStudy
 from tvbo.api.direct_ontology_api import get_direct_ontology_api
 
 _logger = logging.getLogger(__name__)
@@ -31,20 +26,98 @@ _THUMB_URL = '/tvbo/static/src/img/thumbnails'
 _REPORT_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'static', 'src', 'reports')
 _REPORT_URL = '/tvbo/static/src/reports'
 
+_KG_ENTITY_CONFIG = {
+    'dynamics': {
+        'model': 'tvbo.dynamics',
+        'thumbnail': 'models',
+        'report': 'models',
+    },
+    'network': {
+        'model': 'tvbo.network',
+        'thumbnail': 'networks',
+        'report': 'networks',
+    },
+    'integrator': {
+        'model': 'tvbo.integrator',
+        'thumbnail': 'integrators',
+        'report': 'integrators',
+    },
+    'experiment': {
+        'model': 'tvbo.simulation_experiment',
+        'thumbnail': 'experiments',
+        'report': 'experiments',
+    },
+    'study': {
+        'model': 'tvbo.simulation_study',
+        'thumbnail': 'studies',
+        'report': 'studies',
+    },
+    'coupling': {
+        'model': 'tvbo.coupling',
+        'thumbnail': 'coupling_functions',
+        'report': 'coupling_functions',
+    },
+    'observation': {
+        'model': 'tvbo.observation',
+        'thumbnail': 'observation_models',
+        'report': 'observation_models',
+    },
+    'atlas': {
+        'model': 'tvbo.atlas',
+        'thumbnail': 'atlases',
+        'report': 'atlases',
+    },
+}
+
+_KG_INTERNAL_FIELDS = {
+    'id',
+    'display_name',
+    'create_uid',
+    'create_date',
+    'write_uid',
+    'write_date',
+    '__last_update',
+    'linkml_meta',
+}
+
+_KG_LIST_FIELD_TYPES = {
+    'char',
+    'text',
+    'html',
+    'integer',
+    'float',
+    'monetary',
+    'boolean',
+    'selection',
+    'date',
+    'datetime',
+}
+
+_KG_DETAIL_FIELD_TYPES = _KG_LIST_FIELD_TYPES | {'one2many', 'many2many'}
+
+
+def _safe_asset_name(name: str) -> str:
+    """Sanitize a name for filesystem lookup (replace colons, slashes, etc.)."""
+    return re.sub(r'[<>:"/\\|?*]', '_', name).strip()
+
 
 def _thumbnail_url(category: str, name: str) -> str | None:
     """Return the URL for a thumbnail if it exists on disk."""
-    png = os.path.join(_THUMB_DIR, category, f'{name}.png')
+    safe = _safe_asset_name(name)
+    png = os.path.join(_THUMB_DIR, category, f'{safe}.png')
     if os.path.isfile(png):
-        return f'{_THUMB_URL}/{category}/{name}.png'
+        from urllib.parse import quote
+        return f'{_THUMB_URL}/{category}/{quote(safe)}.png'
     return None
 
 
 def _report_url(category: str, name: str) -> str | None:
     """Return the URL for a pre-rendered report if it exists on disk."""
-    md = os.path.join(_REPORT_DIR, category, f'{name}.md')
+    safe = _safe_asset_name(name)
+    md = os.path.join(_REPORT_DIR, category, f'{safe}.md')
     if os.path.isfile(md):
-        return f'{_REPORT_URL}/{category}/{name}.md'
+        from urllib.parse import quote
+        return f'{_REPORT_URL}/{category}/{quote(safe)}.md'
     return None
 
 
@@ -66,53 +139,194 @@ def json_response(data, status=200):
     )
 
 
+def _safe_search_read(model_name, fields, domain=None, limit=None):
+    """Read only compatible fields and retry on stale DB columns.
+
+    This keeps KG endpoints working when Python models and DB schema are temporarily out of sync.
+    """
+    model = request.env[model_name].sudo()
+    requested_fields = [f for f in fields if f in model._fields]
+    if 'id' not in requested_fields:
+        requested_fields.insert(0, 'id')
+
+    while True:
+        try:
+            return model.search_read(domain or [], requested_fields, limit=limit)
+        except Exception as e:
+            msg = str(e)
+
+            # Odoo field mismatch, e.g. "Invalid field 'foo' on 'tvbo.bar'"
+            invalid_field_match = re.search(r"Invalid field '([^']+)'", msg)
+            if invalid_field_match:
+                bad_field = invalid_field_match.group(1)
+                if bad_field in requested_fields:
+                    requested_fields.remove(bad_field)
+                    request.env.cr.rollback()
+                    continue
+
+            # PostgreSQL schema mismatch, e.g. "column tvbo_x.y does not exist"
+            missing_col_match = re.search(r'column\s+(?:[\w\"]+\.)?([\w_]+)\s+does not exist', msg)
+            if missing_col_match:
+                missing_col = missing_col_match.group(1).strip('"')
+
+                # Most fields map directly to a same-name SQL column
+                if missing_col in requested_fields and missing_col != 'id':
+                    requested_fields.remove(missing_col)
+                    request.env.cr.rollback()
+                    continue
+
+                # Fallback: try matching by field.column
+                removed = False
+                for fname in list(requested_fields):
+                    if fname == 'id':
+                        continue
+                    field = model._fields.get(fname)
+                    if getattr(field, 'column', None) == missing_col:
+                        requested_fields.remove(fname)
+                        removed = True
+                if removed:
+                    request.env.cr.rollback()
+                    continue
+
+            raise
+
+
+def _get_model_field_names(model_name, include_relations=False):
+    """Get serializable field names from model metadata.
+
+    This is schema-driven and adapts automatically to generated model changes.
+    """
+    model = request.env[model_name].sudo()
+    allowed_types = _KG_DETAIL_FIELD_TYPES if include_relations else _KG_LIST_FIELD_TYPES
+
+    field_names = []
+    for field_name, field in model._fields.items():
+        if field_name in _KG_INTERNAL_FIELDS:
+            continue
+        if field.type not in allowed_types:
+            continue
+
+        # Skip non-stored scalar fields to avoid triggering heavy compute paths.
+        if field.type in _KG_LIST_FIELD_TYPES and not getattr(field, 'store', True):
+            continue
+
+        field_names.append(field_name)
+
+    return sorted(field_names)
+
+
+def _normalize_field_value(field, value, detail=False):
+    """Normalize ORM values to JSON-safe primitives."""
+    if value is None:
+        return None
+
+    # Keep explicit boolean false values
+    if value is False and field.type != 'boolean':
+        return None
+
+    if field.type == 'many2one':
+        if isinstance(value, (list, tuple)) and len(value) >= 2:
+            rec_id, rec_label = value[0], value[1]
+            if detail:
+                return {'id': rec_id, 'label': rec_label}
+            return rec_label or rec_id
+        return value
+
+    if field.type in ('one2many', 'many2many'):
+        return value if detail else None
+
+    return value
+
+
+def _normalize_row(model_name, row, detail=False):
+    """Normalize a search_read row using model field metadata."""
+    model = request.env[model_name].sudo()
+    normalized = {}
+
+    for field_name, value in row.items():
+        if field_name == 'id':
+            normalized['id'] = value
+            continue
+
+        field = model._fields.get(field_name)
+        if not field:
+            continue
+
+        normalized_value = _normalize_field_value(field, value, detail=detail)
+        if normalized_value is None:
+            continue
+        if normalized_value == '':
+            continue
+        if normalized_value == []:
+            continue
+        if normalized_value == {}:
+            continue
+
+        normalized[field_name] = normalized_value
+
+    if 'id' not in normalized and row.get('id') is not None:
+        normalized['id'] = row['id']
+
+    return normalized
+
+
+def _get_display_name(data, entity_type):
+    """Get a stable display name from common schema fields."""
+    for key in ('name', 'label', 'title', 'method', 'key'):
+        value = data.get(key)
+        if value:
+            return str(value)
+
+    rec_id = data.get('id')
+    if rec_id is not None:
+        return f'{entity_type.capitalize()} {rec_id}'
+
+    return entity_type.capitalize()
+
+
+def _odoo_field_to_property_schema(field_name, field):
+    """Convert an Odoo field definition to KG property schema."""
+    if field.type in ('char', 'text', 'html', 'date', 'datetime', 'many2one'):
+        return {
+            'type': 'string',
+            'label': field.string or _field_label(field_name),
+            'description': field.help or '',
+        }
+
+    if field.type in ('integer', 'float', 'monetary'):
+        return {
+            'type': 'number',
+            'label': field.string or _field_label(field_name),
+            'description': field.help or '',
+        }
+
+    if field.type == 'boolean':
+        return {
+            'type': 'boolean',
+            'label': field.string or _field_label(field_name),
+            'description': field.help or '',
+        }
+
+    if field.type == 'selection':
+        values = []
+        if isinstance(field.selection, (list, tuple)):
+            for item in field.selection:
+                if isinstance(item, (list, tuple)) and len(item) >= 2:
+                    values.append({'value': item[0], 'label': item[1]})
+
+        return {
+            'type': 'enum',
+            'label': field.string or _field_label(field_name),
+            'description': field.help or '',
+            'values': values,
+        }
+
+    return None
+
+
 def _field_label(field_name):
     """Convert field_name to a human-readable label."""
     return field_name.replace('_', ' ').title()
-
-
-def _introspect_field(field_name, field_info):
-    """Return field schema dict if the field is filterable, None otherwise.
-
-    Filterable = simple scalar types (str, int, float, bool, enum).
-    Skips nested objects, lists, dicts, and internal fields.
-    """
-    from typing import get_origin, get_args, Union
-    from enum import Enum
-
-    annotation = field_info.annotation
-    base_type = annotation
-
-    # Unwrap Optional[T]
-    origin = get_origin(annotation)
-    if origin is Union:
-        args = get_args(annotation)
-        non_none = [a for a in args if a is not type(None)]
-        if len(non_none) == 1:
-            base_type = non_none[0]
-            origin = get_origin(base_type)
-        else:
-            return None
-
-    # Skip list, dict, and other generic container types
-    if origin in (list, dict, set, frozenset):
-        return None
-
-    # Extract description from field metadata
-    desc = field_info.description or ''
-
-    if base_type is str:
-        return {'type': 'string', 'label': _field_label(field_name), 'description': desc}
-    elif base_type in (int, float):
-        return {'type': 'number', 'label': _field_label(field_name), 'description': desc}
-    elif base_type is bool:
-        return {'type': 'boolean', 'label': _field_label(field_name), 'description': desc}
-    elif isinstance(base_type, type) and issubclass(base_type, Enum):
-        values = [{'value': v.value, 'label': v.name} for v in base_type]
-        return {'type': 'enum', 'label': _field_label(field_name), 'description': desc, 'values': values}
-
-    # Skip complex types (Pydantic models, etc.)
-    return None
 
 
 class KnowledgeGraphAPI(http.Controller):
@@ -125,8 +339,20 @@ class KnowledgeGraphAPI(http.Controller):
     @http.route('/tvbo/api/kg/schema', type='http', auth='public', methods=['GET'], csrf=False)
     def get_schema(self, **kw):
         """Get browser schema configuration."""
+        searchable_fields = {'name', 'label', 'title', 'description'}
+
+        for cfg in _KG_ENTITY_CONFIG.values():
+            model_name = cfg['model']
+            model = request.env[model_name].sudo()
+            for field_name in _get_model_field_names(model_name, include_relations=False):
+                field = model._fields.get(field_name)
+                if not field:
+                    continue
+                if field.type in ('char', 'text', 'html', 'selection'):
+                    searchable_fields.add(field_name)
+
         return json_response({
-            "searchableFields": ["name", "label", "title", "description", "abstract", "doi", "method", "definition", "symbol"],
+            "searchableFields": sorted(searchable_fields),
             "facets": [
                 {"field": "type", "label": "Class", "type": "string"},
             ],
@@ -137,41 +363,25 @@ class KnowledgeGraphAPI(http.Controller):
     def get_class_schemas(self, **kw):
         """Get schemas for all datamodel classes represented in the KG.
 
-        Introspects Pydantic models (generated from tvbo_datamodel.yaml) to return
+        Introspects Odoo models (generated from schema/tvbo_datamodel.yaml) to return
         class names, descriptions, and filterable properties with types.
         """
-        from tvbo.datamodel import tvbopydantic as dm
-        from typing import get_origin, get_args, Union
-        from enum import Enum
-
-        # Map KG type values to Pydantic classes — the only hardcoded part.
-        # Everything else is introspected from the schema.
-        type_class_map = {
-            'dynamics': dm.Dynamics,
-            'network': dm.Network,
-            'integrator': dm.Integrator,
-            'experiment': dm.SimulationExperiment,
-            'study': dm.SimulationStudy,
-            'coupling': dm.Coupling,
-        }
-
         result = {}
-        for type_key, cls in type_class_map.items():
+        for type_key, cfg in _KG_ENTITY_CONFIG.items():
+            model_name = cfg['model']
+            model = request.env[model_name].sudo()
             properties = {}
-            for field_name, field_info in cls.model_fields.items():
-                if field_name == 'linkml_meta':
+            for field_name, field in model._fields.items():
+                if field_name in _KG_INTERNAL_FIELDS:
                     continue
-                prop = _introspect_field(field_name, field_info)
+                prop = _odoo_field_to_property_schema(field_name, field)
                 if prop:
                     properties[field_name] = prop
 
-            # Use the class name as the label (not LinkML aliases, which may be deprecated)
-            class_label = cls.__name__
-
             result[type_key] = {
-                'class_name': cls.__name__,
-                'label': class_label,
-                'description': (cls.__doc__ or '').strip(),
+                'class_name': model_name,
+                'label': model._description or model_name,
+                'description': model._description or '',
                 'properties': properties,
             }
 
@@ -186,28 +396,20 @@ class KnowledgeGraphAPI(http.Controller):
         """Get all knowledge graph data."""
         import traceback
         try:
+            single_entity = kw.get('entity')
+            if single_entity:
+                if single_entity not in _KG_ENTITY_CONFIG:
+                    return json_response({'error': f'Unknown entity: {single_entity}'}, 400)
+                return json_response(self._get_entity_items(single_entity))
+
             include_ontology = kw.get('include_ontology', 'true').lower() != 'false'
             ontology_query = kw.get('ontology_query', '')
 
             data = []
-            _logger.info("Fetching dynamics...")
-            data.extend(self._get_dynamics())
-            _logger.info(f"Got {len(data)} dynamics")
-            _logger.info("Fetching networks...")
-            data.extend(self._get_networks())
-            _logger.info(f"Total items: {len(data)}")
-            _logger.info("Fetching integrators...")
-            data.extend(self._get_integrators())
-            _logger.info(f"Total items: {len(data)}")
-            _logger.info("Fetching experiments...")
-            data.extend(self._get_experiments())
-            _logger.info(f"Total items: {len(data)}")
-            _logger.info("Fetching studies...")
-            data.extend(self._get_studies())
-            _logger.info(f"Total items: {len(data)}")
-            _logger.info("Fetching couplings...")
-            data.extend(self._get_couplings())
-            _logger.info(f"Total items: {len(data)}")
+            for entity_type in _KG_ENTITY_CONFIG:
+                _logger.info(f"Fetching {entity_type}...")
+                data.extend(self._get_entity_items(entity_type))
+                _logger.info(f"Total items: {len(data)}")
 
             if include_ontology:
                 _logger.info("Fetching ontology concepts...")
@@ -215,177 +417,129 @@ class KnowledgeGraphAPI(http.Controller):
                 _logger.info(f"Total items with ontology: {len(data)}")
 
             return json_response(data)
-        except Exception as e:
+        except BaseException as e:
+            tb = traceback.format_exc()
             _logger.error(f"Error in get_all_data: {e}")
-            _logger.error(traceback.format_exc())
-            return json_response({"error": str(e), "traceback": traceback.format_exc()}, 500)
+            _logger.error(tb)
+            try:
+                return json_response({"error": str(e), "traceback": tb}, 500)
+            except Exception:
+                return Response(tb, content_type='text/plain', status=500)
 
     # ===================
     # Database serializers
     # ===================
 
+    def _serialize_entity_row(self, entity_type, row, detail=False):
+        """Serialize a database row into KG payload using schema metadata."""
+        cfg = _KG_ENTITY_CONFIG[entity_type]
+        data = _normalize_row(cfg['model'], row, detail=detail)
+
+        data['type'] = entity_type
+        if 'id' not in data and row.get('id') is not None:
+            data['id'] = row['id']
+
+        title = _get_display_name(data, entity_type)
+        if not data.get('name'):
+            data['name'] = title
+        if not data.get('title'):
+            data['title'] = title
+
+        if not data.get('description') and data.get('abstract'):
+            data['description'] = data.get('abstract')
+
+        asset_name = data.get('name') or data.get('label') or data.get('method') or data.get('title')
+        if isinstance(asset_name, str):
+            thumb_category = cfg.get('thumbnail')
+            report_category = cfg.get('report')
+
+            if thumb_category:
+                thumb = _thumbnail_url(thumb_category, asset_name)
+                if thumb:
+                    data['thumbnail'] = thumb
+
+            if report_category:
+                report = _report_url(report_category, asset_name)
+                if report:
+                    data['report_url'] = report
+
+        return get_ontology_api().enrich_database_item(data, entity_type)
+
+    def _get_entity_items(self, entity_type):
+        """Fetch and serialize all records for one KG entity type."""
+        cfg = _KG_ENTITY_CONFIG[entity_type]
+        rows = _safe_search_read(
+            cfg['model'],
+            _get_model_field_names(cfg['model'], include_relations=False),
+        )
+        return [self._serialize_entity_row(entity_type, row, detail=False) for row in rows]
+
+    def _expand_relations(self, model_name, row):
+        """Expand x2many fields into nested related records for detail endpoints."""
+        model = request.env[model_name].sudo()
+        expanded = {}
+
+        for field_name, field in model._fields.items():
+            if field_name not in row:
+                continue
+            if field.type not in ('one2many', 'many2many'):
+                continue
+
+            related_ids = row.get(field_name) or []
+            if not related_ids:
+                continue
+
+            comodel_name = field.comodel_name
+            related_rows = _safe_search_read(
+                comodel_name,
+                _get_model_field_names(comodel_name, include_relations=False),
+                domain=[('id', 'in', related_ids)],
+            )
+
+            normalized_rows = [_normalize_row(comodel_name, rel_row, detail=False) for rel_row in related_rows]
+            by_id = {rel_row.get('id'): rel_row for rel_row in normalized_rows}
+            expanded[field_name] = [by_id[rel_id] for rel_id in related_ids if rel_id in by_id]
+
+        return expanded
+
+    def _get_entity_detail(self, entity_type, record_id):
+        """Fetch one record with schema-driven detail serialization."""
+        cfg = _KG_ENTITY_CONFIG[entity_type]
+        model_name = cfg['model']
+        rows = _safe_search_read(
+            model_name,
+            _get_model_field_names(model_name, include_relations=True),
+            domain=[('id', '=', record_id)],
+            limit=1,
+        )
+        if not rows:
+            return None
+
+        row = rows[0]
+        data = self._serialize_entity_row(entity_type, row, detail=True)
+        data.update(self._expand_relations(model_name, row))
+        return data
+
     def _get_dynamics(self):
-        records = request.env['tvbo.dynamics'].sudo().search([])
-        return [self._serialize_dynamics(r) for r in records]
-
-    def _serialize_dynamics(self, record):
-        result = PydanticDynamics(
-            name=record.name or 'Unknown',
-            label=record.label or None,
-            description=record.description or None,
-            source=record.source or None,
-            iri=record.iri or None,
-        ).model_dump(exclude_none=True)
-
-        result.update({
-            'id': record.id,
-            'type': 'dynamics',
-            'title': record.name or record.label or '',
-            'system_type': record.system_type.technical_name if record.system_type else '',
-        })
-
-        thumb = _thumbnail_url('models', record.name or '')
-        if thumb:
-            result['thumbnail'] = thumb
-
-        report = _report_url('models', record.name or '')
-        if report:
-            result['report_url'] = report
-
-        return get_ontology_api().enrich_database_item(result, 'dynamics')
+        return self._get_entity_items('dynamics')
 
     def _get_networks(self):
-        records = request.env['tvbo.network'].sudo().search([])
-        return [self._serialize_network(r) for r in records]
-
-    def _serialize_network(self, record):
-        result = PydanticNetwork(
-            label=record.label or None,
-            description=record.description or None,
-            number_of_nodes=record.number_of_nodes or record.number_of_regions or 1,
-        ).model_dump(exclude_none=True)
-
-        result.update({
-            'id': record.id,
-            'type': 'network',
-            'name': record.label or f'Network {record.id}',
-            'title': record.label or f'Network {record.id}',
-        })
-
-        # Try thumbnail by label
-        thumb = _thumbnail_url('networks', record.label or '')
-        if thumb:
-            result['thumbnail'] = thumb
-
-        return get_ontology_api().enrich_database_item(result, 'network')
+        return self._get_entity_items('network')
 
     def _get_integrators(self):
-        records = request.env['tvbo.integrator'].sudo().search([])
-        return [self._serialize_integrator(r) for r in records]
-
-    def _serialize_integrator(self, record):
-        result = PydanticIntegrator(
-            method=record.method or None,
-            step_size=record.step_size or 0.01220703125,
-            duration=record.duration or 1000.0,
-            time_scale=record.time_scale or 'ms',
-        ).model_dump(exclude_none=True)
-
-        result.update({
-            'id': record.id,
-            'type': 'integrator',
-            'name': record.method or f'Integrator {record.id}',
-            'title': record.method or f'Integrator {record.id}',
-            'description': f"Method: {record.method}, Step: {record.step_size}, Duration: {record.duration}",
-        })
-
-        report = _report_url('integrators', record.method or '')
-        if report:
-            result['report_url'] = report
-
-        return get_ontology_api().enrich_database_item(result, 'integrator')
+        return self._get_entity_items('integrator')
 
     def _get_experiments(self):
-        records = request.env['tvbo.simulation_experiment'].sudo().search([])
-        return [self._serialize_experiment(r) for r in records]
-
-    def _serialize_experiment(self, record):
-        result = PydanticSimulationExperiment(
-            id=str(record.id),
-            label=record.label or None,
-            description=record.description or None,
-        ).model_dump(exclude_none=True)
-
-        result.update({
-            'id': record.id,
-            'type': 'experiment',
-            'name': record.label or f'Experiment {record.id}',
-            'title': record.label or f'Experiment {record.id}',
-            'abstract': record.description or '',
-        })
-
-        return get_ontology_api().enrich_database_item(result, 'experiment')
+        return self._get_entity_items('experiment')
 
     def _get_studies(self):
-        records = request.env['tvbo.simulation_study'].sudo().search([])
-        return [self._serialize_study(r) for r in records]
-
-    def _serialize_study(self, record):
-        result = PydanticSimulationStudy(
-            label=record.label or None,
-            description=record.description or None,
-            doi=record.doi or None,
-            title=record.title or None,
-        ).model_dump(exclude_none=True)
-
-        result.update({
-            'id': record.id,
-            'type': 'study',
-            'name': record.title or record.label or f'Study {record.id}',
-            'title': record.title or record.label or f'Study {record.id}',
-            'abstract': record.description or '',
-            'year': str(record.year) if record.year else '',
-            'doi': record.doi or '',
-        })
-
-        return get_ontology_api().enrich_database_item(result, 'study')
+        return self._get_entity_items('study')
 
     def _get_couplings(self):
-        records = request.env['tvbo.coupling'].sudo().search([])
-        return [self._serialize_coupling(r) for r in records]
+        return self._get_entity_items('coupling')
 
-    def _serialize_coupling(self, record):
-        result = PydanticCoupling(
-            name=record.name or 'Linear',
-            label=record.label or None,
-            delayed=record.delayed,
-            sparse=record.sparse,
-        ).model_dump(exclude_none=True)
-
-        # Build equation display from pre/post expressions
-        eq_parts = []
-        if record.pre_expression and record.pre_expression.righthandside:
-            eq_parts.append(f'pre(x_j) = {record.pre_expression.righthandside}')
-        if record.post_expression and record.post_expression.righthandside:
-            eq_parts.append(f'post(gx) = {record.post_expression.righthandside}')
-
-        result.update({
-            'id': record.id,
-            'type': 'coupling',
-            'title': record.name or record.label or f'Coupling {record.id}',
-            'description': record.coupling_function.definition if record.coupling_function else '',
-            'equation': ' ;  '.join(eq_parts) if eq_parts else '',
-        })
-
-        thumb = _thumbnail_url('coupling_functions', record.name or '')
-        if thumb:
-            result['thumbnail'] = thumb
-
-        report = _report_url('coupling_functions', record.name or '')
-        if report:
-            result['report_url'] = report
-
-        return get_ontology_api().enrich_database_item(result, 'coupling')
+    def _get_observations(self):
+        return self._get_entity_items('observation')
 
     # ===================
     # Ontology concepts
@@ -422,88 +576,58 @@ class KnowledgeGraphAPI(http.Controller):
 
     @http.route('/tvbo/api/kg/dynamics/<int:record_id>', type='http', auth='public', methods=['GET'], csrf=False)
     def get_dynamics_detail(self, record_id, **kw):
-        record = request.env['tvbo.dynamics'].sudo().browse(record_id)
-        if not record.exists():
+        data = self._get_entity_detail('dynamics', record_id)
+        if not data:
             return json_response({"error": "Not found"}, 404)
-
-        data = self._serialize_dynamics(record)
-        data['parameters'] = [{
-            "name": p.name, "label": p.label, "symbol": p.symbol or '',
-            "value": p.value, "description": p.description or ''
-        } for p in record.parameters]
-        data['state_variables'] = [{
-            "name": sv.name, "label": sv.label, "symbol": sv.symbol or '',
-            "description": sv.description or '',
-            "equation": {"label": sv.equation.label, "definition": sv.equation.definition} if sv.equation else None
-        } for sv in record.state_variables]
-
         return json_response(data)
 
     @http.route('/tvbo/api/kg/network/<int:record_id>', type='http', auth='public', methods=['GET'], csrf=False)
     def get_network_detail(self, record_id, **kw):
-        record = request.env['tvbo.network'].sudo().browse(record_id)
-        if not record.exists():
+        data = self._get_entity_detail('network', record_id)
+        if not data:
             return json_response({"error": "Not found"}, 404)
-
-        data = self._serialize_network(record)
-        if record.parcellation:
-            data['parcellation'] = {"label": record.parcellation.label, "data_source": record.parcellation.data_source}
 
         return json_response(data)
 
     @http.route('/tvbo/api/kg/integrator/<int:record_id>', type='http', auth='public', methods=['GET'], csrf=False)
     def get_integrator_detail(self, record_id, **kw):
-        record = request.env['tvbo.integrator'].sudo().browse(record_id)
-        if not record.exists():
+        data = self._get_entity_detail('integrator', record_id)
+        if not data:
             return json_response({"error": "Not found"}, 404)
-
-        data = self._serialize_integrator(record)
-        data['parameters'] = [{
-            "name": p.name, "label": p.label, "symbol": p.symbol or '',
-            "value": p.value, "description": p.description or ''
-        } for p in record.parameters]
 
         return json_response(data)
 
     @http.route('/tvbo/api/kg/coupling/<int:record_id>', type='http', auth='public', methods=['GET'], csrf=False)
     def get_coupling_detail(self, record_id, **kw):
-        record = request.env['tvbo.coupling'].sudo().browse(record_id)
-        if not record.exists():
+        data = self._get_entity_detail('coupling', record_id)
+        if not data:
             return json_response({"error": "Not found"}, 404)
-
-        data = self._serialize_coupling(record)
-        if record.coupling_function:
-            data['coupling_function'] = {"label": record.coupling_function.label, "definition": record.coupling_function.definition}
-        data['parameters'] = [{
-            "name": p.name, "label": p.label, "symbol": p.symbol or '',
-            "value": p.value, "description": p.description or ''
-        } for p in record.parameters]
 
         return json_response(data)
 
     @http.route('/tvbo/api/kg/experiment/<int:record_id>', type='http', auth='public', methods=['GET'], csrf=False)
     def get_experiment_detail(self, record_id, **kw):
-        record = request.env['tvbo.simulation_experiment'].sudo().browse(record_id)
-        if not record.exists():
+        data = self._get_entity_detail('experiment', record_id)
+        if not data:
             return json_response({"error": "Not found"}, 404)
-
-        data = self._serialize_experiment(record)
-        if record.dynamics:
-            data['dynamics'] = {"id": record.dynamics.id, "name": record.dynamics.name}
-        if record.integration:
-            data['integration'] = {"id": record.integration.id, "method": record.integration.method}
-        if record.connectivity:
-            data['connectivity'] = {"id": record.connectivity.id, "label": record.connectivity.label}
 
         return json_response(data)
 
     @http.route('/tvbo/api/kg/study/<int:record_id>', type='http', auth='public', methods=['GET'], csrf=False)
     def get_study_detail(self, record_id, **kw):
-        record = request.env['tvbo.simulation_study'].sudo().browse(record_id)
-        if not record.exists():
+        data = self._get_entity_detail('study', record_id)
+        if not data:
             return json_response({"error": "Not found"}, 404)
 
-        return json_response(self._serialize_study(record))
+        return json_response(data)
+
+    @http.route('/tvbo/api/kg/observation/<int:record_id>', type='http', auth='public', methods=['GET'], csrf=False)
+    def get_observation_detail(self, record_id, **kw):
+        data = self._get_entity_detail('observation', record_id)
+        if not data:
+            return json_response({"error": "Not found"}, 404)
+
+        return json_response(data)
 
     # ===================
     # Ontology endpoints
@@ -657,12 +781,8 @@ class KnowledgeGraphAPI(http.Controller):
 
         # Add database items as nodes linked to their ontology classes
         db_items = []
-        db_items.extend(self._get_dynamics())
-        db_items.extend(self._get_networks())
-        db_items.extend(self._get_integrators())
-        db_items.extend(self._get_experiments())
-        db_items.extend(self._get_studies())
-        db_items.extend(self._get_couplings())
+        for entity_type in _KG_ENTITY_CONFIG:
+            db_items.extend(self._get_entity_items(entity_type))
 
         # Map database items to nodes and create links to ontology
         onto_storid_map = {n['storid']: n for n in nodes if n.get('storid')}

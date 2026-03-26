@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+
+        <record id="numerical_discretization_method_collocation" model="tvbo.numerical_discretization_method">
+            <field name="name">Collocation</field>
+            <field name="technical_name">collocation</field>
+            <field name="description">Orthogonal collocation at Gauss points.</field>
+        </record>
+
+        <record id="numerical_discretization_method_trapezoid" model="tvbo.numerical_discretization_method">
+            <field name="name">Trapezoid</field>
+            <field name="technical_name">trapezoid</field>
+            <field name="description">Trapezoidal rule discretization.</field>
+        </record>
+
+        <record id="numerical_discretization_method_shooting" model="tvbo.numerical_discretization_method">
+            <field name="name">Shooting</field>
+            <field name="technical_name">shooting</field>
+            <field name="description">Standard multiple shooting.</field>
+        </record>
+
+        <record id="numerical_discretization_method_poincare" model="tvbo.numerical_discretization_method">
+            <field name="name">Poincare</field>
+            <field name="technical_name">poincare</field>
+            <field name="description">Poincaré shooting.</field>
+        </record>
+
+    </data>
+</odoo>

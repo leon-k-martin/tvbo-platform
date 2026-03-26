@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+
+        <record id="event_type_continuous" model="tvbo.event_type">
+            <field name="name">Continuous</field>
+            <field name="technical_name">continuous</field>
+            <field name="description">Triggered when condition function crosses zero (root-finding). Maps to ContinuousCallback / ContinuousComponentCallback.</field>
+        </record>
+
+        <record id="event_type_discrete" model="tvbo.event_type">
+            <field name="name">Discrete</field>
+            <field name="technical_name">discrete</field>
+            <field name="description">Triggered when condition function returns true (checked at each step). Maps to DiscreteCallback / DiscreteComponentCallback.</field>
+        </record>
+
+        <record id="event_type_preset_time" model="tvbo.event_type">
+            <field name="name">Preset Time</field>
+            <field name="technical_name">preset_time</field>
+            <field name="description">Triggered at predetermined time points. Maps to PresetTimeCallback / PresetTimeComponentCallback.</field>
+        </record>
+
+        <record id="event_type_stimulus" model="tvbo.event_type">
+            <field name="name">Stimulus</field>
+            <field name="technical_name">stimulus</field>
+            <field name="description">Continuous time-dependent input signal (e.g., external current). Legacy Stimulus behavior.</field>
+        </record>
+
+    </data>
+</odoo>

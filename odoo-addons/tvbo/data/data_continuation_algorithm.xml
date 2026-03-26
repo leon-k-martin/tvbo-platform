@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+
+        <record id="continuation_algorithm_PALC" model="tvbo.continuation_algorithm">
+            <field name="name">Palc</field>
+            <field name="technical_name">PALC</field>
+            <field name="description">Pseudo-arclength continuation (default). Uses weighted dot product constraint.</field>
+        </record>
+
+        <record id="continuation_algorithm_MoorePenrose" model="tvbo.continuation_algorithm">
+            <field name="name">Moorepenrose</field>
+            <field name="technical_name">MoorePenrose</field>
+            <field name="description">Moore-Penrose continuation.</field>
+        </record>
+
+        <record id="continuation_algorithm_Natural" model="tvbo.continuation_algorithm">
+            <field name="name">Natural</field>
+            <field name="technical_name">Natural</field>
+            <field name="description">Natural parameter continuation. Simple parameter stepping, no arc-length constraint.</field>
+        </record>
+
+    </data>
+</odoo>
