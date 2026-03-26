@@ -15,6 +15,9 @@ deploy-job:
           sleep 1
         done
 
+        # Print the exact image digest being used
+        echo "tvbo-odoo image: $(kubectl get pod "$POD" -o jsonpath='{.status.containerStatuses[0].imageID}')"
+
         # follow logs for a while, then exit cleanly
         timeout 10 kubectl logs -f "$POD" || true
   when: manual
