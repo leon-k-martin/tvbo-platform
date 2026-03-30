@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <template id="document_parser_template" name="Document Parser">
+            <t t-call="website.layout">
+                <div id="wrap" class="oe_structure">
+                    <link rel="stylesheet" href="/tvbo/static/src/css/document_parser.css"/>
+                    <!-- marked.js for Markdown rendering -->
+                    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+                    <!-- KaTeX for LaTeX rendering -->
+                    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+                    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+                    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+                    <script src="/tvbo/static/src/js/document_parser.js"></script>
+
+                    <div class="container-fluid" style="max-width: 1200px; margin: 0 auto; padding: 20px;">
+                        <div class="parser-header">
+                            <h1>Document Parser</h1>
+                            <p class="text-muted">Upload a PDF or image to extract structured Markdown with LaTeX equations</p>
+                        </div>
+
+                        <!-- Upload area -->
+                        <div class="parser-upload-area" id="dropZone">
+                            <div class="parser-upload-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                    <polyline points="17 8 12 3 7 8"/>
+                                    <line x1="12" y1="3" x2="12" y2="15"/>
+                                </svg>
+                            </div>
+                            <p class="parser-upload-text">Drag &amp; drop a file here, or click to select</p>
+                            <p class="parser-upload-hint">PDF, PNG, JPG, DOCX supported</p>
+                            <input type="file" id="fileInput" accept=".pdf,.png,.jpg,.jpeg,.docx" style="display:none;"/>
+                        </div>
+
+                        <!-- File info + parse button -->
+                        <div class="parser-file-info" id="fileInfo" style="display:none;">
+                            <span id="fileName" class="parser-file-name"></span>
+                            <span id="fileSize" class="text-muted"></span>
+                            <button id="clearFile" class="btn btn-sm btn-outline-secondary">Clear</button>
+                            <button id="parseBtn" class="btn btn-primary ms-auto">Parse Document</button>
+                        </div>
+
+                        <!-- Status -->
+                        <div id="statusBar" class="parser-status" style="display:none;">
+                            <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                            <span id="statusText">Parsing document...</span>
+                        </div>
+
+                        <!-- Error -->
+                        <div id="errorBar" class="alert alert-danger" style="display:none;" role="alert">
+                            <span id="errorText"></span>
+                        </div>
+
+                        <!-- Results -->
+                        <div id="resultArea" style="display:none;">
+                            <div class="parser-result-toolbar">
+                                <div class="btn-group" role="group">
+                                    <button class="btn btn-outline-secondary btn-sm active" id="viewRendered">Rendered</button>
+                                    <button class="btn btn-outline-secondary btn-sm" id="viewSource">Markdown Source</button>
+                                </div>
+                                <button class="btn btn-outline-primary btn-sm" id="copyMd">Copy Markdown</button>
+                            </div>
+                            <div id="renderedView" class="parser-result-content"></div>
+                            <pre id="sourceView" class="parser-result-source" style="display:none;"><code id="sourceCode"></code></pre>
+                        </div>
+
+                        <!-- Service status -->
+                        <div class="parser-footer">
+                            <span class="parser-service-status" id="serviceStatus">
+                                <span class="parser-status-dot" id="statusDot"></span>
+                                <span id="serviceLabel">Checking MinerU service...</span>
+                            </span>
+                            <span class="text-muted">Powered by <a href="https://github.com/opendatalab/MinerU" target="_blank">MinerU</a></span>
+                        </div>
+                    </div>
+                </div>
+            </t>
+        </template>
+    </data>
+</odoo>

@@ -2,7 +2,7 @@
 # Supports both local development (docker-compose) and production (Kubernetes)
 
 .PHONY: help dev-up dev-down dev-restart dev-update dev-logs dev-logs-odoo dev-build dev-shell \
-        up down restart update-odoo logs logs-odoo logs-api status forward forward-all \
+        dev-logs-ocr up down restart update-odoo logs logs-odoo logs-api logs-ocr status forward forward-all \
         render-thumbnails render-reports
 
 # ================================
@@ -64,6 +64,14 @@ dev-shell:
 	@echo "Opening Odoo shell (tvbo_dev database)..."
 	docker compose exec odoo odoo shell -d tvbo_dev
 
+dev-logs-ocr:
+	docker compose logs -f mineru
+
+dev-build-ocr:
+	@echo "Building MinerU OCR image (CPU pipeline backend)..."
+	docker compose build mineru
+	@echo "✓ MinerU image built"
+
 # ================================
 # THUMBNAIL GENERATION
 # ================================
@@ -117,6 +125,8 @@ help:
 	@echo "  make dev-logs-odoo    - Follow Odoo logs"
 	@echo "  make dev-build        - Rebuild local image"
 	@echo "  make dev-shell        - Open Odoo Python shell"
+	@echo "  make dev-logs-ocr     - Follow MinerU OCR logs"
+	@echo "  make dev-build-ocr    - Build MinerU image"
 	@echo "  make render-thumbnails       - Generate KG browser thumbnails"
 	@echo "  make render-thumbnails-force - Re-generate all thumbnails"
 	@echo ""
@@ -189,6 +199,7 @@ status:
 	@kubectl get pods -n $(K8S_NAMESPACE) -l app=tvbo-odoo -o wide
 	@kubectl get pods -n $(K8S_NAMESPACE) -l app=tvbo-api -o wide
 	@kubectl get pods -n $(K8S_NAMESPACE) -l app=tvbo-postgres -o wide
+	@kubectl get pods -n $(K8S_NAMESPACE) -l app=mineru -o wide
 	@echo ""
 	@echo "Services:"
 	@kubectl get svc -n $(K8S_NAMESPACE) -l app=tvbo-odoo
@@ -206,6 +217,9 @@ logs:
 	@echo ""
 	@echo "=== Odoo ==="
 	@kubectl logs -n $(K8S_NAMESPACE) -l app=tvbo-odoo --tail=20 || true
+	@echo ""
+	@echo "=== MinerU OCR ==="
+	@kubectl logs -n $(K8S_NAMESPACE) -l app=mineru --tail=20 || true
 
 # Follow Odoo logs
 logs-odoo:
@@ -216,6 +230,11 @@ logs-odoo:
 logs-api:
 	@echo "Following API logs (Ctrl+C to stop)..."
 	kubectl logs -n $(K8S_NAMESPACE) -l app=tvbo-api -f
+
+# Follow MinerU OCR logs
+logs-ocr:
+	@echo "Following MinerU OCR logs (Ctrl+C to stop)..."
+	kubectl logs -n $(K8S_NAMESPACE) -l app=mineru -f
 
 # Port-forward Odoo only (avoids conflict with other Odoo projects)
 forward:

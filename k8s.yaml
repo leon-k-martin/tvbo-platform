@@ -161,9 +161,90 @@ spec:
             claimName: tvbo-postgres-pvc
 
 ---
+# MinerU document parser (CPU-only, pipeline backend)
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mineru-models-pvc
+  namespace: kube-system
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: microk8s-hostpath
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mineru-output-pvc
+  namespace: kube-system
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: microk8s-hostpath
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mineru
+  namespace: kube-system
+spec:
+  selector:
+    app: mineru
+  ports: [{port: 8000}]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mineru
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      app: mineru
+  template:
+    metadata:
+      labels:
+        app: mineru
+    spec:
+      containers:
+        - name: mineru
+          image: ghcr.io/leon-k-martin/tvbo-mineru:latest
+          ports: [{containerPort: 8000}]
+          resources:
+            requests:
+              memory: "4Gi"
+              cpu: "2"
+            limits:
+              memory: "8Gi"
+              cpu: "4"
+          volumeMounts:
+            - {name: models, mountPath: /root/.cache}
+            - {name: output, mountPath: /app/output}
+          readinessProbe:
+            httpGet: {path: /health, port: 8000}
+            initialDelaySeconds: 60
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: {path: /health, port: 8000}
+            initialDelaySeconds: 90
+            periodSeconds: 20
+      volumes:
+        - name: models
+          persistentVolumeClaim:
+            claimName: mineru-models-pvc
+        - name: output
+          persistentVolumeClaim:
+            claimName: mineru-output-pvc
+
+---
 # Ingress — Kong API Gateway routes
-# /api/* → tvbo-api FastAPI server (network data, ontology, simulation)
-# /*     → Odoo (website, knowledge graph browser, configurator)
+# /api/*  → tvbo-api FastAPI server (network data, ontology, simulation)
+# /ocr/*  → MinerU document parser (PDF → Markdown)
+# /*      → Odoo (website, knowledge graph browser, configurator)
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -182,6 +263,13 @@ spec:
             backend:
               service:
                 name: tvbo-api
+                port:
+                  number: 8000
+          - path: /ocr
+            pathType: Prefix
+            backend:
+              service:
+                name: mineru
                 port:
                   number: 8000
           - path: /

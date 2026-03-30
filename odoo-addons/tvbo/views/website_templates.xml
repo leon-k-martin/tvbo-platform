@@ -53,6 +53,9 @@
                                     <a class="nav-link" href="/tvbo/configurator">Model Builder</a>
                                 </li>
                                 <li class="nav-item">
+                                    <a class="nav-link" href="/tvbo/parser">Document Parser</a>
+                                </li>
+                                <li class="nav-item">
                                     <a class="nav-link" href="https://virtual-twin.github.io/tvbo/"
                                         target="_blank">Docs</a>
                                 </li>

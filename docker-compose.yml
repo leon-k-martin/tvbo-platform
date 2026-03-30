@@ -65,6 +65,25 @@ services:
         condition: service_healthy
     command: ["--dev=reload,qweb,werkzeug,xml"]
 
+  mineru:
+    build:
+      context: .
+      dockerfile: Dockerfile.mineru
+    container_name: tvbo-mineru-dev
+    volumes:
+      - mineru-models:/root/.cache
+      - mineru-output:/app/output
+    ports:
+      - "8002:8000"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+
 volumes:
   tvbo-postgres-data:
   tvbo-odoo-data:
+  mineru-models:
+  mineru-output:

@@ -1,0 +1,155 @@
+/* Document Parser Styles */
+
+/* Upload drop zone */
+.parser-upload-area {
+    border: 2px dashed #adb5bd;
+    border-radius: 12px;
+    padding: 3rem 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background-color 0.2s;
+    background: #fafbfc;
+}
+.parser-upload-area:hover,
+.parser-upload-area.dragover {
+    border-color: #0d6efd;
+    background: #e8f0fe;
+}
+.parser-upload-area i {
+    font-size: 2.5rem;
+    color: #6c757d;
+    margin-bottom: 0.5rem;
+}
+.parser-upload-area p {
+    margin: 0;
+    color: #6c757d;
+}
+
+/* File info bar */
+.parser-file-info {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+}
+.parser-file-info .file-details {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+}
+.parser-file-info .file-name {
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.parser-file-info .file-size {
+    color: #6c757d;
+    font-size: 0.875rem;
+    white-space: nowrap;
+}
+.parser-file-info .file-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+/* Status and error bars */
+.parser-status {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    background: #e8f0fe;
+    border-radius: 8px;
+    color: #0d47a1;
+}
+.parser-status .spinner-border {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+.parser-error {
+    padding: 0.75rem 1rem;
+    background: #fce4ec;
+    border-radius: 8px;
+    color: #b71c1c;
+}
+
+/* Result area */
+.parser-result-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+}
+.parser-result-content {
+    background: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 1.5rem;
+    min-height: 200px;
+    max-height: 70vh;
+    overflow-y: auto;
+    line-height: 1.7;
+}
+.parser-result-content img {
+    max-width: 100%;
+}
+.parser-result-content table {
+    border-collapse: collapse;
+    margin: 1rem 0;
+    width: 100%;
+}
+.parser-result-content th,
+.parser-result-content td {
+    border: 1px solid #dee2e6;
+    padding: 0.5rem;
+}
+.parser-result-source {
+    background: #1e1e1e;
+    color: #d4d4d4;
+    border-radius: 8px;
+    padding: 1.5rem;
+    min-height: 200px;
+    max-height: 70vh;
+    overflow: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-family: 'Fira Code', 'Consolas', monospace;
+    font-size: 0.875rem;
+    line-height: 1.6;
+}
+
+/* Footer */
+.parser-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 0.5rem;
+}
+
+/* Service status indicator */
+.parser-service-status {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.8rem;
+    color: #6c757d;
+}
+.parser-status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #adb5bd;
+}
+.parser-status-dot.online {
+    background: #28a745;
+}
+.parser-status-dot.offline {
+    background: #dc3545;
+}

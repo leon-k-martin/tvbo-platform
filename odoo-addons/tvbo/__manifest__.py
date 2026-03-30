@@ -45,7 +45,8 @@
         'views/configurator_templates.xml',
         'views/database_views.xml',
         'views/menus.xml',
-        'views/literature_views.xml'
+        'views/literature_views.xml',
+        'views/document_parser_templates.xml'
     ],
     'installable': True,
     'application': True,

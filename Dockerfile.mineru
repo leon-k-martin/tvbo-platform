@@ -1,0 +1,19 @@
+# MinerU document parser - CPU-only (pipeline backend)
+# Converts PDFs with equations to Markdown via FastAPI
+FROM python:3.12-slim
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        libgl1 libglib2.0-0 curl && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+RUN pip install --no-cache-dir "mineru[pipeline]"
+
+# Pre-download pipeline models on build (avoids slow first request)
+RUN printf 'huggingface\npipeline\n' | mineru-models-download
+
+EXPOSE 8000
+
+# Use pipeline backend (CPU), not vlm
+ENTRYPOINT ["mineru-api"]
+CMD ["--host", "0.0.0.0", "--port", "8000", "-b", "pipeline"]
