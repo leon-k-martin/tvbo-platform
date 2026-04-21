@@ -10,15 +10,18 @@ log() {
 }
 
 # Run odoo command with error capture (set -e would hide the traceback)
+# Mirror output to /var/lib/odoo/upgrade.log so it survives container restart.
+UPGRADE_LOG=/var/lib/odoo/upgrade.log
 run_odoo() {
   set +e
-  odoo "$@" 2>&1
-  local rc=$?
+  odoo "$@" --log-level=info 2>&1 | tee -a "$UPGRADE_LOG"
+  local rc=${PIPESTATUS[0]}
   set -e
   if [ $rc -ne 0 ]; then
-    log "ERROR: odoo command failed with exit code $rc"
-    log "Command was: odoo $*"
-    # Check for OOM kill
+    log "ERROR: odoo command failed with exit code $rc" | tee -a "$UPGRADE_LOG"
+    log "Command was: odoo $*" | tee -a "$UPGRADE_LOG"
+    log "Last 50 lines of upgrade log:" | tee -a "$UPGRADE_LOG"
+    tail -50 "$UPGRADE_LOG" || true
     if [ $rc -eq 137 ] || [ $rc -eq 255 ]; then
       log "Checking dmesg for OOM..."
       dmesg 2>/dev/null | tail -20 || true
@@ -26,6 +29,10 @@ run_odoo() {
     exit $rc
   fi
 }
+
+# Rotate upgrade log so each run starts fresh
+mkdir -p "$(dirname "$UPGRADE_LOG")"
+: > "$UPGRADE_LOG" 2>/dev/null || true
 
 # Support both Odoo's standard env vars (HOST, USER, PASSWORD) and DB_* variants
 DB_HOST=${HOST:-${DB_HOST:-postgres}}
