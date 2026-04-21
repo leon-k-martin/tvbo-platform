@@ -18,8 +18,16 @@
             <field name="name">virtualdbs</field>
         </record>
 
+        <record id="brain_atlas_lobar" model="tvbo.brain_atlas">
+            <field name="name">Lobar</field>
+        </record>
+
         <record id="brain_atlas_desikankilliany" model="tvbo.brain_atlas">
             <field name="name">DesikanKilliany</field>
+        </record>
+
+        <record id="brain_atlas_lobar8" model="tvbo.brain_atlas">
+            <field name="name">Lobar8</field>
         </record>
 
         <record id="brain_atlas_destrieux" model="tvbo.brain_atlas">
@@ -54,9 +62,19 @@
             <field name="atlas" ref="brain_atlas_virtualdbs"/>
         </record>
 
+        <record id="parcellation_lobar" model="tvbo.parcellation">
+            <field name="label">Lobar</field>
+            <field name="atlas" ref="brain_atlas_lobar"/>
+        </record>
+
         <record id="parcellation_desikankilliany" model="tvbo.parcellation">
             <field name="label">DesikanKilliany</field>
             <field name="atlas" ref="brain_atlas_desikankilliany"/>
+        </record>
+
+        <record id="parcellation_lobar8" model="tvbo.parcellation">
+            <field name="label">Lobar8</field>
+            <field name="atlas" ref="brain_atlas_lobar8"/>
         </record>
 
         <record id="parcellation_destrieux" model="tvbo.parcellation">
@@ -74,402 +92,489 @@
             <field name="atlas" ref="brain_atlas_hcpex"/>
         </record>
 
-
-        <record id="tractogram_ppmi85" model="tvbo.tractogram">
-            <field name="name">PPMI85</field>
-            <field name="label">PPMI85</field>
-        </record>
-
-        <record id="tractogram_dtor" model="tvbo.tractogram">
-            <field name="name">dTOR</field>
-            <field name="label">dTOR</field>
-        </record>
-
-        <record id="tractogram_mghuschcp32" model="tvbo.tractogram">
-            <field name="name">MghUscHcp32</field>
-            <field name="label">MghUscHcp32</field>
-        </record>
-
         <record id="network_tpl_mni152nlin2009casym_cohort_ppmi85_rec_ppmi85_atlas_yeo17_desc_sc_relmat" model="tvbo.network">
             <field name="label">Yeo17 (PPMI85)</field>
+            <field name="data_file">tpl-MNI152NLin2009cAsym_cohort-PPMI85_rec-PPMI85_atlas-Yeo17_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">17</field>
-            <field name="tractogram" ref="tractogram_ppmi85"/>
+            <field name="tractogram">{'name': 'PPMI85'}</field>
             <field name="parcellation" ref="parcellation_yeo17"/>
         </record>
 
         <record id="network_tpl_mni152nlin2009basym_cohort_hcpya_rec_dtor_atlas_hcpmmp1_desc_sc_relmat" model="tvbo.network">
             <field name="label">hcpmmp1 (dTOR)</field>
+            <field name="data_file">tpl-MNI152NLin2009bAsym_cohort-HCPYA_rec-dTOR_atlas-HCPMMP1_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">379</field>
-            <field name="tractogram" ref="tractogram_dtor"/>
+            <field name="tractogram">{'name': 'dTOR'}</field>
             <field name="parcellation" ref="parcellation_hcpmmp1"/>
         </record>
 
         <record id="network_tpl_fslmni152_cohort_hcpya_rec_dtor_atlas_schaefer2018_seg_7networks_scale_900_desc_sc_relmat" model="tvbo.network">
             <field name="label">Schaefer2018_900_7Networks_dTOR</field>
+            <field name="data_file">tpl-FSLMNI152_cohort-HCPYA_rec-dTOR_atlas-Schaefer2018_seg-7Networks_scale-900_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">900</field>
-            <field name="tractogram" ref="tractogram_dtor"/>
+            <field name="tractogram">{'name': 'dTOR'}</field>
             <field name="parcellation" ref="parcellation_schaefer2018"/>
         </record>
 
         <record id="network_tpl_mni152nlin2009casym_cohort_hcpya_rec_dtor_atlas_virtualdbs_desc_sc_relmat" model="tvbo.network">
             <field name="label">virtualdbs (dTOR)</field>
+            <field name="data_file">tpl-MNI152NLin2009cAsym_cohort-HCPYA_rec-dTOR_atlas-virtualdbs_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">370</field>
-            <field name="tractogram" ref="tractogram_dtor"/>
+            <field name="tractogram">{'name': 'dTOR'}</field>
             <field name="parcellation" ref="parcellation_virtualdbs"/>
         </record>
 
         <record id="network_tpl_fslmni152_cohort_mghuschcp32_rec_mghuschcp32_atlas_schaefer2018_seg_17networks_scale_1000_desc_sc_relmat" model="tvbo.network">
             <field name="label">Schaefer100017Networks (MghUscHcp32)</field>
+            <field name="data_file">tpl-FSLMNI152_cohort-MghUscHcp32_rec-MghUscHcp32_atlas-Schaefer2018_seg-17Networks_scale-1000_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">1000</field>
-            <field name="tractogram" ref="tractogram_mghuschcp32"/>
+            <field name="tractogram">{'name': 'MghUscHcp32'}</field>
             <field name="parcellation" ref="parcellation_schaefer2018"/>
+        </record>
+
+        <record id="network_tpl_mni152nlin2009casym_cohort_hcpya_rec_dtor_atlas_lobar_desc_sc_relmat" model="tvbo.network">
+            <field name="label">Lobar (dTOR)</field>
+            <field name="data_file">tpl-MNI152NLin2009cAsym_cohort-HCPYA_rec-dTOR_atlas-Lobar_desc-SC_relmat.h5</field>
+            <field name="number_of_nodes">17</field>
+            <field name="tractogram">{'name': 'dTOR'}</field>
+            <field name="parcellation" ref="parcellation_lobar"/>
         </record>
 
         <record id="network_tpl_fslmni152_cohort_hcpya_rec_dtor_atlas_schaefer2018_seg_7networks_scale_100_desc_sc_relmat" model="tvbo.network">
             <field name="label">Schaefer2018_100_7Networks_dTOR</field>
+            <field name="data_file">tpl-FSLMNI152_cohort-HCPYA_rec-dTOR_atlas-Schaefer2018_seg-7Networks_scale-100_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">100</field>
-            <field name="tractogram" ref="tractogram_dtor"/>
+            <field name="tractogram">{'name': 'dTOR'}</field>
             <field name="parcellation" ref="parcellation_schaefer2018"/>
         </record>
 
         <record id="network_tpl_mni152nlin2009basym_cohort_mghuschcp32_rec_mghuschcp32_atlas_hcpmmp1_desc_sc_relmat" model="tvbo.network">
             <field name="label">hcpmmp1 (MghUscHcp32)</field>
+            <field name="data_file">tpl-MNI152NLin2009bAsym_cohort-MghUscHcp32_rec-MghUscHcp32_atlas-HCPMMP1_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">379</field>
-            <field name="tractogram" ref="tractogram_mghuschcp32"/>
+            <field name="tractogram">{'name': 'MghUscHcp32'}</field>
             <field name="parcellation" ref="parcellation_hcpmmp1"/>
         </record>
 
         <record id="network_tpl_mni152nlin2009casym_cohort_hcpya_rec_dtor_atlas_yeo17_desc_sc_relmat" model="tvbo.network">
             <field name="label">Yeo17 (dTOR)</field>
+            <field name="data_file">tpl-MNI152NLin2009cAsym_cohort-HCPYA_rec-dTOR_atlas-Yeo17_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">17</field>
-            <field name="tractogram" ref="tractogram_dtor"/>
+            <field name="tractogram">{'name': 'dTOR'}</field>
             <field name="parcellation" ref="parcellation_yeo17"/>
         </record>
 
         <record id="network_tpl_fslmni152_cohort_hcpya_rec_dtor_atlas_schaefer2018_seg_17networks_scale_1000_desc_sc_relmat" model="tvbo.network">
             <field name="label">Schaefer2018_1000_17Networks_dTOR</field>
+            <field name="data_file">tpl-FSLMNI152_cohort-HCPYA_rec-dTOR_atlas-Schaefer2018_seg-17Networks_scale-1000_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">1000</field>
-            <field name="tractogram" ref="tractogram_dtor"/>
+            <field name="tractogram">{'name': 'dTOR'}</field>
             <field name="parcellation" ref="parcellation_schaefer2018"/>
         </record>
 
         <record id="network_tpl_fslmni152_cohort_hcpya_rec_dtor_atlas_schaefer2018_seg_17networks_scale_500_desc_sc_relmat" model="tvbo.network">
             <field name="label">Schaefer2018_500_17Networks_dTOR</field>
+            <field name="data_file">tpl-FSLMNI152_cohort-HCPYA_rec-dTOR_atlas-Schaefer2018_seg-17Networks_scale-500_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">500</field>
-            <field name="tractogram" ref="tractogram_dtor"/>
+            <field name="tractogram">{'name': 'dTOR'}</field>
             <field name="parcellation" ref="parcellation_schaefer2018"/>
-        </record>
-
-        <record id="network_tpl_mni152nlin2009casym_cohort_ppmi85_rec_ppmi85_atlas_desikankilliany_seg_ranked_desc_sc_relmat" model="tvbo.network">
-            <field name="label">DesikanKillianyranked (PPMI85)</field>
-            <field name="number_of_nodes">87</field>
-            <field name="tractogram" ref="tractogram_ppmi85"/>
-            <field name="parcellation" ref="parcellation_desikankilliany"/>
         </record>
 
         <record id="network_sensors_eeg_brainstorm_65" model="tvbo.network">
             <field name="label">EEG Brainstorm 65</field>
+            <field name="data_file">acq-EEGBrainstorm65_sensors.h5</field>
             <field name="number_of_nodes">65</field>
+        </record>
+
+        <record id="network_acq_seeg588_sensors" model="tvbo.network">
+            <field name="label">SEEG 588 contacts</field>
+            <field name="data_file">acq-SEEG588_sensors</field>
+            <field name="number_of_nodes">588</field>
         </record>
 
         <record id="network_tpl_mni152nlin2009casym_cohort_hcpya_rec_dtor_atlas_desikankilliany_desc_sc_relmat" model="tvbo.network">
             <field name="label">DesikanKilliany (dTOR)</field>
+            <field name="data_file">tpl-MNI152NLin2009cAsym_cohort-HCPYA_rec-dTOR_atlas-DesikanKilliany_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">87</field>
-            <field name="tractogram" ref="tractogram_dtor"/>
+            <field name="tractogram">{'name': 'dTOR'}</field>
             <field name="parcellation" ref="parcellation_desikankilliany"/>
         </record>
 
         <record id="network_tpl_mni152nlin2009basym_cohort_hcpya_rec_dtor_atlas_hcpmmp1_seg_ordered_desc_sc_relmat" model="tvbo.network">
             <field name="label">hcpmmp1ordered (dTOR)</field>
+            <field name="data_file">tpl-MNI152NLin2009bAsym_cohort-HCPYA_rec-dTOR_atlas-HCPMMP1_seg-ordered_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">379</field>
-            <field name="tractogram" ref="tractogram_dtor"/>
+            <field name="tractogram">{'name': 'dTOR'}</field>
             <field name="parcellation" ref="parcellation_hcpmmp1"/>
-        </record>
-
-        <record id="network_tpl_mni152nlin2009casym_cohort_hcpya_rec_dtor_atlas_desikankilliany_seg_ranked_desc_sc_relmat" model="tvbo.network">
-            <field name="label">DesikanKillianyranked (dTOR)</field>
-            <field name="number_of_nodes">87</field>
-            <field name="tractogram" ref="tractogram_dtor"/>
-            <field name="parcellation" ref="parcellation_desikankilliany"/>
         </record>
 
         <record id="network_example_3node_network" model="tvbo.network">
             <field name="label">Simple 3-Node Network Example</field>
+            <field name="data_file">example_3node_network</field>
             <field name="number_of_nodes">3</field>
         </record>
 
         <record id="network_tpl_fslmni152_cohort_hcpya_rec_dtor_atlas_schaefer2018_seg_7networks_scale_300_desc_sc_relmat" model="tvbo.network">
             <field name="label">Schaefer2018_300_7Networks_dTOR</field>
+            <field name="data_file">tpl-FSLMNI152_cohort-HCPYA_rec-dTOR_atlas-Schaefer2018_seg-7Networks_scale-300_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">300</field>
-            <field name="tractogram" ref="tractogram_dtor"/>
+            <field name="tractogram">{'name': 'dTOR'}</field>
             <field name="parcellation" ref="parcellation_schaefer2018"/>
         </record>
 
         <record id="network_tpl_fslmni152_cohort_hcpya_rec_dtor_atlas_schaefer2018_seg_17networks_scale_700_desc_sc_relmat" model="tvbo.network">
             <field name="label">Schaefer2018_700_17Networks_dTOR</field>
+            <field name="data_file">tpl-FSLMNI152_cohort-HCPYA_rec-dTOR_atlas-Schaefer2018_seg-17Networks_scale-700_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">700</field>
-            <field name="tractogram" ref="tractogram_dtor"/>
+            <field name="tractogram">{'name': 'dTOR'}</field>
             <field name="parcellation" ref="parcellation_schaefer2018"/>
         </record>
 
         <record id="network_tpl_mni152nlin2009casym_cohort_mghuschcp32_rec_mghuschcp32_atlas_desikankilliany_desc_sc_relmat" model="tvbo.network">
             <field name="label">DesikanKilliany (MghUscHcp32)</field>
+            <field name="data_file">tpl-MNI152NLin2009cAsym_cohort-MghUscHcp32_rec-MghUscHcp32_atlas-DesikanKilliany_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">87</field>
-            <field name="tractogram" ref="tractogram_mghuschcp32"/>
+            <field name="tractogram">{'name': 'MghUscHcp32'}</field>
             <field name="parcellation" ref="parcellation_desikankilliany"/>
         </record>
 
-        <record id="network_tpl_mni152nlin2009casym_cohort_hcpya_rec_dtor_atlas_destrieux_seg_ranked_desc_sc_relmat" model="tvbo.network">
-            <field name="label">Destrieux ranked (dTOR)</field>
-            <field name="number_of_nodes">167</field>
-            <field name="tractogram" ref="tractogram_dtor"/>
-            <field name="parcellation" ref="parcellation_destrieux"/>
+        <record id="network_acq_eegbrainstorm65_sensors" model="tvbo.network">
+            <field name="label">EEG Brainstorm 65</field>
+            <field name="data_file">acq-EEGBrainstorm65_sensors.h5</field>
+            <field name="number_of_nodes">65</field>
         </record>
 
         <record id="network_tpl_mni152nlin2009casym_cohort_mghuschcp32_rec_mghuschcp32_atlas_yeo17_desc_sc_relmat" model="tvbo.network">
             <field name="label">Yeo17 (MghUscHcp32)</field>
+            <field name="data_file">tpl-MNI152NLin2009cAsym_cohort-MghUscHcp32_rec-MghUscHcp32_atlas-Yeo17_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">17</field>
-            <field name="tractogram" ref="tractogram_mghuschcp32"/>
+            <field name="tractogram">{'name': 'MghUscHcp32'}</field>
             <field name="parcellation" ref="parcellation_yeo17"/>
         </record>
 
         <record id="network_tpl_fslmni152_cohort_hcpya_rec_dtor_atlas_schaefer2018_seg_17networks_scale_100_desc_sc_relmat" model="tvbo.network">
             <field name="label">Schaefer2018_100_17Networks_dTOR</field>
+            <field name="data_file">tpl-FSLMNI152_cohort-HCPYA_rec-dTOR_atlas-Schaefer2018_seg-17Networks_scale-100_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">100</field>
-            <field name="tractogram" ref="tractogram_dtor"/>
+            <field name="tractogram">{'name': 'dTOR'}</field>
             <field name="parcellation" ref="parcellation_schaefer2018"/>
         </record>
 
         <record id="network_tpl_fslmni152_cohort_hcpya_rec_dtor_atlas_schaefer2018_seg_7networks_scale_500_desc_sc_relmat" model="tvbo.network">
             <field name="label">Schaefer2018_500_7Networks_dTOR</field>
+            <field name="data_file">tpl-FSLMNI152_cohort-HCPYA_rec-dTOR_atlas-Schaefer2018_seg-7Networks_scale-500_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">500</field>
-            <field name="tractogram" ref="tractogram_dtor"/>
+            <field name="tractogram">{'name': 'dTOR'}</field>
             <field name="parcellation" ref="parcellation_schaefer2018"/>
         </record>
 
         <record id="network_tpl_fslmni152_cohort_hcpya_rec_dtor_atlas_schaefer2018_seg_7networks_scale_1000_desc_sc_relmat" model="tvbo.network">
             <field name="label">Schaefer2018_1000_7Networks_dTOR</field>
+            <field name="data_file">tpl-FSLMNI152_cohort-HCPYA_rec-dTOR_atlas-Schaefer2018_seg-7Networks_scale-1000_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">1000</field>
-            <field name="tractogram" ref="tractogram_dtor"/>
+            <field name="tractogram">{'name': 'dTOR'}</field>
             <field name="parcellation" ref="parcellation_schaefer2018"/>
+        </record>
+
+        <record id="network_acq_megbrainstorm276_sensors" model="tvbo.network">
+            <field name="label">MEG Brainstorm 276</field>
+            <field name="data_file">acq-MEGBrainstorm276_sensors.h5</field>
+            <field name="number_of_nodes">276</field>
         </record>
 
         <record id="network_tpl_fslmni152_cohort_hcpya_rec_dtor_atlas_schaefer2018_seg_17networks_scale_900_desc_sc_relmat" model="tvbo.network">
             <field name="label">Schaefer2018_900_17Networks_dTOR</field>
+            <field name="data_file">tpl-FSLMNI152_cohort-HCPYA_rec-dTOR_atlas-Schaefer2018_seg-17Networks_scale-900_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">900</field>
-            <field name="tractogram" ref="tractogram_dtor"/>
+            <field name="tractogram">{'name': 'dTOR'}</field>
             <field name="parcellation" ref="parcellation_schaefer2018"/>
         </record>
 
-        <record id="network_tpl_mni152nlin2009casym_cohort_mghuschcp32_rec_mghuschcp32_atlas_destrieux_seg_ranked_desc_sc_relmat" model="tvbo.network">
-            <field name="label">Destrieuxranked (MghUscHcp32)</field>
-            <field name="number_of_nodes">167</field>
-            <field name="tractogram" ref="tractogram_mghuschcp32"/>
-            <field name="parcellation" ref="parcellation_destrieux"/>
+        <record id="network_tpl_mni152nlin2009casym_cohort_hcpya_atlas_lobar8_hemi_r_desc_surf_relmat" model="tvbo.network">
+            <field name="label">Lobar8 RH surface (fsaverage 164k, 163842 vertices)</field>
+            <field name="data_file">tpl-MNI152NLin2009cAsym_cohort-HCPYA_atlas-Lobar8_hemi-R_desc-surf_relmat.h5</field>
+            <field name="number_of_nodes">163842</field>
+            <field name="parcellation" ref="parcellation_lobar8"/>
+        </record>
+
+        <record id="network_tpl_fslmni152_cohort_hcpya_rec_hansen2022_atlas_schaefer2018_seg_7networks_scale_100_desc_scfc_relmat" model="tvbo.network">
+            <field name="label">Schaefer2018_100_7Networks_Hansen2022_SCFC</field>
+            <field name="data_file">tpl-FSLMNI152_cohort-HCPYA_rec-Hansen2022_atlas-Schaefer2018_seg-7Networks_scale-100_desc-SCFC_relmat.h5</field>
+            <field name="number_of_nodes">100</field>
+            <field name="tractogram">{'name': 'Hansen2022', 'label': 'MRtrix3-MSMT-CSD-SIFT2 group-consensus SC', 'description': 'Group-consensus structural connectivity from HCP Young Adult cohort. DWI pre-processed with MRtrix3 (v3). Fiber orientation distributions using multi-shell multi-tissue constrained spherical deconvolution (MSMT-CSD). Probabilistic streamline tractography on the generated FODs. Streamline weights optimized with SIFT2 (cross-section multiplier). Group-consensus binary network constructed preserving density and edge-length distributions of individual connectomes. Edge weights: mean log-transformed streamline count of non-zero edges across participants, normalized to [0, 1].', 'processing_pipeline': 'MRtrix3-MSMT-CSD-SIFT2', 'reference': 'Hansen JY, Shafiei G, Markello RD, Smart K, Cox SML, Wu Y, Diez I, Schirner M, Wirsich J, Bhatt DL, Misic B. (2022). Mapping neurotransmitter systems to the structural and functional organization of the human neocortex. Nature Neuroscience, 25, 1569-1581. https://doi.org/10.1038/s41593-022-01186-3'}</field>
+            <field name="parcellation" ref="parcellation_schaefer2018"/>
         </record>
 
         <record id="network_tpl_fslmni152_cohort_ppmi85_rec_ppmi85_atlas_schaefer2018_seg_17networks_scale_1000_desc_sc_relmat" model="tvbo.network">
             <field name="label">Schaefer100017Networks (PPMI85)</field>
+            <field name="data_file">tpl-FSLMNI152_cohort-PPMI85_rec-PPMI85_atlas-Schaefer2018_seg-17Networks_scale-1000_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">1000</field>
-            <field name="tractogram" ref="tractogram_ppmi85"/>
+            <field name="tractogram">{'name': 'PPMI85'}</field>
             <field name="parcellation" ref="parcellation_schaefer2018"/>
+        </record>
+
+        <record id="network_tpl_mni152nlin2009casym_cohort_hcpya_rec_dtor_atlas_lobar_desc_surf_relmat" model="tvbo.network">
+            <field name="label">Lobar surface (fsLR 32k, 64984 vertices)</field>
+            <field name="data_file">tpl-MNI152NLin2009cAsym_cohort-HCPYA_rec-dTOR_atlas-Lobar_desc-surf_relmat.h5</field>
+            <field name="number_of_nodes">64984</field>
+            <field name="parcellation" ref="parcellation_lobar"/>
         </record>
 
         <record id="network_tpl_fslmni152_cohort_hcpya_rec_dtor_atlas_schaefer2018_seg_17networks_scale_300_desc_sc_relmat" model="tvbo.network">
             <field name="label">Schaefer2018_300_17Networks_dTOR</field>
+            <field name="data_file">tpl-FSLMNI152_cohort-HCPYA_rec-dTOR_atlas-Schaefer2018_seg-17Networks_scale-300_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">300</field>
-            <field name="tractogram" ref="tractogram_dtor"/>
+            <field name="tractogram">{'name': 'dTOR'}</field>
             <field name="parcellation" ref="parcellation_schaefer2018"/>
         </record>
 
         <record id="network_tpl_fslmni152_cohort_hcpya_rec_dtor_atlas_schaefer2018_seg_7networks_scale_700_desc_sc_relmat" model="tvbo.network">
             <field name="label">Schaefer2018_700_7Networks_dTOR</field>
+            <field name="data_file">tpl-FSLMNI152_cohort-HCPYA_rec-dTOR_atlas-Schaefer2018_seg-7Networks_scale-700_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">700</field>
-            <field name="tractogram" ref="tractogram_dtor"/>
+            <field name="tractogram">{'name': 'dTOR'}</field>
             <field name="parcellation" ref="parcellation_schaefer2018"/>
         </record>
 
         <record id="network_tpl_mni152nlin2009basym_cohort_ppmi85_rec_ppmi85_atlas_hcpmmp1_seg_ordered_desc_sc_relmat" model="tvbo.network">
             <field name="label">hcpmmp1ordered (PPMI85)</field>
+            <field name="data_file">tpl-MNI152NLin2009bAsym_cohort-PPMI85_rec-PPMI85_atlas-HCPMMP1_seg-ordered_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">379</field>
-            <field name="tractogram" ref="tractogram_ppmi85"/>
+            <field name="tractogram">{'name': 'PPMI85'}</field>
             <field name="parcellation" ref="parcellation_hcpmmp1"/>
+        </record>
+
+        <record id="network_tpl_mni152nlin2009casym_cohort_hcpya_atlas_lobar8_desc_surf_relmat" model="tvbo.network">
+            <field name="label">Lobar8 surface (fsaverage 164k, 327684 vertices)</field>
+            <field name="data_file">tpl-MNI152NLin2009cAsym_cohort-HCPYA_atlas-Lobar8_desc-surf_relmat.h5</field>
+            <field name="number_of_nodes">327684</field>
+            <field name="parcellation" ref="parcellation_lobar8"/>
         </record>
 
         <record id="network_tpl_mni152nlin2009casym_cohort_ppmi85_rec_ppmi85_atlas_destrieux_desc_sc_relmat" model="tvbo.network">
             <field name="label">Destrieux (PPMI85)</field>
+            <field name="data_file">tpl-MNI152NLin2009cAsym_cohort-PPMI85_rec-PPMI85_atlas-Destrieux_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">167</field>
-            <field name="tractogram" ref="tractogram_ppmi85"/>
+            <field name="tractogram">{'name': 'PPMI85'}</field>
             <field name="parcellation" ref="parcellation_destrieux"/>
         </record>
 
         <record id="network_tpl_mni152nlin2009casym_cohort_hcpya_rec_dtor_atlas_destrieux_desc_sc_relmat" model="tvbo.network">
             <field name="label">Destrieux (dTOR)</field>
+            <field name="data_file">tpl-MNI152NLin2009cAsym_cohort-HCPYA_rec-dTOR_atlas-Destrieux_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">167</field>
-            <field name="tractogram" ref="tractogram_dtor"/>
+            <field name="tractogram">{'name': 'dTOR'}</field>
             <field name="parcellation" ref="parcellation_destrieux"/>
+        </record>
+
+        <record id="network_tpl_fsaverage_acq_eegstandard1005_atlas_desikankilliany_desc_projection_sensors" model="tvbo.network">
+            <field name="label">EEG standard_1005 fsaverage projection</field>
+            <field name="data_file">tpl-fsaverage_acq-EEGstandard1005_atlas-DesikanKilliany_desc-projection_sensors.h5</field>
+            <field name="number_of_nodes">61</field>
         </record>
 
         <record id="network_tpl_fslmni152_cohort_hcpya_rec_dtor_atlas_schaefer2018_seg_17networks_scale_400_desc_sc_relmat" model="tvbo.network">
             <field name="label">Schaefer2018_400_17Networks_dTOR</field>
+            <field name="data_file">tpl-FSLMNI152_cohort-HCPYA_rec-dTOR_atlas-Schaefer2018_seg-17Networks_scale-400_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">400</field>
-            <field name="tractogram" ref="tractogram_dtor"/>
+            <field name="tractogram">{'name': 'dTOR'}</field>
             <field name="parcellation" ref="parcellation_schaefer2018"/>
         </record>
 
         <record id="network_sensors_seeg_588" model="tvbo.network">
             <field name="label">SEEG 588 contacts</field>
+            <field name="data_file">sensors_seeg_588</field>
             <field name="number_of_nodes">588</field>
         </record>
 
         <record id="network_tpl_fslmni152_cohort_ppmi85_rec_ppmi85_atlas_schaefer2018_scale_1000_desc_sc_relmat" model="tvbo.network">
             <field name="label">Schaefer1000 (PPMI85)</field>
+            <field name="data_file">tpl-FSLMNI152_cohort-PPMI85_rec-PPMI85_atlas-Schaefer2018_scale-1000_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">1000</field>
-            <field name="tractogram" ref="tractogram_ppmi85"/>
+            <field name="tractogram">{'name': 'PPMI85'}</field>
             <field name="parcellation" ref="parcellation_schaefer2018"/>
         </record>
 
         <record id="network_tpl_mni152nlin2009basym_cohort_ppmi85_rec_ppmi85_atlas_hcpmmp1_desc_sc_relmat" model="tvbo.network">
             <field name="label">hcpmmp1 (PPMI85)</field>
+            <field name="data_file">tpl-MNI152NLin2009bAsym_cohort-PPMI85_rec-PPMI85_atlas-HCPMMP1_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">379</field>
-            <field name="tractogram" ref="tractogram_ppmi85"/>
+            <field name="tractogram">{'name': 'PPMI85'}</field>
             <field name="parcellation" ref="parcellation_hcpmmp1"/>
         </record>
 
         <record id="network_tpl_mni152nlin2009casym_cohort_mghuschcp32_rec_mghuschcp32_atlas_destrieux_desc_sc_relmat" model="tvbo.network">
             <field name="label">Destrieux (MghUscHcp32)</field>
+            <field name="data_file">tpl-MNI152NLin2009cAsym_cohort-MghUscHcp32_rec-MghUscHcp32_atlas-Destrieux_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">167</field>
-            <field name="tractogram" ref="tractogram_mghuschcp32"/>
+            <field name="tractogram">{'name': 'MghUscHcp32'}</field>
             <field name="parcellation" ref="parcellation_destrieux"/>
         </record>
 
         <record id="network_tpl_mni152nlin2009casym_rec_avgmatrix_atlas_desikankilliany_desc_scfc_relmat" model="tvbo.network">
             <field name="label">DesikanKilliany (avgMatrix SC+FC)</field>
+            <field name="data_file">tpl-MNI152NLin2009cAsym_rec-avgMatrix_atlas-DesikanKilliany_desc-SCFC_relmat.h5</field>
             <field name="number_of_nodes">84</field>
             <field name="parcellation" ref="parcellation_desikankilliany"/>
         </record>
 
+        <record id="network_tpl_mni152nlin2009casym_cohort_hcpya_rec_dtor_atlas_lobar8_desc_scfc_relmat" model="tvbo.network">
+            <field name="label">Lobar8 (dTOR)</field>
+            <field name="data_file">tpl-MNI152NLin2009cAsym_cohort-HCPYA_rec-dTOR_atlas-Lobar8_desc-SCFC_relmat.h5</field>
+            <field name="number_of_nodes">16</field>
+            <field name="tractogram">{'name': 'dTOR'}</field>
+            <field name="parcellation" ref="parcellation_lobar8"/>
+        </record>
+
         <record id="network_tpl_fslmni152_cohort_hcpya_rec_dtor_atlas_schaefer2018_seg_7networks_scale_800_desc_sc_relmat" model="tvbo.network">
             <field name="label">Schaefer2018_800_7Networks_dTOR</field>
+            <field name="data_file">tpl-FSLMNI152_cohort-HCPYA_rec-dTOR_atlas-Schaefer2018_seg-7Networks_scale-800_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">800</field>
-            <field name="tractogram" ref="tractogram_dtor"/>
+            <field name="tractogram">{'name': 'dTOR'}</field>
             <field name="parcellation" ref="parcellation_schaefer2018"/>
         </record>
 
         <record id="network_tpl_fslmni152_cohort_hcpya_rec_dtor_atlas_schaefer2018_seg_7networks_scale_200_desc_sc_relmat" model="tvbo.network">
             <field name="label">Schaefer2018_200_7Networks_dTOR</field>
+            <field name="data_file">tpl-FSLMNI152_cohort-HCPYA_rec-dTOR_atlas-Schaefer2018_seg-7Networks_scale-200_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">200</field>
-            <field name="tractogram" ref="tractogram_dtor"/>
+            <field name="tractogram">{'name': 'dTOR'}</field>
             <field name="parcellation" ref="parcellation_schaefer2018"/>
         </record>
 
         <record id="network_tpl_fslmni152_cohort_hcpya_rec_dtor_atlas_schaefer2018_seg_17networks_scale_600_desc_sc_relmat" model="tvbo.network">
             <field name="label">Schaefer2018_600_17Networks_dTOR</field>
+            <field name="data_file">tpl-FSLMNI152_cohort-HCPYA_rec-dTOR_atlas-Schaefer2018_seg-17Networks_scale-600_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">600</field>
-            <field name="tractogram" ref="tractogram_dtor"/>
+            <field name="tractogram">{'name': 'dTOR'}</field>
             <field name="parcellation" ref="parcellation_schaefer2018"/>
         </record>
 
         <record id="network_tpl_mni152nlin2009basym_cohort_mghuschcp32_rec_mghuschcp32_atlas_hcpmmp1_seg_ordered_desc_sc_relmat" model="tvbo.network">
             <field name="label">hcpmmp1ordered (MghUscHcp32)</field>
+            <field name="data_file">tpl-MNI152NLin2009bAsym_cohort-MghUscHcp32_rec-MghUscHcp32_atlas-HCPMMP1_seg-ordered_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">379</field>
-            <field name="tractogram" ref="tractogram_mghuschcp32"/>
+            <field name="tractogram">{'name': 'MghUscHcp32'}</field>
             <field name="parcellation" ref="parcellation_hcpmmp1"/>
+        </record>
+
+        <record id="network_sensors_eeg_standard1005_fsaverage_aparc_projection" model="tvbo.network">
+            <field name="label">EEG standard_1005 fsaverage projection</field>
+            <field name="data_file">tpl-fsaverage_acq-EEGstandard1005_atlas-DesikanKilliany_desc-projection_sensors.h5</field>
+            <field name="number_of_nodes">61</field>
+        </record>
+
+        <record id="network_tpl_mni152nlin2009casym_cohort_hcpya_atlas_lobar8_hemi_l_desc_surf_relmat" model="tvbo.network">
+            <field name="label">Lobar8 LH surface (fsaverage 164k, 163842 vertices)</field>
+            <field name="data_file">tpl-MNI152NLin2009cAsym_cohort-HCPYA_atlas-Lobar8_hemi-L_desc-surf_relmat.h5</field>
+            <field name="number_of_nodes">163842</field>
+            <field name="parcellation" ref="parcellation_lobar8"/>
         </record>
 
         <record id="network_tpl_mni152nlin2009casym_cohort_mghuschcp32_rec_mghuschcp32_atlas_hocpa_desc_sc_relmat" model="tvbo.network">
             <field name="label">HOCPA (MghUscHcp32)</field>
+            <field name="data_file">tpl-MNI152NLin2009cAsym_cohort-MghUscHcp32_rec-MghUscHcp32_atlas-HOCPA_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">48</field>
-            <field name="tractogram" ref="tractogram_mghuschcp32"/>
+            <field name="tractogram">{'name': 'MghUscHcp32'}</field>
             <field name="parcellation" ref="parcellation_hocpa"/>
         </record>
 
         <record id="network_tpl_mni152nlin2009casym_cohort_ppmi85_rec_ppmi85_atlas_virtualdbs_desc_sc_relmat" model="tvbo.network">
             <field name="label">virtualdbs (PPMI85)</field>
+            <field name="data_file">tpl-MNI152NLin2009cAsym_cohort-PPMI85_rec-PPMI85_atlas-virtualdbs_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">370</field>
-            <field name="tractogram" ref="tractogram_ppmi85"/>
+            <field name="tractogram">{'name': 'PPMI85'}</field>
             <field name="parcellation" ref="parcellation_virtualdbs"/>
         </record>
 
-        <record id="network_tpl_mni152nlin2009casym_cohort_ppmi85_rec_ppmi85_atlas_destrieux_seg_ranked_desc_sc_relmat" model="tvbo.network">
-            <field name="label">Destrieuxranked (PPMI85)</field>
-            <field name="number_of_nodes">167</field>
-            <field name="tractogram" ref="tractogram_ppmi85"/>
-            <field name="parcellation" ref="parcellation_destrieux"/>
+        <record id="network_tpl_mni152nlin2009casym_rec_avgmatrix_atlas_lobar8_desc_scfc_relmat" model="tvbo.network">
+            <field name="label">Lobar8 (avgMatrix)</field>
+            <field name="data_file">tpl-MNI152NLin2009cAsym_rec-avgMatrix_atlas-Lobar8_desc-SCFC_relmat.h5</field>
+            <field name="number_of_nodes">16</field>
+            <field name="parcellation" ref="parcellation_lobar8"/>
         </record>
 
         <record id="network_tpl_fslmni152_cohort_hcpya_rec_dtor_atlas_schaefer2018_seg_17networks_scale_800_desc_sc_relmat" model="tvbo.network">
             <field name="label">Schaefer2018_800_17Networks_dTOR</field>
+            <field name="data_file">tpl-FSLMNI152_cohort-HCPYA_rec-dTOR_atlas-Schaefer2018_seg-17Networks_scale-800_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">800</field>
-            <field name="tractogram" ref="tractogram_dtor"/>
+            <field name="tractogram">{'name': 'dTOR'}</field>
             <field name="parcellation" ref="parcellation_schaefer2018"/>
         </record>
 
         <record id="network_tpl_fslmni152_cohort_hcpya_rec_dtor_atlas_schaefer2018_scale_1000_desc_sc_relmat" model="tvbo.network">
             <field name="label">Schaefer1000 (dTOR)</field>
+            <field name="data_file">tpl-FSLMNI152_cohort-HCPYA_rec-dTOR_atlas-Schaefer2018_scale-1000_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">1000</field>
-            <field name="tractogram" ref="tractogram_dtor"/>
+            <field name="tractogram">{'name': 'dTOR'}</field>
             <field name="parcellation" ref="parcellation_schaefer2018"/>
-        </record>
-
-        <record id="network_tpl_mni152nlin2009casym_cohort_mghuschcp32_rec_mghuschcp32_atlas_desikankilliany_seg_ranked_desc_sc_relmat" model="tvbo.network">
-            <field name="label">DesikanKilliany ranked (MghUscHcp32)</field>
-            <field name="number_of_nodes">87</field>
-            <field name="tractogram" ref="tractogram_mghuschcp32"/>
-            <field name="parcellation" ref="parcellation_desikankilliany"/>
         </record>
 
         <record id="network_sensors_meg_brainstorm_276" model="tvbo.network">
             <field name="label">MEG Brainstorm 276</field>
+            <field name="data_file">acq-MEGBrainstorm276_sensors.h5</field>
             <field name="number_of_nodes">276</field>
         </record>
 
         <record id="network_tpl_fslmni152_cohort_hcpya_rec_dtor_atlas_schaefer2018_seg_7networks_scale_400_desc_sc_relmat" model="tvbo.network">
             <field name="label">Schaefer2018_400_7Networks_dTOR</field>
+            <field name="data_file">tpl-FSLMNI152_cohort-HCPYA_rec-dTOR_atlas-Schaefer2018_seg-7Networks_scale-400_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">400</field>
-            <field name="tractogram" ref="tractogram_dtor"/>
+            <field name="tractogram">{'name': 'dTOR'}</field>
             <field name="parcellation" ref="parcellation_schaefer2018"/>
         </record>
 
         <record id="network_tpl_mni152nlin2009casym_cohort_ppmi85_rec_ppmi85_atlas_desikankilliany_desc_sc_relmat" model="tvbo.network">
             <field name="label">DesikanKilliany (PPMI85)</field>
+            <field name="data_file">tpl-MNI152NLin2009cAsym_cohort-PPMI85_rec-PPMI85_atlas-DesikanKilliany_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">87</field>
-            <field name="tractogram" ref="tractogram_ppmi85"/>
+            <field name="tractogram">{'name': 'PPMI85'}</field>
             <field name="parcellation" ref="parcellation_desikankilliany"/>
         </record>
 
         <record id="network_tpl_mni152nlin2009casym_cohort_mghuschcp32_rec_mghuschcp32_atlas_virtualdbs_desc_sc_relmat" model="tvbo.network">
             <field name="label">virtualdbs (MghUscHcp32)</field>
+            <field name="data_file">tpl-MNI152NLin2009cAsym_cohort-MghUscHcp32_rec-MghUscHcp32_atlas-virtualdbs_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">370</field>
-            <field name="tractogram" ref="tractogram_mghuschcp32"/>
+            <field name="tractogram">{'name': 'MghUscHcp32'}</field>
             <field name="parcellation" ref="parcellation_virtualdbs"/>
         </record>
 
         <record id="network_tpl_fslmni152_cohort_mghuschcp32_rec_mghuschcp32_atlas_schaefer2018_scale_1000_desc_sc_relmat" model="tvbo.network">
             <field name="label">Schaefer1000 (MghUscHcp32)</field>
+            <field name="data_file">tpl-FSLMNI152_cohort-MghUscHcp32_rec-MghUscHcp32_atlas-Schaefer2018_scale-1000_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">1000</field>
-            <field name="tractogram" ref="tractogram_mghuschcp32"/>
+            <field name="tractogram">{'name': 'MghUscHcp32'}</field>
             <field name="parcellation" ref="parcellation_schaefer2018"/>
+        </record>
+
+        <record id="network_smileynetwork" model="tvbo.network">
+            <field name="label">SmileyNetwork</field>
+            <field name="data_file">SmileyNetwork.h5</field>
+            <field name="number_of_nodes">9</field>
         </record>
 
         <record id="network_tpl_fslmni152_cohort_hcpya_rec_dtor_atlas_schaefer2018_seg_17networks_scale_200_desc_sc_relmat" model="tvbo.network">
             <field name="label">Schaefer2018_200_17Networks_dTOR</field>
+            <field name="data_file">tpl-FSLMNI152_cohort-HCPYA_rec-dTOR_atlas-Schaefer2018_seg-17Networks_scale-200_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">200</field>
-            <field name="tractogram" ref="tractogram_dtor"/>
+            <field name="tractogram">{'name': 'dTOR'}</field>
             <field name="parcellation" ref="parcellation_schaefer2018"/>
         </record>
 
         <record id="network_tpl_fslmni152_cohort_hcpya_rec_dtor_atlas_schaefer2018_seg_7networks_scale_600_desc_sc_relmat" model="tvbo.network">
             <field name="label">Schaefer2018_600_7Networks_dTOR</field>
+            <field name="data_file">tpl-FSLMNI152_cohort-HCPYA_rec-dTOR_atlas-Schaefer2018_seg-7Networks_scale-600_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">600</field>
-            <field name="tractogram" ref="tractogram_dtor"/>
+            <field name="tractogram">{'name': 'dTOR'}</field>
             <field name="parcellation" ref="parcellation_schaefer2018"/>
         </record>
 
         <record id="network_tpl_mni152nlin2009casym_cohort_hcpya_rec_dtor_atlas_hcpex_desc_sc_relmat" model="tvbo.network">
             <field name="label">HCPex (dTOR)</field>
+            <field name="data_file">tpl-MNI152NLin2009cAsym_cohort-HCPYA_rec-dTOR_atlas-HCPex_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">427</field>
-            <field name="tractogram" ref="tractogram_dtor"/>
+            <field name="tractogram">{'name': 'dTOR'}</field>
             <field name="parcellation" ref="parcellation_hcpex"/>
         </record>
 

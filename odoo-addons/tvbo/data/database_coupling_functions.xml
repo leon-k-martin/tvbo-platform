@@ -233,6 +233,36 @@
             <field name="post_expression" ref="post_expr_kuramotocoupling"/>
         </record>
 
+        <record id="param_coupling_fastlinearcoupling_g" model="tvbo.parameter">
+            <field name="name">G</field>
+            <field name="value">0.1</field>
+            <field name="description">Global coupling strength scaling long-range connections</field>
+        </record>
+
+        <record id="param_coupling_fastlinearcoupling_b" model="tvbo.parameter">
+            <field name="name">b</field>
+            <field name="value">0.0</field>
+            <field name="description">Offset/bias added to coupling signal</field>
+        </record>
+
+        <record id="pre_expr_fastlinearcoupling" model="tvbo.equation">
+            <field name="righthandside">local_states</field>
+        </record>
+
+        <record id="post_expr_fastlinearcoupling" model="tvbo.equation">
+            <field name="righthandside">G * gx + b</field>
+        </record>
+
+        <record id="coupling_fastlinearcoupling" model="tvbo.coupling">
+            <field name="name">FastLinearCoupling</field>
+            <field name="description">Instantaneous linear coupling using vectorized matrix multiplication. Applies global coupling strength G to the weighted sum of source states. Faster than element-wise LinearCoupling for dense all-to-all connectivity.</field>
+            <field name="sparse">false</field>
+            <field name="delayed">false</field>
+            <field name="parameters" eval="[(6, 0, [ref('param_coupling_fastlinearcoupling_g'),ref('param_coupling_fastlinearcoupling_b')])]"/>
+            <field name="pre_expression" ref="pre_expr_fastlinearcoupling"/>
+            <field name="post_expression" ref="post_expr_fastlinearcoupling"/>
+        </record>
+
         <record id="param_coupling_scaling_a" model="tvbo.parameter">
             <field name="name">a</field>
             <field name="value">0.00390625</field>

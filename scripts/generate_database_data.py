@@ -682,6 +682,12 @@ def generate_network_data_xml(yaml_files: List[Path], output_file: Path):
             elif 'name' in data:
                 lines.append(f'            <field name="label">{escape_xml(data["name"])}</field>')
 
+            # Store the YAML stem as data_file so thumbnails can be resolved
+            # by filename match.  Prefer the explicit data_file key from the
+            # YAML; fall back to the YAML filename stem.
+            data_file_val = data.get('data_file') or yaml_file.stem
+            lines.append(f'            <field name="data_file">{escape_xml(str(data_file_val))}</field>')
+
             if 'number_of_regions' in data:
                 lines.append(f'            <field name="number_of_regions">{data["number_of_regions"]}</field>')
 

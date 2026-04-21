@@ -6,7 +6,7 @@
             <field name="name">a_e</field>
             <field name="label">Excitatory input gain</field>
             <field name="value">310.0</field>
-            <field name="unit">n/C</field>
+            <field name="unit">per_nC</field>
         </record>
 
         <record id="exp_ei_tuning_fic_eib_optimization_dyn_param_b_e" model="tvbo.parameter">
@@ -53,7 +53,7 @@
             <field name="name">a_i</field>
             <field name="label">Inhibitory input gain</field>
             <field name="value">615.0</field>
-            <field name="unit">n/C</field>
+            <field name="unit">per_nC</field>
         </record>
 
         <record id="exp_ei_tuning_fic_eib_optimization_dyn_param_b_i" model="tvbo.parameter">
@@ -492,25 +492,17 @@ Note: No alpha scaling - both terms contribute equally as in original.
             <field name="n_iterations">2000</field>
         </record>
 
-        <record id="exp_ei_tuning_fic_eib_optimization_opt_gradient_eib" model="tvbo.optimization">
-            <field name="name">gradient_eib</field>
-            <field name="label">Gradient-Based EI Tuning</field>
-            <field name="description">Alternative to iterative FIC+EIB: define combined loss and use automatic differentiation with modern optimizers. Loss combines FC error and activity deviation from FIC target.
-</field>
-        </record>
-
         <record id="experiment_ei_tuning_fic_eib_optimization" model="tvbo.simulation_experiment">
             <field name="label">EI Tuning: Functional Connectivity Fitting</field>
             <field name="description">Fitting functional connectivity using the two-population Reduced Wong-Wang model with explicit excitatory and inhibitory populations. Combines Feedback Inhibition Control (FIC) to maintain local E-I balance with EIB tuning to globally optimize network connectivity. Supports both iterative (FIC+EIB) and gradient-based optimization approaches.
 </field>
-            <field name="dynamics" ref="exp_ei_tuning_fic_eib_optimization_dynamics"/>
+            <field name="dynamics" eval="[(6, 0, [ref('exp_ei_tuning_fic_eib_optimization_dynamics')])]"/>
             <field name="network" ref="exp_ei_tuning_fic_eib_optimization_network"/>
             <field name="integration" ref="exp_ei_tuning_fic_eib_optimization_integrator"/>
             <field name="functions" eval="[(6, 0, [ref('exp_ei_tuning_fic_eib_optimization_func_hrf_kernel'), ref('exp_ei_tuning_fic_eib_optimization_func_prepend_history'), ref('exp_ei_tuning_fic_eib_optimization_func_volterra_transform'), ref('exp_ei_tuning_fic_eib_optimization_func_subsample_bold'), ref('exp_ei_tuning_fic_eib_optimization_func_rmse'), ref('exp_ei_tuning_fic_eib_optimization_func_correlation'), ref('exp_ei_tuning_fic_eib_optimization_func_fc_corr'), ref('exp_ei_tuning_fic_eib_optimization_func_fc_rmse'), ref('exp_ei_tuning_fic_eib_optimization_func_compute_fc'), ref('exp_ei_tuning_fic_eib_optimization_func_mean_activity'), ref('exp_ei_tuning_fic_eib_optimization_func_fic_update_rule'), ref('exp_ei_tuning_fic_eib_optimization_func_eib_update_wlre'), ref('exp_ei_tuning_fic_eib_optimization_func_eib_update_wffi'), ref('exp_ei_tuning_fic_eib_optimization_func_combined_loss')])]"/>
             <field name="observations" eval="[(6, 0, [ref('exp_ei_tuning_fic_eib_optimization_obs_bold'), ref('exp_ei_tuning_fic_eib_optimization_obs_mean_s_e'), ref('exp_ei_tuning_fic_eib_optimization_obs_mean_s_e_final'), ref('exp_ei_tuning_fic_eib_optimization_obs_mean_s_i'), ref('exp_ei_tuning_fic_eib_optimization_obs_fc_target')])]"/>
             <field name="derived_observations" eval="[(6, 0, [ref('exp_ei_tuning_fic_eib_optimization_dobs_fc'), ref('exp_ei_tuning_fic_eib_optimization_dobs_fc_inloop'), ref('exp_ei_tuning_fic_eib_optimization_dobs_fc_gradient'), ref('exp_ei_tuning_fic_eib_optimization_dobs_fc_corr'), ref('exp_ei_tuning_fic_eib_optimization_dobs_fc_rmse')])]"/>
             <field name="algorithms" eval="[(6, 0, [ref('exp_ei_tuning_fic_eib_optimization_algo_fic'), ref('exp_ei_tuning_fic_eib_optimization_algo_fic_eib')])]"/>
-            <field name="optimizations" eval="[(6, 0, [ref('exp_ei_tuning_fic_eib_optimization_opt_gradient_eib')])]"/>
             <field name="execution" ref="exp_ei_tuning_fic_eib_optimization_execution"/>
             <field name="references">- Schirner, M., Deco, G., &amp; Ritter, P. (2023). Learning how network structure shapes decision-making for bio-inspired computing. Nature Communications, 14(1), Article 1.
 - Wong, K.-F., &amp; Wang, X.-J. (2006). A recurrent network mechanism of time integration in perceptual decisions. J Neurosci, 26:1314-1328.
@@ -539,7 +531,7 @@ Note: No alpha scaling - both terms contribute equally as in original.
         <record id="exp_jr_meg_frequencygradient_optimization_dyn_param_a" model="tvbo.parameter">
             <field name="name">a</field>
             <field name="value">0.065</field>
-            <field name="unit">ms^-1</field>
+            <field name="unit">per_ms</field>
             <field name="description">Reciprocal of membrane time constant (excitatory)</field>
             <field name="domain" ref="exp_jr_meg_frequencygradient_optimization_dyn_param_a_range"/>
         </record>
@@ -552,7 +544,7 @@ Note: No alpha scaling - both terms contribute equally as in original.
         <record id="exp_jr_meg_frequencygradient_optimization_dyn_param_b" model="tvbo.parameter">
             <field name="name">b</field>
             <field name="value">0.065</field>
-            <field name="unit">ms^-1</field>
+            <field name="unit">per_ms</field>
             <field name="description">Reciprocal of membrane time constant (inhibitory)</field>
             <field name="domain" ref="exp_jr_meg_frequencygradient_optimization_dyn_param_b_range"/>
         </record>
@@ -567,14 +559,14 @@ Note: No alpha scaling - both terms contribute equally as in original.
         <record id="exp_jr_meg_frequencygradient_optimization_dyn_param_nu_max" model="tvbo.parameter">
             <field name="name">nu_max</field>
             <field name="value">0.0025</field>
-            <field name="unit">ms^-1</field>
+            <field name="unit">per_ms</field>
             <field name="description">Maximum firing rate</field>
         </record>
 
         <record id="exp_jr_meg_frequencygradient_optimization_dyn_param_r" model="tvbo.parameter">
             <field name="name">r</field>
             <field name="value">0.56</field>
-            <field name="unit">mV^-1</field>
+            <field name="unit">per_mV</field>
             <field name="description">Steepness of sigmoid</field>
         </record>
 
@@ -857,13 +849,6 @@ Note: No alpha scaling - both terms contribute equally as in original.
             <field name="description">Extract peak frequency from average spectrum</field>
         </record>
 
-        <record id="exp_jr_meg_frequencygradient_optimization_opt_spectral_gradient_fit" model="tvbo.optimization">
-            <field name="name">spectral_gradient_fit</field>
-            <field name="label">Spectral Gradient Fitting</field>
-            <field name="description">Fit region-specific a and b parameters to reproduce the MEG frequency gradient. Target frequencies range from 11 Hz (visual cortex) to 7 Hz (most distant regions from lateral occipital gyrus).
-</field>
-        </record>
-
         <record id="exp_jr_meg_frequencygradient_optimization_explr_frequency_landscape" model="tvbo.exploration">
             <field name="name">frequency_landscape</field>
             <field name="label">Frequency Landscape Exploration</field>
@@ -876,13 +861,12 @@ Note: No alpha scaling - both terms contribute equally as in original.
             <field name="label">JR Peak Frequency Optimization</field>
             <field name="description">Reproducing MEG Resting-State Frequency Gradients with Network Dynamics. This experiment fits region-specific Jansen-Rit parameters to reproduce the empirical frequency gradient from visual cortex (11 Hz) to association areas (7 Hz).
 </field>
-            <field name="dynamics" ref="exp_jr_meg_frequencygradient_optimization_dynamics"/>
+            <field name="dynamics" eval="[(6, 0, [ref('exp_jr_meg_frequencygradient_optimization_dynamics')])]"/>
             <field name="network" ref="exp_jr_meg_frequencygradient_optimization_network"/>
             <field name="integration" ref="exp_jr_meg_frequencygradient_optimization_integrator"/>
             <field name="functions" eval="[(6, 0, [ref('exp_jr_meg_frequencygradient_optimization_func_subsample'), ref('exp_jr_meg_frequencygradient_optimization_func_index_at'), ref('exp_jr_meg_frequencygradient_optimization_func_compute_target_frequencies'), ref('exp_jr_meg_frequencygradient_optimization_func_cauchy_pdf'), ref('exp_jr_meg_frequencygradient_optimization_func_correlation'), ref('exp_jr_meg_frequencygradient_optimization_func_spectral_loss')])]"/>
             <field name="observations" eval="[(6, 0, [ref('exp_jr_meg_frequencygradient_optimization_obs_simulated_psd')])]"/>
             <field name="derived_observations" eval="[(6, 0, [ref('exp_jr_meg_frequencygradient_optimization_dobs_avg_spectrum'), ref('exp_jr_meg_frequencygradient_optimization_dobs_peak_frequencies'), ref('exp_jr_meg_frequencygradient_optimization_dobs_peak_frequency')])]"/>
-            <field name="optimizations" eval="[(6, 0, [ref('exp_jr_meg_frequencygradient_optimization_opt_spectral_gradient_fit')])]"/>
             <field name="explorations" eval="[(6, 0, [ref('exp_jr_meg_frequencygradient_optimization_explr_frequency_landscape')])]"/>
             <field name="execution" ref="exp_jr_meg_frequencygradient_optimization_execution"/>
             <field name="references">- Mahjoory et al. (2020) eLife 9:e53715 - MEG frequency gradient
@@ -893,7 +877,7 @@ Note: No alpha scaling - both terms contribute equally as in original.
             <field name="name">a</field>
             <field name="label">Input gain parameter</field>
             <field name="value">0.27</field>
-            <field name="unit">n/C</field>
+            <field name="unit">per_nC</field>
         </record>
 
         <record id="exp_rww_bold_fc_optimization_dyn_param_b" model="tvbo.parameter">
@@ -1109,13 +1093,6 @@ Note: No alpha scaling - both terms contribute equally as in original.
             <field name="description">Pearson correlation matrix from BOLD time series</field>
         </record>
 
-        <record id="exp_rww_bold_fc_optimization_opt_fc_fitting" model="tvbo.optimization">
-            <field name="name">fc_fitting</field>
-            <field name="label">FC Fitting</field>
-            <field name="description">Two-stage optimization to fit empirical FC. Stage 1: Global parameters (w, G) - same for all regions. Stage 2: Regional parameters (w, I_o) - heterogeneous across regions.
-</field>
-        </record>
-
         <record id="exp_rww_bold_fc_optimization_explr_parameter_landscape" model="tvbo.exploration">
             <field name="name">parameter_landscape</field>
             <field name="label">w-G Parameter Landscape</field>
@@ -1128,13 +1105,12 @@ Note: No alpha scaling - both terms contribute equally as in original.
             <field name="label">RWW Functional Connectivity Fitting</field>
             <field name="description">Fitting functional connectivity using the Reduced Wong-Wang model. Two-stage optimization: global parameters first, then regional heterogeneity. Based on tvboptim RWW.qmd tutorial.
 </field>
-            <field name="dynamics" ref="exp_rww_bold_fc_optimization_dynamics"/>
+            <field name="dynamics" eval="[(6, 0, [ref('exp_rww_bold_fc_optimization_dynamics')])]"/>
             <field name="network" ref="exp_rww_bold_fc_optimization_network"/>
             <field name="integration" ref="exp_rww_bold_fc_optimization_integrator"/>
             <field name="functions" eval="[(6, 0, [ref('exp_rww_bold_fc_optimization_func_temporal_average'), ref('exp_rww_bold_fc_optimization_func_hrf_kernel'), ref('exp_rww_bold_fc_optimization_func_prepend_history'), ref('exp_rww_bold_fc_optimization_func_volterra_transform'), ref('exp_rww_bold_fc_optimization_func_subsample_bold'), ref('exp_rww_bold_fc_optimization_func_rmse'), ref('exp_rww_bold_fc_optimization_func_fc_corr')])]"/>
             <field name="observations" eval="[(6, 0, [ref('exp_rww_bold_fc_optimization_obs_empirical_fc'), ref('exp_rww_bold_fc_optimization_obs_bold')])]"/>
             <field name="derived_observations" eval="[(6, 0, [ref('exp_rww_bold_fc_optimization_dobs_fc')])]"/>
-            <field name="optimizations" eval="[(6, 0, [ref('exp_rww_bold_fc_optimization_opt_fc_fitting')])]"/>
             <field name="explorations" eval="[(6, 0, [ref('exp_rww_bold_fc_optimization_explr_parameter_landscape')])]"/>
             <field name="execution" ref="exp_rww_bold_fc_optimization_execution"/>
             <field name="references">- Wong &amp; Wang (2006) J Neurosci 26:1314-1328 - Reduced Wong-Wang model
@@ -1432,8 +1408,176 @@ Key innovation: The ratio of long-range excitation (LRE) to feedforward inhibiti
 - Vogels, T.P., Sprekeler, H., Zenke, F., Clopath, C., &amp; Gerstner, W. (2011). Inhibitory plasticity balances excitation and inhibition in sensory pathways and memory networks. Science, 334(6062), 1569-1573.</field>
         </record>
 
+        <record id="exp_rateml_reducedwongwang_dyn_param_a_e" model="tvbo.parameter">
+            <field name="name">a_E</field>
+            <field name="value">310.0</field>
+            <field name="description">[n/C]. Excitatory population input gain parameter</field>
+        </record>
+
+        <record id="exp_rateml_reducedwongwang_dyn_param_b_e" model="tvbo.parameter">
+            <field name="name">b_E</field>
+            <field name="value">125.0</field>
+            <field name="description">[Hz]. Excitatory population input shift parameter</field>
+        </record>
+
+        <record id="exp_rateml_reducedwongwang_dyn_param_d_e" model="tvbo.parameter">
+            <field name="name">d_E</field>
+            <field name="value">0.16</field>
+            <field name="description">[s]. Excitatory population input scaling parameter</field>
+        </record>
+
+        <record id="exp_rateml_reducedwongwang_dyn_param_a_i" model="tvbo.parameter">
+            <field name="name">a_I</field>
+            <field name="value">615.0</field>
+            <field name="description">[n/C]. Inhibitory population input gain parameter</field>
+        </record>
+
+        <record id="exp_rateml_reducedwongwang_dyn_param_b_i" model="tvbo.parameter">
+            <field name="name">b_I</field>
+            <field name="value">177.0</field>
+            <field name="description">[Hz]. Inhibitory population input shift parameter</field>
+        </record>
+
+        <record id="exp_rateml_reducedwongwang_dyn_param_d_i" model="tvbo.parameter">
+            <field name="name">d_I</field>
+            <field name="value">0.087</field>
+            <field name="description">[s]. Inhibitory population input scaling parameter</field>
+        </record>
+
+        <record id="exp_rateml_reducedwongwang_dyn_param_gamma_e" model="tvbo.parameter">
+            <field name="name">gamma_E</field>
+            <field name="value">0.000641</field>
+            <field name="description">Excitatory population kinetic parameter</field>
+        </record>
+
+        <record id="exp_rateml_reducedwongwang_dyn_param_tau_e" model="tvbo.parameter">
+            <field name="name">tau_E</field>
+            <field name="value">100.0</field>
+            <field name="description">[ms]. Excitatory population NMDA decay time constant</field>
+        </record>
+
+        <record id="exp_rateml_reducedwongwang_dyn_param_w_plus" model="tvbo.parameter">
+            <field name="name">w_plus</field>
+            <field name="value">1.4</field>
+            <field name="description">Excitatory population recurrence weight</field>
+        </record>
+
+        <record id="exp_rateml_reducedwongwang_dyn_param_w_e" model="tvbo.parameter">
+            <field name="name">w_E</field>
+            <field name="value">1.0</field>
+            <field name="description">Excitatory population external input scaling weight</field>
+        </record>
+
+        <record id="exp_rateml_reducedwongwang_dyn_param_gamma_i" model="tvbo.parameter">
+            <field name="name">gamma_I</field>
+            <field name="value">0.001</field>
+            <field name="description">Inhibitory population kinetic parameter</field>
+        </record>
+
+        <record id="exp_rateml_reducedwongwang_dyn_param_tau_i" model="tvbo.parameter">
+            <field name="name">tau_I</field>
+            <field name="value">10.0</field>
+            <field name="description">[ms]. Inhibitory population NMDA decay time constant</field>
+        </record>
+
+        <record id="exp_rateml_reducedwongwang_dyn_param_w_i" model="tvbo.parameter">
+            <field name="name">w_I</field>
+            <field name="value">0.7</field>
+            <field name="description">Inhibitory population external input scaling weight</field>
+        </record>
+
+        <record id="exp_rateml_reducedwongwang_dyn_param_i_0" model="tvbo.parameter">
+            <field name="name">I_0</field>
+            <field name="value">0.382</field>
+            <field name="description">[nA]. Effective external input</field>
+        </record>
+
+        <record id="exp_rateml_reducedwongwang_dyn_param_j_nmda" model="tvbo.parameter">
+            <field name="name">J_NMDA</field>
+            <field name="value">0.15</field>
+            <field name="description">NMDA synaptic coupling</field>
+        </record>
+
+        <record id="exp_rateml_reducedwongwang_dyn_param_ji" model="tvbo.parameter">
+            <field name="name">JI</field>
+            <field name="value">1.0</field>
+            <field name="description">Inhibitory synaptic coupling</field>
+        </record>
+
+        <record id="exp_rateml_reducedwongwang_dyn_sv_v_eq" model="tvbo.equation">
+            <field name="label">dV/dt</field>
+            <field name="lefthandside">dV/dt</field>
+            <field name="righthandside">((-1.0 / tau_E) * V) + (tmp_H_E * (1 - V) * gamma_E)</field>
+        </record>
+
+        <record id="exp_rateml_reducedwongwang_dyn_sv_v" model="tvbo.state_variable">
+            <field name="name">V</field>
+            <field name="initial_value">0.998307465821013</field>
+            <field name="coupling_variable">True</field>
+            <field name="equation" ref="exp_rateml_reducedwongwang_dyn_sv_v_eq"/>
+        </record>
+
+        <record id="exp_rateml_reducedwongwang_dyn_sv_w_eq" model="tvbo.equation">
+            <field name="label">dW/dt</field>
+            <field name="lefthandside">dW/dt</field>
+            <field name="righthandside">((-1.0 / tau_I) * W) + (tmp_H_I * gamma_I)</field>
+        </record>
+
+        <record id="exp_rateml_reducedwongwang_dyn_sv_w" model="tvbo.state_variable">
+            <field name="name">W</field>
+            <field name="initial_value">0.12069886682928</field>
+            <field name="equation" ref="exp_rateml_reducedwongwang_dyn_sv_w_eq"/>
+        </record>
+
+        <record id="exp_rateml_reducedwongwang_dyn_dv_tmp_i_e_eq" model="tvbo.equation">
+            <field name="label">tmp_I_E</field>
+            <field name="lefthandside">tmp_I_E</field>
+            <field name="righthandside">a_E * ((w_E * I_0) + (w_plus * J_NMDA) * V + c_pop0 - JI*W) - b_E</field>
+        </record>
+
+        <record id="exp_rateml_reducedwongwang_dyn_dv_tmp_i_e" model="tvbo.derived_variable">
+            <field name="name">tmp_I_E</field>
+            <field name="equation" ref="exp_rateml_reducedwongwang_dyn_dv_tmp_i_e_eq"/>
+        </record>
+
+        <record id="exp_rateml_reducedwongwang_dyn_dv_tmp_h_e_eq" model="tvbo.equation">
+            <field name="label">tmp_H_E</field>
+            <field name="lefthandside">tmp_H_E</field>
+            <field name="righthandside">tmp_I_E / (1.0 - exp((-1.0 * d_E) * tmp_I_E))</field>
+        </record>
+
+        <record id="exp_rateml_reducedwongwang_dyn_dv_tmp_h_e" model="tvbo.derived_variable">
+            <field name="name">tmp_H_E</field>
+            <field name="equation" ref="exp_rateml_reducedwongwang_dyn_dv_tmp_h_e_eq"/>
+        </record>
+
+        <record id="exp_rateml_reducedwongwang_dyn_dv_tmp_i_i_eq" model="tvbo.equation">
+            <field name="label">tmp_I_I</field>
+            <field name="lefthandside">tmp_I_I</field>
+            <field name="righthandside">(a_I * (((w_I * I_0) + (J_NMDA * V)) - W)) - b_I</field>
+        </record>
+
+        <record id="exp_rateml_reducedwongwang_dyn_dv_tmp_i_i" model="tvbo.derived_variable">
+            <field name="name">tmp_I_I</field>
+            <field name="equation" ref="exp_rateml_reducedwongwang_dyn_dv_tmp_i_i_eq"/>
+        </record>
+
+        <record id="exp_rateml_reducedwongwang_dyn_dv_tmp_h_i_eq" model="tvbo.equation">
+            <field name="label">tmp_H_I</field>
+            <field name="lefthandside">tmp_H_I</field>
+            <field name="righthandside">tmp_I_I / (1.0 - exp((-1.0 * d_I) * tmp_I_I))</field>
+        </record>
+
+        <record id="exp_rateml_reducedwongwang_dyn_dv_tmp_h_i" model="tvbo.derived_variable">
+            <field name="name">tmp_H_I</field>
+            <field name="equation" ref="exp_rateml_reducedwongwang_dyn_dv_tmp_h_i_eq"/>
+        </record>
+
         <record id="exp_rateml_reducedwongwang_dynamics" model="tvbo.dynamics">
-            <field name="name">RateML_ReducedWongWang</field>
+            <field name="name">rwongwang</field>
+            <field name="parameters" eval="[(6, 0, [ref('exp_rateml_reducedwongwang_dyn_param_a_e'), ref('exp_rateml_reducedwongwang_dyn_param_b_e'), ref('exp_rateml_reducedwongwang_dyn_param_d_e'), ref('exp_rateml_reducedwongwang_dyn_param_a_i'), ref('exp_rateml_reducedwongwang_dyn_param_b_i'), ref('exp_rateml_reducedwongwang_dyn_param_d_i'), ref('exp_rateml_reducedwongwang_dyn_param_gamma_e'), ref('exp_rateml_reducedwongwang_dyn_param_tau_e'), ref('exp_rateml_reducedwongwang_dyn_param_w_plus'), ref('exp_rateml_reducedwongwang_dyn_param_w_e'), ref('exp_rateml_reducedwongwang_dyn_param_gamma_i'), ref('exp_rateml_reducedwongwang_dyn_param_tau_i'), ref('exp_rateml_reducedwongwang_dyn_param_w_i'), ref('exp_rateml_reducedwongwang_dyn_param_i_0'), ref('exp_rateml_reducedwongwang_dyn_param_j_nmda'), ref('exp_rateml_reducedwongwang_dyn_param_ji')])]"/>
+            <field name="state_variables" eval="[(6, 0, [ref('exp_rateml_reducedwongwang_dyn_sv_v'), ref('exp_rateml_reducedwongwang_dyn_sv_w')])]"/>
+            <field name="derived_variables" eval="[(6, 0, [ref('exp_rateml_reducedwongwang_dyn_dv_tmp_i_e'), ref('exp_rateml_reducedwongwang_dyn_dv_tmp_h_e'), ref('exp_rateml_reducedwongwang_dyn_dv_tmp_i_i'), ref('exp_rateml_reducedwongwang_dyn_dv_tmp_h_i')])]"/>
         </record>
 
         <record id="exp_rateml_reducedwongwang_network" model="tvbo.network">
@@ -1452,7 +1596,7 @@ Key innovation: The ratio of long-range excitation (LRE) to feedforward inhibiti
 
         <record id="experiment_rateml_reducedwongwang" model="tvbo.simulation_experiment">
             <field name="label">RateML rwongwang ground truth</field>
-            <field name="dynamics" ref="exp_rateml_reducedwongwang_dynamics"/>
+            <field name="dynamics" eval="[(6, 0, [ref('exp_rateml_reducedwongwang_dynamics')])]"/>
             <field name="network" ref="exp_rateml_reducedwongwang_network"/>
             <field name="integration" ref="exp_rateml_reducedwongwang_integrator"/>
             <field name="observations" eval="[(6, 0, [ref('exp_rateml_reducedwongwang_obs_bold')])]"/>

@@ -248,7 +248,7 @@
             <field name="name">a_e</field>
             <field name="value">310.0</field>
             <field name="description">Slope (or gain) parameter of the sigmoid function HE_RWW_EI (Deco et al</field>
-            <field name="unit">nC^-1</field>
+            <field name="unit">per_nC</field>
             <field name="domain" ref="range_param_reducedwongwangexcinh_a_e"/>
         </record>
 
@@ -262,7 +262,7 @@
             <field name="name">a_i</field>
             <field name="value">615.0</field>
             <field name="description">Slope (or gain) parameter of the sigmoid function HI_RWW_EI of the inhibitory population (Deco et al</field>
-            <field name="unit">nC^-1</field>
+            <field name="unit">per_nC</field>
             <field name="domain" ref="range_param_reducedwongwangexcinh_a_i"/>
         </record>
 
@@ -541,7 +541,7 @@
             <field name="name">A</field>
             <field name="value">3.25</field>
             <field name="description">Maximum amplitude of EPSP [mV]</field>
-            <field name="unit">Millivolt</field>
+            <field name="unit">mV</field>
             <field name="domain" ref="range_param_jansenrit_a"/>
         </record>
 
@@ -555,7 +555,7 @@
             <field name="name">B</field>
             <field name="value">22.0</field>
             <field name="description">Maximum amplitude of IPSP [mV]</field>
-            <field name="unit">Millivolt</field>
+            <field name="unit">mV</field>
             <field name="domain" ref="range_param_jansenrit_b"/>
         </record>
 
@@ -634,7 +634,7 @@
             <field name="name">a</field>
             <field name="value">0.1</field>
             <field name="description">Reciprocal of the time constant of passive membrane and all other spatially distributed delays in the dendritic network. Also called average synaptic time constant.</field>
-            <field name="unit">ms^-1</field>
+            <field name="unit">per_ms</field>
             <field name="domain" ref="range_param_jansenrit_a"/>
         </record>
 
@@ -648,7 +648,7 @@
             <field name="name">b</field>
             <field name="value">0.05</field>
             <field name="description">Rate constant of the inhibitory post-synaptic potential (IPSP)</field>
-            <field name="unit">ms^-1</field>
+            <field name="unit">per_ms</field>
             <field name="domain" ref="range_param_jansenrit_b"/>
         </record>
 
@@ -662,7 +662,7 @@
             <field name="name">mu</field>
             <field name="value">0.22</field>
             <field name="description">Mean excitatory external input to the derivative of the state-variable y4_JR (PCs) represented by a pulse density, that consists of activity originating from adjacent and more distant cortical columns, as well as from subcortical structures (e</field>
-            <field name="unit">ms^-1</field>
+            <field name="unit">per_ms</field>
             <field name="domain" ref="range_param_jansenrit_mu"/>
         </record>
 
@@ -676,7 +676,7 @@
             <field name="name">nu_max</field>
             <field name="value">0.0025</field>
             <field name="description">Asymptotic of the sigmoid function Sigm_JR corresponds to the maximum firing rate of the neural populations</field>
-            <field name="unit">ms^-1</field>
+            <field name="unit">per_ms</field>
             <field name="domain" ref="range_param_jansenrit_nu_max"/>
         </record>
 
@@ -690,7 +690,7 @@
             <field name="name">r</field>
             <field name="value">0.56</field>
             <field name="description">Steepness (or gain) parameter of the sigmoid function Sigm_JR</field>
-            <field name="unit">mV^-1</field>
+            <field name="unit">per_mV</field>
             <field name="domain" ref="range_param_jansenrit_r"/>
         </record>
 
@@ -888,14 +888,14 @@ into an average firing rate to the PCs.</field>
             <field name="name">a</field>
             <field name="value">100</field>
             <field name="description">Reciprocal of EPSP time constant</field>
-            <field name="unit">s^-1</field>
+            <field name="unit">per_s</field>
         </record>
 
         <record id="param_jansenrit1995_b" model="tvbo.parameter">
             <field name="name">b</field>
             <field name="value">50</field>
             <field name="description">Reciprocal of IPSP time constant</field>
-            <field name="unit">s^-1</field>
+            <field name="unit">per_s</field>
         </record>
 
         <record id="param_jansenrit1995_v0" model="tvbo.parameter">
@@ -909,21 +909,21 @@ into an average firing rate to the PCs.</field>
             <field name="name">e0</field>
             <field name="value">2.5</field>
             <field name="description">Half of maximum firing rate (2*e0 = max rate)</field>
-            <field name="unit">s^-1</field>
+            <field name="unit">per_s</field>
         </record>
 
         <record id="param_jansenrit1995_r" model="tvbo.parameter">
             <field name="name">r</field>
             <field name="value">0.56</field>
             <field name="description">Steepness of sigmoid transformation</field>
-            <field name="unit">mV^-1</field>
+            <field name="unit">per_mV</field>
         </record>
 
         <record id="param_jansenrit1995_p" model="tvbo.parameter">
             <field name="name">p</field>
             <field name="value">220</field>
             <field name="description">Mean external input (afferent pulse density)</field>
-            <field name="unit">s^-1</field>
+            <field name="unit">per_s</field>
         </record>
 
         <record id="eq_state_var_jansenrit1995_y0" model="tvbo.equation">
@@ -942,7 +942,7 @@ into an average firing rate to the PCs.</field>
 
         <record id="state_var_jansenrit1995_y3" model="tvbo.state_variable">
             <field name="name">y3</field>
-            <field name="unit">mV/s</field>
+            <field name="unit">mV_per_s</field>
             <field name="equation" ref="eq_state_var_jansenrit1995_y3"/>
         </record>
 
@@ -962,7 +962,7 @@ into an average firing rate to the PCs.</field>
 
         <record id="state_var_jansenrit1995_y4" model="tvbo.state_variable">
             <field name="name">y4</field>
-            <field name="unit">mV/s</field>
+            <field name="unit">mV_per_s</field>
             <field name="equation" ref="eq_state_var_jansenrit1995_y4"/>
         </record>
 
@@ -982,7 +982,7 @@ into an average firing rate to the PCs.</field>
 
         <record id="state_var_jansenrit1995_y5" model="tvbo.state_variable">
             <field name="name">y5</field>
-            <field name="unit">mV/s</field>
+            <field name="unit">mV_per_s</field>
             <field name="equation" ref="eq_state_var_jansenrit1995_y5"/>
         </record>
 
@@ -1212,21 +1212,21 @@ into an average firing rate to the PCs.</field>
             <field name="name">Ckp</field>
             <field name="value">5.5</field>
             <field name="description"></field>
-            <field name="unit">mol.m**-3</field>
+            <field name="unit">mol_per_m3</field>
             <field name="domain" ref="range_param_kionex_ckp"/>
         </record>
 
         <record id="range_param_kionex_cl_i0" model="tvbo.range">
-            <field name="lo">4.8</field>
-            <field name="hi">4.8</field>
+            <field name="lo">5.0</field>
+            <field name="hi">5.0</field>
             <field name="step">0.0</field>
         </record>
 
         <record id="param_kionex_cl_i0" model="tvbo.parameter">
             <field name="name">Cl_i0</field>
-            <field name="value">4.8</field>
+            <field name="value">5.0</field>
             <field name="description">initial concentration of intracellular Cl</field>
-            <field name="unit">mMol/m**3</field>
+            <field name="unit">mmol_per_m3</field>
             <field name="domain" ref="range_param_kionex_cl_i0"/>
         </record>
 
@@ -1240,7 +1240,7 @@ into an average firing rate to the PCs.</field>
             <field name="name">Cl_o0</field>
             <field name="value">112.0</field>
             <field name="description">initial concentration of extracellular Cl</field>
-            <field name="unit">mMol/m**3</field>
+            <field name="unit">mmol_per_m3</field>
             <field name="domain" ref="range_param_kionex_cl_o0"/>
         </record>
 
@@ -1268,7 +1268,7 @@ into an average firing rate to the PCs.</field>
             <field name="name">Cnap</field>
             <field name="value">21.0</field>
             <field name="description"></field>
-            <field name="unit">mol.m**-3</field>
+            <field name="unit">mol_per_m3</field>
             <field name="domain" ref="range_param_kionex_cnap"/>
         </record>
 
@@ -1309,7 +1309,7 @@ into an average firing rate to the PCs.</field>
             <field name="name">DCkp</field>
             <field name="value">1.0</field>
             <field name="description"></field>
-            <field name="unit">mol.m**-3</field>
+            <field name="unit">mol_per_m3</field>
             <field name="domain" ref="range_param_kionex_dckp"/>
         </record>
 
@@ -1328,16 +1328,16 @@ into an average firing rate to the PCs.</field>
         </record>
 
         <record id="range_param_kionex_dcnap" model="tvbo.range">
-            <field name="lo">21.0</field>
-            <field name="hi">21.0</field>
+            <field name="lo">2.0</field>
+            <field name="hi">2.0</field>
             <field name="step">0.0</field>
         </record>
 
         <record id="param_kionex_dcnap" model="tvbo.parameter">
             <field name="name">DCnap</field>
-            <field name="value">21.0</field>
+            <field name="value">2.0</field>
             <field name="description"></field>
-            <field name="unit">mol.m**-3</field>
+            <field name="unit">mol_per_m3</field>
             <field name="domain" ref="range_param_kionex_dcnap"/>
         </record>
 
@@ -1365,7 +1365,7 @@ into an average firing rate to the PCs.</field>
             <field name="name">K_i0</field>
             <field name="value">130.0</field>
             <field name="description">initial concentration of intracellular K</field>
-            <field name="unit">mMol/m**3</field>
+            <field name="unit">mmol_per_m3</field>
             <field name="domain" ref="range_param_kionex_k_i0"/>
         </record>
 
@@ -1379,7 +1379,7 @@ into an average firing rate to the PCs.</field>
             <field name="name">K_o0</field>
             <field name="value">4.8</field>
             <field name="description">initial concentration of extracellular K</field>
-            <field name="unit">mMol/m**3</field>
+            <field name="unit">mmol_per_m3</field>
             <field name="domain" ref="range_param_kionex_k_o0"/>
         </record>
 
@@ -1393,7 +1393,7 @@ into an average firing rate to the PCs.</field>
             <field name="name">Na_i0</field>
             <field name="value">16.0</field>
             <field name="description">initial concentration of intracellular Na</field>
-            <field name="unit">mMol/m**3</field>
+            <field name="unit">mmol_per_m3</field>
             <field name="domain" ref="range_param_kionex_na_i0"/>
         </record>
 
@@ -1407,7 +1407,7 @@ into an average firing rate to the PCs.</field>
             <field name="name">Na_o0</field>
             <field name="value">138.0</field>
             <field name="description">initial concentration of extracellular Na</field>
-            <field name="unit">mMol/m**3</field>
+            <field name="unit">mmol_per_m3</field>
             <field name="domain" ref="range_param_kionex_na_o0"/>
         </record>
 
@@ -1505,7 +1505,7 @@ into an average firing rate to the PCs.</field>
             <field name="name">w_i</field>
             <field name="value">2160.0</field>
             <field name="description">intracellular volume</field>
-            <field name="unit">umeter**3</field>
+            <field name="unit">um3</field>
             <field name="domain" ref="range_param_kionex_w_i"/>
         </record>
 
@@ -1519,7 +1519,7 @@ into an average firing rate to the PCs.</field>
             <field name="name">w_o</field>
             <field name="value">720.0</field>
             <field name="description">extracellular volume</field>
-            <field name="unit">umeter**3</field>
+            <field name="unit">um3</field>
             <field name="domain" ref="range_param_kionex_w_o"/>
         </record>
 
@@ -2221,7 +2221,7 @@ Note:
             <field name="name">omega</field>
             <field name="value">1.0</field>
             <field name="description">Sets the base line frequency for the Kuramoto oscillator</field>
-            <field name="unit">rad/ms</field>
+            <field name="unit">rad_per_ms</field>
             <field name="domain" ref="range_param_kuramoto_omega"/>
         </record>
 
@@ -2275,6 +2275,178 @@ Note:
             <field name="state_variables" eval="[(6, 0, [ref('state_var_kuramoto_theta')])]"/>
             <field name="derived_variables" eval="[(6, 0, [ref('derived_var_kuramoto_lc_0'),ref('derived_var_kuramoto_i')])]"/>
             <field name="references">Cabral2011, Strogatz2000, Kuramoto1975</field>
+        </record>
+
+        <record id="range_param_reducedwongwangtvboptim_a" model="tvbo.range">
+            <field name="lo">0.0</field>
+            <field name="hi">0.27</field>
+            <field name="step">0.01</field>
+        </record>
+
+        <record id="param_reducedwongwangtvboptim_a" model="tvbo.parameter">
+            <field name="name">a</field>
+            <field name="value">0.27</field>
+            <field name="description">Input gain parameter</field>
+            <field name="unit">per_pC</field>
+            <field name="domain" ref="range_param_reducedwongwangtvboptim_a"/>
+        </record>
+
+        <record id="range_param_reducedwongwangtvboptim_b" model="tvbo.range">
+            <field name="lo">0.0</field>
+            <field name="hi">1.0</field>
+            <field name="step">0.01</field>
+        </record>
+
+        <record id="param_reducedwongwangtvboptim_b" model="tvbo.parameter">
+            <field name="name">b</field>
+            <field name="value">0.108</field>
+            <field name="description">Input shift parameter</field>
+            <field name="unit">kHz</field>
+            <field name="domain" ref="range_param_reducedwongwangtvboptim_b"/>
+        </record>
+
+        <record id="range_param_reducedwongwangtvboptim_d" model="tvbo.range">
+            <field name="lo">0.0</field>
+            <field name="hi">200.0</field>
+            <field name="step">0.01</field>
+        </record>
+
+        <record id="param_reducedwongwangtvboptim_d" model="tvbo.parameter">
+            <field name="name">d</field>
+            <field name="value">154.0</field>
+            <field name="description">Scaling parameter</field>
+            <field name="unit">ms</field>
+            <field name="domain" ref="range_param_reducedwongwangtvboptim_d"/>
+        </record>
+
+        <record id="range_param_reducedwongwangtvboptim_gamma" model="tvbo.range">
+            <field name="lo">0.0</field>
+            <field name="hi">1.0</field>
+            <field name="step">0.01</field>
+        </record>
+
+        <record id="param_reducedwongwangtvboptim_gamma" model="tvbo.parameter">
+            <field name="name">gamma</field>
+            <field name="value">0.641</field>
+            <field name="description">Kinetic parameter</field>
+            <field name="domain" ref="range_param_reducedwongwangtvboptim_gamma"/>
+        </record>
+
+        <record id="range_param_reducedwongwangtvboptim_tau_s" model="tvbo.range">
+            <field name="lo">50.0</field>
+            <field name="hi">150.0</field>
+            <field name="step">1.0</field>
+        </record>
+
+        <record id="param_reducedwongwangtvboptim_tau_s" model="tvbo.parameter">
+            <field name="name">tau_s</field>
+            <field name="value">100.0</field>
+            <field name="description">NMDA decay time constant</field>
+            <field name="unit">ms</field>
+            <field name="domain" ref="range_param_reducedwongwangtvboptim_tau_s"/>
+        </record>
+
+        <record id="range_param_reducedwongwangtvboptim_w" model="tvbo.range">
+            <field name="lo">0.0</field>
+            <field name="hi">1.0</field>
+            <field name="step">0.01</field>
+        </record>
+
+        <record id="param_reducedwongwangtvboptim_w" model="tvbo.parameter">
+            <field name="name">w</field>
+            <field name="value">0.5</field>
+            <field name="description">Excitatory recurrence strength (local feedback)</field>
+            <field name="unit">dimensionless</field>
+            <field name="domain" ref="range_param_reducedwongwangtvboptim_w"/>
+        </record>
+
+        <record id="range_param_reducedwongwangtvboptim_j_n" model="tvbo.range">
+            <field name="lo">0.2609</field>
+            <field name="hi">0.5</field>
+            <field name="step">0.001</field>
+        </record>
+
+        <record id="param_reducedwongwangtvboptim_j_n" model="tvbo.parameter">
+            <field name="name">J_N</field>
+            <field name="value">0.2609</field>
+            <field name="description">NMDA synaptic coupling strength</field>
+            <field name="unit">nA</field>
+            <field name="domain" ref="range_param_reducedwongwangtvboptim_j_n"/>
+        </record>
+
+        <record id="range_param_reducedwongwangtvboptim_i_o" model="tvbo.range">
+            <field name="lo">0.0</field>
+            <field name="hi">1.0</field>
+            <field name="step">0.01</field>
+        </record>
+
+        <record id="param_reducedwongwangtvboptim_i_o" model="tvbo.parameter">
+            <field name="name">I_o</field>
+            <field name="value">0.34</field>
+            <field name="description">External input current</field>
+            <field name="unit">nA</field>
+            <field name="domain" ref="range_param_reducedwongwangtvboptim_i_o"/>
+        </record>
+
+        <record id="eq_state_var_reducedwongwangtvboptim_s" model="tvbo.equation">
+            <field name="lefthandside">Derivative(S, t)</field>
+            <field name="righthandside">-S/tau_s + (1 - S)*H(x)*gamma</field>
+        </record>
+
+        <record id="range_domain_state_var_reducedwongwangtvboptim_s" model="tvbo.range">
+            <field name="lo">0.0</field>
+            <field name="hi">1.0</field>
+        </record>
+
+        <record id="range_boundaries_state_var_reducedwongwangtvboptim_s" model="tvbo.range">
+            <field name="lo">0.0</field>
+            <field name="hi">1.0</field>
+        </record>
+
+        <record id="state_var_reducedwongwangtvboptim_s" model="tvbo.state_variable">
+            <field name="name">S</field>
+            <field name="description">Average NMDA synaptic gating variable, representing the fraction of open NMDA channels at each network node.</field>
+            <field name="initial_value">0.1</field>
+            <field name="equation" ref="eq_state_var_reducedwongwangtvboptim_s"/>
+            <field name="domain" ref="range_domain_state_var_reducedwongwangtvboptim_s"/>
+            <field name="boundaries" ref="range_boundaries_state_var_reducedwongwangtvboptim_s"/>
+        </record>
+
+        <record id="derived_var_reducedwongwangtvboptim_x" model="tvbo.derived_variable">
+            <field name="name">x</field>
+            <field name="description">Total synaptic input current combining local recurrence, external input, and network coupling (instant and delayed) scaled by J_N.</field>
+        </record>
+        <record id="eq_derived_var_reducedwongwangtvboptim_x" model="tvbo.equation">
+            <field name="lefthandside">x</field>
+            <field name="righthandside">w*J_N*S + I_o + J_N*instant + J_N*delayed</field>
+        </record>
+        <record id="derived_var_reducedwongwangtvboptim_x" model="tvbo.derived_variable">
+            <field name="equation" ref="eq_derived_var_reducedwongwangtvboptim_x"/>
+        </record>
+
+        <record id="derived_var_reducedwongwangtvboptim_h_x" model="tvbo.derived_variable">
+            <field name="name">H_x</field>
+            <field name="description">Average population firing rate H evaluated at the total synaptic input x.</field>
+        </record>
+        <record id="eq_derived_var_reducedwongwangtvboptim_h_x" model="tvbo.equation">
+            <field name="lefthandside">H_x</field>
+            <field name="righthandside">H(x)</field>
+        </record>
+        <record id="derived_var_reducedwongwangtvboptim_h_x" model="tvbo.derived_variable">
+            <field name="equation" ref="eq_derived_var_reducedwongwangtvboptim_h_x"/>
+        </record>
+
+        <record id="dynamics_reducedwongwangtvboptim" model="tvbo.dynamics">
+            <field name="name">ReducedWongWangTvboptim</field>
+            <field name="label">ReducedWongWangTvboptim</field>
+            <field name="description">The Reduced Wong-Wang (RWW) model is a biophysically-based neural mass model that describes the dynamics of NMDA-mediated synaptic gating (Deco et al., 2013). It captures the slow dynamics relevant for resting-state fMRI and has been widely used for modeling whole-brain functional connectivity.
+RWW is the dynamical mean-field (DMF) reduction of the Wong &amp; Wang (2006) spiking model. Each network node is described by a single state variable S representing the average NMDA synaptic gating (fraction of open channels).
+The total synaptic input x combines local excitatory recurrence (w), external input (I_o), and long-range network coupling (instant and delayed) scaled by the synaptic coupling strength J_N. The sigmoid transfer function H(x) maps the total input current to the average population firing rate. In a network setting, the global coupling strength G (a coupling parameter) scales the structural connectivity weights that modulate inter-regional communication.</field>
+            <field name="number_of_modes">1</field>
+            <field name="parameters" eval="[(6, 0, [ref('param_reducedwongwangtvboptim_a'),ref('param_reducedwongwangtvboptim_b'),ref('param_reducedwongwangtvboptim_d'),ref('param_reducedwongwangtvboptim_gamma'),ref('param_reducedwongwangtvboptim_tau_s'),ref('param_reducedwongwangtvboptim_w'),ref('param_reducedwongwangtvboptim_j_n'),ref('param_reducedwongwangtvboptim_i_o')])]"/>
+            <field name="state_variables" eval="[(6, 0, [ref('state_var_reducedwongwangtvboptim_s')])]"/>
+            <field name="derived_variables" eval="[(6, 0, [ref('derived_var_reducedwongwangtvboptim_x'),ref('derived_var_reducedwongwangtvboptim_h_x')])]"/>
+            <field name="references">Wong2006, Deco2013</field>
         </record>
 
         <record id="range_param_suphopf_a" model="tvbo.range">
@@ -4313,7 +4485,7 @@ Note:
             <field name="name">Q_Vmax</field>
             <field name="value">1.0</field>
             <field name="description">Maximal firing rate for excitatory populations</field>
-            <field name="unit">Kilohertz</field>
+            <field name="unit">kHz</field>
             <field name="domain" ref="range_param_larterbreakspear_q_vmax"/>
         </record>
 
@@ -4327,7 +4499,7 @@ Note:
             <field name="name">Q_Zmax</field>
             <field name="value">1.0</field>
             <field name="description">Maximal firing rate for inhibitory population</field>
-            <field name="unit">Kilohertz</field>
+            <field name="unit">kHz</field>
             <field name="domain" ref="range_param_larterbreakspear_q_zmax"/>
         </record>
 
@@ -5370,7 +5542,7 @@ Note:
             <field name="name">a</field>
             <field name="value">0.27</field>
             <field name="description">Slope (or gain) parameter of the sigmoid input-output function H_RWW (Deco et al</field>
-            <field name="unit">(pC)^-1</field>
+            <field name="unit">per_pC</field>
             <field name="domain" ref="range_param_reducedwongwang_a"/>
         </record>
 
@@ -6285,13 +6457,13 @@ RWW is the dynamical mean-field (DMF) reduction of the Reduced WongWang Exc-Inh 
         <record id="param_modeljansen1995_a" model="tvbo.parameter">
             <field name="name">a</field>
             <field name="value">0.1</field>
-            <field name="unit">ms^-1</field>
+            <field name="unit">per_ms</field>
         </record>
 
         <record id="param_modeljansen1995_b" model="tvbo.parameter">
             <field name="name">b</field>
             <field name="value">0.05</field>
-            <field name="unit">ms^-1</field>
+            <field name="unit">per_ms</field>
         </record>
 
         <record id="param_modeljansen1995_v0" model="tvbo.parameter">
@@ -6303,19 +6475,19 @@ RWW is the dynamical mean-field (DMF) reduction of the Reduced WongWang Exc-Inh 
         <record id="param_modeljansen1995_e0" model="tvbo.parameter">
             <field name="name">e0</field>
             <field name="value">0.0025</field>
-            <field name="unit">ms^-1</field>
+            <field name="unit">per_ms</field>
         </record>
 
         <record id="param_modeljansen1995_r" model="tvbo.parameter">
             <field name="name">r</field>
             <field name="value">0.56</field>
-            <field name="unit">mV^-1</field>
+            <field name="unit">per_mV</field>
         </record>
 
         <record id="param_modeljansen1995_p" model="tvbo.parameter">
             <field name="name">p</field>
             <field name="value">0.24</field>
-            <field name="unit">ms^-1</field>
+            <field name="unit">per_ms</field>
         </record>
 
         <record id="eq_state_var_modeljansen1995_y0" model="tvbo.equation">
@@ -6334,7 +6506,7 @@ RWW is the dynamical mean-field (DMF) reduction of the Reduced WongWang Exc-Inh 
 
         <record id="state_var_modeljansen1995_y3" model="tvbo.state_variable">
             <field name="name">y3</field>
-            <field name="unit">mV*ms^-1</field>
+            <field name="unit">mV_per_ms</field>
             <field name="equation" ref="eq_state_var_modeljansen1995_y3"/>
         </record>
 
@@ -6354,7 +6526,7 @@ RWW is the dynamical mean-field (DMF) reduction of the Reduced WongWang Exc-Inh 
 
         <record id="state_var_modeljansen1995_y4" model="tvbo.state_variable">
             <field name="name">y4</field>
-            <field name="unit">mV*ms^-1</field>
+            <field name="unit">mV_per_ms</field>
             <field name="equation" ref="eq_state_var_modeljansen1995_y4"/>
         </record>
 
@@ -6374,7 +6546,7 @@ RWW is the dynamical mean-field (DMF) reduction of the Reduced WongWang Exc-Inh 
 
         <record id="state_var_modeljansen1995_y5" model="tvbo.state_variable">
             <field name="name">y5</field>
-            <field name="unit">mV*ms^-1</field>
+            <field name="unit">mV_per_ms</field>
             <field name="equation" ref="eq_state_var_modeljansen1995_y5"/>
         </record>
 
