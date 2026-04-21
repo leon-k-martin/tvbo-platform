@@ -134,20 +134,17 @@ class KnowledgeGraphBrowser {
             console.log('🏷️ Building facet index...');
             this.facetIndex = this.buildFacetIndex();
             console.log('✅ Facet index built');
-            console.log('🎧 Setting up event listeners...');
-            this.setupEventListeners();
-
-            // Check for search query in URL (from header search)
+            // Check for search query in URL (from header search) — must run before
+            // setupEventListeners so the hero input init block sees this.currentQuery
             const urlParams = new URLSearchParams(window.location.search);
             const queryFromUrl = urlParams.get('q');
             if (queryFromUrl) {
                 console.log('🔗 Found search query in URL:', queryFromUrl);
-                const searchBox = document.getElementById('searchBox');
-                if (searchBox) {
-                    searchBox.value = queryFromUrl;
-                }
                 this.currentQuery = queryFromUrl;
             }
+
+            console.log('🎧 Setting up event listeners...');
+            this.setupEventListeners();
 
             console.log('🔍 Performing initial search...');
             this.search();
