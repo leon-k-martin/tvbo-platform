@@ -41,9 +41,12 @@ deploy-job:
         echo ""
         echo "===== Waiting 60s for upgrade phase to finish/crash ====="
         for i in $(seq 1 12); do
+          echo ""
+          echo "--- [$((i*5))s] kubectl get pods ---"
+          kubectl get pods -n kube-system -l app=tvbo-odoo -o wide
           STATE=$(kubectl get pod "$POD" -n kube-system -o jsonpath='{.status.containerStatuses[0].state}' 2>/dev/null)
           RESTARTS=$(kubectl get pod "$POD" -n kube-system -o jsonpath='{.status.containerStatuses[0].restartCount}' 2>/dev/null)
-          echo "[$((i*5))s] state=$STATE restarts=$RESTARTS"
+          echo "state=$STATE restarts=$RESTARTS"
           # Stop early if pod crashed
           if echo "$STATE" | grep -q terminated; then
             echo "Pod terminated — stopping wait"
@@ -51,6 +54,10 @@ deploy-job:
           fi
           sleep 5
         done
+
+        echo ""
+        echo "===== Final pod status ====="
+        kubectl get pods -n kube-system -l app=tvbo-odoo -o wide
 
         echo ""
         echo "===== Pod describe (events at bottom) ====="
