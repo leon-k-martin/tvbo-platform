@@ -5,20 +5,15 @@ deploy-job:
   script:
     - export KUBECONFIG=/home/gitlab-runner/kubeconfig.yaml
     - kubectl apply -f tvboRunnerActions.yaml
+    - kubectl rollout restart deployment/tvbo-odoo -n kube-system
     - |
-        echo "Waiting for tvbo-odoo pod to be Running..."
-        until POD="$(kubectl get pods \
-          -l app=tvbo-odoo \
-          --field-selector=status.phase=Running \
-          -o jsonpath='{.items[0].metadata.name}' 2>/dev/null)" \
-          && [ -n "$POD" ]; do
-          sleep 1
-        done
-
-        # Print the exact image digest being used
-        echo "tvbo-odoo image: $(kubectl get pod "$POD" -o jsonpath='{.status.containerStatuses[0].imageID}')"
-
-        # follow logs for a while, then exit cleanly
-        timeout 10 kubectl logs -f "$POD" || true
+        echo "Waiting for rollout to complete..."
+        kubectl rollout status deployment/tvbo-odoo -n kube-system --timeout=300s
+        echo "Deployment complete."
+    - |
+        POD=$(kubectl get pods -n kube-system -l app=tvbo-odoo \
+          -o jsonpath='{.items[0].metadata.name}')
+        echo "tvbo-odoo image: $(kubectl get pod "$POD" -n kube-system -o jsonpath='{.status.containerStatuses[0].imageID}')"
+        timeout 30 kubectl logs -f "$POD" -n kube-system || true
   when: manual
 
