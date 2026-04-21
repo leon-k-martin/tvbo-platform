@@ -21,19 +21,15 @@ deploy-job:
         RS=$(kubectl get rs -n kube-system -l app=tvbo-odoo \
           --sort-by=.metadata.creationTimestamp \
           -o jsonpath='{.items[-1:].metadata.name}')
-        POD=$(kubectl get pods -n kube-system \
-          -l app=tvbo-odoo \
-          --field-selector=status.phase!=Failed \
-          -o json | python3 -c "
-import json, sys
-pods = json.load(sys.stdin)['items']
-# Filter to pods owned by current RS, prefer Running
-rs = '$RS'
-candidates = [p for p in pods if any(o.get('name')==rs for o in p['metadata'].get('ownerReferences',[]))]
-running = [p for p in candidates if p['status'].get('phase')=='Running']
-chosen = (running or candidates or pods)[0] if (running or candidates or pods) else None
-print(chosen['metadata']['name'] if chosen else '')
-")
+        # Find a pod owned by current RS, preferring Running
+        POD=$(kubectl get pods -n kube-system -l app=tvbo-odoo \
+          -o jsonpath="{range .items[?(@.metadata.ownerReferences[0].name=='$RS')]}{.metadata.name} {.status.phase}{'\n'}{end}" \
+          | awk '$2=="Running"{print $1; exit}')
+        if [ -z "$POD" ]; then
+          POD=$(kubectl get pods -n kube-system -l app=tvbo-odoo \
+            -o jsonpath="{range .items[?(@.metadata.ownerReferences[0].name=='$RS')]}{.metadata.name}{'\n'}{end}" \
+            | head -1)
+        fi
         echo ""
         echo "Most recent pod (from current RS $RS): $POD"
         if [ -z "$POD" ]; then
