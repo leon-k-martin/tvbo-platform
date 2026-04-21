@@ -1158,6 +1158,8 @@ KnowledgeGraphBrowser.TYPE_ICONS = {
     study:       { icon: 'fa-solid fa-book-open',             gradient: 'linear-gradient(135deg, #f7971e 0%, #ffd200 100%)', color: '#f7971e' },
     observation: { icon: 'fa-solid fa-binoculars',            gradient: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)', color: '#11998e' },
     ontology:    { icon: 'fa-solid fa-share-nodes',           gradient: 'linear-gradient(135deg, #c471f5 0%, #fa71cd 100%)', color: '#c471f5' },
+    software:    { icon: 'fa-solid fa-desktop',               gradient: 'linear-gradient(135deg, #6a85b6 0%, #bac8e0 100%)', color: '#6a85b6' },
+    atlas:       { icon: 'fa-solid fa-location-dot',          gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', color: '#f5576c' },
     _default:    { icon: 'fa-solid fa-tag',                   gradient: 'linear-gradient(135deg, #a0aec0 0%, #718096 100%)', color: '#a0aec0' },
 };
 
