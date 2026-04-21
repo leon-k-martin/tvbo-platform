@@ -14,7 +14,7 @@ log() {
 UPGRADE_LOG=/var/lib/odoo/upgrade.log
 run_odoo() {
   set +e
-  odoo "$@" --log-level=info 2>&1 | tee -a "$UPGRADE_LOG"
+  odoo "$@" --log-level=${ODOO_LOG_LEVEL:-debug} 2>&1 | tee -a "$UPGRADE_LOG"
   local rc=${PIPESTATUS[0]}
   set -e
   if [ $rc -ne 0 ]; then
@@ -25,6 +25,10 @@ run_odoo() {
     if [ $rc -eq 137 ] || [ $rc -eq 255 ]; then
       log "Checking dmesg for OOM..."
       dmesg 2>/dev/null | tail -20 || true
+    fi
+    if [ "${TVBO_KEEP_ALIVE_ON_FAIL:-0}" = "1" ]; then
+      log "TVBO_KEEP_ALIVE_ON_FAIL=1 set; sleeping forever for kubectl exec debugging"
+      sleep infinity
     fi
     exit $rc
   fi

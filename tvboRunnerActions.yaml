@@ -66,6 +66,8 @@ spec:
             - {name: TVBO_UPGRADE, value: "1"}
             - {name: PYTHONFAULTHANDLER, value: "1"}
             - {name: PYTHONUNBUFFERED, value: "1"}
+            - {name: ODOO_LOG_LEVEL, value: "debug"}
+            - {name: TVBO_KEEP_ALIVE_ON_FAIL, value: "1"}
           volumeMounts: [{name: data, mountPath: /var/lib/odoo}]
       volumes:
         - name: data
