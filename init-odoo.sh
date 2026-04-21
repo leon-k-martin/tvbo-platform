@@ -69,6 +69,17 @@ until pg_isready -h "$DB_HOST" -U "$DB_USER" -d postgres > /dev/null 2>&1; do
 done
 log "✓ PostgreSQL is ready"
 
+# Optional: drop and recreate database from scratch (set RESET_DB=1 in env)
+if [ "${RESET_DB:-0}" = "1" ] || [ "${RESET_DB:-false}" = "true" ] || [ "${RESET_DB:-FALSE}" = "TRUE" ]; then
+  log "⚠️  RESET_DB=$RESET_DB — dropping database '$DB_NAME'"
+  # Terminate any existing connections to the DB
+  psql -h "$DB_HOST" -U "$DB_USER" -d postgres -c \
+    "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname='${DB_NAME}' AND pid <> pg_backend_pid();" \
+    > /dev/null 2>&1 || true
+  psql -h "$DB_HOST" -U "$DB_USER" -d postgres -c "DROP DATABASE IF EXISTS \"${DB_NAME}\";"
+  log "✓ Database '$DB_NAME' dropped — will be recreated below"
+fi
+
 # Check if database exists AND is initialized
 if psql -h "$DB_HOST" -U "$DB_USER" -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname='${DB_NAME}'" | grep -q 1; then
   log "Database '$DB_NAME' exists"

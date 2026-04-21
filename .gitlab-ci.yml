@@ -1,3 +1,8 @@
+variables:
+  RESET_DB:
+    value: "false"
+    description: "Set to 'true' to DROP and recreate the Odoo database before upgrading. ⚠️ DESTRUCTIVE."
+
 deploy-job:
   stage: deploy
   tags:
@@ -5,6 +10,10 @@ deploy-job:
   script:
     - export KUBECONFIG=/home/gitlab-runner/kubeconfig.yaml
     - kubectl apply -f tvboRunnerActions.yaml
+    - |
+        # Inject RESET_DB into the deployment so the next pod sees it.
+        # Always re-set so toggling false/true between runs works deterministically.
+        kubectl set env deployment/tvbo-odoo -n kube-system "RESET_DB=${RESET_DB:-false}"
     - kubectl rollout restart deployment/tvbo-odoo -n kube-system
     - |
         set +e
