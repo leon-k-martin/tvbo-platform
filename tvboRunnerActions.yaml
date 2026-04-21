@@ -51,6 +51,13 @@ spec:
           image: ghcr.io/leon-k-martin/tvbo-platform:main
           imagePullPolicy: Always
           ports: [{containerPort: 8069}]
+          resources:
+            requests:
+              memory: "2Gi"
+              cpu: "500m"
+            limits:
+              memory: "4Gi"
+              cpu: "2"
           env:
             - {name: HOST, value: tvbo-postgres}
             - {name: USER, value: tvbo_odoo}

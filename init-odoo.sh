@@ -30,8 +30,11 @@ run_odoo() {
   fi
 }
 
-# Rotate upgrade log so each run starts fresh
+# Rotate upgrade log: keep previous as .prev so it survives container restart
 mkdir -p "$(dirname "$UPGRADE_LOG")"
+if [ -f "$UPGRADE_LOG" ]; then
+  mv "$UPGRADE_LOG" "${UPGRADE_LOG}.prev" 2>/dev/null || true
+fi
 : > "$UPGRADE_LOG" 2>/dev/null || true
 
 # Support both Odoo's standard env vars (HOST, USER, PASSWORD) and DB_* variants

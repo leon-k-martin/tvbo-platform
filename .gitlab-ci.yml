@@ -51,8 +51,8 @@ deploy-job:
         kubectl logs "$POD" -n kube-system --previous --tail=1000 2>/dev/null || echo "(no previous container)"
 
         echo ""
-        echo "===== Persistent upgrade log (/var/lib/odoo/upgrade.log) ====="
-        kubectl exec -n kube-system "$POD" -- tail -200 /var/lib/odoo/upgrade.log 2>/dev/null || echo "(no upgrade log on volume)"
+        echo "===== Persistent upgrade log (/var/lib/odoo/upgrade.log[.prev]) ====="
+        kubectl exec -n kube-system "$POD" -- sh -c 'echo "--- previous run (upgrade.log.prev) ---"; tail -200 /var/lib/odoo/upgrade.log.prev 2>/dev/null || echo "(no .prev)"; echo; echo "--- current run (upgrade.log) ---"; tail -200 /var/lib/odoo/upgrade.log 2>/dev/null || echo "(no current)"' || echo "(could not exec into pod)"
 
         echo ""
         echo "===== Health check ====="
