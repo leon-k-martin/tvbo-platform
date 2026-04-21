@@ -484,25 +484,46 @@ class KnowledgeGraphAPI(http.Controller):
         if not data.get('description') and data.get('abstract'):
             data['description'] = data.get('abstract')
 
-        asset_name = data.get('name') or data.get('label') or data.get('method') or data.get('title')
-        if isinstance(asset_name, str):
-            thumb_category = cfg.get('thumbnail')
-            report_category = cfg.get('report')
+        # Candidate asset names for thumbnail/report lookup. Files are named
+        # after either the entity's `name`/`label`/`title`, or for networks/
+        # atlases after the YAML/data_file stem (BIDS-style filenames).
+        asset_candidates = []
+        for key in ('name', 'label', 'method', 'title'):
+            val = data.get(key)
+            if isinstance(val, str) and val:
+                asset_candidates.append(val)
+        # data_file / file path stems (used by networks, atlases)
+        for key in ('data_file', 'file', 'path', 'filename'):
+            val = data.get(key)
+            if isinstance(val, str) and val:
+                stem = os.path.splitext(os.path.basename(val))[0]
+                if stem:
+                    asset_candidates.append(stem)
 
-            if thumb_category:
+        # Deduplicate while preserving order
+        seen_assets = set()
+        asset_candidates = [a for a in asset_candidates
+                            if not (a in seen_assets or seen_assets.add(a))]
+
+        thumb_category = cfg.get('thumbnail')
+        report_category = cfg.get('report')
+
+        if thumb_category:
+            for asset_name in asset_candidates:
                 thumb = _thumbnail_url(thumb_category, asset_name)
                 if thumb:
                     data['thumbnail'] = thumb
+                    break
 
-            if report_category:
+        if report_category:
+            for asset_name in asset_candidates:
                 report = _report_url(report_category, asset_name)
                 if report:
                     data['report_url'] = report
-
-                # Extract LaTeX equation from report for card preview
-                eq_latex = _extract_equation_latex(report_category, asset_name)
-                if eq_latex:
-                    data['equation_latex'] = eq_latex
+                    eq_latex = _extract_equation_latex(report_category, asset_name)
+                    if eq_latex:
+                        data['equation_latex'] = eq_latex
+                    break
 
         return get_ontology_api().enrich_database_item(data, entity_type)
 
