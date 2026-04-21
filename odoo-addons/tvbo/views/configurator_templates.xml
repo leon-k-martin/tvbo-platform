@@ -7,6 +7,7 @@
                     <!-- Load required JavaScript files -->
                     <script src="/tvbo/static/src/js/network_graph_3d.js"></script>
                     <script src="/tvbo/static/src/js/experiment_builder.js"></script>
+                    <script src="/tvbo/static/src/js/schema_driven_editor.js"></script>
 
                     <div class="container-fluid" style="max-width: 1400px; margin: 0 auto; padding: 20px;">
                         <div class="header" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #e5e7eb;">
@@ -46,7 +47,7 @@
                                 </li>
                                 <li class="nav-item" role="presentation">
                                     <button class="nav-link" id="stimulus-tab" data-bs-toggle="tab" data-bs-target="#stimulus-panel" type="button" role="tab">
-                                        Stimulus
+                                        Events / Stimulus
                                     </button>
                                 </li>
                                 <li class="nav-item" role="presentation">
@@ -395,11 +396,19 @@
                                 </div>
                             </div>
 
-                            <!-- Stimulus Tab -->
+                            <!-- Events / Stimulus Tab -->
                             <div class="tab-pane fade" id="stimulus-panel" role="tabpanel" style="grid-column: 1; grid-row: 1 / 3;">
                                 <div style="background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                                    <h5 class="mb-3" style="color: #1f2937;">Stimulus Configuration</h5>
-                                    <div id="stimulusContent"></div>
+                                    <h5 class="mb-3" style="color: #1f2937;">Events &amp; Stimulus</h5>
+                                    <div id="stimulusContent"
+                                         data-sde-class="Stimulus"
+                                         data-sde-slot="stimulation"
+                                         data-sde-multivalued="false"></div>
+                                    <hr/>
+                                    <div id="eventsContent"
+                                         data-sde-class="Event"
+                                         data-sde-slot="events"
+                                         data-sde-multivalued="true"></div>
                                 </div>
                             </div>
 
@@ -407,7 +416,10 @@
                             <div class="tab-pane fade" id="functions-panel" role="tabpanel" style="grid-column: 1; grid-row: 1 / 3;">
                                 <div style="background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                                     <h5 class="mb-3" style="color: #1f2937;">Functions</h5>
-                                    <div id="functionsContent"></div>
+                                    <div id="functionsContent"
+                                         data-sde-class="Function"
+                                         data-sde-slot="functions"
+                                         data-sde-multivalued="true"></div>
                                 </div>
                             </div>
 
@@ -415,7 +427,10 @@
                             <div class="tab-pane fade" id="observations-panel" role="tabpanel" style="grid-column: 1; grid-row: 1 / 3;">
                                 <div style="background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                                     <h5 class="mb-3" style="color: #1f2937;">Observations</h5>
-                                    <div id="observationsContent"></div>
+                                    <div id="observationsContent"
+                                         data-sde-class="Observation"
+                                         data-sde-slot="observations"
+                                         data-sde-multivalued="true"></div>
                                 </div>
                             </div>
 
@@ -423,7 +438,10 @@
                             <div class="tab-pane fade" id="derived-observations-panel" role="tabpanel" style="grid-column: 1; grid-row: 1 / 3;">
                                 <div style="background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                                     <h5 class="mb-3" style="color: #1f2937;">Derived Observations</h5>
-                                    <div id="derivedObservationsContent"></div>
+                                    <div id="derivedObservationsContent"
+                                         data-sde-class="DerivedObservation"
+                                         data-sde-slot="derived_observations"
+                                         data-sde-multivalued="true"></div>
                                 </div>
                             </div>
 
@@ -431,15 +449,21 @@
                             <div class="tab-pane fade" id="algorithms-panel" role="tabpanel" style="grid-column: 1; grid-row: 1 / 3;">
                                 <div style="background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                                     <h5 class="mb-3" style="color: #1f2937;">Algorithms</h5>
-                                    <div id="algorithmsContent"></div>
+                                    <div id="algorithmsContent"
+                                         data-sde-class="Algorithm"
+                                         data-sde-slot="algorithms"
+                                         data-sde-multivalued="true"></div>
                                 </div>
                             </div>
 
                             <!-- Optimization Tab -->
                             <div class="tab-pane fade" id="optimization-panel" role="tabpanel" style="grid-column: 1; grid-row: 1 / 3;">
                                 <div style="background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                                    <h5 class="mb-3" style="color: #1f2937;">Optimization</h5>
-                                    <div id="optimizationContent"></div>
+                                    <h5 class="mb-3" style="color: #1f2937;">Optimizations</h5>
+                                    <div id="optimizationContent"
+                                         data-sde-class="Optimization"
+                                         data-sde-slot="optimizations"
+                                         data-sde-multivalued="true"></div>
                                 </div>
                             </div>
 
@@ -447,7 +471,28 @@
                             <div class="tab-pane fade" id="explorations-panel" role="tabpanel" style="grid-column: 1; grid-row: 1 / 3;">
                                 <div style="background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                                     <h5 class="mb-3" style="color: #1f2937;">Explorations</h5>
-                                    <div id="explorationsContent"></div>
+                                    <div id="explorationsContent"
+                                         data-sde-class="Exploration"
+                                         data-sde-slot="explorations"
+                                         data-sde-multivalued="true"></div>
+                                    <hr/>
+                                    <h6 class="mt-3">Continuations</h6>
+                                    <div id="continuationsContent"
+                                         data-sde-class="Continuation"
+                                         data-sde-slot="continuations"
+                                         data-sde-multivalued="true"></div>
+                                    <hr/>
+                                    <h6 class="mt-3">Additional Equations</h6>
+                                    <div id="equationsContent"
+                                         data-sde-class="Equation"
+                                         data-sde-slot="additional_equations"
+                                         data-sde-multivalued="true"></div>
+                                    <hr/>
+                                    <h6 class="mt-3">References</h6>
+                                    <div id="referencesContent"
+                                         data-sde-class="string"
+                                         data-sde-slot="references"
+                                         data-sde-multivalued="true"></div>
                                 </div>
                             </div>
 
@@ -455,7 +500,28 @@
                             <div class="tab-pane fade" id="execution-panel" role="tabpanel" style="grid-column: 1; grid-row: 1 / 3;">
                                 <div style="background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                                     <h5 class="mb-3" style="color: #1f2937;">Execution</h5>
-                                    <div id="executionContent"></div>
+                                    <div id="executionContent"
+                                         data-sde-class="ExecutionConfig"
+                                         data-sde-slot="execution"
+                                         data-sde-multivalued="false"></div>
+                                    <hr/>
+                                    <h6 class="mt-3">Software Environment</h6>
+                                    <div id="environmentContent"
+                                         data-sde-class="SoftwareEnvironment"
+                                         data-sde-slot="environment"
+                                         data-sde-multivalued="false"></div>
+                                    <hr/>
+                                    <h6 class="mt-3">Software Requirements</h6>
+                                    <div id="softwareContent"
+                                         data-sde-class="SoftwareRequirement"
+                                         data-sde-slot="software"
+                                         data-sde-multivalued="false"></div>
+                                    <hr/>
+                                    <h6 class="mt-3">Dataset</h6>
+                                    <div id="datasetContent"
+                                         data-sde-class="Dataset"
+                                         data-sde-slot="dataset"
+                                         data-sde-multivalued="false"></div>
                                 </div>
                             </div>
 
@@ -727,6 +793,11 @@
                                     // Schema-driven prefill: NO hardcoded field mappings
                                     window.prefillExperiment(result.data);
 
+                                    // Hydrate the schema-driven editor for advanced sections.
+                                    if (window.SchemaEditor &amp;&amp; window.SchemaEditor.loadExperiment) {
+                                        window.SchemaEditor.loadExperiment(result.data);
+                                    }
+
                                 } catch (err) {
                                     console.error('[Configurator] Error loading experiment:', err);
                                     alert('Error loading experiment: ' + err.message);
@@ -776,6 +847,21 @@
                         });
 
                         // Note: initializeBuilder is now called when dynamics-tab is shown (see experiment_builder.js)
+
+                        // === Schema-driven editor bootstrap ===
+                        // Mounts dynamic editors into every &lt;div data-sde-class="..."&gt; in the page.
+                        // Edits trigger live YAML refresh via onChange.
+                        if (window.SchemaEditor &amp;&amp; window.SchemaEditor.init) {
+                            window.SchemaEditor.init({
+                                onChange: function () {
+                                    if (typeof scheduleLiveYamlUpdate === 'function') {
+                                        scheduleLiveYamlUpdate();
+                                    }
+                                }
+                            }).catch(function (err) {
+                                console.error('[Configurator] SchemaEditor init failed:', err);
+                            });
+                        }
 
                         // Also initialize immediately so the Dynamics tab works on first page load
                         if (window.initializeBuilder) {
@@ -865,19 +951,54 @@
                         }
 
                         // === Live YAML Preview ===
-                        // Debounced function to update the live YAML preview in the right panel
+                        // Two paths:
+                        // 1. Loaded library experiment + no SDE edits  -> server /yaml_raw  (full fidelity).
+                        // 2. SDE edits OR brand-new experiment         -> /experiment/dump_yaml with merged state.
                         let yamlUpdateTimer = null;
-                        function updateLiveYaml() {
+                        async function updateLiveYaml() {
                             const livePreview = document.getElementById('liveYamlPreview');
                             const previewYaml = document.getElementById('previewYaml');
-                            if (!livePreview) return;
-                            // Reuse initializePreviewTab which populates previewYaml
-                            if (typeof initializePreviewTab === 'function') {
-                                initializePreviewTab();
-                            }
-                            // Copy content from previewYaml to livePreview
-                            if (previewYaml) {
-                                livePreview.textContent = previewYaml.textContent;
+                            const targets = [livePreview, previewYaml].filter(Boolean);
+                            if (!targets.length) return;
+
+                            const loadSelect = document.getElementById('loadExistingExperiment');
+                            const experimentId = loadSelect ? loadSelect.value : null;
+                            const sdeHasState = window.SchemaEditor &amp;&amp; window.SchemaEditor.state &amp;&amp;
+                                                Object.keys(window.SchemaEditor.state).length > 0;
+
+                            try {
+                                let yamlText = null;
+
+                                // Build the merged state dict (legacy collectors + SDE state).
+                                let mergedExp = null;
+                                if (typeof window.collectFullExperiment === 'function') {
+                                    try { mergedExp = window.collectFullExperiment() || {}; } catch (e) { mergedExp = {}; }
+                                }
+                                if (window.SchemaEditor &amp;&amp; window.SchemaEditor.mergeInto) {
+                                    mergedExp = window.SchemaEditor.mergeInto(mergedExp || {});
+                                }
+
+                                const mergedHasContent = mergedExp &amp;&amp; Object.keys(mergedExp).some(k =>
+                                    mergedExp[k] !== undefined &amp;&amp; mergedExp[k] !== null &amp;&amp; mergedExp[k] !== ''
+                                );
+
+                                if (sdeHasState || mergedHasContent) {
+                                    yamlText = await window.SchemaEditor.dumpYaml(mergedExp || {});
+                                }
+
+                                if (!yamlText &amp;&amp; experimentId) {
+                                    const r = await fetch(`/tvbo/api/configurator/experiment/${experimentId}/yaml_raw`);
+                                    if (r.ok) yamlText = await r.text();
+                                }
+
+                                if (!yamlText &amp;&amp; typeof initializePreviewTab === 'function') {
+                                    initializePreviewTab();
+                                    yamlText = previewYaml ? previewYaml.textContent : '';
+                                }
+
+                                targets.forEach(t => { t.textContent = yamlText || ''; });
+                            } catch (e) {
+                                console.warn('[Configurator] Live YAML update failed:', e);
                             }
                         }
                         window.updateLiveYaml = updateLiveYaml;

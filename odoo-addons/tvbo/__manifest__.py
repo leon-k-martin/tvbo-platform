@@ -35,6 +35,7 @@
         'data/database_neural_models.xml',
         'data/database_julia_dynamics.xml',
         'data/database_integrators.xml',
+        'data/database_tractograms.xml',
         'data/database_networks.xml',
         'data/database_studies.xml',
         'data/database_coupling_functions.xml',

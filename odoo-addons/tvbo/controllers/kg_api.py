@@ -11,8 +11,6 @@ import re
 from odoo import http
 from odoo.http import Response, request
 
-from tvbo.api.direct_ontology_api import get_direct_ontology_api
-
 _logger = logging.getLogger(__name__)
 
 # Singleton ontology API
@@ -160,6 +158,7 @@ def get_ontology_api():
     """Get DirectOntologyAPI singleton. Fails if unavailable."""
     global _ontology_api
     if _ontology_api is None:
+        from tvbo.api.direct_ontology_api import get_direct_ontology_api
         _ontology_api = get_direct_ontology_api()
     return _ontology_api
 

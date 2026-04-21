@@ -101,11 +101,23 @@ class ModelConfiguratorController(http.Controller):
 
     @http.route('/tvbo/api/configurator/networks', type='http', auth='public', methods=['GET'], csrf=False)
     def api_networks(self, **kwargs):
-        """Get all networks"""
+        """Get all networks plus the tractograms / parcellations available
+        as Many2one targets (used to populate the Network panel selectors)."""
         try:
             records = request.env['tvbo.network'].sudo().search([])
             data = records.read()
-            return self._json_response({'success': True, 'data': data})
+
+            tractograms = request.env['tvbo.tractogram'].sudo().search([]).read(
+                ['id', 'name', 'label', 'description'])
+            parcellations = request.env['tvbo.parcellation'].sudo().search([]).read(
+                ['id', 'label', 'atlas'])
+
+            return self._json_response({
+                'success': True,
+                'data': data,
+                'tractograms': tractograms,
+                'parcellations': parcellations,
+            })
         except Exception as e:
             _logger.error(f"Error in api_networks: {e}", exc_info=True)
             return self._json_response({'success': False, 'error': str(e)})

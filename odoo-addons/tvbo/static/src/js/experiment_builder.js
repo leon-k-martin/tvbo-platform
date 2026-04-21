@@ -850,8 +850,28 @@
     const experimentId = loadSelect ? loadSelect.value : null;
 
     if (experimentId) {
-      // Fetch YAML from server using Pydantic SimulationExperiment
-      window.location.href = `/tvbo/api/configurator/experiment/${experimentId}/yaml`;
+      // Fetch YAML from server. Try the strict Pydantic path first, fall
+      // back to the raw cleaned dump so the user always gets a complete
+      // file even if the DB record doesn't pass current Pydantic validation.
+      fetch(`/tvbo/api/configurator/experiment/${experimentId}/yaml`)
+        .then(r => r.ok ? r.text().then(t => ({ok: true, text: t, ct: r.headers.get('Content-Type') || ''})) : ({ok: false}))
+        .then(res => {
+          if (res && res.ok && res.ct.includes('yaml')) return res.text;
+          return fetch(`/tvbo/api/configurator/experiment/${experimentId}/yaml_raw`)
+            .then(r => r.text());
+        })
+        .then(yamlText => {
+          const blob = new Blob([yamlText], { type: 'text/yaml' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `experiment_${experimentId}.yaml`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        })
+        .catch(err => alert('Download failed: ' + err.message));
       return;
     }
 
@@ -2214,8 +2234,15 @@
       }
       window.tractogramsData.forEach(tractogram => {
         const option = document.createElement('option');
-        option.value = tractogram;
-        option.textContent = tractogram;
+        // Backend returns full records [{id, name, label, description}].
+        // Tolerate plain string entries for backwards-compat.
+        if (typeof tractogram === 'string') {
+          option.value = tractogram;
+          option.textContent = tractogram;
+        } else {
+          option.value = tractogram.id;
+          option.textContent = tractogram.label || tractogram.name || `#${tractogram.id}`;
+        }
         tractogramSelect.appendChild(option);
       });
       // Add custom option at the end
@@ -2916,10 +2943,27 @@
     const previewElement = document.getElementById('previewYaml');
     if (!previewElement) return;
 
-    // Collect general fields using data-section/data-field
-    const general = collectSection('general') || {};
+    // If a library experiment is currently selected (e.g. user just loaded
+    // an example), prefer the server-side dump: it round-trips the FULL
+    // record (all sections, all metadata) instead of being limited to
+    // whatever the legacy hand-rolled collectors know about.
+    const loadSelect = document.getElementById('loadExistingExperiment');
+    const experimentId = loadSelect ? loadSelect.value : null;
+    if (experimentId) {
+      fetch(`/tvbo/api/configurator/experiment/${experimentId}/yaml_raw`)
+        .then(r => r.ok ? r.text() : Promise.reject(new Error('HTTP ' + r.status)))
+        .then(text => { previewElement.textContent = text; })
+        .catch(() => {
+          // Fallback to legacy generator on network/server failure.
+          previewElement.textContent = _legacyGenerateYamlPreview();
+        });
+      return;
+    }
+    previewElement.textContent = _legacyGenerateYamlPreview();
+  }
 
-    // Collect configuration from all tabs
+  function _legacyGenerateYamlPreview() {
+    const general = collectSection('general') || {};
     const config = {
       simulation_experiment: {
         name: general.name || 'Simulation Experiment',
@@ -2940,10 +2984,7 @@
         execution: collectExecutionConfig()
       }
     };
-
-    // Convert to YAML-like format
-    const yamlText = generateYamlPreview(config);
-    previewElement.textContent = yamlText;
+    return generateYamlPreview(config);
   }
 
   function collectDynamicsConfig() {
@@ -4571,4 +4612,9 @@
       initializeCouplingTab();
     });
   });
+
+  // Expose for SchemaEditor live-preview integration
+  if (typeof collectFullExperiment === 'function') {
+    window.collectFullExperiment = collectFullExperiment;
+  }
 })();

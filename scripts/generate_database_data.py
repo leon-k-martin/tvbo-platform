@@ -48,6 +48,35 @@ def _as_string_list(value: Any) -> List[str]:
     return [s] if s else []
 
 
+def emit_parameter_value(value: Any, indent: str = '            ') -> List[str]:
+    """Render a parameter ``value`` into XML field lines respecting the
+    schema, where ``tvbo.parameter.value`` is a Float and ``default`` is a
+    Char.
+
+    - bool/int/float go into ``<field name="value">...</field>`` as a number.
+    - everything else (strings like 'True', 'auto', enum codes, etc.) is
+      preserved in ``<field name="default">...</field>`` so no information
+      is lost when Odoo loads the fixture.
+    - None / empty values produce no output.
+    """
+    if value is None:
+        return []
+    if isinstance(value, bool):
+        return [f'{indent}<field name="value">{1.0 if value else 0.0}</field>']
+    if isinstance(value, (int, float)):
+        return [f'{indent}<field name="value">{value}</field>']
+    s = str(value).strip()
+    if not s:
+        return []
+    # Try numeric coercion before falling back to default (Char)
+    try:
+        f = float(s)
+        return [f'{indent}<field name="value">{f}</field>']
+    except (TypeError, ValueError):
+        pass
+    return [f'{indent}<field name="default">{escape_xml(s)}</field>']
+
+
 def _version_spec_from_data(data: Dict[str, Any]) -> str:
     """Build a version specifier from raw metadata.
 
@@ -325,8 +354,7 @@ def generate_model_data_xml(yaml_files: List[Path], output_file: Path):
                     lines.append(f'            <field name="name">{escape_xml(param_name)}</field>')
 
                     if isinstance(param_data, dict):
-                        if 'value' in param_data:
-                            lines.append(f'            <field name="value">{param_data["value"]}</field>')
+                        lines.extend(emit_parameter_value(param_data.get('value'), indent='            '))
                         if 'description' in param_data:
                             lines.append(f'            <field name="description">{escape_xml(param_data["description"])}</field>')
                         if 'unit' in param_data:
@@ -469,8 +497,7 @@ def generate_model_data_xml(yaml_files: List[Path], output_file: Path):
                     lines.append(f'            <field name="name">{escape_xml(term_name)}</field>')
 
                     if isinstance(term_data, dict):
-                        if 'value' in term_data:
-                            lines.append(f'            <field name="value">{term_data["value"]}</field>')
+                        lines.extend(emit_parameter_value(term_data.get('value'), indent='            '))
                         if 'description' in term_data:
                             lines.append(f'            <field name="description">{escape_xml(term_data["description"])}</field>')
 
@@ -620,6 +647,59 @@ def generate_integrator_data_xml(yaml_files: List[Path], output_file: Path):
     output_file.write_text('\n'.join(lines))
 
 
+def generate_tractogram_data_xml(yaml_files: List[Path], output_file: Path) -> int:
+    """Emit Tractogram fixtures collected from network YAMLs.
+
+    Networks reference tractograms via Many2one; this fixture provides the
+    target records so the reference resolves at module load.
+    """
+    lines = [
+        '<?xml version="1.0" encoding="utf-8"?>',
+        '<odoo>',
+        '    <data noupdate="0">',
+        ''
+    ]
+
+    # Deduplicate by tractogram name across all network YAMLs
+    seen: Dict[str, Dict[str, Any]] = {}
+    for yaml_file in yaml_files:
+        try:
+            with open(yaml_file) as f:
+                data = yaml.safe_load(f)
+        except Exception:
+            continue
+        if not data:
+            continue
+        t = data.get('tractogram')
+        if not isinstance(t, dict):
+            continue
+        name = t.get('name')
+        if not name or name in seen:
+            continue
+        seen[name] = t
+
+    _SCALARS = (
+        'label', 'description', 'data_source', 'acquisition',
+        'processing_pipeline', 'reference',
+    )
+    for name, t in sorted(seen.items()):
+        tract_id = sanitize_xml_id(name)
+        lines.append(f'        <record id="tractogram_{tract_id}" model="tvbo.tractogram">')
+        lines.append(f'            <field name="name">{escape_xml(name)}</field>')
+        for f in _SCALARS:
+            v = t.get(f)
+            if v is not None and v != '':
+                lines.append(f'            <field name="{f}">{escape_xml(str(v))}</field>')
+        nsubj = t.get('number_of_subjects')
+        if isinstance(nsubj, int):
+            lines.append(f'            <field name="number_of_subjects">{nsubj}</field>')
+        lines.extend(['        </record>', ''])
+
+    lines.extend(['    </data>', '</odoo>', ''])
+    output_file.write_text('\n'.join(lines))
+    return len(seen)
+
+
 def generate_network_data_xml(yaml_files: List[Path], output_file: Path):
     """Generate XML data file for connectivity networks (Network records)."""
     lines = [
@@ -629,13 +709,17 @@ def generate_network_data_xml(yaml_files: List[Path], output_file: Path):
         ''
     ]
 
-    # Collect unique atlases to create BrainAtlas and Parcellation records first
+    # Collect unique atlases for BrainAtlas + Parcellation dependency records.
+    # Tractograms are emitted in a separate fixture (database_tractograms.xml)
+    # which must be loaded BEFORE this file in __manifest__.py.
     atlases = {}
     for yaml_file in yaml_files:
         try:
             with open(yaml_file) as f:
                 data = yaml.safe_load(f)
-            if data and 'parcellation' in data and 'atlas' in data['parcellation']:
+            if not data:
+                continue
+            if 'parcellation' in data and 'atlas' in data['parcellation']:
                 atlas_name = data['parcellation']['atlas'].get('name', '')
                 if atlas_name and atlas_name not in atlases:
                     atlases[atlas_name] = sanitize_xml_id(atlas_name)
@@ -694,8 +778,13 @@ def generate_network_data_xml(yaml_files: List[Path], output_file: Path):
             if 'number_of_nodes' in data:
                 lines.append(f'            <field name="number_of_nodes">{data["number_of_nodes"]}</field>')
 
-            if 'tractogram' in data:
-                lines.append(f'            <field name="tractogram">{escape_xml(data["tractogram"])}</field>')
+            # tractogram is Many2one -> reference the pre-emitted tvbo.tractogram record
+            tractogram = data.get('tractogram')
+            if isinstance(tractogram, dict):
+                tname = tractogram.get('name', '')
+                if tname:
+                    tract_id = sanitize_xml_id(tname)
+                    lines.append(f'            <field name="tractogram" ref="tractogram_{tract_id}"/>')
 
             # Link to parcellation by atlas name
             if 'parcellation' in data and 'atlas' in data['parcellation']:
@@ -848,8 +937,7 @@ def generate_experiment_data_xml(yaml_files: List[Path], output_file: Path):
                         lines.append(f'            <field name="name">{escape_xml(pname)}</field>')
                         if 'label' in pdata:
                             lines.append(f'            <field name="label">{escape_xml(str(pdata["label"]))}</field>')
-                        if 'value' in pdata:
-                            lines.append(f'            <field name="value">{pdata["value"]}</field>')
+                        lines.extend(emit_parameter_value(pdata.get('value'), indent='            '))
                         if 'unit' in pdata:
                             lines.append(f'            <field name="unit">{escape_xml(str(pdata["unit"]))}</field>')
                         if 'description' in pdata:
@@ -991,8 +1079,7 @@ def generate_experiment_data_xml(yaml_files: List[Path], output_file: Path):
                                 lines.append(f'            <field name="name">{escape_xml(cpname)}</field>')
                                 if 'label' in cpdata:
                                     lines.append(f'            <field name="label">{escape_xml(str(cpdata["label"]))}</field>')
-                                if 'value' in cpdata:
-                                    lines.append(f'            <field name="value">{cpdata["value"]}</field>')
+                                lines.extend(emit_parameter_value(cpdata.get('value'), indent='            '))
                                 if 'description' in cpdata:
                                     lines.append(f'            <field name="description">{escape_xml(str(cpdata["description"]))}</field>')
                                 if cpdata.get('free'):
@@ -1249,9 +1336,9 @@ def generate_experiment_data_xml(yaml_files: List[Path], output_file: Path):
             if exp_desc:
                 lines.append(f'            <field name="description">{escape_xml(exp_desc)}</field>')
 
-            # Link dynamics
+            # Link dynamics (Many2one — first ref wins; extras are ignored)
             if dynamics_refs:
-                lines.append(f'            <field name="dynamics" eval="[(6, 0, [{", ".join(f"ref(\'{d}\')" for d in dynamics_refs)}])]"/>')
+                lines.append(f'            <field name="dynamics" ref="{dynamics_refs[0]}"/>')
 
             # Link network
             if network_id:
@@ -1342,10 +1429,15 @@ def generate_observation_data_xml(yaml_files: List[Path], output_file: Path):
             if 'period' in data:
                 lines.append(f'            <field name="period">{data["period"]}</field>')
 
-            # imaging_modality is a Many2one to tvbo.imaging_modality enum
+            # imaging_modality is a Many2one to tvbo.imaging_modality enum.
+            # The seed fixture data_imaging_modality.xml uses the original
+            # casing of the modality code (e.g. ``imaging_modality_BOLD``),
+            # so preserve the case here instead of lower-casing.
             if 'imaging_modality' in data:
-                modality = data['imaging_modality']
-                modality_ref = f"imaging_modality_{sanitize_xml_id(modality)}"
+                modality = str(data['imaging_modality'])
+                modality_token = re.sub(r'[^a-zA-Z0-9_]', '_', modality)
+                modality_token = re.sub(r'_+', '_', modality_token)
+                modality_ref = f"imaging_modality_{modality_token}"
                 lines.append(f'            <field name="imaging_modality" ref="{modality_ref}"/>')
 
             # Store pipeline summary as description supplement
@@ -1382,8 +1474,7 @@ def generate_observation_data_xml(yaml_files: List[Path], output_file: Path):
                     lines.append(f'        <record id="{pid}" model="tvbo.parameter">')
                     lines.append(f'            <field name="name">{escape_xml(pname)}</field>')
                     if isinstance(pdata, dict):
-                        if 'value' in pdata:
-                            lines.append(f'            <field name="value">{pdata["value"]}</field>')
+                        lines.extend(emit_parameter_value(pdata.get('value'), indent='            '))
                         if 'unit' in pdata:
                             lines.append(f'            <field name="unit">{escape_xml(pdata["unit"])}</field>')
                         if 'description' in pdata:
@@ -1437,8 +1528,7 @@ def generate_coupling_function_data_xml(yaml_files: List[Path], output_file: Pat
                     lines.append(f'            <field name="name">{escape_xml(param_name)}</field>')
 
                     if isinstance(param_data, dict):
-                        if 'value' in param_data:
-                            lines.append(f'            <field name="value">{param_data["value"]}</field>')
+                        lines.extend(emit_parameter_value(param_data.get('value'), indent='            '))
                         if 'description' in param_data:
                             lines.append(f'            <field name="description">{escape_xml(param_data["description"])}</field>')
 
@@ -1575,6 +1665,12 @@ def main():
     if networks_dir.exists():
         yaml_files = list(networks_dir.glob('*.yaml'))
         if yaml_files:
+            # Tractograms first - networks reference them via Many2one
+            tract_file = output_dir / 'database_tractograms.xml'
+            n_tract = generate_tractogram_data_xml(yaml_files, tract_file)
+            data_files.append('data/database_tractograms.xml')
+            print(f"✓ Generated {tract_file.name} with {n_tract} tractograms")
+
             output_file = output_dir / 'database_networks.xml'
             generate_network_data_xml(yaml_files, output_file)
             data_files.append('data/database_networks.xml')

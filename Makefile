@@ -42,9 +42,22 @@ dev-restart:
 
 dev-update:
 	@echo "Updating TVBO module in DEV environment..."
-	docker compose exec odoo odoo -d tvbo_dev -u tvbo --stop-after-init --db_host=postgres --db_user=odoo --db_password=odoo
-	@echo "Restarting Odoo..."
-	@$(MAKE) dev-restart
+	@echo "  → stopping odoo to release DB locks..."
+	@docker compose stop odoo >/dev/null
+	@echo "  → running upgrade in ephemeral container..."
+	@set +e; \
+	docker compose run --rm -T --no-deps --entrypoint "" odoo \
+		sh -c 'odoo -d tvbo_dev -u tvbo --stop-after-init --no-http \
+			--db_host=postgres --db_user=odoo --db_password=odoo; \
+			echo "ODOO_EXIT=$$?"'; \
+	rc=$$?; \
+	echo "  → starting odoo back up..."; \
+	docker compose start odoo >/dev/null; \
+	if [ $$rc -ne 0 ] && [ $$rc -ne 255 ]; then \
+		echo "✗ Module upgrade failed (exit $$rc). Odoo restarted; check logs:"; \
+		echo "    make dev-logs-odoo"; \
+		exit $$rc; \
+	fi
 	@echo "✓ Module updated"
 
 dev-logs:

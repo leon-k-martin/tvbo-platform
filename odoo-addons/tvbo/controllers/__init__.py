@@ -3,3 +3,4 @@ from . import model_configurator
 from . import schema_api
 from . import kg_api
 from . import document_parser
+from . import building_blocks_api

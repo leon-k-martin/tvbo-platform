@@ -96,7 +96,7 @@
             <field name="label">Yeo17 (PPMI85)</field>
             <field name="data_file">tpl-MNI152NLin2009cAsym_cohort-PPMI85_rec-PPMI85_atlas-Yeo17_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">17</field>
-            <field name="tractogram">{'name': 'PPMI85'}</field>
+            <field name="tractogram" ref="tractogram_ppmi85"/>
             <field name="parcellation" ref="parcellation_yeo17"/>
         </record>
 
@@ -104,7 +104,7 @@
             <field name="label">hcpmmp1 (dTOR)</field>
             <field name="data_file">tpl-MNI152NLin2009bAsym_cohort-HCPYA_rec-dTOR_atlas-HCPMMP1_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">379</field>
-            <field name="tractogram">{'name': 'dTOR'}</field>
+            <field name="tractogram" ref="tractogram_dtor"/>
             <field name="parcellation" ref="parcellation_hcpmmp1"/>
         </record>
 
@@ -112,7 +112,7 @@
             <field name="label">Schaefer2018_900_7Networks_dTOR</field>
             <field name="data_file">tpl-FSLMNI152_cohort-HCPYA_rec-dTOR_atlas-Schaefer2018_seg-7Networks_scale-900_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">900</field>
-            <field name="tractogram">{'name': 'dTOR'}</field>
+            <field name="tractogram" ref="tractogram_dtor"/>
             <field name="parcellation" ref="parcellation_schaefer2018"/>
         </record>
 
@@ -120,7 +120,7 @@
             <field name="label">virtualdbs (dTOR)</field>
             <field name="data_file">tpl-MNI152NLin2009cAsym_cohort-HCPYA_rec-dTOR_atlas-virtualdbs_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">370</field>
-            <field name="tractogram">{'name': 'dTOR'}</field>
+            <field name="tractogram" ref="tractogram_dtor"/>
             <field name="parcellation" ref="parcellation_virtualdbs"/>
         </record>
 
@@ -128,7 +128,7 @@
             <field name="label">Schaefer100017Networks (MghUscHcp32)</field>
             <field name="data_file">tpl-FSLMNI152_cohort-MghUscHcp32_rec-MghUscHcp32_atlas-Schaefer2018_seg-17Networks_scale-1000_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">1000</field>
-            <field name="tractogram">{'name': 'MghUscHcp32'}</field>
+            <field name="tractogram" ref="tractogram_mghuschcp32"/>
             <field name="parcellation" ref="parcellation_schaefer2018"/>
         </record>
 
@@ -136,7 +136,7 @@
             <field name="label">Lobar (dTOR)</field>
             <field name="data_file">tpl-MNI152NLin2009cAsym_cohort-HCPYA_rec-dTOR_atlas-Lobar_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">17</field>
-            <field name="tractogram">{'name': 'dTOR'}</field>
+            <field name="tractogram" ref="tractogram_dtor"/>
             <field name="parcellation" ref="parcellation_lobar"/>
         </record>
 
@@ -144,7 +144,7 @@
             <field name="label">Schaefer2018_100_7Networks_dTOR</field>
             <field name="data_file">tpl-FSLMNI152_cohort-HCPYA_rec-dTOR_atlas-Schaefer2018_seg-7Networks_scale-100_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">100</field>
-            <field name="tractogram">{'name': 'dTOR'}</field>
+            <field name="tractogram" ref="tractogram_dtor"/>
             <field name="parcellation" ref="parcellation_schaefer2018"/>
         </record>
 
@@ -152,7 +152,7 @@
             <field name="label">hcpmmp1 (MghUscHcp32)</field>
             <field name="data_file">tpl-MNI152NLin2009bAsym_cohort-MghUscHcp32_rec-MghUscHcp32_atlas-HCPMMP1_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">379</field>
-            <field name="tractogram">{'name': 'MghUscHcp32'}</field>
+            <field name="tractogram" ref="tractogram_mghuschcp32"/>
             <field name="parcellation" ref="parcellation_hcpmmp1"/>
         </record>
 
@@ -160,7 +160,7 @@
             <field name="label">Yeo17 (dTOR)</field>
             <field name="data_file">tpl-MNI152NLin2009cAsym_cohort-HCPYA_rec-dTOR_atlas-Yeo17_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">17</field>
-            <field name="tractogram">{'name': 'dTOR'}</field>
+            <field name="tractogram" ref="tractogram_dtor"/>
             <field name="parcellation" ref="parcellation_yeo17"/>
         </record>
 
@@ -168,7 +168,7 @@
             <field name="label">Schaefer2018_1000_17Networks_dTOR</field>
             <field name="data_file">tpl-FSLMNI152_cohort-HCPYA_rec-dTOR_atlas-Schaefer2018_seg-17Networks_scale-1000_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">1000</field>
-            <field name="tractogram">{'name': 'dTOR'}</field>
+            <field name="tractogram" ref="tractogram_dtor"/>
             <field name="parcellation" ref="parcellation_schaefer2018"/>
         </record>
 
@@ -176,7 +176,7 @@
             <field name="label">Schaefer2018_500_17Networks_dTOR</field>
             <field name="data_file">tpl-FSLMNI152_cohort-HCPYA_rec-dTOR_atlas-Schaefer2018_seg-17Networks_scale-500_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">500</field>
-            <field name="tractogram">{'name': 'dTOR'}</field>
+            <field name="tractogram" ref="tractogram_dtor"/>
             <field name="parcellation" ref="parcellation_schaefer2018"/>
         </record>
 
@@ -196,7 +196,7 @@
             <field name="label">DesikanKilliany (dTOR)</field>
             <field name="data_file">tpl-MNI152NLin2009cAsym_cohort-HCPYA_rec-dTOR_atlas-DesikanKilliany_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">87</field>
-            <field name="tractogram">{'name': 'dTOR'}</field>
+            <field name="tractogram" ref="tractogram_dtor"/>
             <field name="parcellation" ref="parcellation_desikankilliany"/>
         </record>
 
@@ -204,7 +204,7 @@
             <field name="label">hcpmmp1ordered (dTOR)</field>
             <field name="data_file">tpl-MNI152NLin2009bAsym_cohort-HCPYA_rec-dTOR_atlas-HCPMMP1_seg-ordered_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">379</field>
-            <field name="tractogram">{'name': 'dTOR'}</field>
+            <field name="tractogram" ref="tractogram_dtor"/>
             <field name="parcellation" ref="parcellation_hcpmmp1"/>
         </record>
 
@@ -218,7 +218,7 @@
             <field name="label">Schaefer2018_300_7Networks_dTOR</field>
             <field name="data_file">tpl-FSLMNI152_cohort-HCPYA_rec-dTOR_atlas-Schaefer2018_seg-7Networks_scale-300_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">300</field>
-            <field name="tractogram">{'name': 'dTOR'}</field>
+            <field name="tractogram" ref="tractogram_dtor"/>
             <field name="parcellation" ref="parcellation_schaefer2018"/>
         </record>
 
@@ -226,7 +226,7 @@
             <field name="label">Schaefer2018_700_17Networks_dTOR</field>
             <field name="data_file">tpl-FSLMNI152_cohort-HCPYA_rec-dTOR_atlas-Schaefer2018_seg-17Networks_scale-700_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">700</field>
-            <field name="tractogram">{'name': 'dTOR'}</field>
+            <field name="tractogram" ref="tractogram_dtor"/>
             <field name="parcellation" ref="parcellation_schaefer2018"/>
         </record>
 
@@ -234,7 +234,7 @@
             <field name="label">DesikanKilliany (MghUscHcp32)</field>
             <field name="data_file">tpl-MNI152NLin2009cAsym_cohort-MghUscHcp32_rec-MghUscHcp32_atlas-DesikanKilliany_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">87</field>
-            <field name="tractogram">{'name': 'MghUscHcp32'}</field>
+            <field name="tractogram" ref="tractogram_mghuschcp32"/>
             <field name="parcellation" ref="parcellation_desikankilliany"/>
         </record>
 
@@ -248,7 +248,7 @@
             <field name="label">Yeo17 (MghUscHcp32)</field>
             <field name="data_file">tpl-MNI152NLin2009cAsym_cohort-MghUscHcp32_rec-MghUscHcp32_atlas-Yeo17_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">17</field>
-            <field name="tractogram">{'name': 'MghUscHcp32'}</field>
+            <field name="tractogram" ref="tractogram_mghuschcp32"/>
             <field name="parcellation" ref="parcellation_yeo17"/>
         </record>
 
@@ -256,7 +256,7 @@
             <field name="label">Schaefer2018_100_17Networks_dTOR</field>
             <field name="data_file">tpl-FSLMNI152_cohort-HCPYA_rec-dTOR_atlas-Schaefer2018_seg-17Networks_scale-100_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">100</field>
-            <field name="tractogram">{'name': 'dTOR'}</field>
+            <field name="tractogram" ref="tractogram_dtor"/>
             <field name="parcellation" ref="parcellation_schaefer2018"/>
         </record>
 
@@ -264,7 +264,7 @@
             <field name="label">Schaefer2018_500_7Networks_dTOR</field>
             <field name="data_file">tpl-FSLMNI152_cohort-HCPYA_rec-dTOR_atlas-Schaefer2018_seg-7Networks_scale-500_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">500</field>
-            <field name="tractogram">{'name': 'dTOR'}</field>
+            <field name="tractogram" ref="tractogram_dtor"/>
             <field name="parcellation" ref="parcellation_schaefer2018"/>
         </record>
 
@@ -272,7 +272,7 @@
             <field name="label">Schaefer2018_1000_7Networks_dTOR</field>
             <field name="data_file">tpl-FSLMNI152_cohort-HCPYA_rec-dTOR_atlas-Schaefer2018_seg-7Networks_scale-1000_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">1000</field>
-            <field name="tractogram">{'name': 'dTOR'}</field>
+            <field name="tractogram" ref="tractogram_dtor"/>
             <field name="parcellation" ref="parcellation_schaefer2018"/>
         </record>
 
@@ -286,7 +286,7 @@
             <field name="label">Schaefer2018_900_17Networks_dTOR</field>
             <field name="data_file">tpl-FSLMNI152_cohort-HCPYA_rec-dTOR_atlas-Schaefer2018_seg-17Networks_scale-900_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">900</field>
-            <field name="tractogram">{'name': 'dTOR'}</field>
+            <field name="tractogram" ref="tractogram_dtor"/>
             <field name="parcellation" ref="parcellation_schaefer2018"/>
         </record>
 
@@ -301,7 +301,7 @@
             <field name="label">Schaefer2018_100_7Networks_Hansen2022_SCFC</field>
             <field name="data_file">tpl-FSLMNI152_cohort-HCPYA_rec-Hansen2022_atlas-Schaefer2018_seg-7Networks_scale-100_desc-SCFC_relmat.h5</field>
             <field name="number_of_nodes">100</field>
-            <field name="tractogram">{'name': 'Hansen2022', 'label': 'MRtrix3-MSMT-CSD-SIFT2 group-consensus SC', 'description': 'Group-consensus structural connectivity from HCP Young Adult cohort. DWI pre-processed with MRtrix3 (v3). Fiber orientation distributions using multi-shell multi-tissue constrained spherical deconvolution (MSMT-CSD). Probabilistic streamline tractography on the generated FODs. Streamline weights optimized with SIFT2 (cross-section multiplier). Group-consensus binary network constructed preserving density and edge-length distributions of individual connectomes. Edge weights: mean log-transformed streamline count of non-zero edges across participants, normalized to [0, 1].', 'processing_pipeline': 'MRtrix3-MSMT-CSD-SIFT2', 'reference': 'Hansen JY, Shafiei G, Markello RD, Smart K, Cox SML, Wu Y, Diez I, Schirner M, Wirsich J, Bhatt DL, Misic B. (2022). Mapping neurotransmitter systems to the structural and functional organization of the human neocortex. Nature Neuroscience, 25, 1569-1581. https://doi.org/10.1038/s41593-022-01186-3'}</field>
+            <field name="tractogram" ref="tractogram_hansen2022"/>
             <field name="parcellation" ref="parcellation_schaefer2018"/>
         </record>
 
@@ -309,7 +309,7 @@
             <field name="label">Schaefer100017Networks (PPMI85)</field>
             <field name="data_file">tpl-FSLMNI152_cohort-PPMI85_rec-PPMI85_atlas-Schaefer2018_seg-17Networks_scale-1000_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">1000</field>
-            <field name="tractogram">{'name': 'PPMI85'}</field>
+            <field name="tractogram" ref="tractogram_ppmi85"/>
             <field name="parcellation" ref="parcellation_schaefer2018"/>
         </record>
 
@@ -324,7 +324,7 @@
             <field name="label">Schaefer2018_300_17Networks_dTOR</field>
             <field name="data_file">tpl-FSLMNI152_cohort-HCPYA_rec-dTOR_atlas-Schaefer2018_seg-17Networks_scale-300_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">300</field>
-            <field name="tractogram">{'name': 'dTOR'}</field>
+            <field name="tractogram" ref="tractogram_dtor"/>
             <field name="parcellation" ref="parcellation_schaefer2018"/>
         </record>
 
@@ -332,7 +332,7 @@
             <field name="label">Schaefer2018_700_7Networks_dTOR</field>
             <field name="data_file">tpl-FSLMNI152_cohort-HCPYA_rec-dTOR_atlas-Schaefer2018_seg-7Networks_scale-700_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">700</field>
-            <field name="tractogram">{'name': 'dTOR'}</field>
+            <field name="tractogram" ref="tractogram_dtor"/>
             <field name="parcellation" ref="parcellation_schaefer2018"/>
         </record>
 
@@ -340,7 +340,7 @@
             <field name="label">hcpmmp1ordered (PPMI85)</field>
             <field name="data_file">tpl-MNI152NLin2009bAsym_cohort-PPMI85_rec-PPMI85_atlas-HCPMMP1_seg-ordered_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">379</field>
-            <field name="tractogram">{'name': 'PPMI85'}</field>
+            <field name="tractogram" ref="tractogram_ppmi85"/>
             <field name="parcellation" ref="parcellation_hcpmmp1"/>
         </record>
 
@@ -355,7 +355,7 @@
             <field name="label">Destrieux (PPMI85)</field>
             <field name="data_file">tpl-MNI152NLin2009cAsym_cohort-PPMI85_rec-PPMI85_atlas-Destrieux_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">167</field>
-            <field name="tractogram">{'name': 'PPMI85'}</field>
+            <field name="tractogram" ref="tractogram_ppmi85"/>
             <field name="parcellation" ref="parcellation_destrieux"/>
         </record>
 
@@ -363,7 +363,7 @@
             <field name="label">Destrieux (dTOR)</field>
             <field name="data_file">tpl-MNI152NLin2009cAsym_cohort-HCPYA_rec-dTOR_atlas-Destrieux_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">167</field>
-            <field name="tractogram">{'name': 'dTOR'}</field>
+            <field name="tractogram" ref="tractogram_dtor"/>
             <field name="parcellation" ref="parcellation_destrieux"/>
         </record>
 
@@ -377,7 +377,7 @@
             <field name="label">Schaefer2018_400_17Networks_dTOR</field>
             <field name="data_file">tpl-FSLMNI152_cohort-HCPYA_rec-dTOR_atlas-Schaefer2018_seg-17Networks_scale-400_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">400</field>
-            <field name="tractogram">{'name': 'dTOR'}</field>
+            <field name="tractogram" ref="tractogram_dtor"/>
             <field name="parcellation" ref="parcellation_schaefer2018"/>
         </record>
 
@@ -391,7 +391,7 @@
             <field name="label">Schaefer1000 (PPMI85)</field>
             <field name="data_file">tpl-FSLMNI152_cohort-PPMI85_rec-PPMI85_atlas-Schaefer2018_scale-1000_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">1000</field>
-            <field name="tractogram">{'name': 'PPMI85'}</field>
+            <field name="tractogram" ref="tractogram_ppmi85"/>
             <field name="parcellation" ref="parcellation_schaefer2018"/>
         </record>
 
@@ -399,7 +399,7 @@
             <field name="label">hcpmmp1 (PPMI85)</field>
             <field name="data_file">tpl-MNI152NLin2009bAsym_cohort-PPMI85_rec-PPMI85_atlas-HCPMMP1_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">379</field>
-            <field name="tractogram">{'name': 'PPMI85'}</field>
+            <field name="tractogram" ref="tractogram_ppmi85"/>
             <field name="parcellation" ref="parcellation_hcpmmp1"/>
         </record>
 
@@ -407,7 +407,7 @@
             <field name="label">Destrieux (MghUscHcp32)</field>
             <field name="data_file">tpl-MNI152NLin2009cAsym_cohort-MghUscHcp32_rec-MghUscHcp32_atlas-Destrieux_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">167</field>
-            <field name="tractogram">{'name': 'MghUscHcp32'}</field>
+            <field name="tractogram" ref="tractogram_mghuschcp32"/>
             <field name="parcellation" ref="parcellation_destrieux"/>
         </record>
 
@@ -422,7 +422,7 @@
             <field name="label">Lobar8 (dTOR)</field>
             <field name="data_file">tpl-MNI152NLin2009cAsym_cohort-HCPYA_rec-dTOR_atlas-Lobar8_desc-SCFC_relmat.h5</field>
             <field name="number_of_nodes">16</field>
-            <field name="tractogram">{'name': 'dTOR'}</field>
+            <field name="tractogram" ref="tractogram_dtor"/>
             <field name="parcellation" ref="parcellation_lobar8"/>
         </record>
 
@@ -430,7 +430,7 @@
             <field name="label">Schaefer2018_800_7Networks_dTOR</field>
             <field name="data_file">tpl-FSLMNI152_cohort-HCPYA_rec-dTOR_atlas-Schaefer2018_seg-7Networks_scale-800_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">800</field>
-            <field name="tractogram">{'name': 'dTOR'}</field>
+            <field name="tractogram" ref="tractogram_dtor"/>
             <field name="parcellation" ref="parcellation_schaefer2018"/>
         </record>
 
@@ -438,7 +438,7 @@
             <field name="label">Schaefer2018_200_7Networks_dTOR</field>
             <field name="data_file">tpl-FSLMNI152_cohort-HCPYA_rec-dTOR_atlas-Schaefer2018_seg-7Networks_scale-200_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">200</field>
-            <field name="tractogram">{'name': 'dTOR'}</field>
+            <field name="tractogram" ref="tractogram_dtor"/>
             <field name="parcellation" ref="parcellation_schaefer2018"/>
         </record>
 
@@ -446,7 +446,7 @@
             <field name="label">Schaefer2018_600_17Networks_dTOR</field>
             <field name="data_file">tpl-FSLMNI152_cohort-HCPYA_rec-dTOR_atlas-Schaefer2018_seg-17Networks_scale-600_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">600</field>
-            <field name="tractogram">{'name': 'dTOR'}</field>
+            <field name="tractogram" ref="tractogram_dtor"/>
             <field name="parcellation" ref="parcellation_schaefer2018"/>
         </record>
 
@@ -454,7 +454,7 @@
             <field name="label">hcpmmp1ordered (MghUscHcp32)</field>
             <field name="data_file">tpl-MNI152NLin2009bAsym_cohort-MghUscHcp32_rec-MghUscHcp32_atlas-HCPMMP1_seg-ordered_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">379</field>
-            <field name="tractogram">{'name': 'MghUscHcp32'}</field>
+            <field name="tractogram" ref="tractogram_mghuschcp32"/>
             <field name="parcellation" ref="parcellation_hcpmmp1"/>
         </record>
 
@@ -475,7 +475,7 @@
             <field name="label">HOCPA (MghUscHcp32)</field>
             <field name="data_file">tpl-MNI152NLin2009cAsym_cohort-MghUscHcp32_rec-MghUscHcp32_atlas-HOCPA_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">48</field>
-            <field name="tractogram">{'name': 'MghUscHcp32'}</field>
+            <field name="tractogram" ref="tractogram_mghuschcp32"/>
             <field name="parcellation" ref="parcellation_hocpa"/>
         </record>
 
@@ -483,7 +483,7 @@
             <field name="label">virtualdbs (PPMI85)</field>
             <field name="data_file">tpl-MNI152NLin2009cAsym_cohort-PPMI85_rec-PPMI85_atlas-virtualdbs_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">370</field>
-            <field name="tractogram">{'name': 'PPMI85'}</field>
+            <field name="tractogram" ref="tractogram_ppmi85"/>
             <field name="parcellation" ref="parcellation_virtualdbs"/>
         </record>
 
@@ -498,7 +498,7 @@
             <field name="label">Schaefer2018_800_17Networks_dTOR</field>
             <field name="data_file">tpl-FSLMNI152_cohort-HCPYA_rec-dTOR_atlas-Schaefer2018_seg-17Networks_scale-800_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">800</field>
-            <field name="tractogram">{'name': 'dTOR'}</field>
+            <field name="tractogram" ref="tractogram_dtor"/>
             <field name="parcellation" ref="parcellation_schaefer2018"/>
         </record>
 
@@ -506,7 +506,7 @@
             <field name="label">Schaefer1000 (dTOR)</field>
             <field name="data_file">tpl-FSLMNI152_cohort-HCPYA_rec-dTOR_atlas-Schaefer2018_scale-1000_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">1000</field>
-            <field name="tractogram">{'name': 'dTOR'}</field>
+            <field name="tractogram" ref="tractogram_dtor"/>
             <field name="parcellation" ref="parcellation_schaefer2018"/>
         </record>
 
@@ -520,7 +520,7 @@
             <field name="label">Schaefer2018_400_7Networks_dTOR</field>
             <field name="data_file">tpl-FSLMNI152_cohort-HCPYA_rec-dTOR_atlas-Schaefer2018_seg-7Networks_scale-400_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">400</field>
-            <field name="tractogram">{'name': 'dTOR'}</field>
+            <field name="tractogram" ref="tractogram_dtor"/>
             <field name="parcellation" ref="parcellation_schaefer2018"/>
         </record>
 
@@ -528,7 +528,7 @@
             <field name="label">DesikanKilliany (PPMI85)</field>
             <field name="data_file">tpl-MNI152NLin2009cAsym_cohort-PPMI85_rec-PPMI85_atlas-DesikanKilliany_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">87</field>
-            <field name="tractogram">{'name': 'PPMI85'}</field>
+            <field name="tractogram" ref="tractogram_ppmi85"/>
             <field name="parcellation" ref="parcellation_desikankilliany"/>
         </record>
 
@@ -536,7 +536,7 @@
             <field name="label">virtualdbs (MghUscHcp32)</field>
             <field name="data_file">tpl-MNI152NLin2009cAsym_cohort-MghUscHcp32_rec-MghUscHcp32_atlas-virtualdbs_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">370</field>
-            <field name="tractogram">{'name': 'MghUscHcp32'}</field>
+            <field name="tractogram" ref="tractogram_mghuschcp32"/>
             <field name="parcellation" ref="parcellation_virtualdbs"/>
         </record>
 
@@ -544,7 +544,7 @@
             <field name="label">Schaefer1000 (MghUscHcp32)</field>
             <field name="data_file">tpl-FSLMNI152_cohort-MghUscHcp32_rec-MghUscHcp32_atlas-Schaefer2018_scale-1000_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">1000</field>
-            <field name="tractogram">{'name': 'MghUscHcp32'}</field>
+            <field name="tractogram" ref="tractogram_mghuschcp32"/>
             <field name="parcellation" ref="parcellation_schaefer2018"/>
         </record>
 
@@ -558,7 +558,7 @@
             <field name="label">Schaefer2018_200_17Networks_dTOR</field>
             <field name="data_file">tpl-FSLMNI152_cohort-HCPYA_rec-dTOR_atlas-Schaefer2018_seg-17Networks_scale-200_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">200</field>
-            <field name="tractogram">{'name': 'dTOR'}</field>
+            <field name="tractogram" ref="tractogram_dtor"/>
             <field name="parcellation" ref="parcellation_schaefer2018"/>
         </record>
 
@@ -566,7 +566,7 @@
             <field name="label">Schaefer2018_600_7Networks_dTOR</field>
             <field name="data_file">tpl-FSLMNI152_cohort-HCPYA_rec-dTOR_atlas-Schaefer2018_seg-7Networks_scale-600_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">600</field>
-            <field name="tractogram">{'name': 'dTOR'}</field>
+            <field name="tractogram" ref="tractogram_dtor"/>
             <field name="parcellation" ref="parcellation_schaefer2018"/>
         </record>
 
@@ -574,7 +574,7 @@
             <field name="label">HCPex (dTOR)</field>
             <field name="data_file">tpl-MNI152NLin2009cAsym_cohort-HCPYA_rec-dTOR_atlas-HCPex_desc-SC_relmat.h5</field>
             <field name="number_of_nodes">427</field>
-            <field name="tractogram">{'name': 'dTOR'}</field>
+            <field name="tractogram" ref="tractogram_dtor"/>
             <field name="parcellation" ref="parcellation_hcpex"/>
         </record>
 
