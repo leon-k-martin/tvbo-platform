@@ -824,26 +824,51 @@ class KnowledgeGraphAPI(http.Controller):
         nodes = []
         links = []
 
-        # Get ontology class hierarchy (unless db_only)
-        if not db_only:
-            hierarchy = api.get_class_hierarchy()
-            nodes = hierarchy.get('nodes', [])
-            links = hierarchy.get('links', [])
-
-            # Apply limit if specified
-            if limit > 0 and len(nodes) > limit:
-                nodes = nodes[:limit]
-                # Filter links to only include nodes in our limited set
-                node_ids = {n.get('storid') for n in nodes}
-                links = [l for l in links if l.get('source') in node_ids and l.get('target') in node_ids]
-
-        # Add database items as nodes linked to their ontology classes
+        # Collect database items first so we know which ontology classes
+        # they reference. Those classes must always be included regardless
+        # of the requested ontology limit.
         db_items = []
         for entity_type, _, _ in _iter_available_entity_configs():
             db_items.extend(self._get_entity_items(entity_type))
 
+        referenced_storids = set()
+        for item in db_items:
+            for key in ('ontology_class', 'ontology_instance'):
+                ref = item.get(key)
+                if ref and ref.get('storid') is not None:
+                    referenced_storids.add(ref['storid'])
+
+        # Get ontology class hierarchy (unless db_only)
+        if not db_only:
+            hierarchy = api.get_class_hierarchy()
+            all_nodes = hierarchy.get('nodes', [])
+            all_links = hierarchy.get('links', [])
+
+            if limit > 0 and len(all_nodes) > limit:
+                # Keep referenced classes plus the first `limit` other classes.
+                kept = []
+                kept_ids = set()
+                for n in all_nodes:
+                    sid = n.get('storid')
+                    if sid in referenced_storids and sid not in kept_ids:
+                        kept.append(n)
+                        kept_ids.add(sid)
+                for n in all_nodes:
+                    if len(kept) >= limit:
+                        break
+                    sid = n.get('storid')
+                    if sid not in kept_ids:
+                        kept.append(n)
+                        kept_ids.add(sid)
+                nodes = kept
+                links = [l for l in all_links
+                         if l.get('source') in kept_ids and l.get('target') in kept_ids]
+            else:
+                nodes = all_nodes
+                links = all_links
+
         # Map database items to nodes and create links to ontology
-        onto_storid_map = {n['storid']: n for n in nodes if n.get('storid')}
+        onto_storid_map = {n['storid']: n for n in nodes if n.get('storid') is not None}
 
         for item in db_items:
             node_id = f"db_{item['type']}_{item['id']}"
@@ -858,18 +883,17 @@ class KnowledgeGraphAPI(http.Controller):
             }
             nodes.append(node)
 
-            # Link to ontology class if enriched (check ontology_class.storid or ontology_instance.storid)
+            # Link to specific ontology instance if available, else to class.
             onto_class = item.get('ontology_class')
             onto_instance = item.get('ontology_instance')
 
-            # Try to link to specific instance first, then to class
             target_storid = None
-            if onto_instance and onto_instance.get('storid'):
+            if onto_instance and onto_instance.get('storid') is not None:
                 target_storid = onto_instance['storid']
-            elif onto_class and onto_class.get('storid'):
+            elif onto_class and onto_class.get('storid') is not None:
                 target_storid = onto_class['storid']
 
-            if target_storid and target_storid in onto_storid_map:
+            if target_storid is not None and target_storid in onto_storid_map:
                 links.append({
                     'source': node_id,
                     'target': target_storid,

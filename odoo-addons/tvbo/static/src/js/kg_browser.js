@@ -291,25 +291,52 @@ class KnowledgeGraphBrowser {
         let searchTimeout;
         const searchBox = document.getElementById('searchBox');
         const searchForm = document.getElementById('globalSearchForm');
+        const heroInput = document.getElementById('kgHeroSearchInput');
+        const heroForm = document.getElementById('kgHeroSearchForm');
+        const heroClear = document.getElementById('kgHeroSearchClear');
+
+        const syncQuery = (value) => {
+            this.currentQuery = value;
+            if (searchBox && searchBox.value !== value) searchBox.value = value;
+            if (heroInput && heroInput.value !== value) heroInput.value = value;
+            if (heroForm) heroForm.classList.toggle('has-value', !!value);
+            this.search();
+        };
+
+        // Initialise hero input from currentQuery (set from URL ?q=)
+        if (heroInput && this.currentQuery) {
+            heroInput.value = this.currentQuery;
+            if (heroForm) heroForm.classList.add('has-value');
+        }
+
+        if (heroInput) {
+            heroInput.addEventListener('input', (e) => {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => syncQuery(e.target.value), 150);
+            });
+        }
+        if (heroForm) {
+            heroForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                if (heroInput) syncQuery(heroInput.value);
+            });
+        }
+        if (heroClear) {
+            heroClear.addEventListener('click', () => syncQuery(''));
+        }
 
         // Prevent form submission on KG browser page - use live search instead
         if (searchForm) {
             searchForm.addEventListener('submit', (e) => {
                 e.preventDefault();
-                if (searchBox) {
-                    this.currentQuery = searchBox.value;
-                    this.search();
-                }
+                if (searchBox) syncQuery(searchBox.value);
             });
         }
 
         if (searchBox) {
             searchBox.addEventListener('input', (e) => {
                 clearTimeout(searchTimeout);
-                searchTimeout = setTimeout(() => {
-                    this.currentQuery = e.target.value;
-                    this.search();
-                }, 150);
+                searchTimeout = setTimeout(() => syncQuery(e.target.value), 150);
             });
         }
 
@@ -866,12 +893,17 @@ class KnowledgeGraphBrowser {
                     ${symbolDisplay}
                     ${typeBadge}
                 </div>`;
-            // Show equation for coupling items (prefer LaTeX, fall back to code)
-            const eqDisplay = item.equation_latex
-                ? `<div class="card-equation card-equation-latex">$$${item.equation_latex}$$</div>`
-                : item.equation
-                    ? `<div class="card-equation">${this.escapeHtml(item.equation)}</div>`
-                    : '';
+            // Show equation only for short single-equation entities
+            // (coupling, observation). Dynamics typically have many equations,
+            // for which the description is more informative on a card.
+            const showEquation = (type === 'coupling' || type === 'observation');
+            const eqDisplay = showEquation
+                ? (item.equation_latex
+                    ? `<div class="card-equation card-equation-latex">$$${item.equation_latex}$$</div>`
+                    : item.equation
+                        ? `<div class="card-equation">${this.escapeHtml(item.equation)}</div>`
+                        : '')
+                : '';
 
             const body = desc || thumb || eqDisplay ? `
                 <div class="card-body">

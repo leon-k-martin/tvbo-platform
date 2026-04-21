@@ -507,6 +507,19 @@
 
                         <!-- Browser Container -->
                         <div class="tvbo-kg-container">
+                            <!-- Hero search section (in-page big search bar) -->
+                            <div class="kg-hero">
+                                <div class="kg-hero-inner">
+                                    <h1 class="kg-hero-title">Knowledge Graph</h1>
+                                    <p class="kg-hero-subtitle">Search the TVB Ontology: dynamics, networks, integrators, couplings, observation models, atlases, studies and more.</p>
+                                    <form class="kg-hero-search" id="kgHeroSearchForm" onsubmit="return false;">
+                                        <span class="material-icons kg-hero-search-icon">search</span>
+                                        <input type="text" id="kgHeroSearchInput" class="kg-hero-search-input"
+                                               placeholder="Search models, networks, studies..." aria-label="Search knowledge graph"/>
+                                        <button type="button" id="kgHeroSearchClear" class="kg-hero-search-clear" aria-label="Clear search">×</button>
+                                    </form>
+                                </div>
+                            </div>
                             <div class="container-fluid">
                                 <div class="main-content">
                                     <div class="sidebar" id="facetsSidebar">

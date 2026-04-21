@@ -139,11 +139,35 @@ def render_models(db_root: str, force: bool = False, name_filter: str | None = N
 
 # ------------------------------------------------------- network thumbnails
 def render_network_thumbnail(yaml_path: str, out_path: str) -> bool:
-    """Plot the connectivity weight matrix as a heatmap."""
+    """Render network overview using Network.plot_overview().
+
+    Falls back to a plain weight-matrix heatmap if plot_overview is
+    unavailable or fails (e.g. missing edge matrices).
+    """
     from tvbo.data.network_io import load_network
 
     net = load_network(yaml_path)
-    weights = net.weights_matrix
+
+    # Preferred: rich multi-panel overview (brain surface + matrices).
+    if hasattr(net, "plot_overview"):
+        try:
+            fig = net.plot_overview()
+            if fig is not None:
+                fig.set_size_inches(2.4, 2.4)
+                fig.patch.set_alpha(0)
+                for ax in fig.axes:
+                    ax.set_axis_off()
+                    ax.patch.set_alpha(0)
+                fig.savefig(out_path, bbox_inches="tight", transparent=True,
+                            pad_inches=0, dpi=150)
+                plt.close(fig)
+                return True
+        except Exception as e:
+            print(f"  [warn] plot_overview failed for {os.path.basename(yaml_path)}: {e}")
+            plt.close("all")
+
+    # Fallback: plain weight-matrix heatmap.
+    weights = getattr(net, "weights_matrix", None)
     if weights is None or weights.size == 0:
         return False
 
