@@ -1,0 +1,1318 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+
+        <record id="software_package_auto_07p" model="tvbo.software_package">
+            <field name="name">AUTO-07p</field>
+            <field name="description">A software package for continuation and bifurcation problems in ordinary differential equations. The standard tool for numerical continuation in dynamical systems since 1980.</field>
+            <field name="homepage">https://github.com/auto-07p/auto-07p</field>
+            <field name="license">BSD-2-Clause</field>
+            <field name="repository">https://github.com/auto-07p/auto-07p</field>
+            <field name="doi">10.1007/978-1-4614-6141-2_3</field>
+        </record>
+
+        <record id="software_requirement_auto_07p" model="tvbo.software_requirement">
+            <field name="name">AUTO-07p</field>
+            <field name="package" ref="software_package_auto_07p"/>
+            <field name="description">A software package for continuation and bifurcation problems in ordinary differential equations. The standard tool for numerical continuation in dynamical systems since 1980.</field>
+            <field name="role" ref="requirement_role_engine"/>
+            <field name="optional">false</field>
+            <field name="source_url">https://github.com/auto-07p/auto-07p</field>
+            <field name="license">BSD-2-Clause</field>
+            <field name="dataLocation">database/software/AUTO-07p.yaml</field>
+            <field name="modules">{&quot;application_category&quot;:&quot;analysis&quot;,&quot;author&quot;:[&quot;Eusebius Doedel&quot;],&quot;date_created&quot;:&quot;1980-01-01&quot;,&quot;development_status&quot;:&quot;active&quot;,&quot;interoperates_with&quot;:[&quot;MatCont&quot;,&quot;BifurcationKit.jl&quot;],&quot;is_accessible_for_free&quot;:true,&quot;keywords&quot;:[&quot;continuation&quot;,&quot;bifurcation&quot;,&quot;periodic orbits&quot;,&quot;boundary value problems&quot;],&quot;maintainer&quot;:[&quot;Eusebius Doedel&quot;],&quot;model_paradigm&quot;:[&quot;bifurcation_analysis&quot;],&quot;programming_language&quot;:[&quot;Fortran&quot;,&quot;C&quot;],&quot;reference_publication&quot;:&quot;10.1007/978-1-4020-6356-5_4&quot;,&quot;runtime_platform&quot;:[&quot;Fortran runtime&quot;],&quot;same_as&quot;:[&quot;https://www.wikidata.org/entity/Q4824289&quot;],&quot;scale&quot;:[&quot;neural_mass&quot;,&quot;network_system&quot;],&quot;tool_role&quot;:[&quot;continuation_tool&quot;]}</field>
+        </record>
+
+        <record id="software_package_arbor" model="tvbo.software_package">
+            <field name="name">Arbor</field>
+            <field name="description">A high-performance library for computational neuroscience simulation with native support for morphologically detailed neuron models on modern hardware including GPUs and many-core CPUs.</field>
+            <field name="homepage">https://arbor-sim.org</field>
+            <field name="license">BSD-2-Clause</field>
+            <field name="repository">https://github.com/arbor-sim/arbor</field>
+            <field name="doi">10.5281/zenodo.1459679</field>
+            <field name="ecosystem">pypi</field>
+        </record>
+
+        <record id="software_requirement_arbor" model="tvbo.software_requirement">
+            <field name="name">Arbor</field>
+            <field name="package" ref="software_package_arbor"/>
+            <field name="description">A high-performance library for computational neuroscience simulation with native support for morphologically detailed neuron models on modern hardware including GPUs and many-core CPUs.</field>
+            <field name="role" ref="requirement_role_engine"/>
+            <field name="optional">false</field>
+            <field name="source_url">https://github.com/arbor-sim/arbor</field>
+            <field name="license">BSD-2-Clause</field>
+            <field name="dataLocation">database/software/Arbor.yaml</field>
+            <field name="modules">{&quot;application_category&quot;:&quot;simulation&quot;,&quot;author&quot;:[&quot;Ben Cumming&quot;,&quot;Nora Abi Akar&quot;],&quot;date_created&quot;:&quot;2018-01-01&quot;,&quot;development_status&quot;:&quot;active&quot;,&quot;funder&quot;:[&quot;EU HBP&quot;,&quot;Swiss National Science Foundation&quot;],&quot;interoperates_with&quot;:[&quot;NeuroML&quot;,&quot;NEURON&quot;,&quot;TVB&quot;,&quot;SONATA&quot;],&quot;is_accessible_for_free&quot;:true,&quot;issue_tracker&quot;:&quot;https://github.com/arbor-sim/arbor/issues&quot;,&quot;keywords&quot;:[&quot;morphologically detailed&quot;,&quot;GPU&quot;,&quot;multi-compartment&quot;,&quot;HPC&quot;],&quot;maintainer&quot;:[&quot;Arbor Development Team&quot;],&quot;model_paradigm&quot;:[&quot;compartmental&quot;,&quot;spiking&quot;],&quot;programming_language&quot;:[&quot;C++&quot;,&quot;Python&quot;],&quot;reference_publication&quot;:&quot;10.3389/fninf.2019.00034&quot;,&quot;runtime_platform&quot;:[&quot;GPU&quot;,&quot;MPI&quot;,&quot;SIMD&quot;],&quot;same_as&quot;:[&quot;https://scicrunch.org/resolver/RRID:SCR_023698&quot;],&quot;scale&quot;:[&quot;channel&quot;,&quot;neuron&quot;,&quot;network_system&quot;],&quot;tool_role&quot;:[&quot;simulator&quot;]}</field>
+        </record>
+
+        <record id="software_package_bsb" model="tvbo.software_package">
+            <field name="name">BSB</field>
+            <field name="description">Brain Scaffold Builder — a framework for reconstructing and simulating data-driven brain tissue models using morphological and connectivity scaffolds.</field>
+            <field name="homepage">https://bsb.readthedocs.io</field>
+            <field name="license">Apache-2.0</field>
+            <field name="repository">https://github.com/dbbs-lab/bsb-core</field>
+            <field name="ecosystem">pypi</field>
+        </record>
+
+        <record id="software_requirement_bsb" model="tvbo.software_requirement">
+            <field name="name">BSB</field>
+            <field name="package" ref="software_package_bsb"/>
+            <field name="description">Brain Scaffold Builder — a framework for reconstructing and simulating data-driven brain tissue models using morphological and connectivity scaffolds.</field>
+            <field name="role" ref="requirement_role_runtime"/>
+            <field name="optional">false</field>
+            <field name="source_url">https://github.com/dbbs-lab/bsb-core</field>
+            <field name="license">Apache-2.0</field>
+            <field name="dataLocation">database/software/BSB.yaml</field>
+            <field name="modules">{&quot;application_category&quot;:&quot;scaffold&quot;,&quot;author&quot;:[&quot;Robin De Schepper&quot;,&quot;Egidio D&apos;Angelo&quot;],&quot;date_created&quot;:&quot;2019-01-01&quot;,&quot;development_status&quot;:&quot;active&quot;,&quot;funder&quot;:[&quot;EU HBP&quot;],&quot;interoperates_with&quot;:[&quot;SONATA&quot;,&quot;NEURON&quot;,&quot;Arbor&quot;,&quot;NEST&quot;],&quot;is_accessible_for_free&quot;:true,&quot;issue_tracker&quot;:&quot;https://github.com/dbbs-lab/bsb/issues&quot;,&quot;keywords&quot;:[&quot;cerebellum&quot;,&quot;network builder&quot;,&quot;multi-simulator&quot;,&quot;placement&quot;],&quot;maintainer&quot;:[&quot;Robin De Schepper&quot;],&quot;model_paradigm&quot;:[&quot;multiscale&quot;],&quot;programming_language&quot;:[&quot;Python&quot;],&quot;reference_publication&quot;:&quot;10.3389/fninf.2019.00068&quot;,&quot;runtime_platform&quot;:[&quot;Python&quot;,&quot;HPC&quot;],&quot;scale&quot;:[&quot;neuron&quot;,&quot;network_system&quot;],&quot;tool_role&quot;:[&quot;workflow_framework&quot;]}</field>
+        </record>
+
+        <record id="software_package_bifurcationkit_jl" model="tvbo.software_package">
+            <field name="name">BifurcationKit.jl</field>
+            <field name="description">A Julia package for bifurcation analysis of large-dimensional equations. Supports continuation of equilibria, periodic orbits, and detection of bifurcation points for ODE and PDE systems.</field>
+            <field name="homepage">https://bifurcationkit.github.io/BifurcationKitDocs.jl/stable/</field>
+            <field name="license">MIT</field>
+            <field name="repository">https://github.com/bifurcationkit/BifurcationKit.jl</field>
+            <field name="doi">10.21105/joss.06316</field>
+            <field name="ecosystem">julia_registry</field>
+        </record>
+
+        <record id="software_requirement_bifurcationkit_jl" model="tvbo.software_requirement">
+            <field name="name">BifurcationKit.jl</field>
+            <field name="package" ref="software_package_bifurcationkit_jl"/>
+            <field name="description">A Julia package for bifurcation analysis of large-dimensional equations. Supports continuation of equilibria, periodic orbits, and detection of bifurcation points for ODE and PDE systems.</field>
+            <field name="role" ref="requirement_role_engine"/>
+            <field name="optional">false</field>
+            <field name="source_url">https://github.com/bifurcationkit/BifurcationKit.jl</field>
+            <field name="license">MIT</field>
+            <field name="dataLocation">database/software/BifurcationKit.jl.yaml</field>
+            <field name="modules">{&quot;application_category&quot;:&quot;analysis&quot;,&quot;author&quot;:[&quot;Romain Veltz&quot;],&quot;date_created&quot;:&quot;2019-01-01&quot;,&quot;development_status&quot;:&quot;active&quot;,&quot;funder&quot;:[&quot;INRIA&quot;],&quot;interoperates_with&quot;:[&quot;NetworkDynamics.jl&quot;,&quot;AUTO-07p&quot;],&quot;is_accessible_for_free&quot;:true,&quot;issue_tracker&quot;:&quot;https://github.com/bifurcationkit/BifurcationKit.jl/issues&quot;,&quot;keywords&quot;:[&quot;Julia&quot;,&quot;bifurcation analysis&quot;,&quot;continuation&quot;,&quot;dynamical systems&quot;],&quot;maintainer&quot;:[&quot;Romain Veltz&quot;],&quot;model_paradigm&quot;:[&quot;bifurcation_analysis&quot;],&quot;programming_language&quot;:[&quot;Julia&quot;],&quot;runtime_platform&quot;:[&quot;DifferentialEquations.jl&quot;],&quot;scale&quot;:[&quot;neural_mass&quot;,&quot;network_system&quot;],&quot;tool_role&quot;:[&quot;continuation_tool&quot;]}</field>
+        </record>
+
+        <record id="software_package_bluepyopt" model="tvbo.software_package">
+            <field name="name">BluePyOpt</field>
+            <field name="description">Blue Brain Python Optimisation Library — a framework for data-driven model parameter optimisation using multi-objective evolutionary algorithms on NEURON models.</field>
+            <field name="homepage">https://bluepyopt.readthedocs.io</field>
+            <field name="license">LGPL-3.0-only</field>
+            <field name="repository">https://github.com/BlueBrain/BluePyOpt</field>
+            <field name="doi">10.3389/fninf.2016.00017</field>
+            <field name="ecosystem">pypi</field>
+        </record>
+
+        <record id="software_requirement_bluepyopt" model="tvbo.software_requirement">
+            <field name="name">BluePyOpt</field>
+            <field name="package" ref="software_package_bluepyopt"/>
+            <field name="description">Blue Brain Python Optimisation Library — a framework for data-driven model parameter optimisation using multi-objective evolutionary algorithms on NEURON models.</field>
+            <field name="role" ref="requirement_role_runtime"/>
+            <field name="optional">false</field>
+            <field name="source_url">https://github.com/BlueBrain/BluePyOpt</field>
+            <field name="license">LGPL-3.0-only</field>
+            <field name="dataLocation">database/software/BluePyOpt.yaml</field>
+            <field name="modules">{&quot;application_category&quot;:&quot;optimization&quot;,&quot;author&quot;:[&quot;Werner Van Geit&quot;],&quot;date_created&quot;:&quot;2016-01-01&quot;,&quot;development_status&quot;:&quot;active&quot;,&quot;funder&quot;:[&quot;EPFL Blue Brain Project&quot;],&quot;interoperates_with&quot;:[&quot;NEURON&quot;,&quot;eFEL&quot;],&quot;is_accessible_for_free&quot;:true,&quot;issue_tracker&quot;:&quot;https://github.com/BlueBrain/BluePyOpt/issues&quot;,&quot;keywords&quot;:[&quot;optimization&quot;,&quot;evolutionary algorithm&quot;,&quot;NEURON&quot;,&quot;parameter fitting&quot;],&quot;maintainer&quot;:[&quot;Blue Brain Project&quot;],&quot;model_paradigm&quot;:[&quot;conductance_based&quot;],&quot;programming_language&quot;:[&quot;Python&quot;],&quot;reference_publication&quot;:&quot;10.3389/fninf.2016.00017&quot;,&quot;runtime_platform&quot;:[&quot;Python&quot;,&quot;iPyParallel&quot;],&quot;scale&quot;:[&quot;channel&quot;,&quot;neuron&quot;],&quot;tool_role&quot;:[&quot;optimization_framework&quot;]}</field>
+        </record>
+
+        <record id="software_package_brainbrowser" model="tvbo.software_package">
+            <field name="name">BrainBrowser</field>
+            <field name="description">A set of JavaScript visualization tools for rendering brain surfaces, volumes, and connectivity data in the browser using WebGL.</field>
+            <field name="homepage">https://brainbrowser.cbrain.mcgill.ca</field>
+            <field name="license">MIT</field>
+            <field name="repository">https://github.com/aces/brainbrowser</field>
+        </record>
+
+        <record id="software_requirement_brainbrowser" model="tvbo.software_requirement">
+            <field name="name">BrainBrowser</field>
+            <field name="package" ref="software_package_brainbrowser"/>
+            <field name="description">A set of JavaScript visualization tools for rendering brain surfaces, volumes, and connectivity data in the browser using WebGL.</field>
+            <field name="role" ref="requirement_role_runtime"/>
+            <field name="optional">false</field>
+            <field name="source_url">https://github.com/aces/brainbrowser</field>
+            <field name="license">MIT</field>
+            <field name="dataLocation">database/software/BrainBrowser.yaml</field>
+            <field name="modules">{&quot;application_category&quot;:&quot;visualization&quot;,&quot;author&quot;:[&quot;Tarek Bhatt&quot;,&quot;Alan Evans&quot;],&quot;date_created&quot;:&quot;2012-01-01&quot;,&quot;development_status&quot;:&quot;inactive&quot;,&quot;funder&quot;:[&quot;McGill University&quot;],&quot;interoperates_with&quot;:[&quot;neuroimaging formats&quot;],&quot;is_accessible_for_free&quot;:true,&quot;keywords&quot;:[&quot;3D brain viewer&quot;,&quot;web-based&quot;,&quot;surface&quot;,&quot;volume&quot;],&quot;maintainer&quot;:[&quot;ACElab, McGill University&quot;],&quot;model_paradigm&quot;:[&quot;generic&quot;],&quot;programming_language&quot;:[&quot;JavaScript&quot;],&quot;runtime_platform&quot;:[&quot;browser&quot;,&quot;WebGL&quot;],&quot;scale&quot;:[&quot;network_system&quot;],&quot;tool_role&quot;:[&quot;visualization_tool&quot;]}</field>
+        </record>
+
+        <record id="software_package_brainpy" model="tvbo.software_package">
+            <field name="name">BrainPy</field>
+            <field name="description">A flexible, efficient, and extensible framework for computational neuroscience and brain-inspired computation built on JAX. Supports spiking, rate-based, and mean-field models at all scales.</field>
+            <field name="homepage">https://brainpy.readthedocs.io</field>
+            <field name="license">Apache-2.0</field>
+            <field name="repository">https://github.com/brainpy/BrainPy</field>
+            <field name="doi">10.7554/eLife.86365</field>
+            <field name="ecosystem">pypi</field>
+        </record>
+
+        <record id="software_requirement_brainpy" model="tvbo.software_requirement">
+            <field name="name">BrainPy</field>
+            <field name="package" ref="software_package_brainpy"/>
+            <field name="description">A flexible, efficient, and extensible framework for computational neuroscience and brain-inspired computation built on JAX. Supports spiking, rate-based, and mean-field models at all scales.</field>
+            <field name="role" ref="requirement_role_engine"/>
+            <field name="optional">false</field>
+            <field name="source_url">https://github.com/brainpy/BrainPy</field>
+            <field name="license">Apache-2.0</field>
+            <field name="dataLocation">database/software/BrainPy.yaml</field>
+            <field name="modules">{&quot;application_category&quot;:&quot;simulation&quot;,&quot;author&quot;:[&quot;Chaoming Wang&quot;,&quot;Si Wu&quot;],&quot;date_created&quot;:&quot;2021-01-01&quot;,&quot;development_status&quot;:&quot;active&quot;,&quot;funder&quot;:[&quot;NSFC&quot;,&quot;Peking University&quot;],&quot;interoperates_with&quot;:[&quot;TVB&quot;,&quot;NEURON&quot;,&quot;NEST&quot;,&quot;Brian2&quot;],&quot;is_accessible_for_free&quot;:true,&quot;issue_tracker&quot;:&quot;https://github.com/brainpy/BrainPy/issues&quot;,&quot;keywords&quot;:[&quot;JAX&quot;,&quot;brain dynamics&quot;,&quot;differentiable simulation&quot;,&quot;neural mass&quot;],&quot;maintainer&quot;:[&quot;Chaoming Wang&quot;],&quot;model_paradigm&quot;:[&quot;spiking&quot;,&quot;neural_mass&quot;,&quot;mean_field&quot;],&quot;programming_language&quot;:[&quot;Python&quot;],&quot;reference_publication&quot;:&quot;10.7554/eLife.86365&quot;,&quot;runtime_platform&quot;:[&quot;JAX&quot;,&quot;XLA&quot;],&quot;scale&quot;:[&quot;channel&quot;,&quot;neuron&quot;,&quot;neural_mass&quot;,&quot;neural_network&quot;,&quot;network_system&quot;],&quot;tool_role&quot;:[&quot;framework&quot;]}</field>
+        </record>
+
+        <record id="software_package_brainsimii" model="tvbo.software_package">
+            <field name="name">BrainSimII</field>
+            <field name="description">A neural simulator exploring AGI-inspired approaches to brain simulation, with a focus on large-scale spiking neuron models and real-time interaction.</field>
+            <field name="license">MIT</field>
+            <field name="repository">https://github.com/FutureAIGuru/BrainSimII</field>
+        </record>
+
+        <record id="software_requirement_brainsimii" model="tvbo.software_requirement">
+            <field name="name">BrainSimII</field>
+            <field name="package" ref="software_package_brainsimii"/>
+            <field name="description">A neural simulator exploring AGI-inspired approaches to brain simulation, with a focus on large-scale spiking neuron models and real-time interaction.</field>
+            <field name="role" ref="requirement_role_engine"/>
+            <field name="optional">false</field>
+            <field name="source_url">https://github.com/FutureAIGuru/BrainSimII</field>
+            <field name="license">MIT</field>
+            <field name="dataLocation">database/software/BrainSimII.yaml</field>
+            <field name="modules">{&quot;application_category&quot;:&quot;simulation&quot;,&quot;author&quot;:[&quot;Charles Simon&quot;],&quot;date_created&quot;:&quot;2020-01-01&quot;,&quot;development_status&quot;:&quot;active&quot;,&quot;is_accessible_for_free&quot;:true,&quot;issue_tracker&quot;:&quot;https://github.com/FutureAIGuru/BrainSimII/issues&quot;,&quot;keywords&quot;:[&quot;AGI&quot;,&quot;spiking model&quot;,&quot;Windows&quot;,&quot;C#&quot;],&quot;maintainer&quot;:[&quot;Charles Simon&quot;],&quot;model_paradigm&quot;:[&quot;spiking&quot;],&quot;programming_language&quot;:[&quot;C#&quot;],&quot;runtime_platform&quot;:[&quot;Windows&quot;],&quot;scale&quot;:[&quot;neuron&quot;,&quot;network_system&quot;],&quot;tool_role&quot;:[&quot;simulator&quot;]}</field>
+        </record>
+
+        <record id="software_package_brainstorm" model="tvbo.software_package">
+            <field name="name">Brainstorm</field>
+            <field name="description">A collaborative, open-source application for MEG/EEG/sEEG/ECoG/fNIRS data analysis, visualization, and source localization.</field>
+            <field name="homepage">https://neuroimage.usc.edu/brainstorm/</field>
+            <field name="license">GPL-3.0-only</field>
+            <field name="repository">https://github.com/brainstorm-tools/brainstorm3</field>
+            <field name="doi">10.1155/2011/879716</field>
+        </record>
+
+        <record id="software_requirement_brainstorm" model="tvbo.software_requirement">
+            <field name="name">Brainstorm</field>
+            <field name="package" ref="software_package_brainstorm"/>
+            <field name="description">A collaborative, open-source application for MEG/EEG/sEEG/ECoG/fNIRS data analysis, visualization, and source localization.</field>
+            <field name="role" ref="requirement_role_analysis"/>
+            <field name="optional">false</field>
+            <field name="source_url">https://github.com/brainstorm-tools/brainstorm3</field>
+            <field name="license">GPL-3.0-only</field>
+            <field name="dataLocation">database/software/Brainstorm.yaml</field>
+            <field name="modules">{&quot;application_category&quot;:&quot;analysis&quot;,&quot;author&quot;:[&quot;Francois Tadel&quot;,&quot;Sylvain Baillet&quot;],&quot;date_created&quot;:&quot;2000-01-01&quot;,&quot;development_status&quot;:&quot;active&quot;,&quot;funder&quot;:[&quot;NIH&quot;,&quot;McGill University&quot;],&quot;interoperates_with&quot;:[&quot;MNE-Python&quot;,&quot;FieldTrip&quot;,&quot;SPM&quot;],&quot;is_accessible_for_free&quot;:true,&quot;keywords&quot;:[&quot;MEG&quot;,&quot;EEG&quot;,&quot;source imaging&quot;,&quot;MATLAB&quot;,&quot;GUI&quot;],&quot;maintainer&quot;:[&quot;USC Biomedical Imaging Group&quot;],&quot;model_paradigm&quot;:[&quot;generic&quot;],&quot;programming_language&quot;:[&quot;MATLAB&quot;],&quot;reference_publication&quot;:&quot;10.1155/2011/879716&quot;,&quot;runtime_platform&quot;:[&quot;MATLAB&quot;],&quot;same_as&quot;:[&quot;https://scicrunch.org/resolver/RRID:SCR_001761&quot;],&quot;scale&quot;:[&quot;network_system&quot;],&quot;tool_role&quot;:[&quot;analysis_tool&quot;]}</field>
+        </record>
+
+        <record id="software_package_brian2" model="tvbo.software_package">
+            <field name="name">Brian2</field>
+            <field name="description">A simulator for spiking neural networks. Equations are specified in standard mathematical notation, and Brian2 automatically generates efficient C++ code for numerical integration.</field>
+            <field name="homepage">https://brian2.readthedocs.io</field>
+            <field name="license">CeCILL-2.1</field>
+            <field name="repository">https://github.com/brian-team/brian2</field>
+            <field name="doi">10.7554/eLife.47314</field>
+            <field name="ecosystem">pypi</field>
+        </record>
+
+        <record id="software_requirement_brian2" model="tvbo.software_requirement">
+            <field name="name">Brian2</field>
+            <field name="package" ref="software_package_brian2"/>
+            <field name="description">A simulator for spiking neural networks. Equations are specified in standard mathematical notation, and Brian2 automatically generates efficient C++ code for numerical integration.</field>
+            <field name="role" ref="requirement_role_engine"/>
+            <field name="optional">false</field>
+            <field name="source_url">https://github.com/brian-team/brian2</field>
+            <field name="license">CeCILL-2.1</field>
+            <field name="dataLocation">database/software/Brian2.yaml</field>
+            <field name="modules">{&quot;application_category&quot;:&quot;simulation&quot;,&quot;author&quot;:[&quot;Marcel Stimberg&quot;,&quot;Dan Goodman&quot;,&quot;Romain Brette&quot;],&quot;date_created&quot;:&quot;2014-01-01&quot;,&quot;development_status&quot;:&quot;active&quot;,&quot;funder&quot;:[&quot;ANR&quot;,&quot;CNRS&quot;],&quot;interoperates_with&quot;:[&quot;PyNN&quot;,&quot;NeuroML&quot;,&quot;Brian2GeNN&quot;],&quot;is_accessible_for_free&quot;:true,&quot;issue_tracker&quot;:&quot;https://github.com/brian-team/brian2/issues&quot;,&quot;keywords&quot;:[&quot;spiking neural network&quot;,&quot;equation-based&quot;,&quot;code generation&quot;,&quot;C++ standalone&quot;],&quot;maintainer&quot;:[&quot;Marcel Stimberg&quot;,&quot;Dan Goodman&quot;],&quot;model_paradigm&quot;:[&quot;spiking&quot;],&quot;programming_language&quot;:[&quot;Python&quot;,&quot;C++&quot;],&quot;reference_publication&quot;:&quot;10.7554/eLife.47314&quot;,&quot;runtime_platform&quot;:[&quot;C++ standalone&quot;,&quot;Python&quot;,&quot;OpenMP&quot;],&quot;same_as&quot;:[&quot;https://www.wikidata.org/entity/Q19845440&quot;,&quot;https://scicrunch.org/resolver/RRID:SCR_002998&quot;],&quot;scale&quot;:[&quot;neuron&quot;,&quot;neural_network&quot;,&quot;network_system&quot;],&quot;tool_role&quot;:[&quot;simulator&quot;]}</field>
+        </record>
+
+        <record id="software_package_carlsim" model="tvbo.software_package">
+            <field name="name">CARLsim</field>
+            <field name="description">An efficient, easy-to-use, GPU-accelerated library for simulating large-scale spiking neural network models with conductance-based synapses, STDP, and neuromodulation.</field>
+            <field name="homepage">https://uci-carl.github.io/CARLsim6/</field>
+            <field name="license">MIT</field>
+            <field name="repository">https://github.com/UCI-CARL/CARLsim6</field>
+        </record>
+
+        <record id="software_requirement_carlsim" model="tvbo.software_requirement">
+            <field name="name">CARLsim</field>
+            <field name="package" ref="software_package_carlsim"/>
+            <field name="description">An efficient, easy-to-use, GPU-accelerated library for simulating large-scale spiking neural network models with conductance-based synapses, STDP, and neuromodulation.</field>
+            <field name="role" ref="requirement_role_engine"/>
+            <field name="optional">false</field>
+            <field name="source_url">https://github.com/UCI-CARL/CARLsim6</field>
+            <field name="license">MIT</field>
+            <field name="dataLocation">database/software/CARLsim.yaml</field>
+            <field name="modules">{&quot;application_category&quot;:&quot;simulation&quot;,&quot;author&quot;:[&quot;Michael Beyeler&quot;,&quot;Nikil Dutt&quot;],&quot;date_created&quot;:&quot;2014-01-01&quot;,&quot;development_status&quot;:&quot;active&quot;,&quot;funder&quot;:[&quot;NSF&quot;,&quot;UC Irvine&quot;],&quot;interoperates_with&quot;:[&quot;PyNN&quot;],&quot;is_accessible_for_free&quot;:true,&quot;issue_tracker&quot;:&quot;https://github.com/UCI-CARL/CARLsim6/issues&quot;,&quot;keywords&quot;:[&quot;GPU&quot;,&quot;spiking neural network&quot;,&quot;CUDA&quot;,&quot;plasticity&quot;],&quot;maintainer&quot;:[&quot;UCI CARL Lab&quot;],&quot;model_paradigm&quot;:[&quot;spiking&quot;,&quot;plasticity&quot;],&quot;programming_language&quot;:[&quot;C++&quot;,&quot;Python&quot;],&quot;reference_publication&quot;:&quot;10.1162/neco_a_01208&quot;,&quot;runtime_platform&quot;:[&quot;CUDA&quot;],&quot;scale&quot;:[&quot;neuron&quot;,&quot;neural_network&quot;,&quot;network_system&quot;],&quot;tool_role&quot;:[&quot;simulator&quot;]}</field>
+        </record>
+
+        <record id="software_package_coreneuron" model="tvbo.software_package">
+            <field name="name">CoreNEURON</field>
+            <field name="description">Optimized compute engine for the NEURON simulator. Provides efficient execution of NEURON models on CPUs and GPUs using NMODL code generation.</field>
+            <field name="homepage">https://github.com/BlueBrain/CoreNeuron</field>
+            <field name="license">BSD-3-Clause</field>
+            <field name="repository">https://github.com/BlueBrain/CoreNeuron</field>
+        </record>
+
+        <record id="software_requirement_coreneuron" model="tvbo.software_requirement">
+            <field name="name">CoreNEURON</field>
+            <field name="package" ref="software_package_coreneuron"/>
+            <field name="description">Optimized compute engine for the NEURON simulator. Provides efficient execution of NEURON models on CPUs and GPUs using NMODL code generation.</field>
+            <field name="role" ref="requirement_role_runtime"/>
+            <field name="optional">false</field>
+            <field name="source_url">https://github.com/BlueBrain/CoreNeuron</field>
+            <field name="license">BSD-3-Clause</field>
+            <field name="dataLocation">database/software/CoreNEURON.yaml</field>
+            <field name="modules">{&quot;application_category&quot;:&quot;simulation&quot;,&quot;author&quot;:[&quot;Pramod Kumbhar&quot;,&quot;Michael Hines&quot;],&quot;date_created&quot;:&quot;2016-01-01&quot;,&quot;development_status&quot;:&quot;active&quot;,&quot;funder&quot;:[&quot;EU HBP&quot;,&quot;EPFL Blue Brain Project&quot;],&quot;interoperates_with&quot;:[&quot;NEURON&quot;],&quot;is_accessible_for_free&quot;:true,&quot;issue_tracker&quot;:&quot;https://github.com/BlueBrain/CoreNeuron/issues&quot;,&quot;keywords&quot;:[&quot;compute backend&quot;,&quot;GPU&quot;,&quot;vectorization&quot;,&quot;NEURON optimization&quot;],&quot;maintainer&quot;:[&quot;Blue Brain Project&quot;],&quot;model_paradigm&quot;:[&quot;conductance_based&quot;,&quot;compartmental&quot;],&quot;programming_language&quot;:[&quot;C++&quot;],&quot;reference_publication&quot;:&quot;10.3389/fninf.2019.00063&quot;,&quot;runtime_platform&quot;:[&quot;MPI&quot;,&quot;GPU&quot;,&quot;NMODL&quot;],&quot;scale&quot;:[&quot;channel&quot;,&quot;neuron&quot;,&quot;network_system&quot;],&quot;tool_role&quot;:[&quot;backend_runtime&quot;]}</field>
+        </record>
+
+        <record id="software_package_cxsystem2" model="tvbo.software_package">
+            <field name="name">CxSystem2</field>
+            <field name="description">A simulation framework for cortical microcircuit models with support for data-driven customization and modular circuit specification. Uses Brian2 as its simulation backend.</field>
+            <field name="homepage">https://cxsystem2.readthedocs.io</field>
+            <field name="license">MIT</field>
+            <field name="repository">https://github.com/VisualNeuroscience-UH/CxSystem2</field>
+            <field name="doi">10.1016/j.neucom.2019.11.004</field>
+            <field name="ecosystem">pypi</field>
+        </record>
+
+        <record id="software_requirement_cxsystem2" model="tvbo.software_requirement">
+            <field name="name">CxSystem2</field>
+            <field name="package" ref="software_package_cxsystem2"/>
+            <field name="description">A simulation framework for cortical microcircuit models with support for data-driven customization and modular circuit specification. Uses Brian2 as its simulation backend.</field>
+            <field name="role" ref="requirement_role_engine"/>
+            <field name="optional">false</field>
+            <field name="source_url">https://github.com/VisualNeuroscience-UH/CxSystem2</field>
+            <field name="license">MIT</field>
+            <field name="dataLocation">database/software/CxSystem2.yaml</field>
+            <field name="modules">{&quot;application_category&quot;:&quot;simulation&quot;,&quot;author&quot;:[&quot;Andalibi Vafa&quot;],&quot;date_created&quot;:&quot;2018-01-01&quot;,&quot;development_status&quot;:&quot;inactive&quot;,&quot;interoperates_with&quot;:[&quot;Brian2&quot;,&quot;NEST&quot;],&quot;is_accessible_for_free&quot;:true,&quot;keywords&quot;:[&quot;cortical model&quot;,&quot;Brian2&quot;,&quot;YAML configuration&quot;],&quot;maintainer&quot;:[&quot;University of Helsinki&quot;],&quot;model_paradigm&quot;:[&quot;spiking&quot;],&quot;programming_language&quot;:[&quot;Python&quot;],&quot;reference_publication&quot;:&quot;10.1016/j.softx.2018.11.009&quot;,&quot;runtime_platform&quot;:[&quot;Brian2 backend&quot;],&quot;scale&quot;:[&quot;neuron&quot;,&quot;network_system&quot;],&quot;tool_role&quot;:[&quot;simulator&quot;]}</field>
+        </record>
+
+        <record id="software_package_differentialequations_jl" model="tvbo.software_package">
+            <field name="name">DifferentialEquations.jl</field>
+            <field name="description">A suite for numerically solving differential equations in Julia. Supports ODEs, SDEs, DAEs, DDEs, and PDEs with a unified interface, high performance, and extensive algorithm selection.</field>
+            <field name="homepage">https://docs.sciml.ai/DiffEqDocs/stable/</field>
+            <field name="license">MIT</field>
+            <field name="repository">https://github.com/SciML/DifferentialEquations.jl</field>
+            <field name="doi">10.5334/jors.151</field>
+            <field name="ecosystem">julia_registry</field>
+        </record>
+
+        <record id="software_requirement_differentialequations_jl" model="tvbo.software_requirement">
+            <field name="name">DifferentialEquations.jl</field>
+            <field name="package" ref="software_package_differentialequations_jl"/>
+            <field name="description">A suite for numerically solving differential equations in Julia. Supports ODEs, SDEs, DAEs, DDEs, and PDEs with a unified interface, high performance, and extensive algorithm selection.</field>
+            <field name="role" ref="requirement_role_engine"/>
+            <field name="optional">false</field>
+            <field name="source_url">https://github.com/SciML/DifferentialEquations.jl</field>
+            <field name="license">MIT</field>
+            <field name="dataLocation">database/software/DifferentialEquations.jl.yaml</field>
+            <field name="modules">{&quot;application_category&quot;:&quot;simulation&quot;,&quot;author&quot;:[&quot;Chris Rackauckas&quot;],&quot;date_created&quot;:&quot;2017-01-01&quot;,&quot;development_status&quot;:&quot;active&quot;,&quot;funder&quot;:[&quot;MIT&quot;,&quot;Julia Computing&quot;],&quot;interoperates_with&quot;:[&quot;NetworkDynamics.jl&quot;,&quot;Neuroblox.jl&quot;,&quot;BifurcationKit.jl&quot;],&quot;is_accessible_for_free&quot;:true,&quot;issue_tracker&quot;:&quot;https://github.com/SciML/DifferentialEquations.jl/issues&quot;,&quot;keywords&quot;:[&quot;Julia&quot;,&quot;ODE&quot;,&quot;SDE&quot;,&quot;DDE&quot;,&quot;differential equations&quot;,&quot;scientific computing&quot;],&quot;maintainer&quot;:[&quot;Chris Rackauckas&quot;,&quot;SciML&quot;],&quot;model_paradigm&quot;:[&quot;generic&quot;],&quot;programming_language&quot;:[&quot;Julia&quot;],&quot;reference_publication&quot;:&quot;10.21105/joss.00615&quot;,&quot;runtime_platform&quot;:[&quot;Julia&quot;,&quot;GPU&quot;],&quot;same_as&quot;:[&quot;https://www.wikidata.org/entity/Q111486832&quot;],&quot;scale&quot;:[&quot;neural_mass&quot;,&quot;network_system&quot;],&quot;tool_role&quot;:[&quot;framework&quot;]}</field>
+        </record>
+
+        <record id="software_package_eeglab" model="tvbo.software_package">
+            <field name="name">EEGLAB</field>
+            <field name="description">An interactive MATLAB toolbox for processing continuous and event-related EEG, MEG, and other electrophysiological data using independent component analysis, time/frequency analysis, and other methods.</field>
+            <field name="homepage">https://eeglab.org</field>
+            <field name="license">BSD-2-Clause</field>
+            <field name="repository">https://github.com/sccn/eeglab</field>
+            <field name="doi">10.1016/j.jneumeth.2003.10.009</field>
+        </record>
+
+        <record id="software_requirement_eeglab" model="tvbo.software_requirement">
+            <field name="name">EEGLAB</field>
+            <field name="package" ref="software_package_eeglab"/>
+            <field name="description">An interactive MATLAB toolbox for processing continuous and event-related EEG, MEG, and other electrophysiological data using independent component analysis, time/frequency analysis, and other methods.</field>
+            <field name="role" ref="requirement_role_analysis"/>
+            <field name="optional">false</field>
+            <field name="source_url">https://github.com/sccn/eeglab</field>
+            <field name="license">BSD-2-Clause</field>
+            <field name="dataLocation">database/software/EEGLAB.yaml</field>
+            <field name="modules">{&quot;application_category&quot;:&quot;analysis&quot;,&quot;author&quot;:[&quot;Arnaud Delorme&quot;,&quot;Scott Makeig&quot;],&quot;date_created&quot;:&quot;2004-01-01&quot;,&quot;development_status&quot;:&quot;active&quot;,&quot;funder&quot;:[&quot;NIH&quot;,&quot;UCSD&quot;],&quot;interoperates_with&quot;:[&quot;FieldTrip&quot;,&quot;MNE-Python&quot;],&quot;is_accessible_for_free&quot;:true,&quot;keywords&quot;:[&quot;EEG&quot;,&quot;ICA&quot;,&quot;MATLAB&quot;,&quot;signal processing&quot;],&quot;maintainer&quot;:[&quot;SCCN, UC San Diego&quot;],&quot;model_paradigm&quot;:[&quot;generic&quot;],&quot;programming_language&quot;:[&quot;MATLAB&quot;],&quot;reference_publication&quot;:&quot;10.1016/j.jneumeth.2003.10.009&quot;,&quot;runtime_platform&quot;:[&quot;MATLAB&quot;],&quot;same_as&quot;:[&quot;https://www.wikidata.org/entity/Q18030316&quot;,&quot;https://scicrunch.org/resolver/RRID:SCR_007292&quot;],&quot;scale&quot;:[&quot;network_system&quot;],&quot;tool_role&quot;:[&quot;analysis_tool&quot;]}</field>
+        </record>
+
+        <record id="software_package_elephant" model="tvbo.software_package">
+            <field name="name">Elephant</field>
+            <field name="description">Electrophysiology Analysis Toolkit — a Python library for the analysis of electrophysiological data, including spike-train statistics, spectral analysis, and unitary event analysis.</field>
+            <field name="homepage">https://elephant.readthedocs.io</field>
+            <field name="license">BSD-3-Clause</field>
+            <field name="repository">https://github.com/NeuralEnsemble/elephant</field>
+            <field name="doi">10.5281/zenodo.1186602</field>
+            <field name="ecosystem">pypi</field>
+        </record>
+
+        <record id="software_requirement_elephant" model="tvbo.software_requirement">
+            <field name="name">Elephant</field>
+            <field name="package" ref="software_package_elephant"/>
+            <field name="description">Electrophysiology Analysis Toolkit — a Python library for the analysis of electrophysiological data, including spike-train statistics, spectral analysis, and unitary event analysis.</field>
+            <field name="role" ref="requirement_role_analysis"/>
+            <field name="optional">false</field>
+            <field name="source_url">https://github.com/NeuralEnsemble/elephant</field>
+            <field name="license">BSD-3-Clause</field>
+            <field name="dataLocation">database/software/Elephant.yaml</field>
+            <field name="modules">{&quot;application_category&quot;:&quot;analysis&quot;,&quot;author&quot;:[&quot;Michael Denker&quot;,&quot;Andrew Davison&quot;],&quot;date_created&quot;:&quot;2015-01-01&quot;,&quot;development_status&quot;:&quot;active&quot;,&quot;funder&quot;:[&quot;EU HBP&quot;,&quot;J\u00fclich Research Centre&quot;],&quot;interoperates_with&quot;:[&quot;Neo&quot;,&quot;NEST&quot;,&quot;Brian2&quot;,&quot;NWB&quot;],&quot;is_accessible_for_free&quot;:true,&quot;issue_tracker&quot;:&quot;https://github.com/NeuralEnsemble/elephant/issues&quot;,&quot;keywords&quot;:[&quot;spike train analysis&quot;,&quot;electrophysiology&quot;,&quot;statistics&quot;,&quot;Python&quot;],&quot;maintainer&quot;:[&quot;NeuralEnsemble&quot;],&quot;model_paradigm&quot;:[&quot;generic&quot;],&quot;programming_language&quot;:[&quot;Python&quot;],&quot;reference_publication&quot;:&quot;10.5281/zenodo.1186602&quot;,&quot;runtime_platform&quot;:[&quot;Python&quot;,&quot;NumPy&quot;],&quot;same_as&quot;:[&quot;https://scicrunch.org/resolver/RRID:SCR_003833&quot;],&quot;scale&quot;:[&quot;neuron&quot;,&quot;network_system&quot;],&quot;tool_role&quot;:[&quot;analysis_tool&quot;]}</field>
+        </record>
+
+        <record id="software_package_fastdmf" model="tvbo.software_package">
+            <field name="name">FastDMF</field>
+            <field name="description">A fast C++ implementation of the Dynamic Mean Field (DMF) model for whole-brain simulation, with Python bindings. Optimized for rapid parameter exploration on connectome data.</field>
+            <field name="license">MIT</field>
+            <field name="repository">https://github.com/Picardian14/FastDMF</field>
+            <field name="doi">10.3389/fncom.2022.866517</field>
+        </record>
+
+        <record id="software_requirement_fastdmf" model="tvbo.software_requirement">
+            <field name="name">FastDMF</field>
+            <field name="package" ref="software_package_fastdmf"/>
+            <field name="description">A fast C++ implementation of the Dynamic Mean Field (DMF) model for whole-brain simulation, with Python bindings. Optimized for rapid parameter exploration on connectome data.</field>
+            <field name="role" ref="requirement_role_engine"/>
+            <field name="optional">false</field>
+            <field name="source_url">https://github.com/Picardian14/FastDMF</field>
+            <field name="license">MIT</field>
+            <field name="dataLocation">database/software/FastDMF.yaml</field>
+            <field name="modules">{&quot;application_category&quot;:&quot;simulation&quot;,&quot;author&quot;:[&quot;Gustavo Deco&quot;],&quot;date_created&quot;:&quot;2021-01-01&quot;,&quot;development_status&quot;:&quot;inactive&quot;,&quot;interoperates_with&quot;:[&quot;TVB&quot;],&quot;is_accessible_for_free&quot;:true,&quot;keywords&quot;:[&quot;dynamic mean-field&quot;,&quot;resting state&quot;,&quot;functional connectivity&quot;],&quot;maintainer&quot;:[&quot;Ignacio Mart\u00edn&quot;],&quot;model_paradigm&quot;:[&quot;dynamic_mean_field&quot;],&quot;programming_language&quot;:[&quot;C++&quot;,&quot;Python&quot;],&quot;reference_publication&quot;:&quot;10.1016/j.neuroimage.2021.118367&quot;,&quot;runtime_platform&quot;:[&quot;C++&quot;],&quot;scale&quot;:[&quot;neural_mass&quot;,&quot;network_system&quot;],&quot;tool_role&quot;:[&quot;simulator&quot;]}</field>
+        </record>
+
+        <record id="software_package_fieldtrip" model="tvbo.software_package">
+            <field name="name">FieldTrip</field>
+            <field name="description">A MATLAB toolbox for MEG, EEG, iEEG and NIRS analysis, including preprocessing, source reconstruction, statistical testing, and connectivity analysis.</field>
+            <field name="homepage">https://www.fieldtriptoolbox.org</field>
+            <field name="license">GPL-3.0-only</field>
+            <field name="repository">https://github.com/fieldtrip/fieldtrip</field>
+            <field name="doi">10.1155/2011/156869</field>
+        </record>
+
+        <record id="software_requirement_fieldtrip" model="tvbo.software_requirement">
+            <field name="name">FieldTrip</field>
+            <field name="package" ref="software_package_fieldtrip"/>
+            <field name="description">A MATLAB toolbox for MEG, EEG, iEEG and NIRS analysis, including preprocessing, source reconstruction, statistical testing, and connectivity analysis.</field>
+            <field name="role" ref="requirement_role_analysis"/>
+            <field name="optional">false</field>
+            <field name="source_url">https://github.com/fieldtrip/fieldtrip</field>
+            <field name="license">GPL-3.0-only</field>
+            <field name="dataLocation">database/software/FieldTrip.yaml</field>
+            <field name="modules">{&quot;application_category&quot;:&quot;analysis&quot;,&quot;author&quot;:[&quot;Robert Oostenveld&quot;,&quot;Jan-Mathijs Schoffelen&quot;],&quot;date_created&quot;:&quot;2003-01-01&quot;,&quot;development_status&quot;:&quot;active&quot;,&quot;funder&quot;:[&quot;Radboud University&quot;,&quot;NWO&quot;],&quot;interoperates_with&quot;:[&quot;MNE-Python&quot;,&quot;SPM&quot;,&quot;EEGLAB&quot;],&quot;is_accessible_for_free&quot;:true,&quot;keywords&quot;:[&quot;MEG&quot;,&quot;EEG&quot;,&quot;LFP&quot;,&quot;MATLAB&quot;,&quot;source reconstruction&quot;],&quot;maintainer&quot;:[&quot;Donders Institute&quot;],&quot;model_paradigm&quot;:[&quot;generic&quot;],&quot;programming_language&quot;:[&quot;MATLAB&quot;],&quot;reference_publication&quot;:&quot;10.1155/2011/156869&quot;,&quot;runtime_platform&quot;:[&quot;MATLAB&quot;],&quot;same_as&quot;:[&quot;https://www.wikidata.org/entity/Q5448078&quot;,&quot;https://scicrunch.org/resolver/RRID:SCR_004849&quot;],&quot;scale&quot;:[&quot;network_system&quot;],&quot;tool_role&quot;:[&quot;analysis_tool&quot;]}</field>
+        </record>
+
+        <record id="software_package_genesis" model="tvbo.software_package">
+            <field name="name">GENESIS</field>
+            <field name="description">GEneral NEural SImulation System — one of the earliest simulators for biologically realistic modeling of neural systems, from sub-cellular components to large networks.</field>
+            <field name="homepage">http://www.genesis-sim.org</field>
+            <field name="license">GPL-2.0-only</field>
+            <field name="repository">https://github.com/genesis-sim/genesis-2.4</field>
+        </record>
+
+        <record id="software_requirement_genesis" model="tvbo.software_requirement">
+            <field name="name">GENESIS</field>
+            <field name="package" ref="software_package_genesis"/>
+            <field name="description">GEneral NEural SImulation System — one of the earliest simulators for biologically realistic modeling of neural systems, from sub-cellular components to large networks.</field>
+            <field name="role" ref="requirement_role_engine"/>
+            <field name="optional">false</field>
+            <field name="source_url">https://github.com/genesis-sim/genesis-2.4</field>
+            <field name="license">GPL-2.0-only</field>
+            <field name="dataLocation">database/software/GENESIS.yaml</field>
+            <field name="modules">{&quot;application_category&quot;:&quot;simulation&quot;,&quot;author&quot;:[&quot;James Bower&quot;,&quot;David Beeman&quot;],&quot;date_created&quot;:&quot;1988-01-01&quot;,&quot;development_status&quot;:&quot;inactive&quot;,&quot;interoperates_with&quot;:[&quot;NEURON&quot;,&quot;NeuroML&quot;,&quot;neuroConstruct&quot;],&quot;is_accessible_for_free&quot;:true,&quot;keywords&quot;:[&quot;compartmental model&quot;,&quot;ion channel&quot;,&quot;classic simulator&quot;],&quot;maintainer&quot;:[&quot;Caltech / University of Essex&quot;],&quot;model_paradigm&quot;:[&quot;compartmental&quot;,&quot;conductance_based&quot;,&quot;spiking&quot;],&quot;programming_language&quot;:[&quot;C&quot;],&quot;reference_publication&quot;:&quot;10.1007/978-1-4612-1634-6_10&quot;,&quot;runtime_platform&quot;:[&quot;C&quot;],&quot;same_as&quot;:[&quot;https://www.wikidata.org/entity/Q5533484&quot;,&quot;https://scicrunch.org/resolver/RRID:SCR_002807&quot;],&quot;scale&quot;:[&quot;channel&quot;,&quot;neuron&quot;,&quot;network_system&quot;],&quot;tool_role&quot;:[&quot;simulator&quot;]}</field>
+        </record>
+
+        <record id="software_package_genn" model="tvbo.software_package">
+            <field name="name">GeNN</field>
+            <field name="description">GPU Enhanced Neuronal Networks — a framework for GPU-accelerated spiking neural network simulations using NVIDIA CUDA. Generates optimized GPU kernels from model descriptions.</field>
+            <field name="homepage">https://genn-team.github.io/genn/</field>
+            <field name="license">GPL-2.0-only</field>
+            <field name="repository">https://github.com/genn-team/genn</field>
+            <field name="doi">10.1038/s43588-022-00222-7</field>
+        </record>
+
+        <record id="software_requirement_genn" model="tvbo.software_requirement">
+            <field name="name">GeNN</field>
+            <field name="package" ref="software_package_genn"/>
+            <field name="description">GPU Enhanced Neuronal Networks — a framework for GPU-accelerated spiking neural network simulations using NVIDIA CUDA. Generates optimized GPU kernels from model descriptions.</field>
+            <field name="role" ref="requirement_role_engine"/>
+            <field name="optional">false</field>
+            <field name="source_url">https://github.com/genn-team/genn</field>
+            <field name="license">GPL-2.0-only</field>
+            <field name="dataLocation">database/software/GeNN.yaml</field>
+            <field name="modules">{&quot;application_category&quot;:&quot;simulation&quot;,&quot;author&quot;:[&quot;Thomas Nowotny&quot;,&quot;James Turner&quot;],&quot;date_created&quot;:&quot;2016-01-01&quot;,&quot;development_status&quot;:&quot;active&quot;,&quot;funder&quot;:[&quot;EPSRC&quot;,&quot;EU H2020&quot;],&quot;interoperates_with&quot;:[&quot;PyNN&quot;,&quot;Brian2&quot;,&quot;NEURON&quot;],&quot;is_accessible_for_free&quot;:true,&quot;issue_tracker&quot;:&quot;https://github.com/genn-team/genn/issues&quot;,&quot;keywords&quot;:[&quot;GPU&quot;,&quot;spiking neural network&quot;,&quot;code generation&quot;,&quot;CUDA&quot;],&quot;maintainer&quot;:[&quot;University of Sussex&quot;],&quot;model_paradigm&quot;:[&quot;spiking&quot;],&quot;programming_language&quot;:[&quot;C++&quot;,&quot;Python&quot;],&quot;reference_publication&quot;:&quot;10.1038/s43588-020-00022-7&quot;,&quot;runtime_platform&quot;:[&quot;CUDA&quot;,&quot;OpenCL&quot;],&quot;same_as&quot;:[&quot;https://scicrunch.org/resolver/RRID:SCR_017581&quot;],&quot;scale&quot;:[&quot;neuron&quot;,&quot;neural_network&quot;,&quot;network_system&quot;],&quot;tool_role&quot;:[&quot;simulator&quot;]}</field>
+        </record>
+
+        <record id="software_package_hnn_core" model="tvbo.software_package">
+            <field name="name">HNN-core</field>
+            <field name="description">Human Neocortical Neurosolver — a tool for simulating the cellular and network-level origin of MEG/EEG signals using biophysically detailed neocortical column models on NEURON.</field>
+            <field name="homepage">https://jonescompneurolab.github.io/hnn-core/</field>
+            <field name="license">BSD-3-Clause</field>
+            <field name="repository">https://github.com/jonescompneurolab/hnn-core</field>
+            <field name="doi">10.1523/ENEURO.0460-21.2022</field>
+            <field name="ecosystem">pypi</field>
+        </record>
+
+        <record id="software_requirement_hnn_core" model="tvbo.software_requirement">
+            <field name="name">HNN-core</field>
+            <field name="package" ref="software_package_hnn_core"/>
+            <field name="description">Human Neocortical Neurosolver — a tool for simulating the cellular and network-level origin of MEG/EEG signals using biophysically detailed neocortical column models on NEURON.</field>
+            <field name="role" ref="requirement_role_engine"/>
+            <field name="optional">false</field>
+            <field name="source_url">https://github.com/jonescompneurolab/hnn-core</field>
+            <field name="license">BSD-3-Clause</field>
+            <field name="dataLocation">database/software/HNN-core.yaml</field>
+            <field name="modules">{&quot;application_category&quot;:&quot;simulation&quot;,&quot;author&quot;:[&quot;Mainak Jas&quot;,&quot;Stephanie Jones&quot;],&quot;date_created&quot;:&quot;2020-01-01&quot;,&quot;development_status&quot;:&quot;active&quot;,&quot;funder&quot;:[&quot;NIH BRAIN Initiative&quot;],&quot;interoperates_with&quot;:[&quot;TVB&quot;,&quot;LFPy&quot;,&quot;NWB&quot;,&quot;MNE-Python&quot;],&quot;is_accessible_for_free&quot;:true,&quot;issue_tracker&quot;:&quot;https://github.com/jonescompneurolab/hnn-core/issues&quot;,&quot;keywords&quot;:[&quot;MEG&quot;,&quot;EEG&quot;,&quot;cortical column&quot;,&quot;evoked response&quot;],&quot;maintainer&quot;:[&quot;Jones Lab, Brown University&quot;],&quot;model_paradigm&quot;:[&quot;spiking&quot;,&quot;compartmental&quot;],&quot;programming_language&quot;:[&quot;Python&quot;],&quot;reference_publication&quot;:&quot;10.7554/eLife.92862&quot;,&quot;runtime_platform&quot;:[&quot;NEURON backend&quot;],&quot;scale&quot;:[&quot;neuron&quot;,&quot;network_system&quot;],&quot;tool_role&quot;:[&quot;simulator&quot;]}</field>
+        </record>
+
+        <record id="software_package_lems" model="tvbo.software_package">
+            <field name="name">LEMS</field>
+            <field name="description">Low Entropy Model Specification — an XML-based language for defining the structure and dynamics of hierarchically structured models of biological systems. Foundation for NeuroML2.</field>
+            <field name="homepage">https://lems.github.io/LEMS/</field>
+            <field name="license">MIT</field>
+            <field name="repository">https://github.com/LEMS/jLEMS</field>
+        </record>
+
+        <record id="software_requirement_lems" model="tvbo.software_requirement">
+            <field name="name">LEMS</field>
+            <field name="package" ref="software_package_lems"/>
+            <field name="description">Low Entropy Model Specification — an XML-based language for defining the structure and dynamics of hierarchically structured models of biological systems. Foundation for NeuroML2.</field>
+            <field name="role" ref="requirement_role_runtime"/>
+            <field name="optional">false</field>
+            <field name="source_url">https://github.com/LEMS/jLEMS</field>
+            <field name="license">MIT</field>
+            <field name="dataLocation">database/software/LEMS.yaml</field>
+            <field name="modules">{&quot;application_category&quot;:&quot;specification&quot;,&quot;author&quot;:[&quot;Robert Cannon&quot;,&quot;Padraig Gleeson&quot;],&quot;date_created&quot;:&quot;2012-01-01&quot;,&quot;development_status&quot;:&quot;active&quot;,&quot;interoperates_with&quot;:[&quot;NeuroML&quot;],&quot;is_accessible_for_free&quot;:true,&quot;issue_tracker&quot;:&quot;https://github.com/LEMS/jLEMS/issues&quot;,&quot;keywords&quot;:[&quot;model exchange&quot;,&quot;XML&quot;,&quot;dynamics specification&quot;,&quot;simulator-neutral&quot;],&quot;maintainer&quot;:[&quot;NeuroML Editorial Board&quot;],&quot;model_paradigm&quot;:[&quot;model_description&quot;],&quot;programming_language&quot;:[&quot;XML&quot;,&quot;Java&quot;],&quot;reference_publication&quot;:&quot;10.3389/fninf.2014.00079&quot;,&quot;runtime_platform&quot;:[&quot;JVM&quot;],&quot;scale&quot;:[&quot;channel&quot;,&quot;neuron&quot;,&quot;neural_network&quot;,&quot;network_system&quot;],&quot;tool_role&quot;:[&quot;specification_language&quot;]}</field>
+        </record>
+
+        <record id="software_package_lfpy" model="tvbo.software_package">
+            <field name="name">LFPy</field>
+            <field name="description">A Python module for calculating local field potentials (LFPs) and extracellular potentials from multicompartment neuron models using the line-source method on NEURON simulations.</field>
+            <field name="homepage">https://lfpy.readthedocs.io</field>
+            <field name="license">GPL-3.0-only</field>
+            <field name="repository">https://github.com/LFPy/LFPy</field>
+            <field name="doi">10.3389/fninf.2013.00041</field>
+            <field name="ecosystem">pypi</field>
+        </record>
+
+        <record id="software_requirement_lfpy" model="tvbo.software_requirement">
+            <field name="name">LFPy</field>
+            <field name="package" ref="software_package_lfpy"/>
+            <field name="description">A Python module for calculating local field potentials (LFPs) and extracellular potentials from multicompartment neuron models using the line-source method on NEURON simulations.</field>
+            <field name="role" ref="requirement_role_analysis"/>
+            <field name="optional">false</field>
+            <field name="source_url">https://github.com/LFPy/LFPy</field>
+            <field name="license">GPL-3.0-only</field>
+            <field name="dataLocation">database/software/LFPy.yaml</field>
+            <field name="modules">{&quot;application_category&quot;:&quot;analysis&quot;,&quot;author&quot;:[&quot;Espen Hagen&quot;,&quot;Gaute Einevoll&quot;],&quot;date_created&quot;:&quot;2013-01-01&quot;,&quot;development_status&quot;:&quot;active&quot;,&quot;funder&quot;:[&quot;Norwegian University of Life Sciences&quot;,&quot;EU HBP&quot;],&quot;interoperates_with&quot;:[&quot;NEURON&quot;,&quot;HNN-core&quot;,&quot;TVB&quot;],&quot;is_accessible_for_free&quot;:true,&quot;issue_tracker&quot;:&quot;https://github.com/LFPy/LFPy/issues&quot;,&quot;keywords&quot;:[&quot;LFP&quot;,&quot;EEG&quot;,&quot;extracellular potential&quot;,&quot;compartmental model&quot;],&quot;maintainer&quot;:[&quot;Espen Hagen&quot;],&quot;model_paradigm&quot;:[&quot;compartmental&quot;],&quot;programming_language&quot;:[&quot;Python&quot;],&quot;reference_publication&quot;:&quot;10.3389/fncom.2013.00041&quot;,&quot;runtime_platform&quot;:[&quot;NEURON backend&quot;],&quot;scale&quot;:[&quot;neuron&quot;,&quot;network_system&quot;],&quot;tool_role&quot;:[&quot;analysis_tool&quot;]}</field>
+        </record>
+
+        <record id="software_package_mcell" model="tvbo.software_package">
+            <field name="name">MCell</field>
+            <field name="description">Monte Carlo Cell — a program for realistic simulation of cellular signaling using spatially realistic 3D models of sub-cellular reaction-diffusion dynamics.</field>
+            <field name="homepage">https://mcell.org</field>
+            <field name="license">GPL-2.0-only</field>
+            <field name="repository">https://github.com/mcellteam/mcell</field>
+            <field name="doi">10.1016/j.cpc.2016.06.013</field>
+        </record>
+
+        <record id="software_requirement_mcell" model="tvbo.software_requirement">
+            <field name="name">MCell</field>
+            <field name="package" ref="software_package_mcell"/>
+            <field name="description">Monte Carlo Cell — a program for realistic simulation of cellular signaling using spatially realistic 3D models of sub-cellular reaction-diffusion dynamics.</field>
+            <field name="role" ref="requirement_role_engine"/>
+            <field name="optional">false</field>
+            <field name="source_url">https://github.com/mcellteam/mcell</field>
+            <field name="license">GPL-2.0-only</field>
+            <field name="dataLocation">database/software/MCell.yaml</field>
+            <field name="modules">{&quot;application_category&quot;:&quot;simulation&quot;,&quot;author&quot;:[&quot;Thomas Bartol&quot;,&quot;Joel Stiles&quot;],&quot;date_created&quot;:&quot;1996-01-01&quot;,&quot;development_status&quot;:&quot;active&quot;,&quot;funder&quot;:[&quot;NIH&quot;,&quot;Salk Institute&quot;],&quot;interoperates_with&quot;:[&quot;CellBlender&quot;,&quot;NeuroML&quot;],&quot;is_accessible_for_free&quot;:true,&quot;issue_tracker&quot;:&quot;https://github.com/mcellteam/mcell/issues&quot;,&quot;keywords&quot;:[&quot;Monte Carlo&quot;,&quot;reaction-diffusion&quot;,&quot;synapse&quot;,&quot;sub-cellular&quot;],&quot;maintainer&quot;:[&quot;Salk Institute&quot;],&quot;model_paradigm&quot;:[&quot;reaction_diffusion&quot;],&quot;programming_language&quot;:[&quot;C++&quot;,&quot;Python&quot;],&quot;reference_publication&quot;:&quot;10.1016/j.tins.2006.07.001&quot;,&quot;runtime_platform&quot;:[&quot;Python&quot;],&quot;same_as&quot;:[&quot;https://scicrunch.org/resolver/RRID:SCR_004551&quot;],&quot;scale&quot;:[&quot;channel&quot;,&quot;neuron&quot;],&quot;tool_role&quot;:[&quot;simulator&quot;]}</field>
+        </record>
+
+        <record id="software_package_mne_python" model="tvbo.software_package">
+            <field name="name">MNE-Python</field>
+            <field name="description">Open-source Python package for exploring, visualizing, and analyzing human neurophysiological data: MEG, EEG, sEEG, ECoG, NIRS, and more.</field>
+            <field name="homepage">https://mne.tools</field>
+            <field name="license">BSD-3-Clause</field>
+            <field name="repository">https://github.com/mne-tools/mne-python</field>
+            <field name="doi">10.3389/fnins.2013.00267</field>
+            <field name="ecosystem">pypi</field>
+        </record>
+
+        <record id="software_requirement_mne_python" model="tvbo.software_requirement">
+            <field name="name">MNE-Python</field>
+            <field name="package" ref="software_package_mne_python"/>
+            <field name="description">Open-source Python package for exploring, visualizing, and analyzing human neurophysiological data: MEG, EEG, sEEG, ECoG, NIRS, and more.</field>
+            <field name="role" ref="requirement_role_analysis"/>
+            <field name="optional">false</field>
+            <field name="source_url">https://github.com/mne-tools/mne-python</field>
+            <field name="license">BSD-3-Clause</field>
+            <field name="dataLocation">database/software/MNE-Python.yaml</field>
+            <field name="modules">{&quot;application_category&quot;:&quot;analysis&quot;,&quot;author&quot;:[&quot;Alexandre Gramfort&quot;,&quot;Martin Luessi&quot;],&quot;date_created&quot;:&quot;2011-01-01&quot;,&quot;development_status&quot;:&quot;active&quot;,&quot;funder&quot;:[&quot;NIH&quot;,&quot;NSF&quot;,&quot;ANR&quot;],&quot;interoperates_with&quot;:[&quot;NWB&quot;,&quot;FieldTrip&quot;,&quot;EEGLAB&quot;],&quot;is_accessible_for_free&quot;:true,&quot;issue_tracker&quot;:&quot;https://github.com/mne-tools/mne-python/issues&quot;,&quot;keywords&quot;:[&quot;MEG&quot;,&quot;EEG&quot;,&quot;source estimation&quot;,&quot;time-frequency&quot;,&quot;Python&quot;],&quot;maintainer&quot;:[&quot;MNE-Python Developers&quot;],&quot;model_paradigm&quot;:[&quot;generic&quot;],&quot;programming_language&quot;:[&quot;Python&quot;],&quot;reference_publication&quot;:&quot;10.3389/fnins.2013.00267&quot;,&quot;runtime_platform&quot;:[&quot;Python&quot;,&quot;NumPy&quot;],&quot;same_as&quot;:[&quot;https://scicrunch.org/resolver/RRID:SCR_005972&quot;],&quot;scale&quot;:[&quot;network_system&quot;],&quot;tool_role&quot;:[&quot;analysis_tool&quot;]}</field>
+        </record>
+
+        <record id="software_package_moose" model="tvbo.software_package">
+            <field name="name">MOOSE</field>
+            <field name="description">Multiscale Object-Oriented Simulation Environment. Supports models from sub-cellular signaling to large networks, including reaction-diffusion, electrical, and chemical compartmental models.</field>
+            <field name="homepage">https://moose.ncbs.res.in</field>
+            <field name="license">GPL-3.0-only</field>
+            <field name="repository">https://github.com/BhallaLab/moose-core</field>
+            <field name="doi">10.3389/fninf.2014.00094</field>
+            <field name="ecosystem">pypi</field>
+        </record>
+
+        <record id="software_requirement_moose" model="tvbo.software_requirement">
+            <field name="name">MOOSE</field>
+            <field name="package" ref="software_package_moose"/>
+            <field name="description">Multiscale Object-Oriented Simulation Environment. Supports models from sub-cellular signaling to large networks, including reaction-diffusion, electrical, and chemical compartmental models.</field>
+            <field name="role" ref="requirement_role_engine"/>
+            <field name="optional">false</field>
+            <field name="source_url">https://github.com/BhallaLab/moose-core</field>
+            <field name="license">GPL-3.0-only</field>
+            <field name="dataLocation">database/software/MOOSE.yaml</field>
+            <field name="modules">{&quot;application_category&quot;:&quot;simulation&quot;,&quot;author&quot;:[&quot;Upinder Bhalla&quot;],&quot;date_created&quot;:&quot;2008-01-01&quot;,&quot;development_status&quot;:&quot;active&quot;,&quot;funder&quot;:[&quot;NCBS&quot;,&quot;DBT India&quot;],&quot;interoperates_with&quot;:[&quot;NeuroML&quot;,&quot;NEURON&quot;],&quot;is_accessible_for_free&quot;:true,&quot;issue_tracker&quot;:&quot;https://github.com/BhallaLab/moose-core/issues&quot;,&quot;keywords&quot;:[&quot;multi-scale&quot;,&quot;compartmental&quot;,&quot;signaling pathway&quot;,&quot;reaction-diffusion&quot;],&quot;maintainer&quot;:[&quot;NCBS Bangalore&quot;],&quot;model_paradigm&quot;:[&quot;reaction_diffusion&quot;,&quot;compartmental&quot;,&quot;spiking&quot;],&quot;programming_language&quot;:[&quot;C++&quot;,&quot;Python&quot;],&quot;reference_publication&quot;:&quot;10.3389/fninf.2008.00006&quot;,&quot;runtime_platform&quot;:[&quot;Python&quot;],&quot;same_as&quot;:[&quot;https://scicrunch.org/resolver/RRID:SCR_008031&quot;],&quot;scale&quot;:[&quot;channel&quot;,&quot;neuron&quot;,&quot;network_system&quot;],&quot;tool_role&quot;:[&quot;simulator&quot;]}</field>
+        </record>
+
+        <record id="software_package_matcont" model="tvbo.software_package">
+            <field name="name">MatCont</field>
+            <field name="description">A MATLAB continuation toolbox for interactive bifurcation analysis of dynamical systems. Computes equilibria, limit cycles, and bifurcation curves with graphical user interface.</field>
+            <field name="homepage">https://sourceforge.net/projects/matcont/</field>
+            <field name="license">GPL-3.0-only</field>
+            <field name="repository">https://sourceforge.net/projects/matcont/</field>
+        </record>
+
+        <record id="software_requirement_matcont" model="tvbo.software_requirement">
+            <field name="name">MatCont</field>
+            <field name="package" ref="software_package_matcont"/>
+            <field name="description">A MATLAB continuation toolbox for interactive bifurcation analysis of dynamical systems. Computes equilibria, limit cycles, and bifurcation curves with graphical user interface.</field>
+            <field name="role" ref="requirement_role_engine"/>
+            <field name="optional">false</field>
+            <field name="source_url">https://sourceforge.net/projects/matcont/</field>
+            <field name="license">GPL-3.0-only</field>
+            <field name="dataLocation">database/software/MatCont.yaml</field>
+            <field name="modules">{&quot;application_category&quot;:&quot;analysis&quot;,&quot;author&quot;:[&quot;Willy Govaerts&quot;,&quot;Yuri Kuznetsov&quot;],&quot;date_created&quot;:&quot;2003-01-01&quot;,&quot;development_status&quot;:&quot;active&quot;,&quot;interoperates_with&quot;:[&quot;AUTO-07p&quot;],&quot;is_accessible_for_free&quot;:true,&quot;keywords&quot;:[&quot;MATLAB&quot;,&quot;continuation&quot;,&quot;bifurcation&quot;,&quot;limit cycles&quot;,&quot;GUI&quot;],&quot;maintainer&quot;:[&quot;Willy Govaerts&quot;,&quot;Yuri Kuznetsov&quot;],&quot;model_paradigm&quot;:[&quot;bifurcation_analysis&quot;],&quot;programming_language&quot;:[&quot;MATLAB&quot;],&quot;reference_publication&quot;:&quot;10.1145/779359.779362&quot;,&quot;runtime_platform&quot;:[&quot;MATLAB&quot;],&quot;same_as&quot;:[&quot;https://www.wikidata.org/entity/Q6785071&quot;],&quot;scale&quot;:[&quot;neural_mass&quot;,&quot;network_system&quot;],&quot;tool_role&quot;:[&quot;continuation_tool&quot;]}</field>
+        </record>
+
+        <record id="software_package_modeldb" model="tvbo.software_package">
+            <field name="name">ModelDB</field>
+            <field name="description">A curated database of published computational neuroscience models. Provides source code and metadata for thousands of models linked to peer-reviewed publications.</field>
+            <field name="homepage">https://modeldb.science</field>
+        </record>
+
+        <record id="software_requirement_modeldb" model="tvbo.software_requirement">
+            <field name="name">ModelDB</field>
+            <field name="package" ref="software_package_modeldb"/>
+            <field name="description">A curated database of published computational neuroscience models. Provides source code and metadata for thousands of models linked to peer-reviewed publications.</field>
+            <field name="role" ref="requirement_role_runtime"/>
+            <field name="optional">false</field>
+            <field name="source_url">https://modeldb.science</field>
+            <field name="dataLocation">database/software/ModelDB.yaml</field>
+            <field name="modules">{&quot;application_category&quot;:&quot;repository&quot;,&quot;author&quot;:[&quot;Michael Hines&quot;,&quot;Ted Bhatt&quot;],&quot;date_created&quot;:&quot;1996-01-01&quot;,&quot;development_status&quot;:&quot;active&quot;,&quot;funder&quot;:[&quot;NIH&quot;,&quot;Yale University&quot;],&quot;interoperates_with&quot;:[&quot;NEURON&quot;,&quot;GENESIS&quot;,&quot;NeuroML&quot;],&quot;is_accessible_for_free&quot;:true,&quot;keywords&quot;:[&quot;model repository&quot;,&quot;curated database&quot;,&quot;published models&quot;],&quot;maintainer&quot;:[&quot;Yale University&quot;],&quot;model_paradigm&quot;:[&quot;generic&quot;],&quot;reference_publication&quot;:&quot;10.1007/s12021-006-9003-2&quot;,&quot;runtime_platform&quot;:[&quot;browser&quot;],&quot;same_as&quot;:[&quot;https://scicrunch.org/resolver/RRID:SCR_007271&quot;],&quot;scale&quot;:[&quot;channel&quot;,&quot;neuron&quot;,&quot;network_system&quot;],&quot;tool_role&quot;:[&quot;model_repository&quot;]}</field>
+        </record>
+
+        <record id="software_package_nest" model="tvbo.software_package">
+            <field name="name">NEST</field>
+            <field name="description">NEST is a simulator for spiking neural network models that focuses on the dynamics, size, and structure of neural systems rather than on the exact morphology of individual neurons.</field>
+            <field name="homepage">https://www.nest-simulator.org</field>
+            <field name="license">GPL-2.0-or-later</field>
+            <field name="repository">https://github.com/nest/nest-simulator</field>
+            <field name="doi">10.5281/zenodo.882971</field>
+            <field name="ecosystem">pypi</field>
+        </record>
+
+        <record id="software_requirement_nest" model="tvbo.software_requirement">
+            <field name="name">NEST</field>
+            <field name="package" ref="software_package_nest"/>
+            <field name="description">NEST is a simulator for spiking neural network models that focuses on the dynamics, size, and structure of neural systems rather than on the exact morphology of individual neurons.</field>
+            <field name="role" ref="requirement_role_engine"/>
+            <field name="optional">false</field>
+            <field name="source_url">https://github.com/nest/nest-simulator</field>
+            <field name="license">GPL-2.0-or-later</field>
+            <field name="dataLocation">database/software/NEST.yaml</field>
+            <field name="modules">{&quot;application_category&quot;:&quot;simulation&quot;,&quot;author&quot;:[&quot;Marc-Oliver Gewaltig&quot;,&quot;Markus Diesmann&quot;],&quot;date_created&quot;:&quot;2004-01-01&quot;,&quot;development_status&quot;:&quot;active&quot;,&quot;funder&quot;:[&quot;EU HBP&quot;,&quot;Helmholtz Association&quot;,&quot;J\u00fclich Research Centre&quot;],&quot;interoperates_with&quot;:[&quot;PyNN&quot;,&quot;NeuroML&quot;,&quot;TVB&quot;,&quot;SONATA&quot;],&quot;is_accessible_for_free&quot;:true,&quot;issue_tracker&quot;:&quot;https://github.com/nest/nest-simulator/issues&quot;,&quot;keywords&quot;:[&quot;spiking neural network&quot;,&quot;point neuron&quot;,&quot;large-scale simulation&quot;,&quot;plasticity&quot;],&quot;maintainer&quot;:[&quot;NEST Initiative&quot;],&quot;model_paradigm&quot;:[&quot;spiking&quot;,&quot;plasticity&quot;],&quot;programming_language&quot;:[&quot;C++&quot;,&quot;Python&quot;],&quot;reference_publication&quot;:&quot;10.3389/fninf.2007.00011&quot;,&quot;runtime_platform&quot;:[&quot;MPI&quot;,&quot;OpenMP&quot;],&quot;same_as&quot;:[&quot;https://www.wikidata.org/entity/Q51142269&quot;,&quot;https://scicrunch.org/resolver/RRID:SCR_002963&quot;],&quot;scale&quot;:[&quot;neuron&quot;,&quot;neural_network&quot;,&quot;network_system&quot;],&quot;tool_role&quot;:[&quot;simulator&quot;]}</field>
+        </record>
+
+        <record id="software_package_neuron" model="tvbo.software_package">
+            <field name="name">NEURON</field>
+            <field name="description">NEURON is a simulation environment for modeling individual neurons and networks of neurons. It provides tools for constructing, managing, and using biophysically realistic models with active membranes.</field>
+            <field name="homepage">https://www.neuron.yale.edu</field>
+            <field name="license">BSD-3-Clause</field>
+            <field name="repository">https://github.com/neuronsimulator/nrn</field>
+            <field name="doi">10.3389/fninf.2009.00001</field>
+            <field name="ecosystem">pypi</field>
+        </record>
+
+        <record id="software_requirement_neuron" model="tvbo.software_requirement">
+            <field name="name">NEURON</field>
+            <field name="package" ref="software_package_neuron"/>
+            <field name="description">NEURON is a simulation environment for modeling individual neurons and networks of neurons. It provides tools for constructing, managing, and using biophysically realistic models with active membranes.</field>
+            <field name="role" ref="requirement_role_engine"/>
+            <field name="optional">false</field>
+            <field name="source_url">https://github.com/neuronsimulator/nrn</field>
+            <field name="license">BSD-3-Clause</field>
+            <field name="dataLocation">database/software/NEURON.yaml</field>
+            <field name="modules">{&quot;application_category&quot;:&quot;simulation&quot;,&quot;author&quot;:[&quot;Michael Hines&quot;,&quot;Nicholas Carnevale&quot;],&quot;date_created&quot;:&quot;1994-01-01&quot;,&quot;development_status&quot;:&quot;active&quot;,&quot;funder&quot;:[&quot;NIH&quot;,&quot;Yale University&quot;],&quot;interoperates_with&quot;:[&quot;CoreNEURON&quot;,&quot;NeuroML&quot;,&quot;PyNN&quot;,&quot;TVB&quot;,&quot;NetPyNE&quot;,&quot;SONATA&quot;],&quot;is_accessible_for_free&quot;:true,&quot;issue_tracker&quot;:&quot;https://github.com/neuronsimulator/nrn/issues&quot;,&quot;keywords&quot;:[&quot;compartmental model&quot;,&quot;Hodgkin-Huxley&quot;,&quot;morphology&quot;,&quot;electrophysiology&quot;],&quot;maintainer&quot;:[&quot;Yale University&quot;,&quot;Blue Brain Project&quot;],&quot;model_paradigm&quot;:[&quot;conductance_based&quot;,&quot;compartmental&quot;,&quot;spiking&quot;],&quot;programming_language&quot;:[&quot;Python&quot;,&quot;C++&quot;,&quot;HOC&quot;],&quot;reference_publication&quot;:&quot;10.1162/neco.1997.9.6.1179&quot;,&quot;runtime_platform&quot;:[&quot;MPI&quot;,&quot;CoreNEURON&quot;],&quot;same_as&quot;:[&quot;https://www.wikidata.org/entity/Q1993723&quot;,&quot;https://scicrunch.org/resolver/RRID:SCR_005393&quot;],&quot;scale&quot;:[&quot;channel&quot;,&quot;neuron&quot;,&quot;neural_network&quot;,&quot;network_system&quot;],&quot;tool_role&quot;:[&quot;simulator&quot;]}</field>
+        </record>
+
+        <record id="software_package_nwb" model="tvbo.software_package">
+            <field name="name">NWB</field>
+            <field name="description">Neurodata Without Borders — a data standard for neurophysiology providing a common format for storing diverse cellular and systems neuroscience data in HDF5 files.</field>
+            <field name="homepage">https://www.nwb.org</field>
+            <field name="license">BSD-3-Clause</field>
+            <field name="repository">https://github.com/NeurodataWithoutBorders/pynwb</field>
+            <field name="doi">10.7554/eLife.78362</field>
+            <field name="ecosystem">pypi</field>
+        </record>
+
+        <record id="software_requirement_nwb" model="tvbo.software_requirement">
+            <field name="name">NWB</field>
+            <field name="package" ref="software_package_nwb"/>
+            <field name="description">Neurodata Without Borders — a data standard for neurophysiology providing a common format for storing diverse cellular and systems neuroscience data in HDF5 files.</field>
+            <field name="role" ref="requirement_role_runtime"/>
+            <field name="optional">false</field>
+            <field name="source_url">https://github.com/NeurodataWithoutBorders/pynwb</field>
+            <field name="license">BSD-3-Clause</field>
+            <field name="dataLocation">database/software/NWB.yaml</field>
+            <field name="modules">{&quot;application_category&quot;:&quot;specification&quot;,&quot;author&quot;:[&quot;Oliver R\u00fcbel&quot;,&quot;Andrew Tritt&quot;],&quot;date_created&quot;:&quot;2017-01-01&quot;,&quot;development_status&quot;:&quot;active&quot;,&quot;funder&quot;:[&quot;NIH BRAIN Initiative&quot;,&quot;Kavli Foundation&quot;],&quot;interoperates_with&quot;:[&quot;HNN-core&quot;,&quot;TVB&quot;,&quot;LFPy&quot;,&quot;MNE-Python&quot;,&quot;SpikeInterface&quot;],&quot;is_accessible_for_free&quot;:true,&quot;issue_tracker&quot;:&quot;https://github.com/NeurodataWithoutBorders/pynwb/issues&quot;,&quot;keywords&quot;:[&quot;neurophysiology data&quot;,&quot;HDF5&quot;,&quot;standardization&quot;,&quot;FAIR&quot;],&quot;maintainer&quot;:[&quot;NWB Team&quot;],&quot;model_paradigm&quot;:[&quot;data_standard&quot;],&quot;programming_language&quot;:[&quot;Python&quot;],&quot;reference_publication&quot;:&quot;10.7554/eLife.78362&quot;,&quot;runtime_platform&quot;:[&quot;Python&quot;,&quot;HDF5&quot;],&quot;same_as&quot;:[&quot;https://www.wikidata.org/entity/Q56279569&quot;,&quot;https://scicrunch.org/resolver/RRID:SCR_015242&quot;],&quot;scale&quot;:[&quot;network_system&quot;],&quot;tool_role&quot;:[&quot;specification_language&quot;]}</field>
+        </record>
+
+        <record id="software_package_nengo" model="tvbo.software_package">
+            <field name="name">Nengo</field>
+            <field name="description">A Python library for building and simulating large-scale brain models using the Neural Engineering Framework (NEF). Supports spiking and rate-based neurons with backends including NumPy, TensorFlow (NengoDL), and neuromorphic hardware (NengoLoihi).</field>
+            <field name="homepage">https://www.nengo.ai</field>
+            <field name="license">MIT</field>
+            <field name="repository">https://github.com/nengo/nengo</field>
+            <field name="doi">10.3389/fninf.2013.00048</field>
+            <field name="ecosystem">pypi</field>
+        </record>
+
+        <record id="software_requirement_nengo" model="tvbo.software_requirement">
+            <field name="name">Nengo</field>
+            <field name="package" ref="software_package_nengo"/>
+            <field name="description">A Python library for building and simulating large-scale brain models using the Neural Engineering Framework (NEF). Supports spiking and rate-based neurons with backends including NumPy, TensorFlow (NengoDL), and neuromorphic hardware (NengoLoihi).</field>
+            <field name="role" ref="requirement_role_engine"/>
+            <field name="optional">false</field>
+            <field name="source_url">https://github.com/nengo/nengo</field>
+            <field name="license">MIT</field>
+            <field name="dataLocation">database/software/Nengo.yaml</field>
+            <field name="modules">{&quot;application_category&quot;:&quot;simulation&quot;,&quot;author&quot;:[&quot;Chris Eliasmith&quot;,&quot;Trevor Bekolay&quot;],&quot;date_created&quot;:&quot;2013-01-01&quot;,&quot;development_status&quot;:&quot;active&quot;,&quot;funder&quot;:[&quot;NSERC&quot;,&quot;CFI&quot;,&quot;Applied Brain Research&quot;],&quot;interoperates_with&quot;:[&quot;NengoLoihi&quot;,&quot;NengoDL&quot;,&quot;SpiNNaker&quot;],&quot;is_accessible_for_free&quot;:true,&quot;issue_tracker&quot;:&quot;https://github.com/nengo/nengo/issues&quot;,&quot;keywords&quot;:[&quot;Neural Engineering Framework&quot;,&quot;semantic pointer&quot;,&quot;SPA&quot;,&quot;functional model&quot;],&quot;maintainer&quot;:[&quot;Applied Brain Research&quot;],&quot;model_paradigm&quot;:[&quot;spiking&quot;,&quot;rate_based&quot;],&quot;programming_language&quot;:[&quot;Python&quot;],&quot;reference_publication&quot;:&quot;10.3389/fninf.2013.00048&quot;,&quot;runtime_platform&quot;:[&quot;Python&quot;,&quot;NumPy&quot;,&quot;TensorFlow&quot;,&quot;NengoLoihi&quot;],&quot;same_as&quot;:[&quot;https://scicrunch.org/resolver/RRID:SCR_013828&quot;],&quot;scale&quot;:[&quot;neuron&quot;,&quot;neural_network&quot;,&quot;network_system&quot;],&quot;tool_role&quot;:[&quot;framework&quot;]}</field>
+        </record>
+
+        <record id="software_package_neo" model="tvbo.software_package">
+            <field name="name">Neo</field>
+            <field name="description">A Python package for representing electrophysiology data in a common object model independently of the data source. Core I/O library for the NeuralEnsemble ecosystem.</field>
+            <field name="homepage">https://neo.readthedocs.io</field>
+            <field name="license">BSD-3-Clause</field>
+            <field name="repository">https://github.com/NeuralEnsemble/python-neo</field>
+            <field name="doi">10.3389/fninf.2014.00010</field>
+            <field name="ecosystem">pypi</field>
+        </record>
+
+        <record id="software_requirement_neo" model="tvbo.software_requirement">
+            <field name="name">Neo</field>
+            <field name="package" ref="software_package_neo"/>
+            <field name="description">A Python package for representing electrophysiology data in a common object model independently of the data source. Core I/O library for the NeuralEnsemble ecosystem.</field>
+            <field name="role" ref="requirement_role_runtime"/>
+            <field name="optional">false</field>
+            <field name="source_url">https://github.com/NeuralEnsemble/python-neo</field>
+            <field name="license">BSD-3-Clause</field>
+            <field name="dataLocation">database/software/Neo.yaml</field>
+            <field name="modules">{&quot;application_category&quot;:&quot;data&quot;,&quot;author&quot;:[&quot;Andrew Davison&quot;,&quot;Samuel Garcia&quot;],&quot;date_created&quot;:&quot;2010-01-01&quot;,&quot;development_status&quot;:&quot;active&quot;,&quot;funder&quot;:[&quot;CNRS&quot;,&quot;EU HBP&quot;],&quot;interoperates_with&quot;:[&quot;Elephant&quot;,&quot;NEST&quot;,&quot;Brian2&quot;,&quot;NWB&quot;,&quot;SpikeInterface&quot;],&quot;is_accessible_for_free&quot;:true,&quot;issue_tracker&quot;:&quot;https://github.com/NeuralEnsemble/python-neo/issues&quot;,&quot;keywords&quot;:[&quot;electrophysiology I/O&quot;,&quot;data model&quot;,&quot;Python&quot;,&quot;file formats&quot;],&quot;maintainer&quot;:[&quot;NeuralEnsemble&quot;],&quot;model_paradigm&quot;:[&quot;data_standard&quot;],&quot;programming_language&quot;:[&quot;Python&quot;],&quot;reference_publication&quot;:&quot;10.3389/fninf.2014.00010&quot;,&quot;runtime_platform&quot;:[&quot;Python&quot;],&quot;same_as&quot;:[&quot;https://scicrunch.org/resolver/RRID:SCR_000634&quot;],&quot;scale&quot;:[&quot;neuron&quot;,&quot;network_system&quot;],&quot;tool_role&quot;:[&quot;specification_language&quot;]}</field>
+        </record>
+
+        <record id="software_package_netpyne" model="tvbo.software_package">
+            <field name="name">NetPyNE</field>
+            <field name="description">A high-level Python interface for NEURON that facilitates the development, simulation, and analysis of biological neuronal networks. Supports multiscale models from detailed to abstract.</field>
+            <field name="homepage">http://netpyne.org</field>
+            <field name="license">MIT</field>
+            <field name="repository">https://github.com/Neurosim-lab/netpyne</field>
+            <field name="doi">10.7554/eLife.44494</field>
+            <field name="ecosystem">pypi</field>
+        </record>
+
+        <record id="software_requirement_netpyne" model="tvbo.software_requirement">
+            <field name="name">NetPyNE</field>
+            <field name="package" ref="software_package_netpyne"/>
+            <field name="description">A high-level Python interface for NEURON that facilitates the development, simulation, and analysis of biological neuronal networks. Supports multiscale models from detailed to abstract.</field>
+            <field name="role" ref="requirement_role_runtime"/>
+            <field name="optional">false</field>
+            <field name="source_url">https://github.com/Neurosim-lab/netpyne</field>
+            <field name="license">MIT</field>
+            <field name="dataLocation">database/software/NetPyNE.yaml</field>
+            <field name="modules">{&quot;application_category&quot;:&quot;simulation&quot;,&quot;author&quot;:[&quot;Salvador Dura-Bernal&quot;,&quot;William Lytton&quot;],&quot;date_created&quot;:&quot;2016-01-01&quot;,&quot;development_status&quot;:&quot;active&quot;,&quot;funder&quot;:[&quot;NIH&quot;,&quot;SUNY Downstate&quot;],&quot;interoperates_with&quot;:[&quot;NEURON&quot;,&quot;TVB&quot;,&quot;PyNN&quot;,&quot;NeuroML&quot;,&quot;SONATA&quot;],&quot;is_accessible_for_free&quot;:true,&quot;issue_tracker&quot;:&quot;https://github.com/Neurosim-lab/netpyne/issues&quot;,&quot;keywords&quot;:[&quot;NEURON&quot;,&quot;network builder&quot;,&quot;Python&quot;,&quot;GUI&quot;],&quot;maintainer&quot;:[&quot;SUNY Downstate&quot;],&quot;model_paradigm&quot;:[&quot;spiking&quot;,&quot;multiscale&quot;],&quot;programming_language&quot;:[&quot;Python&quot;],&quot;reference_publication&quot;:&quot;10.7554/eLife.44494&quot;,&quot;runtime_platform&quot;:[&quot;NEURON backend&quot;],&quot;same_as&quot;:[&quot;https://scicrunch.org/resolver/RRID:SCR_017603&quot;],&quot;scale&quot;:[&quot;neuron&quot;,&quot;neural_network&quot;,&quot;network_system&quot;],&quot;tool_role&quot;:[&quot;workflow_framework&quot;]}</field>
+        </record>
+
+        <record id="software_package_networkdynamics_jl" model="tvbo.software_package">
+            <field name="name">NetworkDynamics.jl</field>
+            <field name="description">A Julia package for simulating dynamics on networks. Provides an efficient interface for defining node and edge dynamics that compiles to optimized DifferentialEquations.jl ODE/SDE problems.</field>
+            <field name="homepage">https://juliadynamics.github.io/NetworkDynamics.jl/stable/</field>
+            <field name="license">MIT</field>
+            <field name="repository">https://github.com/PIK-ICoNe/NetworkDynamics.jl</field>
+            <field name="doi">10.1063/5.0051387</field>
+            <field name="ecosystem">julia_registry</field>
+        </record>
+
+        <record id="software_requirement_networkdynamics_jl" model="tvbo.software_requirement">
+            <field name="name">NetworkDynamics.jl</field>
+            <field name="package" ref="software_package_networkdynamics_jl"/>
+            <field name="description">A Julia package for simulating dynamics on networks. Provides an efficient interface for defining node and edge dynamics that compiles to optimized DifferentialEquations.jl ODE/SDE problems.</field>
+            <field name="role" ref="requirement_role_engine"/>
+            <field name="optional">false</field>
+            <field name="source_url">https://github.com/PIK-ICoNe/NetworkDynamics.jl</field>
+            <field name="license">MIT</field>
+            <field name="dataLocation">database/software/NetworkDynamics.jl.yaml</field>
+            <field name="modules">{&quot;application_category&quot;:&quot;simulation&quot;,&quot;author&quot;:[&quot;Frank Hellmann&quot;,&quot;Michael Lindner&quot;],&quot;date_created&quot;:&quot;2020-01-01&quot;,&quot;development_status&quot;:&quot;active&quot;,&quot;funder&quot;:[&quot;PIK Potsdam&quot;],&quot;interoperates_with&quot;:[&quot;DifferentialEquations.jl&quot;,&quot;Graphs.jl&quot;],&quot;is_accessible_for_free&quot;:true,&quot;issue_tracker&quot;:&quot;https://github.com/JuliaDynamics/NetworkDynamics.jl/issues&quot;,&quot;keywords&quot;:[&quot;Julia&quot;,&quot;network dynamics&quot;,&quot;differential equations&quot;,&quot;power grid&quot;,&quot;neural network&quot;],&quot;maintainer&quot;:[&quot;PIK Potsdam&quot;],&quot;model_paradigm&quot;:[&quot;neural_mass&quot;,&quot;generic&quot;],&quot;programming_language&quot;:[&quot;Julia&quot;],&quot;reference_publication&quot;:&quot;10.1063/5.0051387&quot;,&quot;runtime_platform&quot;:[&quot;DifferentialEquations.jl&quot;],&quot;scale&quot;:[&quot;neural_mass&quot;,&quot;network_system&quot;],&quot;tool_role&quot;:[&quot;simulator&quot;,&quot;framework&quot;]}</field>
+        </record>
+
+        <record id="software_package_neuroml" model="tvbo.software_package">
+            <field name="name">NeuroML</field>
+            <field name="description">An XML-based model description language for computational neuroscience. Provides a standardized format for defining models of neurons, synapses, networks, and channels that can be simulated across multiple platforms.</field>
+            <field name="homepage">https://neuroml.org</field>
+            <field name="license">LGPL-3.0-only</field>
+            <field name="repository">https://github.com/NeuroML/NeuroML2</field>
+            <field name="doi">10.1371/journal.pcbi.1008349</field>
+        </record>
+
+        <record id="software_requirement_neuroml" model="tvbo.software_requirement">
+            <field name="name">NeuroML</field>
+            <field name="package" ref="software_package_neuroml"/>
+            <field name="description">An XML-based model description language for computational neuroscience. Provides a standardized format for defining models of neurons, synapses, networks, and channels that can be simulated across multiple platforms.</field>
+            <field name="role" ref="requirement_role_runtime"/>
+            <field name="optional">false</field>
+            <field name="source_url">https://github.com/NeuroML/NeuroML2</field>
+            <field name="license">LGPL-3.0-only</field>
+            <field name="dataLocation">database/software/NeuroML.yaml</field>
+            <field name="modules">{&quot;application_category&quot;:&quot;specification&quot;,&quot;author&quot;:[&quot;Padraig Gleeson&quot;,&quot;Sharon Crook&quot;],&quot;date_created&quot;:&quot;2004-01-01&quot;,&quot;development_status&quot;:&quot;active&quot;,&quot;funder&quot;:[&quot;NIH&quot;,&quot;Wellcome Trust&quot;,&quot;EU HBP&quot;],&quot;interoperates_with&quot;:[&quot;NEURON&quot;,&quot;NEST&quot;,&quot;Arbor&quot;,&quot;Brian2&quot;,&quot;jNeuroML&quot;,&quot;pyNeuroML&quot;],&quot;is_accessible_for_free&quot;:true,&quot;issue_tracker&quot;:&quot;https://github.com/NeuroML/NeuroML2/issues&quot;,&quot;keywords&quot;:[&quot;model description language&quot;,&quot;XML&quot;,&quot;standardization&quot;,&quot;interoperability&quot;],&quot;maintainer&quot;:[&quot;Padraig Gleeson&quot;,&quot;NeuroML Editorial Board&quot;],&quot;model_paradigm&quot;:[&quot;conductance_based&quot;,&quot;spiking&quot;,&quot;neural_mass&quot;],&quot;programming_language&quot;:[&quot;XML&quot;,&quot;Python&quot;,&quot;Java&quot;],&quot;reference_publication&quot;:&quot;10.3389/fninf.2014.00079&quot;,&quot;runtime_platform&quot;:[&quot;backend-dependent&quot;],&quot;same_as&quot;:[&quot;https://www.wikidata.org/entity/Q7003628&quot;,&quot;https://scicrunch.org/resolver/RRID:SCR_004594&quot;],&quot;scale&quot;:[&quot;channel&quot;,&quot;neuron&quot;,&quot;neural_network&quot;,&quot;network_system&quot;],&quot;tool_role&quot;:[&quot;specification_language&quot;]}</field>
+        </record>
+
+        <record id="software_package_neuroblox_jl" model="tvbo.software_package">
+            <field name="name">Neuroblox.jl</field>
+            <field name="description">A Julia package for building brain circuit models from composable neural mass and spiking &quot;blox&quot; components. Built on ModelingToolkit.jl for symbolic model construction and automatic differentiation.</field>
+            <field name="homepage">https://docs.neuroblox.org</field>
+            <field name="license">MIT</field>
+            <field name="repository">https://github.com/Neuroblox/Neuroblox.jl</field>
+            <field name="ecosystem">julia_registry</field>
+        </record>
+
+        <record id="software_requirement_neuroblox_jl" model="tvbo.software_requirement">
+            <field name="name">Neuroblox.jl</field>
+            <field name="package" ref="software_package_neuroblox_jl"/>
+            <field name="description">A Julia package for building brain circuit models from composable neural mass and spiking &quot;blox&quot; components. Built on ModelingToolkit.jl for symbolic model construction and automatic differentiation.</field>
+            <field name="role" ref="requirement_role_engine"/>
+            <field name="optional">false</field>
+            <field name="source_url">https://github.com/Neuroblox/Neuroblox.jl</field>
+            <field name="license">MIT</field>
+            <field name="dataLocation">database/software/Neuroblox.jl.yaml</field>
+            <field name="modules">{&quot;application_category&quot;:&quot;simulation&quot;,&quot;author&quot;:[&quot;Neuroblox Inc.&quot;],&quot;date_created&quot;:&quot;2023-01-01&quot;,&quot;development_status&quot;:&quot;active&quot;,&quot;funder&quot;:[&quot;ARPA-H&quot;],&quot;interoperates_with&quot;:[&quot;NetworkDynamics.jl&quot;,&quot;TVB&quot;],&quot;is_accessible_for_free&quot;:true,&quot;issue_tracker&quot;:&quot;https://github.com/Neuroblox/Neuroblox.jl/issues&quot;,&quot;keywords&quot;:[&quot;Julia&quot;,&quot;whole-brain model&quot;,&quot;modular&quot;,&quot;neural mass&quot;,&quot;clinical&quot;],&quot;maintainer&quot;:[&quot;Neuroblox Inc.&quot;],&quot;model_paradigm&quot;:[&quot;neural_mass&quot;,&quot;spiking&quot;,&quot;mean_field&quot;],&quot;programming_language&quot;:[&quot;Julia&quot;],&quot;runtime_platform&quot;:[&quot;ModelingToolkit.jl&quot;,&quot;DifferentialEquations.jl&quot;],&quot;scale&quot;:[&quot;neural_mass&quot;,&quot;neural_network&quot;,&quot;network_system&quot;],&quot;tool_role&quot;:[&quot;framework&quot;]}</field>
+        </record>
+
+        <record id="software_package_neurofitter" model="tvbo.software_package">
+            <field name="name">Neurofitter</field>
+            <field name="description">A parameter optimization tool for neuroscience models. Uses evolutionary algorithms to fit model parameters to experimental electrophysiology data.</field>
+            <field name="license">GPL-2.0-only</field>
+            <field name="repository">https://github.com/ModelDBRepository/64261</field>
+        </record>
+
+        <record id="software_requirement_neurofitter" model="tvbo.software_requirement">
+            <field name="name">Neurofitter</field>
+            <field name="package" ref="software_package_neurofitter"/>
+            <field name="description">A parameter optimization tool for neuroscience models. Uses evolutionary algorithms to fit model parameters to experimental electrophysiology data.</field>
+            <field name="role" ref="requirement_role_runtime"/>
+            <field name="optional">false</field>
+            <field name="source_url">https://github.com/ModelDBRepository/64261</field>
+            <field name="license">GPL-2.0-only</field>
+            <field name="dataLocation">database/software/Neurofitter.yaml</field>
+            <field name="modules">{&quot;application_category&quot;:&quot;optimization&quot;,&quot;author&quot;:[&quot;Werner Van Geit&quot;,&quot;Erik De Schutter&quot;],&quot;date_created&quot;:&quot;2007-01-01&quot;,&quot;development_status&quot;:&quot;inactive&quot;,&quot;interoperates_with&quot;:[&quot;NEURON&quot;,&quot;GENESIS&quot;],&quot;is_accessible_for_free&quot;:true,&quot;keywords&quot;:[&quot;parameter estimation&quot;,&quot;evolutionary algorithm&quot;,&quot;fitting&quot;],&quot;maintainer&quot;:[&quot;Werner Van Geit&quot;],&quot;model_paradigm&quot;:[&quot;spiking&quot;],&quot;programming_language&quot;:[&quot;C++&quot;],&quot;reference_publication&quot;:&quot;10.3389/fninf.2007.00001&quot;,&quot;runtime_platform&quot;:[&quot;MPI&quot;],&quot;scale&quot;:[&quot;neuron&quot;,&quot;network_system&quot;],&quot;tool_role&quot;:[&quot;optimization_framework&quot;]}</field>
+        </record>
+
+        <record id="software_package_nineml" model="tvbo.software_package">
+            <field name="name">NineML</field>
+            <field name="description">A language for describing the dynamics and connectivity of spiking neuronal network models. Designed by the INCF to enable simulator-independent model exchange.</field>
+            <field name="homepage">https://nineml.net</field>
+            <field name="license">BSD-2-Clause</field>
+            <field name="repository">https://github.com/INCF/nineml-spec</field>
+        </record>
+
+        <record id="software_requirement_nineml" model="tvbo.software_requirement">
+            <field name="name">NineML</field>
+            <field name="package" ref="software_package_nineml"/>
+            <field name="description">A language for describing the dynamics and connectivity of spiking neuronal network models. Designed by the INCF to enable simulator-independent model exchange.</field>
+            <field name="role" ref="requirement_role_runtime"/>
+            <field name="optional">false</field>
+            <field name="source_url">https://github.com/INCF/nineml-spec</field>
+            <field name="license">BSD-2-Clause</field>
+            <field name="dataLocation">database/software/NineML.yaml</field>
+            <field name="modules">{&quot;application_category&quot;:&quot;specification&quot;,&quot;author&quot;:[&quot;Andrew Davison&quot;,&quot;Ivan Raikov&quot;],&quot;date_created&quot;:&quot;2011-01-01&quot;,&quot;development_status&quot;:&quot;inactive&quot;,&quot;funder&quot;:[&quot;INCF&quot;],&quot;interoperates_with&quot;:[&quot;PyNN&quot;,&quot;NeuroML&quot;],&quot;is_accessible_for_free&quot;:true,&quot;keywords&quot;:[&quot;model description&quot;,&quot;abstraction layers&quot;,&quot;XML&quot;,&quot;standardization&quot;],&quot;maintainer&quot;:[&quot;INCF&quot;],&quot;model_paradigm&quot;:[&quot;spiking&quot;,&quot;generic&quot;],&quot;programming_language&quot;:[&quot;Python&quot;,&quot;XML&quot;],&quot;reference_publication&quot;:&quot;10.1186/1471-2202-11-S1-P56&quot;,&quot;runtime_platform&quot;:[&quot;backend-dependent&quot;],&quot;scale&quot;:[&quot;neuron&quot;,&quot;neural_network&quot;,&quot;network_system&quot;],&quot;tool_role&quot;:[&quot;specification_language&quot;]}</field>
+        </record>
+
+        <record id="software_package_open_source_brain" model="tvbo.software_package">
+            <field name="name">Open Source Brain</field>
+            <field name="description">A platform for sharing and collaboratively developing computational neuroscience models in standardized formats, primarily NeuroML.</field>
+            <field name="homepage">https://www.opensourcebrain.org</field>
+            <field name="license">LGPL-3.0-only</field>
+            <field name="repository">https://github.com/OpenSourceBrain</field>
+        </record>
+
+        <record id="software_requirement_open_source_brain" model="tvbo.software_requirement">
+            <field name="name">Open Source Brain</field>
+            <field name="package" ref="software_package_open_source_brain"/>
+            <field name="description">A platform for sharing and collaboratively developing computational neuroscience models in standardized formats, primarily NeuroML.</field>
+            <field name="role" ref="requirement_role_runtime"/>
+            <field name="optional">false</field>
+            <field name="source_url">https://github.com/OpenSourceBrain</field>
+            <field name="license">LGPL-3.0-only</field>
+            <field name="dataLocation">database/software/OpenSourceBrain.yaml</field>
+            <field name="modules">{&quot;application_category&quot;:&quot;repository&quot;,&quot;development_status&quot;:&quot;active&quot;,&quot;interoperates_with&quot;:[&quot;NeuroML&quot;,&quot;NEURON&quot;,&quot;jNeuroML&quot;],&quot;is_accessible_for_free&quot;:true,&quot;keywords&quot;:[],&quot;maintainer&quot;:[&quot;Padraig Gleeson&quot;,&quot;Silver Lab, UCL&quot;],&quot;model_paradigm&quot;:[&quot;generic&quot;],&quot;programming_language&quot;:[&quot;Python&quot;,&quot;Java&quot;],&quot;runtime_platform&quot;:[&quot;browser&quot;],&quot;scale&quot;:[&quot;channel&quot;,&quot;neuron&quot;,&quot;network_system&quot;],&quot;tool_role&quot;:[&quot;model_repository&quot;]}</field>
+        </record>
+
+        <record id="software_package_openworm" model="tvbo.software_package">
+            <field name="name">OpenWorm</field>
+            <field name="description">An open science project to build a comprehensive computational model of the C. elegans nematode, including its 302-neuron nervous system.</field>
+            <field name="homepage">http://openworm.org</field>
+            <field name="license">MIT</field>
+            <field name="repository">https://github.com/openworm/OpenWorm</field>
+        </record>
+
+        <record id="software_requirement_openworm" model="tvbo.software_requirement">
+            <field name="name">OpenWorm</field>
+            <field name="package" ref="software_package_openworm"/>
+            <field name="description">An open science project to build a comprehensive computational model of the C. elegans nematode, including its 302-neuron nervous system.</field>
+            <field name="role" ref="requirement_role_engine"/>
+            <field name="optional">false</field>
+            <field name="source_url">https://github.com/openworm/OpenWorm</field>
+            <field name="license">MIT</field>
+            <field name="dataLocation">database/software/OpenWorm.yaml</field>
+            <field name="modules">{&quot;application_category&quot;:&quot;simulation&quot;,&quot;author&quot;:[&quot;Stephen Larson&quot;],&quot;date_created&quot;:&quot;2011-01-01&quot;,&quot;development_status&quot;:&quot;active&quot;,&quot;funder&quot;:[&quot;OpenWorm Foundation&quot;],&quot;interoperates_with&quot;:[&quot;NEURON&quot;,&quot;NeuroML&quot;,&quot;c302&quot;],&quot;is_accessible_for_free&quot;:true,&quot;issue_tracker&quot;:&quot;https://github.com/openworm/OpenWorm/issues&quot;,&quot;keywords&quot;:[&quot;C. elegans&quot;,&quot;whole-organism simulation&quot;,&quot;open science&quot;,&quot;connectome&quot;],&quot;maintainer&quot;:[&quot;OpenWorm Foundation&quot;],&quot;model_paradigm&quot;:[&quot;compartmental&quot;,&quot;spiking&quot;],&quot;programming_language&quot;:[&quot;Python&quot;,&quot;C++&quot;],&quot;reference_publication&quot;:&quot;10.1098/rstb.2017.0382&quot;,&quot;runtime_platform&quot;:[&quot;Python&quot;],&quot;same_as&quot;:[&quot;https://www.wikidata.org/entity/Q7097017&quot;],&quot;scale&quot;:[&quot;neuron&quot;,&quot;network_system&quot;],&quot;tool_role&quot;:[&quot;simulator&quot;]}</field>
+        </record>
+
+        <record id="software_package_psics" model="tvbo.software_package">
+            <field name="name">PSICS</field>
+            <field name="description">Parallel Stochastic Ion Channel Simulator — a fast simulator for stochastic ion channel models in morphologically detailed neurons using efficient population-based algorithms.</field>
+            <field name="license">MPL-2.0</field>
+            <field name="repository">https://github.com/BorgwardtLab/PSICS</field>
+        </record>
+
+        <record id="software_requirement_psics" model="tvbo.software_requirement">
+            <field name="name">PSICS</field>
+            <field name="package" ref="software_package_psics"/>
+            <field name="description">Parallel Stochastic Ion Channel Simulator — a fast simulator for stochastic ion channel models in morphologically detailed neurons using efficient population-based algorithms.</field>
+            <field name="role" ref="requirement_role_engine"/>
+            <field name="optional">false</field>
+            <field name="source_url">https://github.com/BorgwardtLab/PSICS</field>
+            <field name="license">MPL-2.0</field>
+            <field name="dataLocation">database/software/PSICS.yaml</field>
+            <field name="modules">{&quot;application_category&quot;:&quot;simulation&quot;,&quot;author&quot;:[&quot;Robert Cannon&quot;,&quot;Cian O&apos;Donnell&quot;],&quot;date_created&quot;:&quot;2010-01-01&quot;,&quot;development_status&quot;:&quot;inactive&quot;,&quot;interoperates_with&quot;:[&quot;NeuroML&quot;],&quot;is_accessible_for_free&quot;:true,&quot;keywords&quot;:[&quot;stochastic&quot;,&quot;ion channel&quot;,&quot;point process&quot;],&quot;maintainer&quot;:[&quot;Robert Cannon&quot;],&quot;model_paradigm&quot;:[&quot;conductance_based&quot;,&quot;compartmental&quot;],&quot;programming_language&quot;:[&quot;Java&quot;],&quot;reference_publication&quot;:&quot;10.1162/neco.2009.08-09-1078&quot;,&quot;runtime_platform&quot;:[&quot;JVM&quot;],&quot;scale&quot;:[&quot;channel&quot;,&quot;neuron&quot;],&quot;tool_role&quot;:[&quot;simulator&quot;]}</field>
+        </record>
+
+        <record id="software_package_pynn" model="tvbo.software_package">
+            <field name="name">PyNN</field>
+            <field name="description">A Python package for simulator-independent specification of spiking neuronal network models. Provides a common API for NEST, NEURON, Brian2, GeNN, and SpiNNaker backends.</field>
+            <field name="homepage">https://neuralensemble.org/PyNN/</field>
+            <field name="license">CeCILL-2.0</field>
+            <field name="repository">https://github.com/NeuralEnsemble/PyNN</field>
+            <field name="doi">10.3389/fninf.2008.00011</field>
+            <field name="ecosystem">pypi</field>
+        </record>
+
+        <record id="software_requirement_pynn" model="tvbo.software_requirement">
+            <field name="name">PyNN</field>
+            <field name="package" ref="software_package_pynn"/>
+            <field name="description">A Python package for simulator-independent specification of spiking neuronal network models. Provides a common API for NEST, NEURON, Brian2, GeNN, and SpiNNaker backends.</field>
+            <field name="role" ref="requirement_role_runtime"/>
+            <field name="optional">false</field>
+            <field name="source_url">https://github.com/NeuralEnsemble/PyNN</field>
+            <field name="license">CeCILL-2.0</field>
+            <field name="dataLocation">database/software/PyNN.yaml</field>
+            <field name="modules">{&quot;application_category&quot;:&quot;interoperability&quot;,&quot;author&quot;:[&quot;Andrew Davison&quot;],&quot;date_created&quot;:&quot;2008-01-01&quot;,&quot;development_status&quot;:&quot;active&quot;,&quot;funder&quot;:[&quot;EU HBP&quot;,&quot;CNRS&quot;],&quot;interoperates_with&quot;:[&quot;NEST&quot;,&quot;NEURON&quot;,&quot;Brian2&quot;,&quot;sPyNNaker&quot;,&quot;GeNN&quot;],&quot;is_accessible_for_free&quot;:true,&quot;issue_tracker&quot;:&quot;https://github.com/NeuralEnsemble/PyNN/issues&quot;,&quot;keywords&quot;:[&quot;simulator-independent&quot;,&quot;abstraction layer&quot;,&quot;NEST&quot;,&quot;NEURON&quot;,&quot;Brian2&quot;],&quot;maintainer&quot;:[&quot;Andrew Davison&quot;],&quot;model_paradigm&quot;:[&quot;spiking&quot;,&quot;generic&quot;],&quot;programming_language&quot;:[&quot;Python&quot;],&quot;reference_publication&quot;:&quot;10.3389/neuro.11.011.2008&quot;,&quot;runtime_platform&quot;:[&quot;backend-dependent&quot;],&quot;same_as&quot;:[&quot;https://scicrunch.org/resolver/RRID:SCR_002715&quot;],&quot;scale&quot;:[&quot;neuron&quot;,&quot;neural_network&quot;,&quot;network_system&quot;],&quot;tool_role&quot;:[&quot;specification_language&quot;,&quot;workflow_framework&quot;]}</field>
+        </record>
+
+        <record id="software_package_pyrates" model="tvbo.software_package">
+            <field name="name">PyRates</field>
+            <field name="description">A Python framework for rate-based and neural mass network simulations. Provides symbolic equation parsing, automatic code generation, and parameter continuation support.</field>
+            <field name="homepage">https://pyrates.readthedocs.io</field>
+            <field name="license">BSD-3-Clause</field>
+            <field name="repository">https://github.com/pyrates-neuroscience/PyRates</field>
+            <field name="doi">10.1371/journal.pone.0244637</field>
+            <field name="ecosystem">pypi</field>
+        </record>
+
+        <record id="software_requirement_pyrates" model="tvbo.software_requirement">
+            <field name="name">PyRates</field>
+            <field name="package" ref="software_package_pyrates"/>
+            <field name="description">A Python framework for rate-based and neural mass network simulations. Provides symbolic equation parsing, automatic code generation, and parameter continuation support.</field>
+            <field name="role" ref="requirement_role_engine"/>
+            <field name="optional">false</field>
+            <field name="source_url">https://github.com/pyrates-neuroscience/PyRates</field>
+            <field name="license">BSD-3-Clause</field>
+            <field name="dataLocation">database/software/PyRates.yaml</field>
+            <field name="modules">{&quot;application_category&quot;:&quot;simulation&quot;,&quot;author&quot;:[&quot;Richard Gast&quot;,&quot;Daniel Rose&quot;],&quot;date_created&quot;:&quot;2019-01-01&quot;,&quot;development_status&quot;:&quot;active&quot;,&quot;interoperates_with&quot;:[&quot;TVB&quot;],&quot;is_accessible_for_free&quot;:true,&quot;issue_tracker&quot;:&quot;https://github.com/pyrates-neuroscience/PyRates/issues&quot;,&quot;keywords&quot;:[&quot;neural mass&quot;,&quot;rate model&quot;,&quot;mean-field&quot;,&quot;code generation&quot;,&quot;graph-based&quot;],&quot;maintainer&quot;:[&quot;Richard Gast&quot;],&quot;model_paradigm&quot;:[&quot;rate_based&quot;,&quot;neural_mass&quot;],&quot;programming_language&quot;:[&quot;Python&quot;],&quot;reference_publication&quot;:&quot;10.1371/journal.pone.0225900&quot;,&quot;runtime_platform&quot;:[&quot;Python&quot;,&quot;NumPy&quot;,&quot;TensorFlow&quot;],&quot;scale&quot;:[&quot;neural_mass&quot;,&quot;network_system&quot;],&quot;tool_role&quot;:[&quot;simulator&quot;,&quot;framework&quot;]}</field>
+        </record>
+
+        <record id="software_package_pyrho" model="tvbo.software_package">
+            <field name="name">PyRhO</field>
+            <field name="description">A Python module for fitting, simulating, and analyzing optogenetic rhodopsin photocurrent models. Integrates with NEURON and Brian2.</field>
+            <field name="homepage">https://pyrho.readthedocs.io</field>
+            <field name="license">BSD-3-Clause</field>
+            <field name="repository">https://github.com/ProjectPyRhO/PyRhO</field>
+            <field name="doi">10.3389/fninf.2016.00008</field>
+            <field name="ecosystem">pypi</field>
+        </record>
+
+        <record id="software_requirement_pyrho" model="tvbo.software_requirement">
+            <field name="name">PyRhO</field>
+            <field name="package" ref="software_package_pyrho"/>
+            <field name="description">A Python module for fitting, simulating, and analyzing optogenetic rhodopsin photocurrent models. Integrates with NEURON and Brian2.</field>
+            <field name="role" ref="requirement_role_runtime"/>
+            <field name="optional">false</field>
+            <field name="source_url">https://github.com/ProjectPyRhO/PyRhO</field>
+            <field name="license">BSD-3-Clause</field>
+            <field name="dataLocation">database/software/PyRhO.yaml</field>
+            <field name="modules">{&quot;application_category&quot;:&quot;modeling&quot;,&quot;author&quot;:[&quot;Benjamin Evans&quot;,&quot;Konstantin Bhatt&quot;],&quot;date_created&quot;:&quot;2016-01-01&quot;,&quot;development_status&quot;:&quot;inactive&quot;,&quot;interoperates_with&quot;:[&quot;NEURON&quot;,&quot;Brian2&quot;],&quot;is_accessible_for_free&quot;:true,&quot;keywords&quot;:[&quot;optogenetics&quot;,&quot;rhodopsin&quot;,&quot;photocurrent&quot;,&quot;fitting&quot;],&quot;maintainer&quot;:[&quot;Benjamin Evans&quot;],&quot;model_paradigm&quot;:[&quot;conductance_based&quot;],&quot;programming_language&quot;:[&quot;Python&quot;],&quot;reference_publication&quot;:&quot;10.3389/fninf.2016.00008&quot;,&quot;runtime_platform&quot;:[&quot;Python&quot;],&quot;scale&quot;:[&quot;neuron&quot;],&quot;tool_role&quot;:[&quot;analysis_tool&quot;]}</field>
+        </record>
+
+        <record id="software_package_sonata" model="tvbo.software_package">
+            <field name="name">SONATA</field>
+            <field name="description">Scalable Open Network Architecture ToolKit and Application — a data format specification for storing large-scale neural network models and simulation results. Joint Allen Institute / Blue Brain standard.</field>
+            <field name="homepage">https://github.com/AllenInstitute/sonata/blob/master/docs/SONATA_DEVELOPER_GUIDE.md</field>
+            <field name="license">BSD-3-Clause</field>
+            <field name="repository">https://github.com/AllenInstitute/sonata</field>
+        </record>
+
+        <record id="software_requirement_sonata" model="tvbo.software_requirement">
+            <field name="name">SONATA</field>
+            <field name="package" ref="software_package_sonata"/>
+            <field name="description">Scalable Open Network Architecture ToolKit and Application — a data format specification for storing large-scale neural network models and simulation results. Joint Allen Institute / Blue Brain standard.</field>
+            <field name="role" ref="requirement_role_runtime"/>
+            <field name="optional">false</field>
+            <field name="source_url">https://github.com/AllenInstitute/sonata</field>
+            <field name="license">BSD-3-Clause</field>
+            <field name="dataLocation">database/software/SONATA.yaml</field>
+            <field name="modules">{&quot;application_category&quot;:&quot;specification&quot;,&quot;author&quot;:[&quot;Kael Dai&quot;,&quot;Sergey Bhatt&quot;],&quot;date_created&quot;:&quot;2019-01-01&quot;,&quot;development_status&quot;:&quot;active&quot;,&quot;funder&quot;:[&quot;Allen Institute for Brain Science&quot;,&quot;EPFL Blue Brain Project&quot;],&quot;interoperates_with&quot;:[&quot;NEST&quot;,&quot;NEURON&quot;,&quot;Arbor&quot;,&quot;NetPyNE&quot;],&quot;is_accessible_for_free&quot;:true,&quot;issue_tracker&quot;:&quot;https://github.com/AllenInstitute/sonata/issues&quot;,&quot;keywords&quot;:[&quot;data format&quot;,&quot;network model&quot;,&quot;HDF5&quot;,&quot;circuit&quot;],&quot;maintainer&quot;:[&quot;Allen Institute for Brain Science&quot;,&quot;Blue Brain Project&quot;],&quot;model_paradigm&quot;:[&quot;generic&quot;],&quot;programming_language&quot;:[&quot;Python&quot;],&quot;reference_publication&quot;:&quot;10.1371/journal.pcbi.1007696&quot;,&quot;runtime_platform&quot;:[&quot;backend-dependent&quot;],&quot;scale&quot;:[&quot;neuron&quot;,&quot;neural_network&quot;,&quot;network_system&quot;],&quot;tool_role&quot;:[&quot;specification_language&quot;]}</field>
+        </record>
+
+        <record id="software_package_spm" model="tvbo.software_package">
+            <field name="name">SPM</field>
+            <field name="description">Statistical Parametric Mapping — software for the analysis of brain imaging data sequences (fMRI, PET, SPECT, EEG, MEG). Standard tool for voxel-based and DCM analyses.</field>
+            <field name="homepage">https://www.fil.ion.ucl.ac.uk/spm/</field>
+            <field name="license">GPL-2.0-or-later</field>
+            <field name="repository">https://github.com/spm/spm</field>
+            <field name="doi">10.1016/B978-012372560-8/50002-4</field>
+        </record>
+
+        <record id="software_requirement_spm" model="tvbo.software_requirement">
+            <field name="name">SPM</field>
+            <field name="package" ref="software_package_spm"/>
+            <field name="description">Statistical Parametric Mapping — software for the analysis of brain imaging data sequences (fMRI, PET, SPECT, EEG, MEG). Standard tool for voxel-based and DCM analyses.</field>
+            <field name="role" ref="requirement_role_analysis"/>
+            <field name="optional">false</field>
+            <field name="source_url">https://github.com/spm/spm</field>
+            <field name="license">GPL-2.0-or-later</field>
+            <field name="dataLocation">database/software/SPM.yaml</field>
+            <field name="modules">{&quot;application_category&quot;:&quot;analysis&quot;,&quot;author&quot;:[&quot;Karl Friston&quot;],&quot;date_created&quot;:&quot;1991-01-01&quot;,&quot;development_status&quot;:&quot;active&quot;,&quot;funder&quot;:[&quot;Wellcome Trust&quot;],&quot;interoperates_with&quot;:[&quot;FieldTrip&quot;,&quot;FSL&quot;,&quot;FreeSurfer&quot;],&quot;is_accessible_for_free&quot;:true,&quot;keywords&quot;:[&quot;neuroimaging&quot;,&quot;fMRI&quot;,&quot;PET&quot;,&quot;EEG&quot;,&quot;statistical parametric mapping&quot;,&quot;dynamic causal modelling&quot;],&quot;maintainer&quot;:[&quot;Wellcome Centre for Human Neuroimaging, UCL&quot;],&quot;model_paradigm&quot;:[&quot;generic&quot;],&quot;programming_language&quot;:[&quot;MATLAB&quot;],&quot;reference_publication&quot;:&quot;10.1016/j.neuroimage.2011.10.018&quot;,&quot;runtime_platform&quot;:[&quot;MATLAB&quot;],&quot;same_as&quot;:[&quot;https://www.wikidata.org/entity/Q4414458&quot;,&quot;https://scicrunch.org/resolver/RRID:SCR_007037&quot;],&quot;scale&quot;:[&quot;network_system&quot;],&quot;tool_role&quot;:[&quot;analysis_tool&quot;]}</field>
+        </record>
+
+        <record id="software_package_steps" model="tvbo.software_package">
+            <field name="name">STEPS</field>
+            <field name="description">STochastic Engine for Pathway Simulation — a stochastic reaction-diffusion simulator for modeling biochemical signaling pathways in realistic 3D cellular morphologies.</field>
+            <field name="homepage">https://steps.sourceforge.net</field>
+            <field name="license">GPL-3.0-only</field>
+            <field name="repository">https://github.com/CNS-OIST/STEPS</field>
+            <field name="doi">10.3389/fninf.2014.00068</field>
+            <field name="ecosystem">pypi</field>
+        </record>
+
+        <record id="software_requirement_steps" model="tvbo.software_requirement">
+            <field name="name">STEPS</field>
+            <field name="package" ref="software_package_steps"/>
+            <field name="description">STochastic Engine for Pathway Simulation — a stochastic reaction-diffusion simulator for modeling biochemical signaling pathways in realistic 3D cellular morphologies.</field>
+            <field name="role" ref="requirement_role_engine"/>
+            <field name="optional">false</field>
+            <field name="source_url">https://github.com/CNS-OIST/STEPS</field>
+            <field name="license">GPL-3.0-only</field>
+            <field name="dataLocation">database/software/STEPS.yaml</field>
+            <field name="modules">{&quot;application_category&quot;:&quot;simulation&quot;,&quot;author&quot;:[&quot;Erik De Schutter&quot;,&quot;Weiliang Chen&quot;],&quot;date_created&quot;:&quot;2012-01-01&quot;,&quot;development_status&quot;:&quot;active&quot;,&quot;funder&quot;:[&quot;OIST&quot;],&quot;interoperates_with&quot;:[&quot;NeuroML&quot;],&quot;is_accessible_for_free&quot;:true,&quot;issue_tracker&quot;:&quot;https://github.com/CNS-OIST/STEPS/issues&quot;,&quot;keywords&quot;:[&quot;stochastic&quot;,&quot;reaction-diffusion&quot;,&quot;tetrahedral mesh&quot;,&quot;compartmental&quot;],&quot;maintainer&quot;:[&quot;OIST Computational Neuroscience Unit&quot;],&quot;model_paradigm&quot;:[&quot;reaction_diffusion&quot;],&quot;programming_language&quot;:[&quot;C++&quot;,&quot;Python&quot;],&quot;reference_publication&quot;:&quot;10.3389/fninf.2009.00002&quot;,&quot;runtime_platform&quot;:[&quot;MPI&quot;,&quot;Python&quot;],&quot;same_as&quot;:[&quot;https://scicrunch.org/resolver/RRID:SCR_008742&quot;],&quot;scale&quot;:[&quot;channel&quot;,&quot;neuron&quot;],&quot;tool_role&quot;:[&quot;simulator&quot;]}</field>
+        </record>
+
+        <record id="software_package_snudda" model="tvbo.software_package">
+            <field name="name">Snudda</field>
+            <field name="description">A Python tool for creating detailed neuronal network models with realistic 3D neuron placement, morphology, and connectivity using touch detection. Exports to NEURON via SONATA format.</field>
+            <field name="homepage">https://snudda.readthedocs.io</field>
+            <field name="license">GPL-3.0-only</field>
+            <field name="repository">https://github.com/Hjorthmedansen/Snudda</field>
+            <field name="ecosystem">pypi</field>
+        </record>
+
+        <record id="software_requirement_snudda" model="tvbo.software_requirement">
+            <field name="name">Snudda</field>
+            <field name="package" ref="software_package_snudda"/>
+            <field name="description">A Python tool for creating detailed neuronal network models with realistic 3D neuron placement, morphology, and connectivity using touch detection. Exports to NEURON via SONATA format.</field>
+            <field name="role" ref="requirement_role_runtime"/>
+            <field name="optional">false</field>
+            <field name="source_url">https://github.com/Hjorthmedansen/Snudda</field>
+            <field name="license">GPL-3.0-only</field>
+            <field name="dataLocation">database/software/Snudda.yaml</field>
+            <field name="modules">{&quot;application_category&quot;:&quot;simulation&quot;,&quot;author&quot;:[&quot;Johannes Hjorth&quot;,&quot;Jeanette Hellgren Kotaleski&quot;],&quot;date_created&quot;:&quot;2021-01-01&quot;,&quot;development_status&quot;:&quot;active&quot;,&quot;funder&quot;:[&quot;KTH Stockholm&quot;,&quot;EU HBP&quot;],&quot;interoperates_with&quot;:[&quot;NEURON&quot;,&quot;SONATA&quot;],&quot;is_accessible_for_free&quot;:true,&quot;issue_tracker&quot;:&quot;https://github.com/Hjorthmedansen/Snudda/issues&quot;,&quot;keywords&quot;:[&quot;striatum&quot;,&quot;basal ganglia&quot;,&quot;detailed network&quot;,&quot;touch detection&quot;],&quot;maintainer&quot;:[&quot;Johannes Hjorth&quot;],&quot;model_paradigm&quot;:[&quot;spiking&quot;,&quot;compartmental&quot;],&quot;programming_language&quot;:[&quot;Python&quot;],&quot;reference_publication&quot;:&quot;10.1038/s41467-022-30979-w&quot;,&quot;runtime_platform&quot;:[&quot;NEURON backend&quot;],&quot;scale&quot;:[&quot;neuron&quot;,&quot;network_system&quot;],&quot;tool_role&quot;:[&quot;workflow_framework&quot;]}</field>
+        </record>
+
+        <record id="software_package_spikeinterface" model="tvbo.software_package">
+            <field name="name">SpikeInterface</field>
+            <field name="description">A unified framework for spike sorting, providing a common interface to many spike sorting algorithms, preprocessing tools, and quality metrics.</field>
+            <field name="homepage">https://spikeinterface.readthedocs.io</field>
+            <field name="license">MIT</field>
+            <field name="repository">https://github.com/SpikeInterface/spikeinterface</field>
+            <field name="doi">10.7554/eLife.61834</field>
+            <field name="ecosystem">pypi</field>
+        </record>
+
+        <record id="software_requirement_spikeinterface" model="tvbo.software_requirement">
+            <field name="name">SpikeInterface</field>
+            <field name="package" ref="software_package_spikeinterface"/>
+            <field name="description">A unified framework for spike sorting, providing a common interface to many spike sorting algorithms, preprocessing tools, and quality metrics.</field>
+            <field name="role" ref="requirement_role_analysis"/>
+            <field name="optional">false</field>
+            <field name="source_url">https://github.com/SpikeInterface/spikeinterface</field>
+            <field name="license">MIT</field>
+            <field name="dataLocation">database/software/SpikeInterface.yaml</field>
+            <field name="modules">{&quot;application_category&quot;:&quot;analysis&quot;,&quot;author&quot;:[&quot;Alessio Buccino&quot;,&quot;Cole Hurwitz&quot;,&quot;Samuel Garcia&quot;],&quot;date_created&quot;:&quot;2020-01-01&quot;,&quot;development_status&quot;:&quot;active&quot;,&quot;funder&quot;:[&quot;Allen Institute&quot;,&quot;CatalystNeuro&quot;],&quot;interoperates_with&quot;:[&quot;NWB&quot;,&quot;Neo&quot;,&quot;MNE-Python&quot;],&quot;is_accessible_for_free&quot;:true,&quot;issue_tracker&quot;:&quot;https://github.com/SpikeInterface/spikeinterface/issues&quot;,&quot;keywords&quot;:[&quot;spike sorting&quot;,&quot;electrophysiology&quot;,&quot;Python&quot;,&quot;reproducibility&quot;],&quot;maintainer&quot;:[&quot;SpikeInterface Developers&quot;],&quot;model_paradigm&quot;:[&quot;generic&quot;],&quot;programming_language&quot;:[&quot;Python&quot;],&quot;reference_publication&quot;:&quot;10.7554/eLife.61834&quot;,&quot;runtime_platform&quot;:[&quot;Python&quot;],&quot;scale&quot;:[&quot;neuron&quot;,&quot;network_system&quot;],&quot;tool_role&quot;:[&quot;analysis_tool&quot;]}</field>
+        </record>
+
+        <record id="software_package_spinecreator" model="tvbo.software_package">
+            <field name="name">SpineCreator</field>
+            <field name="description">A graphical tool for building neural network models using SpineML component-based descriptions, with export to multiple simulation engines.</field>
+            <field name="homepage">https://spineml.github.io/spinecreator/</field>
+            <field name="license">GPL-3.0-only</field>
+            <field name="repository">https://github.com/SpineML/SpineCreator</field>
+        </record>
+
+        <record id="software_requirement_spinecreator" model="tvbo.software_requirement">
+            <field name="name">SpineCreator</field>
+            <field name="package" ref="software_package_spinecreator"/>
+            <field name="description">A graphical tool for building neural network models using SpineML component-based descriptions, with export to multiple simulation engines.</field>
+            <field name="role" ref="requirement_role_runtime"/>
+            <field name="optional">false</field>
+            <field name="source_url">https://github.com/SpineML/SpineCreator</field>
+            <field name="license">GPL-3.0-only</field>
+            <field name="dataLocation">database/software/SpineCreator.yaml</field>
+            <field name="modules">{&quot;application_category&quot;:&quot;editor&quot;,&quot;author&quot;:[&quot;Alex Cope&quot;],&quot;date_created&quot;:&quot;2014-01-01&quot;,&quot;development_status&quot;:&quot;inactive&quot;,&quot;interoperates_with&quot;:[&quot;SpineML&quot;,&quot;BRAHMS&quot;],&quot;is_accessible_for_free&quot;:true,&quot;keywords&quot;:[&quot;SpineML&quot;,&quot;GUI&quot;,&quot;model builder&quot;],&quot;maintainer&quot;:[&quot;SpineML Team&quot;],&quot;model_paradigm&quot;:[&quot;spiking&quot;],&quot;programming_language&quot;:[&quot;C++&quot;],&quot;runtime_platform&quot;:[&quot;Qt&quot;],&quot;scale&quot;:[&quot;neuron&quot;,&quot;neural_network&quot;,&quot;network_system&quot;],&quot;tool_role&quot;:[&quot;workflow_framework&quot;]}</field>
+        </record>
+
+        <record id="software_package_spineml" model="tvbo.software_package">
+            <field name="name">SpineML</field>
+            <field name="description">A declarative XML-based language for describing spiking neural network models using a component-based approach. Designed for simulator independence.</field>
+            <field name="homepage">https://spineml.github.io</field>
+            <field name="license">BSD-3-Clause</field>
+            <field name="repository">https://github.com/SpineML</field>
+        </record>
+
+        <record id="software_requirement_spineml" model="tvbo.software_requirement">
+            <field name="name">SpineML</field>
+            <field name="package" ref="software_package_spineml"/>
+            <field name="description">A declarative XML-based language for describing spiking neural network models using a component-based approach. Designed for simulator independence.</field>
+            <field name="role" ref="requirement_role_runtime"/>
+            <field name="optional">false</field>
+            <field name="source_url">https://github.com/SpineML</field>
+            <field name="license">BSD-3-Clause</field>
+            <field name="dataLocation">database/software/SpineML.yaml</field>
+            <field name="modules">{&quot;application_category&quot;:&quot;specification&quot;,&quot;author&quot;:[&quot;Alex Cope&quot;,&quot;Kevin Gurney&quot;],&quot;date_created&quot;:&quot;2014-01-01&quot;,&quot;development_status&quot;:&quot;inactive&quot;,&quot;interoperates_with&quot;:[&quot;SpineCreator&quot;,&quot;BRAHMS&quot;,&quot;PyNN&quot;],&quot;is_accessible_for_free&quot;:true,&quot;keywords&quot;:[&quot;model description&quot;,&quot;XML&quot;,&quot;spiking network&quot;],&quot;maintainer&quot;:[&quot;SpineML Team&quot;],&quot;model_paradigm&quot;:[&quot;spiking&quot;],&quot;programming_language&quot;:[&quot;XML&quot;],&quot;runtime_platform&quot;:[&quot;backend-dependent&quot;],&quot;scale&quot;:[&quot;neuron&quot;,&quot;neural_network&quot;,&quot;network_system&quot;],&quot;tool_role&quot;:[&quot;specification_language&quot;]}</field>
+        </record>
+
+        <record id="software_package_tvb_o" model="tvbo.software_package">
+            <field name="name">TVB-O</field>
+            <field name="description">The Virtual Brain Ontology — a Python library for knowledge representation, code generation, and simulation of large-scale brain network models. Integrates a LinkML-based ontology with JAX-accelerated numerical backends and interoperates with TVB, PyRates, NEURON, NEST, NeuroML, and NetworkDynamics.jl.</field>
+            <field name="homepage">https://tvbo.charite.de</field>
+            <field name="license">EUPL-1.2</field>
+            <field name="repository">https://github.com/virtual-twin/tvbo</field>
+            <field name="doi">10.1101/2025.11.19.689211</field>
+            <field name="ecosystem">pypi</field>
+        </record>
+
+        <record id="software_requirement_tvb_o" model="tvbo.software_requirement">
+            <field name="name">TVB-O</field>
+            <field name="package" ref="software_package_tvb_o"/>
+            <field name="description">The Virtual Brain Ontology — a Python library for knowledge representation, code generation, and simulation of large-scale brain network models. Integrates a LinkML-based ontology with JAX-accelerated numerical backends and interoperates with TVB, PyRates, NEURON, NEST, NeuroML, and NetworkDynamics.jl.</field>
+            <field name="version_spec">==0.3.10</field>
+            <field name="version">0.3.10</field>
+            <field name="role" ref="requirement_role_engine"/>
+            <field name="optional">false</field>
+            <field name="source_url">https://github.com/virtual-twin/tvbo</field>
+            <field name="license">EUPL-1.2</field>
+            <field name="dataLocation">database/software/TVB-O.yaml</field>
+            <field name="modules">{&quot;application_category&quot;:&quot;simulation&quot;,&quot;author&quot;:[&quot;Leon Martin&quot;,&quot;Konstantin B\u00fclau&quot;,&quot;Marius Pille&quot;,&quot;Rico Andre Schmitt&quot;,&quot;Christoph H\u00fcttl&quot;,&quot;Jil M Meier&quot;,&quot;Halgurd Taher&quot;,&quot;Dionysios Perdikis&quot;,&quot;Michael Schirner&quot;,&quot;Petra Ritter&quot;],&quot;date_created&quot;:&quot;2024-01-01&quot;,&quot;development_status&quot;:&quot;active&quot;,&quot;funder&quot;:[&quot;EU Horizon Europe 101147319 (EBRAINS 2.0)&quot;,&quot;EU H2020 945539 (HBP SGA3)&quot;],&quot;interoperates_with&quot;:[&quot;TVB&quot;,&quot;TVB-Optim&quot;,&quot;PyRates&quot;,&quot;NeuroML&quot;,&quot;NetworkDynamics.jl&quot;,&quot;BifurcationKit.jl&quot;,&quot;DifferentialEquations.jl&quot;,&quot;AUTO-07p&quot;],&quot;is_accessible_for_free&quot;:true,&quot;issue_tracker&quot;:&quot;https://github.com/virtual-twin/tvbo/issues&quot;,&quot;keywords&quot;:[&quot;brain simulation&quot;,&quot;ontology&quot;,&quot;knowledge representation&quot;,&quot;code generation&quot;,&quot;connectome&quot;,&quot;neural mass&quot;,&quot;JAX&quot;,&quot;LinkML&quot;],&quot;maintainer&quot;:[&quot;Leon Martin&quot;,&quot;Berlin Institute of Health (BIH) at Charit\u00e9&quot;],&quot;model_paradigm&quot;:[&quot;neural_mass&quot;,&quot;mean_field&quot;,&quot;dynamic_mean_field&quot;,&quot;conductance_based&quot;,&quot;spiking&quot;,&quot;multiscale&quot;],&quot;operating_system&quot;:[&quot;Linux&quot;,&quot;macOS&quot;,&quot;Windows&quot;],&quot;programming_language&quot;:[&quot;Python&quot;],&quot;reference_publication&quot;:&quot;10.1101/2025.11.19.689211&quot;,&quot;runtime_platform&quot;:[&quot;JAX&quot;,&quot;NumPy&quot;],&quot;same_as&quot;:[&quot;https://pypi.org/project/tvbo/&quot;],&quot;scale&quot;:[&quot;neural_mass&quot;,&quot;network_system&quot;,&quot;neuron&quot;],&quot;tool_role&quot;:[&quot;framework&quot;]}</field>
+        </record>
+
+        <record id="software_package_tvb_optim" model="tvbo.software_package">
+            <field name="name">TVB-Optim</field>
+            <field name="description">Differentiable whole-brain simulation and optimization framework using JAX. Supports gradient-based fitting of neural mass models to empirical neuroimaging data.</field>
+            <field name="homepage">https://virtual-twin.github.io/tvboptim/</field>
+            <field name="license">EUPL-1.2</field>
+            <field name="repository">https://github.com/virtual-twin/tvboptim</field>
+            <field name="ecosystem">pypi</field>
+        </record>
+
+        <record id="software_requirement_tvb_optim" model="tvbo.software_requirement">
+            <field name="name">TVB-Optim</field>
+            <field name="package" ref="software_package_tvb_optim"/>
+            <field name="description">Differentiable whole-brain simulation and optimization framework using JAX. Supports gradient-based fitting of neural mass models to empirical neuroimaging data.</field>
+            <field name="role" ref="requirement_role_runtime"/>
+            <field name="optional">false</field>
+            <field name="source_url">https://github.com/virtual-twin/tvboptim</field>
+            <field name="license">EUPL-1.2</field>
+            <field name="dataLocation">database/software/TVB-Optim.yaml</field>
+            <field name="modules">{&quot;application_category&quot;:&quot;optimization&quot;,&quot;author&quot;:[&quot;Leon Martin&quot;],&quot;date_created&quot;:&quot;2024-01-01&quot;,&quot;development_status&quot;:&quot;active&quot;,&quot;funder&quot;:[&quot;BIH Charit\u00e9&quot;,&quot;EU Horizon Europe 101147319 (EBRAINS 2.0)&quot;],&quot;interoperates_with&quot;:[&quot;TVB&quot;],&quot;is_accessible_for_free&quot;:true,&quot;issue_tracker&quot;:&quot;https://github.com/virtual-twin/tvboptim/issues&quot;,&quot;keywords&quot;:[&quot;TVB&quot;,&quot;JAX&quot;,&quot;automatic differentiation&quot;,&quot;parameter optimization&quot;,&quot;whole-brain&quot;],&quot;maintainer&quot;:[&quot;Virtual Twin Project&quot;],&quot;model_paradigm&quot;:[&quot;neural_mass&quot;,&quot;dynamic_mean_field&quot;],&quot;programming_language&quot;:[&quot;Python&quot;],&quot;runtime_platform&quot;:[&quot;JAX&quot;],&quot;scale&quot;:[&quot;neural_mass&quot;,&quot;network_system&quot;],&quot;tool_role&quot;:[&quot;optimization_framework&quot;]}</field>
+        </record>
+
+        <record id="software_package_tvb" model="tvbo.software_package">
+            <field name="name">TVB</field>
+            <field name="description">The Virtual Brain — a neuroinformatics platform for full-brain network simulation using neural mass and mean-field models on individual connectome data.</field>
+            <field name="homepage">https://www.thevirtualbrain.org</field>
+            <field name="license">GPL-3.0-or-later</field>
+            <field name="repository">https://github.com/the-virtual-brain/tvb-root</field>
+            <field name="doi">10.3389/fninf.2013.00010</field>
+            <field name="ecosystem">pypi</field>
+        </record>
+
+        <record id="software_requirement_tvb" model="tvbo.software_requirement">
+            <field name="name">TVB</field>
+            <field name="package" ref="software_package_tvb"/>
+            <field name="description">The Virtual Brain — a neuroinformatics platform for full-brain network simulation using neural mass and mean-field models on individual connectome data.</field>
+            <field name="role" ref="requirement_role_engine"/>
+            <field name="optional">false</field>
+            <field name="source_url">https://github.com/the-virtual-brain/tvb-root</field>
+            <field name="license">GPL-3.0-or-later</field>
+            <field name="dataLocation">database/software/TVB.yaml</field>
+            <field name="modules">{&quot;application_category&quot;:&quot;simulation&quot;,&quot;author&quot;:[&quot;Viktor Jirsa&quot;,&quot;Petra Ritter&quot;,&quot;Randy McIntosh&quot;,&quot;Michael Breakspear&quot;],&quot;date_created&quot;:&quot;2013-01-01&quot;,&quot;development_status&quot;:&quot;active&quot;,&quot;funder&quot;:[&quot;EU H2020 826421 (TVB-Cloud)&quot;,&quot;EU H2020 945539 (HBP SGA3)&quot;,&quot;EU Horizon Europe 101147319 (EBRAINS 2.0)&quot;],&quot;interoperates_with&quot;:[&quot;NEST&quot;,&quot;NEURON&quot;,&quot;Arbor&quot;,&quot;NeuroML&quot;,&quot;PyRates&quot;,&quot;neurolib&quot;],&quot;is_accessible_for_free&quot;:true,&quot;issue_tracker&quot;:&quot;https://github.com/the-virtual-brain/tvb-root/issues&quot;,&quot;keywords&quot;:[&quot;whole-brain simulation&quot;,&quot;neural mass&quot;,&quot;connectome&quot;,&quot;mean-field&quot;,&quot;neuroimaging&quot;],&quot;maintainer&quot;:[&quot;The Virtual Brain Consortium&quot;],&quot;model_paradigm&quot;:[&quot;neural_mass&quot;,&quot;mean_field&quot;],&quot;programming_language&quot;:[&quot;Python&quot;,&quot;C&quot;],&quot;reference_publication&quot;:&quot;10.3389/fninf.2013.00010&quot;,&quot;runtime_platform&quot;:[&quot;Python&quot;,&quot;NumPy&quot;],&quot;same_as&quot;:[&quot;https://www.wikidata.org/entity/Q49165099&quot;,&quot;https://scicrunch.org/resolver/RRID:SCR_004841&quot;],&quot;scale&quot;:[&quot;neural_mass&quot;,&quot;network_system&quot;],&quot;tool_role&quot;:[&quot;simulator&quot;]}</field>
+        </record>
+
+        <record id="software_package_jneuroml" model="tvbo.software_package">
+            <field name="name">jNeuroML</field>
+            <field name="description">Java-based toolchain for NeuroML/LEMS model validation, simulation, and export to multiple simulator backends including NEURON, NEST, and Brian2.</field>
+            <field name="homepage">https://docs.neuroml.org/Userdocs/Software/jNeuroML.html</field>
+            <field name="license">LGPL-3.0-only</field>
+            <field name="repository">https://github.com/NeuroML/jNeuroML</field>
+        </record>
+
+        <record id="software_requirement_jneuroml" model="tvbo.software_requirement">
+            <field name="name">jNeuroML</field>
+            <field name="package" ref="software_package_jneuroml"/>
+            <field name="description">Java-based toolchain for NeuroML/LEMS model validation, simulation, and export to multiple simulator backends including NEURON, NEST, and Brian2.</field>
+            <field name="role" ref="requirement_role_engine"/>
+            <field name="optional">false</field>
+            <field name="source_url">https://github.com/NeuroML/jNeuroML</field>
+            <field name="license">LGPL-3.0-only</field>
+            <field name="dataLocation">database/software/jNeuroML.yaml</field>
+            <field name="modules">{&quot;application_category&quot;:&quot;specification&quot;,&quot;author&quot;:[&quot;Padraig Gleeson&quot;],&quot;date_created&quot;:&quot;2014-01-01&quot;,&quot;development_status&quot;:&quot;active&quot;,&quot;interoperates_with&quot;:[&quot;NeuroML&quot;,&quot;LEMS&quot;,&quot;NEURON&quot;,&quot;NEST&quot;,&quot;Brian2&quot;],&quot;is_accessible_for_free&quot;:true,&quot;issue_tracker&quot;:&quot;https://github.com/NeuroML/jNeuroML/issues&quot;,&quot;keywords&quot;:[&quot;NeuroML&quot;,&quot;LEMS&quot;,&quot;validation&quot;,&quot;Java&quot;],&quot;maintainer&quot;:[&quot;Padraig Gleeson&quot;],&quot;model_paradigm&quot;:[&quot;conductance_based&quot;,&quot;spiking&quot;],&quot;programming_language&quot;:[&quot;Java&quot;],&quot;reference_publication&quot;:&quot;10.1098/rstb.2017.0380&quot;,&quot;runtime_platform&quot;:[&quot;JVM&quot;],&quot;scale&quot;:[&quot;channel&quot;,&quot;neuron&quot;,&quot;neural_network&quot;,&quot;network_system&quot;],&quot;tool_role&quot;:[&quot;simulator&quot;,&quot;specification_language&quot;]}</field>
+        </record>
+
+        <record id="software_package_jaxley" model="tvbo.software_package">
+            <field name="name">jaxley</field>
+            <field name="description">A differentiable simulator for biophysical neuron models built on JAX. Supports multi-compartment Hodgkin-Huxley models with automatic differentiation for gradient-based parameter inference.</field>
+            <field name="homepage">https://jaxley.readthedocs.io</field>
+            <field name="license">Apache-2.0</field>
+            <field name="repository">https://github.com/jaxleyverse/jaxley</field>
+            <field name="doi">10.7554/eLife.99205</field>
+            <field name="ecosystem">pypi</field>
+        </record>
+
+        <record id="software_requirement_jaxley" model="tvbo.software_requirement">
+            <field name="name">jaxley</field>
+            <field name="package" ref="software_package_jaxley"/>
+            <field name="description">A differentiable simulator for biophysical neuron models built on JAX. Supports multi-compartment Hodgkin-Huxley models with automatic differentiation for gradient-based parameter inference.</field>
+            <field name="role" ref="requirement_role_engine"/>
+            <field name="optional">false</field>
+            <field name="source_url">https://github.com/jaxleyverse/jaxley</field>
+            <field name="license">Apache-2.0</field>
+            <field name="dataLocation">database/software/jaxley.yaml</field>
+            <field name="modules">{&quot;application_category&quot;:&quot;simulation&quot;,&quot;author&quot;:[&quot;Michael Deistler&quot;,&quot;Jakob Macke&quot;],&quot;date_created&quot;:&quot;2024-01-01&quot;,&quot;development_status&quot;:&quot;active&quot;,&quot;funder&quot;:[&quot;University of T\u00fcbingen&quot;,&quot;DFG&quot;],&quot;interoperates_with&quot;:[&quot;NEURON&quot;,&quot;SWC morphologies&quot;],&quot;is_accessible_for_free&quot;:true,&quot;issue_tracker&quot;:&quot;https://github.com/jaxleyverse/jaxley/issues&quot;,&quot;keywords&quot;:[&quot;differentiable simulation&quot;,&quot;JAX&quot;,&quot;compartmental model&quot;,&quot;parameter inference&quot;],&quot;maintainer&quot;:[&quot;Michael Deistler&quot;],&quot;model_paradigm&quot;:[&quot;compartmental&quot;,&quot;conductance_based&quot;],&quot;programming_language&quot;:[&quot;Python&quot;],&quot;reference_publication&quot;:&quot;10.7554/eLife.99205&quot;,&quot;runtime_platform&quot;:[&quot;JAX&quot;],&quot;scale&quot;:[&quot;channel&quot;,&quot;neuron&quot;,&quot;network_system&quot;],&quot;tool_role&quot;:[&quot;simulator&quot;]}</field>
+        </record>
+
+        <record id="software_package_neuroconstruct" model="tvbo.software_package">
+            <field name="name">neuroConstruct</field>
+            <field name="description">A graphical tool for constructing and simulating biologically realistic 3D neuronal networks with morphologically detailed cells. Exports to NEURON, GENESIS, and NeuroML.</field>
+            <field name="homepage">http://www.neuroconstruct.org</field>
+            <field name="license">GPL-2.0-only</field>
+            <field name="repository">https://github.com/NeuralEnsemble/neuroConstruct</field>
+        </record>
+
+        <record id="software_requirement_neuroconstruct" model="tvbo.software_requirement">
+            <field name="name">neuroConstruct</field>
+            <field name="package" ref="software_package_neuroconstruct"/>
+            <field name="description">A graphical tool for constructing and simulating biologically realistic 3D neuronal networks with morphologically detailed cells. Exports to NEURON, GENESIS, and NeuroML.</field>
+            <field name="role" ref="requirement_role_runtime"/>
+            <field name="optional">false</field>
+            <field name="source_url">https://github.com/NeuralEnsemble/neuroConstruct</field>
+            <field name="license">GPL-2.0-only</field>
+            <field name="dataLocation">database/software/neuroConstruct.yaml</field>
+            <field name="modules">{&quot;application_category&quot;:&quot;model-building&quot;,&quot;author&quot;:[&quot;Padraig Gleeson&quot;],&quot;date_created&quot;:&quot;2007-01-01&quot;,&quot;development_status&quot;:&quot;inactive&quot;,&quot;interoperates_with&quot;:[&quot;NEURON&quot;,&quot;PyNN&quot;,&quot;NeuroML&quot;],&quot;is_accessible_for_free&quot;:true,&quot;keywords&quot;:[&quot;3D visualization&quot;,&quot;network builder&quot;,&quot;NEURON&quot;,&quot;GENESIS&quot;],&quot;maintainer&quot;:[&quot;Padraig Gleeson&quot;],&quot;model_paradigm&quot;:[&quot;compartmental&quot;],&quot;programming_language&quot;:[&quot;Java&quot;],&quot;reference_publication&quot;:&quot;10.1016/j.neuron.2007.08.015&quot;,&quot;runtime_platform&quot;:[&quot;NEURON&quot;,&quot;GENESIS&quot;],&quot;same_as&quot;:[&quot;https://scicrunch.org/resolver/RRID:SCR_002178&quot;],&quot;scale&quot;:[&quot;channel&quot;,&quot;neuron&quot;,&quot;network_system&quot;],&quot;tool_role&quot;:[&quot;workflow_framework&quot;]}</field>
+        </record>
+
+        <record id="software_package_neurolib" model="tvbo.software_package">
+            <field name="name">neurolib</field>
+            <field name="description">A simulation framework for whole-brain neural mass models with built-in exploration, optimization, and fMRI/EEG forward-model support on empirical connectomes.</field>
+            <field name="homepage">https://neurolib-dev.github.io/</field>
+            <field name="license">MIT</field>
+            <field name="repository">https://github.com/neurolib-dev/neurolib</field>
+            <field name="doi">10.1007/s12559-021-09931-9</field>
+            <field name="ecosystem">pypi</field>
+        </record>
+
+        <record id="software_requirement_neurolib" model="tvbo.software_requirement">
+            <field name="name">neurolib</field>
+            <field name="package" ref="software_package_neurolib"/>
+            <field name="description">A simulation framework for whole-brain neural mass models with built-in exploration, optimization, and fMRI/EEG forward-model support on empirical connectomes.</field>
+            <field name="role" ref="requirement_role_engine"/>
+            <field name="optional">false</field>
+            <field name="source_url">https://github.com/neurolib-dev/neurolib</field>
+            <field name="license">MIT</field>
+            <field name="dataLocation">database/software/neurolib.yaml</field>
+            <field name="modules">{&quot;application_category&quot;:&quot;simulation&quot;,&quot;author&quot;:[&quot;Caglar Cakan&quot;,&quot;Klaus Obermayer&quot;],&quot;date_created&quot;:&quot;2020-01-01&quot;,&quot;development_status&quot;:&quot;active&quot;,&quot;funder&quot;:[&quot;TU Berlin&quot;,&quot;DFG&quot;],&quot;interoperates_with&quot;:[&quot;TVB&quot;],&quot;is_accessible_for_free&quot;:true,&quot;issue_tracker&quot;:&quot;https://github.com/neurolib-dev/neurolib/issues&quot;,&quot;keywords&quot;:[&quot;whole-brain simulation&quot;,&quot;neural mass&quot;,&quot;exploration&quot;,&quot;optimization&quot;],&quot;maintainer&quot;:[&quot;Caglar Cakan&quot;],&quot;model_paradigm&quot;:[&quot;neural_mass&quot;,&quot;mean_field&quot;],&quot;programming_language&quot;:[&quot;Python&quot;],&quot;reference_publication&quot;:&quot;10.1007/s12559-021-09931-9&quot;,&quot;runtime_platform&quot;:[&quot;NumPy&quot;],&quot;scale&quot;:[&quot;neural_mass&quot;,&quot;network_system&quot;],&quot;tool_role&quot;:[&quot;simulator&quot;]}</field>
+        </record>
+
+        <record id="software_package_pyneuroml" model="tvbo.software_package">
+            <field name="name">pyNeuroML</field>
+            <field name="description">Python API and command-line tools for NeuroML/LEMS model creation, validation, visualization, and simulation via jNeuroML and direct simulator backends.</field>
+            <field name="homepage">https://docs.neuroml.org/Userdocs/Software/pyNeuroML.html</field>
+            <field name="license">LGPL-3.0-only</field>
+            <field name="repository">https://github.com/NeuroML/pyNeuroML</field>
+            <field name="ecosystem">pypi</field>
+        </record>
+
+        <record id="software_requirement_pyneuroml" model="tvbo.software_requirement">
+            <field name="name">pyNeuroML</field>
+            <field name="package" ref="software_package_pyneuroml"/>
+            <field name="description">Python API and command-line tools for NeuroML/LEMS model creation, validation, visualization, and simulation via jNeuroML and direct simulator backends.</field>
+            <field name="role" ref="requirement_role_runtime"/>
+            <field name="optional">false</field>
+            <field name="source_url">https://github.com/NeuroML/pyNeuroML</field>
+            <field name="license">LGPL-3.0-only</field>
+            <field name="dataLocation">database/software/pyNeuroML.yaml</field>
+            <field name="modules">{&quot;application_category&quot;:&quot;specification&quot;,&quot;author&quot;:[&quot;Padraig Gleeson&quot;],&quot;date_created&quot;:&quot;2016-01-01&quot;,&quot;development_status&quot;:&quot;active&quot;,&quot;interoperates_with&quot;:[&quot;NeuroML&quot;,&quot;LEMS&quot;,&quot;jNeuroML&quot;,&quot;NEURON&quot;,&quot;NEST&quot;],&quot;is_accessible_for_free&quot;:true,&quot;issue_tracker&quot;:&quot;https://github.com/NeuroML/pyNeuroML/issues&quot;,&quot;keywords&quot;:[&quot;NeuroML&quot;,&quot;Python API&quot;,&quot;model analysis&quot;,&quot;visualization&quot;],&quot;maintainer&quot;:[&quot;Padraig Gleeson&quot;],&quot;model_paradigm&quot;:[&quot;conductance_based&quot;,&quot;spiking&quot;],&quot;programming_language&quot;:[&quot;Python&quot;],&quot;reference_publication&quot;:&quot;10.1098/rstb.2017.0380&quot;,&quot;runtime_platform&quot;:[&quot;Python&quot;],&quot;scale&quot;:[&quot;channel&quot;,&quot;neuron&quot;,&quot;neural_network&quot;,&quot;network_system&quot;],&quot;tool_role&quot;:[&quot;workflow_framework&quot;]}</field>
+        </record>
+
+        <record id="software_package_pynn_genn" model="tvbo.software_package">
+            <field name="name">pynn_genn</field>
+            <field name="description">PyNN interface for the GeNN GPU simulator, enabling PyNN models to run on NVIDIA GPUs via the GeNN backend.</field>
+            <field name="license">GPL-2.0-only</field>
+            <field name="repository">https://github.com/genn-team/pynn_genn</field>
+            <field name="ecosystem">pypi</field>
+        </record>
+
+        <record id="software_requirement_pynn_genn" model="tvbo.software_requirement">
+            <field name="name">pynn_genn</field>
+            <field name="package" ref="software_package_pynn_genn"/>
+            <field name="description">PyNN interface for the GeNN GPU simulator, enabling PyNN models to run on NVIDIA GPUs via the GeNN backend.</field>
+            <field name="role" ref="requirement_role_runtime"/>
+            <field name="optional">false</field>
+            <field name="source_url">https://github.com/genn-team/pynn_genn</field>
+            <field name="license">GPL-2.0-only</field>
+            <field name="dataLocation">database/software/pynn_genn.yaml</field>
+            <field name="modules">{&quot;application_category&quot;:&quot;interface&quot;,&quot;author&quot;:[&quot;James Turner&quot;,&quot;Thomas Nowotny&quot;],&quot;date_created&quot;:&quot;2020-01-01&quot;,&quot;development_status&quot;:&quot;active&quot;,&quot;interoperates_with&quot;:[&quot;PyNN&quot;,&quot;GeNN&quot;],&quot;is_accessible_for_free&quot;:true,&quot;issue_tracker&quot;:&quot;https://github.com/genn-team/pynn_genn/issues&quot;,&quot;keywords&quot;:[&quot;PyNN&quot;,&quot;GeNN&quot;,&quot;GPU backend&quot;],&quot;maintainer&quot;:[&quot;University of Sussex&quot;],&quot;model_paradigm&quot;:[&quot;spiking&quot;],&quot;programming_language&quot;:[&quot;Python&quot;],&quot;runtime_platform&quot;:[&quot;CUDA&quot;],&quot;scale&quot;:[&quot;neuron&quot;,&quot;neural_network&quot;,&quot;network_system&quot;],&quot;tool_role&quot;:[&quot;workflow_framework&quot;]}</field>
+        </record>
+
+        <record id="software_package_spynnaker" model="tvbo.software_package">
+            <field name="name">sPyNNaker</field>
+            <field name="description">Software stack enabling PyNN models to execute on the SpiNNaker neuromorphic computing platform. Translates PyNN network descriptions into configurations for SpiNNaker&apos;s many-core ARM processors.</field>
+            <field name="homepage">https://spinnakermanchester.github.io</field>
+            <field name="license">GPL-3.0-only</field>
+            <field name="repository">https://github.com/SpiNNakerManchester/sPyNNaker</field>
+        </record>
+
+        <record id="software_requirement_spynnaker" model="tvbo.software_requirement">
+            <field name="name">sPyNNaker</field>
+            <field name="package" ref="software_package_spynnaker"/>
+            <field name="description">Software stack enabling PyNN models to execute on the SpiNNaker neuromorphic computing platform. Translates PyNN network descriptions into configurations for SpiNNaker&apos;s many-core ARM processors.</field>
+            <field name="role" ref="requirement_role_runtime"/>
+            <field name="optional">false</field>
+            <field name="source_url">https://github.com/SpiNNakerManchester/sPyNNaker</field>
+            <field name="license">GPL-3.0-only</field>
+            <field name="dataLocation">database/software/sPyNNaker.yaml</field>
+            <field name="modules">{&quot;application_category&quot;:&quot;simulation&quot;,&quot;author&quot;:[&quot;Andrew Rowley&quot;,&quot;Steve Furber&quot;],&quot;date_created&quot;:&quot;2015-01-01&quot;,&quot;development_status&quot;:&quot;active&quot;,&quot;funder&quot;:[&quot;EU HBP&quot;,&quot;EPSRC&quot;,&quot;University of Manchester&quot;],&quot;interoperates_with&quot;:[&quot;PyNN&quot;],&quot;is_accessible_for_free&quot;:true,&quot;issue_tracker&quot;:&quot;https://github.com/SpiNNakerManchester/sPyNNaker/issues&quot;,&quot;keywords&quot;:[&quot;SpiNNaker&quot;,&quot;neuromorphic&quot;,&quot;PyNN&quot;,&quot;real-time&quot;],&quot;maintainer&quot;:[&quot;University of Manchester&quot;],&quot;model_paradigm&quot;:[&quot;spiking&quot;],&quot;programming_language&quot;:[&quot;Python&quot;],&quot;reference_publication&quot;:&quot;10.3389/fnins.2018.00816&quot;,&quot;runtime_platform&quot;:[&quot;SpiNNaker hardware&quot;],&quot;scale&quot;:[&quot;neuron&quot;,&quot;neural_network&quot;,&quot;network_system&quot;],&quot;tool_role&quot;:[&quot;backend_runtime&quot;]}</field>
+        </record>
+
+        <record id="software_environment_tvbo_catalog" model="tvbo.software_environment">
+            <field name="name">TVBO Software Catalog</field>
+            <field name="label">TVBO Software Catalog</field>
+            <field name="description">Auto-generated environment aggregating software requirements from tvbo/database/software.</field>
+            <field name="requirements" eval="[(6, 0, [ref('software_requirement_auto_07p'), ref('software_requirement_arbor'), ref('software_requirement_bsb'), ref('software_requirement_bifurcationkit_jl'), ref('software_requirement_bluepyopt'), ref('software_requirement_brainbrowser'), ref('software_requirement_brainpy'), ref('software_requirement_brainsimii'), ref('software_requirement_brainstorm'), ref('software_requirement_brian2'), ref('software_requirement_carlsim'), ref('software_requirement_coreneuron'), ref('software_requirement_cxsystem2'), ref('software_requirement_differentialequations_jl'), ref('software_requirement_eeglab'), ref('software_requirement_elephant'), ref('software_requirement_fastdmf'), ref('software_requirement_fieldtrip'), ref('software_requirement_genesis'), ref('software_requirement_genn'), ref('software_requirement_hnn_core'), ref('software_requirement_lems'), ref('software_requirement_lfpy'), ref('software_requirement_mcell'), ref('software_requirement_mne_python'), ref('software_requirement_moose'), ref('software_requirement_matcont'), ref('software_requirement_modeldb'), ref('software_requirement_nest'), ref('software_requirement_neuron'), ref('software_requirement_nwb'), ref('software_requirement_nengo'), ref('software_requirement_neo'), ref('software_requirement_netpyne'), ref('software_requirement_networkdynamics_jl'), ref('software_requirement_neuroml'), ref('software_requirement_neuroblox_jl'), ref('software_requirement_neurofitter'), ref('software_requirement_nineml'), ref('software_requirement_open_source_brain'), ref('software_requirement_openworm'), ref('software_requirement_psics'), ref('software_requirement_pynn'), ref('software_requirement_pyrates'), ref('software_requirement_pyrho'), ref('software_requirement_sonata'), ref('software_requirement_spm'), ref('software_requirement_steps'), ref('software_requirement_snudda'), ref('software_requirement_spikeinterface'), ref('software_requirement_spinecreator'), ref('software_requirement_spineml'), ref('software_requirement_tvb_o'), ref('software_requirement_tvb_optim'), ref('software_requirement_tvb'), ref('software_requirement_jneuroml'), ref('software_requirement_jaxley'), ref('software_requirement_neuroconstruct'), ref('software_requirement_neurolib'), ref('software_requirement_pyneuroml'), ref('software_requirement_pynn_genn'), ref('software_requirement_spynnaker')])]"/>
+        </record>
+
+    </data>
+</odoo>

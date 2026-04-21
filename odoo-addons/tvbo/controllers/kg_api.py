@@ -63,9 +63,12 @@ _KG_ENTITY_CONFIG = {
         'report': 'observation_models',
     },
     'atlas': {
-        'model': 'tvbo.atlas',
+        'model': 'tvbo.brain_atlas',
         'thumbnail': 'atlases',
         'report': 'atlases',
+    },
+    'software': {
+        'model': 'tvbo.software_requirement',
     },
 }
 
@@ -94,6 +97,24 @@ _KG_LIST_FIELD_TYPES = {
 }
 
 _KG_DETAIL_FIELD_TYPES = _KG_LIST_FIELD_TYPES | {'one2many', 'many2many'}
+
+
+def _get_model_or_none(model_name):
+    """Return sudo model proxy or None if the model is unavailable."""
+    try:
+        return request.env[model_name].sudo()
+    except Exception as e:
+        _logger.warning('KG model unavailable: %s (%s)', model_name, e)
+        return None
+
+
+def _iter_available_entity_configs():
+    """Yield (entity_type, cfg, model) for registered and available KG entities."""
+    for entity_type, cfg in _KG_ENTITY_CONFIG.items():
+        model = _get_model_or_none(cfg['model'])
+        if model is None:
+            continue
+        yield entity_type, cfg, model
 
 
 def _safe_asset_name(name: str) -> str:
@@ -355,9 +376,8 @@ class KnowledgeGraphAPI(http.Controller):
         """Get browser schema configuration."""
         searchable_fields = {'name', 'label', 'title', 'description'}
 
-        for cfg in _KG_ENTITY_CONFIG.values():
+        for _, cfg, model in _iter_available_entity_configs():
             model_name = cfg['model']
-            model = request.env[model_name].sudo()
             for field_name in _get_model_field_names(model_name, include_relations=False):
                 field = model._fields.get(field_name)
                 if not field:
@@ -381,9 +401,8 @@ class KnowledgeGraphAPI(http.Controller):
         class names, descriptions, and filterable properties with types.
         """
         result = {}
-        for type_key, cfg in _KG_ENTITY_CONFIG.items():
+        for type_key, cfg, model in _iter_available_entity_configs():
             model_name = cfg['model']
-            model = request.env[model_name].sudo()
             properties = {}
             for field_name, field in model._fields.items():
                 if field_name in _KG_INTERNAL_FIELDS:
@@ -414,13 +433,16 @@ class KnowledgeGraphAPI(http.Controller):
             if single_entity:
                 if single_entity not in _KG_ENTITY_CONFIG:
                     return json_response({'error': f'Unknown entity: {single_entity}'}, 400)
+                model_name = _KG_ENTITY_CONFIG[single_entity]['model']
+                if _get_model_or_none(model_name) is None:
+                    return json_response({'error': f'Entity model unavailable: {model_name}'}, 503)
                 return json_response(self._get_entity_items(single_entity))
 
             include_ontology = kw.get('include_ontology', 'true').lower() != 'false'
             ontology_query = kw.get('ontology_query', '')
 
             data = []
-            for entity_type in _KG_ENTITY_CONFIG:
+            for entity_type, _, _ in _iter_available_entity_configs():
                 _logger.info(f"Fetching {entity_type}...")
                 data.extend(self._get_entity_items(entity_type))
                 _logger.info(f"Total items: {len(data)}")
@@ -487,6 +509,8 @@ class KnowledgeGraphAPI(http.Controller):
     def _get_entity_items(self, entity_type):
         """Fetch and serialize all records for one KG entity type."""
         cfg = _KG_ENTITY_CONFIG[entity_type]
+        if _get_model_or_none(cfg['model']) is None:
+            return []
         rows = _safe_search_read(
             cfg['model'],
             _get_model_field_names(cfg['model'], include_relations=False),
@@ -495,7 +519,9 @@ class KnowledgeGraphAPI(http.Controller):
 
     def _expand_relations(self, model_name, row):
         """Expand x2many fields into nested related records for detail endpoints."""
-        model = request.env[model_name].sudo()
+        model = _get_model_or_none(model_name)
+        if model is None:
+            return {}
         expanded = {}
 
         for field_name, field in model._fields.items():
@@ -525,6 +551,8 @@ class KnowledgeGraphAPI(http.Controller):
         """Fetch one record with schema-driven detail serialization."""
         cfg = _KG_ENTITY_CONFIG[entity_type]
         model_name = cfg['model']
+        if _get_model_or_none(model_name) is None:
+            return None
         rows = _safe_search_read(
             model_name,
             _get_model_field_names(model_name, include_relations=True),
@@ -559,6 +587,9 @@ class KnowledgeGraphAPI(http.Controller):
 
     def _get_observations(self):
         return self._get_entity_items('observation')
+
+    def _get_software(self):
+        return self._get_entity_items('software')
 
     # ===================
     # Ontology concepts
@@ -643,6 +674,14 @@ class KnowledgeGraphAPI(http.Controller):
     @http.route('/tvbo/api/kg/observation/<int:record_id>', type='http', auth='public', methods=['GET'], csrf=False)
     def get_observation_detail(self, record_id, **kw):
         data = self._get_entity_detail('observation', record_id)
+        if not data:
+            return json_response({"error": "Not found"}, 404)
+
+        return json_response(data)
+
+    @http.route('/tvbo/api/kg/software/<int:record_id>', type='http', auth='public', methods=['GET'], csrf=False)
+    def get_software_detail(self, record_id, **kw):
+        data = self._get_entity_detail('software', record_id)
         if not data:
             return json_response({"error": "Not found"}, 404)
 
@@ -800,7 +839,7 @@ class KnowledgeGraphAPI(http.Controller):
 
         # Add database items as nodes linked to their ontology classes
         db_items = []
-        for entity_type in _KG_ENTITY_CONFIG:
+        for entity_type, _, _ in _iter_available_entity_configs():
             db_items.extend(self._get_entity_items(entity_type))
 
         # Map database items to nodes and create links to ontology

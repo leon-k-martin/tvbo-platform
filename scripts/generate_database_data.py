@@ -38,6 +38,182 @@ def escape_xml(text: str) -> str:
             .replace("'", '&apos;'))
 
 
+def _as_string_list(value: Any) -> List[str]:
+    """Normalize scalar/list values to a compact list of strings."""
+    if value is None:
+        return []
+    if isinstance(value, list):
+        return [str(v).strip() for v in value if str(v).strip()]
+    s = str(value).strip()
+    return [s] if s else []
+
+
+def _version_spec_from_data(data: Dict[str, Any]) -> str:
+    """Build a version specifier from raw metadata.
+
+    If a plain version is provided (e.g. 1.2.3), convert to ==1.2.3.
+    """
+    if data.get('version_spec'):
+        return str(data['version_spec'])
+
+    if not data.get('version'):
+        return ''
+
+    raw = str(data['version']).strip()
+    if not raw:
+        return ''
+
+    operators = ('==', '>=', '<=', '!=', '~=', '>', '<')
+    if raw.startswith(operators) or ',' in raw:
+        return raw
+    return f'=={raw}'
+
+
+def _software_role_ref(data: Dict[str, Any]) -> str:
+    """Map software metadata to requirement role XML refs."""
+    if data.get('optional'):
+        return 'requirement_role_optional'
+
+    tool_roles = {r.lower() for r in _as_string_list(data.get('tool_role'))}
+    app_category = str(data.get('application_category', '')).lower()
+
+    if {'simulator', 'framework', 'continuation_tool'} & tool_roles:
+        return 'requirement_role_engine'
+
+    if app_category == 'analysis' or 'analysis' in tool_roles:
+        return 'requirement_role_analysis'
+
+    return 'requirement_role_runtime'
+
+
+def generate_software_data_xml(yaml_files: List[Path], output_file: Path):
+    """Generate XML data for software packages and requirements.
+
+    This ingests tvbo/database/software/*.yaml entries into:
+    - tvbo.software_package (identity metadata)
+    - tvbo.software_requirement (versioned requirements)
+    - one aggregate tvbo.software_environment containing all requirements
+    """
+    lines = [
+        '<?xml version="1.0" encoding="utf-8"?>',
+        '<odoo>',
+        '    <data noupdate="0">',
+        ''
+    ]
+
+    seen_ids = set()
+    requirement_refs = []
+
+    known_keys = {
+        'name', 'description', 'homepage', 'repository', 'doi', 'license',
+        'ecosystem', 'version', 'version_spec', 'optional'
+    }
+
+    for yaml_file in sorted(yaml_files):
+        try:
+            with open(yaml_file) as f:
+                data = yaml.safe_load(f)
+
+            if not isinstance(data, dict):
+                continue
+
+            tool_name = str(data.get('name', yaml_file.stem)).strip()
+            if not tool_name:
+                continue
+
+            base_id = sanitize_xml_id(tool_name)
+            xml_id = base_id
+            suffix = 2
+            while xml_id in seen_ids:
+                xml_id = f'{base_id}_{suffix}'
+                suffix += 1
+            seen_ids.add(xml_id)
+
+            package_id = f'software_package_{xml_id}'
+            requirement_id = f'software_requirement_{xml_id}'
+
+            description = str(data.get('description', '')).strip()
+            homepage = str(data.get('homepage', '')).strip()
+            repository = str(data.get('repository', '')).strip()
+            doi = str(data.get('doi', '')).strip()
+            license_name = str(data.get('license', '')).strip()
+            ecosystem = ', '.join(_as_string_list(data.get('ecosystem')))
+
+            lines.append(f'        <record id="{package_id}" model="tvbo.software_package">')
+            lines.append(f'            <field name="name">{escape_xml(tool_name)}</field>')
+            if description:
+                lines.append(f'            <field name="description">{escape_xml(description)}</field>')
+            if homepage:
+                lines.append(f'            <field name="homepage">{escape_xml(homepage)}</field>')
+            if license_name:
+                lines.append(f'            <field name="license">{escape_xml(license_name)}</field>')
+            if repository:
+                lines.append(f'            <field name="repository">{escape_xml(repository)}</field>')
+            if doi:
+                lines.append(f'            <field name="doi">{escape_xml(doi)}</field>')
+            if ecosystem:
+                lines.append(f'            <field name="ecosystem">{escape_xml(ecosystem)}</field>')
+            lines.append('        </record>')
+            lines.append('')
+
+            lines.append(f'        <record id="{requirement_id}" model="tvbo.software_requirement">')
+            lines.append(f'            <field name="name">{escape_xml(tool_name)}</field>')
+            lines.append(f'            <field name="package" ref="{package_id}"/>')
+
+            if description:
+                lines.append(f'            <field name="description">{escape_xml(description)}</field>')
+
+            version_spec = _version_spec_from_data(data)
+            if version_spec:
+                lines.append(f'            <field name="version_spec">{escape_xml(version_spec)}</field>')
+
+            raw_version = str(data.get('version', '')).strip()
+            if raw_version:
+                lines.append(f'            <field name="version">{escape_xml(raw_version)}</field>')
+
+            role_ref = _software_role_ref(data)
+            if role_ref:
+                lines.append(f'            <field name="role" ref="{role_ref}"/>')
+
+            optional = bool(data.get('optional', False))
+            lines.append(f'            <field name="optional">{str(optional).lower()}</field>')
+
+            source_url = repository or homepage
+            if source_url:
+                lines.append(f'            <field name="source_url">{escape_xml(source_url)}</field>')
+
+            if license_name:
+                lines.append(f'            <field name="license">{escape_xml(license_name)}</field>')
+
+            lines.append(f'            <field name="dataLocation">database/software/{escape_xml(yaml_file.name)}</field>')
+
+            extra = {k: v for k, v in data.items() if k not in known_keys}
+            if extra:
+                extra_json = json.dumps(extra, ensure_ascii=True, sort_keys=True, separators=(',', ':'))
+                lines.append(f'            <field name="modules">{escape_xml(extra_json)}</field>')
+
+            lines.append('        </record>')
+            lines.append('')
+
+            requirement_refs.append(requirement_id)
+
+        except Exception as e:
+            print(f"✗ Error processing {yaml_file.name}: {e}")
+
+    if requirement_refs:
+        refs = ', '.join([f"ref('{rid}')" for rid in requirement_refs])
+        lines.append('        <record id="software_environment_tvbo_catalog" model="tvbo.software_environment">')
+        lines.append('            <field name="name">TVBO Software Catalog</field>')
+        lines.append('            <field name="label">TVBO Software Catalog</field>')
+        lines.append('            <field name="description">Auto-generated environment aggregating software requirements from tvbo/database/software.</field>')
+        lines.append(f'            <field name="requirements" eval="[(6, 0, [{refs}])]"/>')
+        lines.append('        </record>')
+        lines.append('')
+
+    lines.extend(['    </data>', '</odoo>'])
+    output_file.write_text('\n'.join(lines))
+
+
 def generate_dynamics_data_xml(yaml_files: List[Path], output_file: Path, model_type: str = "dynamics"):
     """Generate XML data file for general dynamics models (Julia models)."""
     lines = [
@@ -1437,6 +1613,16 @@ def main():
             generate_experiment_data_xml(yaml_files, output_file)
             data_files.append('data/database_experiments.xml')
             print(f"✓ Generated {output_file.name} with {len(yaml_files)} experiments")
+
+    # Process software tools and environments
+    software_dir = database_dir / 'software'
+    if software_dir.exists():
+        yaml_files = list(software_dir.glob('*.yaml'))
+        if yaml_files:
+            output_file = output_dir / 'database_software.xml'
+            generate_software_data_xml(yaml_files, output_file)
+            data_files.append('data/database_software.xml')
+            print(f"✓ Generated {output_file.name} with {len(yaml_files)} software tools")
 
     print()
     print(f"✓ Generated {len(data_files)} database data files")

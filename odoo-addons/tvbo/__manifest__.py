@@ -40,6 +40,7 @@
         'data/database_coupling_functions.xml',
         'data/database_observations.xml',
         'data/database_experiments.xml',
+        'data/database_software.xml',
         'data/website_config.xml',
         'views/website_templates.xml',
         'views/configurator_templates.xml',
