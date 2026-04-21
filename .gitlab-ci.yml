@@ -7,13 +7,39 @@ deploy-job:
     - kubectl apply -f tvboRunnerActions.yaml
     - kubectl rollout restart deployment/tvbo-odoo -n kube-system
     - |
+        set +e
         echo "Waiting for rollout to complete..."
         kubectl rollout status deployment/tvbo-odoo -n kube-system --timeout=300s
-        echo "Deployment complete."
-    - |
+        ROLLOUT_RC=$?
+        echo "Rollout exit code: $ROLLOUT_RC"
+
+        echo ""
+        echo "===== Pod status ====="
+        kubectl get pods -n kube-system -l app=tvbo-odoo -o wide
+
         POD=$(kubectl get pods -n kube-system -l app=tvbo-odoo \
-          -o jsonpath='{.items[0].metadata.name}')
-        echo "tvbo-odoo image: $(kubectl get pod "$POD" -n kube-system -o jsonpath='{.status.containerStatuses[0].imageID}')"
-        timeout 30 kubectl logs -f "$POD" -n kube-system || true
+          --sort-by=.metadata.creationTimestamp \
+          -o jsonpath='{.items[-1:].metadata.name}')
+        echo ""
+        echo "Most recent pod: $POD"
+        echo "Image: $(kubectl get pod "$POD" -n kube-system -o jsonpath='{.status.containerStatuses[0].imageID}')"
+
+        echo ""
+        echo "===== Pod describe (events at bottom) ====="
+        kubectl describe pod "$POD" -n kube-system | tail -50
+
+        echo ""
+        echo "===== Pod logs (current container, last 200 lines) ====="
+        kubectl logs "$POD" -n kube-system --tail=200 || true
+
+        echo ""
+        echo "===== Pod logs (previous container, if crashed) ====="
+        kubectl logs "$POD" -n kube-system --previous --tail=200 2>/dev/null || echo "(no previous container)"
+
+        echo ""
+        echo "===== Health check ====="
+        kubectl exec -n kube-system "$POD" -- curl -sS -o /dev/null -w "internal HTTP %{http_code}\n" http://localhost:8069/tvbo/api/kg/schema || true
+
+        exit $ROLLOUT_RC
   when: manual
 
