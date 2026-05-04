@@ -9,10 +9,13 @@ ENV LANG=C.UTF-8 \
     LC_ALL=C.UTF-8 \
     LANGUAGE=C.UTF-8
 
-# Install minimal system dependencies
+# Install uv (fast package installer) + minimal system dependencies
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+ENV UV_SYSTEM_PYTHON=1 \
+    UV_BREAK_SYSTEM_PACKAGES=1
+
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        python3-pip \
         libcairo2-dev \
         libpango1.0-dev \
         git \
@@ -23,7 +26,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # Install tvbo Python package (for model loading, not heavy compute)
-RUN pip3 install --break-system-packages --ignore-installed typing-extensions tvbo
+RUN uv pip install --ignore-installed typing-extensions tvbo
 
 # Copy the Odoo addons
 COPY odoo-addons /mnt/extra-addons
