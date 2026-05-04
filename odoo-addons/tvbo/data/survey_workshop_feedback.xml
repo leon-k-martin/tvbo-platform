@@ -1,0 +1,567 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo><data noupdate="1">
+
+    <!-- ============================================================
+         TVB / TVB-O / TVB-Optim Workshop Feedback Survey
+         FAIR Brain Data Science Bootcamp – Track 4, May 12–13 2026
+         ============================================================ -->
+    <record model="survey.survey" id="survey_tvbo_workshop_feedback">
+        <field name="title">Workshop Feedback: TVB / TVB-O / TVB-Optim (May 2026)</field>
+        <field name="access_token">c7a2e1f3-4b8d-4e96-a0f5-2d3c9b1e7a04</field>
+        <field name="survey_type">survey</field>
+        <field name="user_id" ref="base.user_admin"/>
+        <field name="access_mode">public</field>
+        <field name="users_can_go_back" eval="True"/>
+        <field name="questions_layout">page_per_section</field>
+        <field name="lang_ids" eval="False"/>
+        <field name="description" type="html">
+<p>Thank you for attending the <strong>TVB / TVB-O / TVB-Optim Workshop</strong> at the
+FAIR Brain Data Science Bootcamp (Charité – BIH, May 12–13 2026).</p>
+<p>Please take 5 minutes to share your feedback. Your responses help us improve future
+workshops. All answers are anonymous.</p>
+        </field>
+        <field name="description_done" type="html">
+<p>Thank you for your feedback! We really appreciate it.</p>
+<p>Stay in touch via the <a href="https://virtual-twin.github.io/tvbo">TVB-O website</a>
+or join the TVB community forum.</p>
+        </field>
+    </record>
+
+    <!-- ============================================================
+         Section 1: About you
+         ============================================================ -->
+    <record model="survey.question" id="ws_fb_s1">
+        <field name="survey_id" ref="survey_tvbo_workshop_feedback"/>
+        <field name="sequence">10</field>
+        <field name="title">About you</field>
+        <field name="is_page" eval="True"/>
+        <field name="question_type" eval="False"/>
+        <field name="description" type="html">
+<p>A few quick questions about your background so we can better interpret the feedback.</p>
+        </field>
+    </record>
+
+    <record model="survey.question" id="ws_fb_s1_q1">
+        <field name="survey_id" ref="survey_tvbo_workshop_feedback"/>
+        <field name="sequence">11</field>
+        <field name="title">What is your role / career stage?</field>
+        <field name="question_type">simple_choice</field>
+        <field name="constr_mandatory" eval="True"/>
+    </record>
+    <record model="survey.question.answer" id="ws_fb_s1_q1_a1">
+        <field name="question_id" ref="ws_fb_s1_q1"/>
+        <field name="sequence">1</field>
+        <field name="value">Bachelor / Master student</field>
+    </record>
+    <record model="survey.question.answer" id="ws_fb_s1_q1_a2">
+        <field name="question_id" ref="ws_fb_s1_q1"/>
+        <field name="sequence">2</field>
+        <field name="value">PhD student</field>
+    </record>
+    <record model="survey.question.answer" id="ws_fb_s1_q1_a3">
+        <field name="question_id" ref="ws_fb_s1_q1"/>
+        <field name="sequence">3</field>
+        <field name="value">Postdoctoral researcher</field>
+    </record>
+    <record model="survey.question.answer" id="ws_fb_s1_q1_a4">
+        <field name="question_id" ref="ws_fb_s1_q1"/>
+        <field name="sequence">4</field>
+        <field name="value">Faculty / Senior researcher</field>
+    </record>
+    <record model="survey.question.answer" id="ws_fb_s1_q1_a5">
+        <field name="question_id" ref="ws_fb_s1_q1"/>
+        <field name="sequence">5</field>
+        <field name="value">Clinician</field>
+    </record>
+    <record model="survey.question.answer" id="ws_fb_s1_q1_a6">
+        <field name="question_id" ref="ws_fb_s1_q1"/>
+        <field name="sequence">6</field>
+        <field name="value">Engineer / Data scientist (industry)</field>
+    </record>
+    <record model="survey.question.answer" id="ws_fb_s1_q1_a7">
+        <field name="question_id" ref="ws_fb_s1_q1"/>
+        <field name="sequence">7</field>
+        <field name="value">Other</field>
+    </record>
+
+    <record model="survey.question" id="ws_fb_s1_q2">
+        <field name="survey_id" ref="survey_tvbo_workshop_feedback"/>
+        <field name="sequence">12</field>
+        <field name="title">How would you describe your prior experience with The Virtual Brain (TVB)?</field>
+        <field name="question_type">simple_choice</field>
+        <field name="constr_mandatory" eval="True"/>
+    </record>
+    <record model="survey.question.answer" id="ws_fb_s1_q2_a1">
+        <field name="question_id" ref="ws_fb_s1_q2"/>
+        <field name="sequence">1</field>
+        <field name="value">No prior experience</field>
+    </record>
+    <record model="survey.question.answer" id="ws_fb_s1_q2_a2">
+        <field name="question_id" ref="ws_fb_s1_q2"/>
+        <field name="sequence">2</field>
+        <field name="value">Heard of it but never used it</field>
+    </record>
+    <record model="survey.question.answer" id="ws_fb_s1_q2_a3">
+        <field name="question_id" ref="ws_fb_s1_q2"/>
+        <field name="sequence">3</field>
+        <field name="value">Used TVB in a course or tutorial</field>
+    </record>
+    <record model="survey.question.answer" id="ws_fb_s1_q2_a4">
+        <field name="question_id" ref="ws_fb_s1_q2"/>
+        <field name="sequence">4</field>
+        <field name="value">Used TVB in my own research</field>
+    </record>
+    <record model="survey.question.answer" id="ws_fb_s1_q2_a5">
+        <field name="question_id" ref="ws_fb_s1_q2"/>
+        <field name="sequence">5</field>
+        <field name="value">I am an active TVB contributor</field>
+    </record>
+
+    <record model="survey.question" id="ws_fb_s1_q3">
+        <field name="survey_id" ref="survey_tvbo_workshop_feedback"/>
+        <field name="sequence">13</field>
+        <field name="title">How would you rate your Python programming skills?</field>
+        <field name="question_type">simple_choice</field>
+        <field name="constr_mandatory" eval="True"/>
+    </record>
+    <record model="survey.question.answer" id="ws_fb_s1_q3_a1">
+        <field name="question_id" ref="ws_fb_s1_q3"/>
+        <field name="sequence">1</field>
+        <field name="value">Beginner (I can run scripts)</field>
+    </record>
+    <record model="survey.question.answer" id="ws_fb_s1_q3_a2">
+        <field name="question_id" ref="ws_fb_s1_q3"/>
+        <field name="sequence">2</field>
+        <field name="value">Intermediate (I write my own functions and classes)</field>
+    </record>
+    <record model="survey.question.answer" id="ws_fb_s1_q3_a3">
+        <field name="question_id" ref="ws_fb_s1_q3"/>
+        <field name="sequence">3</field>
+        <field name="value">Advanced (I develop packages / contribute to open source)</field>
+    </record>
+
+    <!-- ============================================================
+         Section 2: Workshop sessions
+         ============================================================ -->
+    <record model="survey.question" id="ws_fb_s2">
+        <field name="survey_id" ref="survey_tvbo_workshop_feedback"/>
+        <field name="sequence">20</field>
+        <field name="title">Workshop sessions</field>
+        <field name="is_page" eval="True"/>
+        <field name="question_type" eval="False"/>
+        <field name="description" type="html">
+<p>Please rate each session on a scale from <strong>1 (poor)</strong> to
+<strong>5 (excellent)</strong>. Skip any session you did not attend.</p>
+        </field>
+    </record>
+
+    <!-- Rating matrix: sessions × quality -->
+    <record model="survey.question" id="ws_fb_s2_q1">
+        <field name="survey_id" ref="survey_tvbo_workshop_feedback"/>
+        <field name="sequence">21</field>
+        <field name="title">How would you rate the following sessions?</field>
+        <field name="question_type">matrix</field>
+        <field name="matrix_subtype">simple</field>
+        <field name="constr_mandatory" eval="False"/>
+    </record>
+    <!-- Columns (scale) -->
+    <record model="survey.question.answer" id="ws_fb_s2_q1_col1">
+        <field name="question_id" ref="ws_fb_s2_q1"/>
+        <field name="sequence">1</field>
+        <field name="value">1 – Poor</field>
+    </record>
+    <record model="survey.question.answer" id="ws_fb_s2_q1_col2">
+        <field name="question_id" ref="ws_fb_s2_q1"/>
+        <field name="sequence">2</field>
+        <field name="value">2</field>
+    </record>
+    <record model="survey.question.answer" id="ws_fb_s2_q1_col3">
+        <field name="question_id" ref="ws_fb_s2_q1"/>
+        <field name="sequence">3</field>
+        <field name="value">3 – OK</field>
+    </record>
+    <record model="survey.question.answer" id="ws_fb_s2_q1_col4">
+        <field name="question_id" ref="ws_fb_s2_q1"/>
+        <field name="sequence">4</field>
+        <field name="value">4</field>
+    </record>
+    <record model="survey.question.answer" id="ws_fb_s2_q1_col5">
+        <field name="question_id" ref="ws_fb_s2_q1"/>
+        <field name="sequence">5</field>
+        <field name="value">5 – Excellent</field>
+    </record>
+    <!-- Rows (sessions) -->
+    <record model="survey.question.answer" id="ws_fb_s2_q1_row1">
+        <field name="matrix_question_id" ref="ws_fb_s2_q1"/>
+        <field name="sequence">1</field>
+        <field name="value">Intro to The Virtual Brain and applications</field>
+    </record>
+    <record model="survey.question.answer" id="ws_fb_s2_q1_row2">
+        <field name="matrix_question_id" ref="ws_fb_s2_q1"/>
+        <field name="sequence">2</field>
+        <field name="value">Defining a FAIR brain network model (TVB-O)</field>
+    </record>
+    <record model="survey.question.answer" id="ws_fb_s2_q1_row3">
+        <field name="matrix_question_id" ref="ws_fb_s2_q1"/>
+        <field name="sequence">3</field>
+        <field name="value">Dynamical perspective and bifurcation analysis</field>
+    </record>
+    <record model="survey.question.answer" id="ws_fb_s2_q1_row4">
+        <field name="matrix_question_id" ref="ws_fb_s2_q1"/>
+        <field name="sequence">4</field>
+        <field name="value">Parameter exploration and optimization (TVB-Optim)</field>
+    </record>
+    <record model="survey.question.answer" id="ws_fb_s2_q1_row5">
+        <field name="matrix_question_id" ref="ws_fb_s2_q1"/>
+        <field name="sequence">5</field>
+        <field name="value">Stimulating the brain (VEPs / TMS)</field>
+    </record>
+    <record model="survey.question.answer" id="ws_fb_s2_q1_row6">
+        <field name="matrix_question_id" ref="ws_fb_s2_q1"/>
+        <field name="sequence">6</field>
+        <field name="value">Day 2 Mini Hackathon</field>
+    </record>
+
+    <record model="survey.question" id="ws_fb_s2_q2">
+        <field name="survey_id" ref="survey_tvbo_workshop_feedback"/>
+        <field name="sequence">22</field>
+        <field name="title">Which session did you find most valuable?</field>
+        <field name="question_type">simple_choice</field>
+        <field name="comments_allowed" eval="True"/>
+        <field name="comment_count_as_answer" eval="False"/>
+        <field name="comments_message">Tell us briefly why</field>
+        <field name="constr_mandatory" eval="False"/>
+    </record>
+    <record model="survey.question.answer" id="ws_fb_s2_q2_a1">
+        <field name="question_id" ref="ws_fb_s2_q2"/>
+        <field name="sequence">1</field>
+        <field name="value">Intro to TVB and applications</field>
+    </record>
+    <record model="survey.question.answer" id="ws_fb_s2_q2_a2">
+        <field name="question_id" ref="ws_fb_s2_q2"/>
+        <field name="sequence">2</field>
+        <field name="value">FAIR brain network model (TVB-O)</field>
+    </record>
+    <record model="survey.question.answer" id="ws_fb_s2_q2_a3">
+        <field name="question_id" ref="ws_fb_s2_q2"/>
+        <field name="sequence">3</field>
+        <field name="value">Dynamics and bifurcation analysis</field>
+    </record>
+    <record model="survey.question.answer" id="ws_fb_s2_q2_a4">
+        <field name="question_id" ref="ws_fb_s2_q2"/>
+        <field name="sequence">4</field>
+        <field name="value">Parameter optimization (TVB-Optim)</field>
+    </record>
+    <record model="survey.question.answer" id="ws_fb_s2_q2_a5">
+        <field name="question_id" ref="ws_fb_s2_q2"/>
+        <field name="sequence">5</field>
+        <field name="value">Brain stimulation (VEPs / TMS)</field>
+    </record>
+    <record model="survey.question.answer" id="ws_fb_s2_q2_a6">
+        <field name="question_id" ref="ws_fb_s2_q2"/>
+        <field name="sequence">6</field>
+        <field name="value">Mini Hackathon</field>
+    </record>
+
+    <record model="survey.question" id="ws_fb_s2_q3">
+        <field name="survey_id" ref="survey_tvbo_workshop_feedback"/>
+        <field name="sequence">23</field>
+        <field name="title">Was the pace of the workshop appropriate?</field>
+        <field name="question_type">simple_choice</field>
+        <field name="constr_mandatory" eval="True"/>
+    </record>
+    <record model="survey.question.answer" id="ws_fb_s2_q3_a1">
+        <field name="question_id" ref="ws_fb_s2_q3"/>
+        <field name="sequence">1</field>
+        <field name="value">Too slow</field>
+    </record>
+    <record model="survey.question.answer" id="ws_fb_s2_q3_a2">
+        <field name="question_id" ref="ws_fb_s2_q3"/>
+        <field name="sequence">2</field>
+        <field name="value">About right</field>
+    </record>
+    <record model="survey.question.answer" id="ws_fb_s2_q3_a3">
+        <field name="question_id" ref="ws_fb_s2_q3"/>
+        <field name="sequence">3</field>
+        <field name="value">Too fast</field>
+    </record>
+
+    <!-- ============================================================
+         Section 3: Tools and technical setup
+         ============================================================ -->
+    <record model="survey.question" id="ws_fb_s3">
+        <field name="survey_id" ref="survey_tvbo_workshop_feedback"/>
+        <field name="sequence">30</field>
+        <field name="title">Tools and technical setup</field>
+        <field name="is_page" eval="True"/>
+        <field name="question_type" eval="False"/>
+        <field name="description" type="html">
+<p>Questions about the software tools and technical environment used during the workshop.</p>
+        </field>
+    </record>
+
+    <record model="survey.question" id="ws_fb_s3_q1">
+        <field name="survey_id" ref="survey_tvbo_workshop_feedback"/>
+        <field name="sequence">31</field>
+        <field name="title">How did you run the workshop notebooks?</field>
+        <field name="question_type">multiple_choice</field>
+        <field name="constr_mandatory" eval="True"/>
+    </record>
+    <record model="survey.question.answer" id="ws_fb_s3_q1_a1">
+        <field name="question_id" ref="ws_fb_s3_q1"/>
+        <field name="sequence">1</field>
+        <field name="value">EBRAINS JupyterHub (cloud)</field>
+    </record>
+    <record model="survey.question.answer" id="ws_fb_s3_q1_a2">
+        <field name="question_id" ref="ws_fb_s3_q1"/>
+        <field name="sequence">2</field>
+        <field name="value">Local installation (uv / pip)</field>
+    </record>
+    <record model="survey.question.answer" id="ws_fb_s3_q1_a3">
+        <field name="question_id" ref="ws_fb_s3_q1"/>
+        <field name="sequence">3</field>
+        <field name="value">Provided container / Docker image</field>
+    </record>
+    <record model="survey.question.answer" id="ws_fb_s3_q1_a4">
+        <field name="question_id" ref="ws_fb_s3_q1"/>
+        <field name="sequence">4</field>
+        <field name="value">I could not get the notebooks running</field>
+    </record>
+
+    <record model="survey.question" id="ws_fb_s3_q2">
+        <field name="survey_id" ref="survey_tvbo_workshop_feedback"/>
+        <field name="sequence">32</field>
+        <field name="title">How easy was the technical setup (installation / EBRAINS access)?</field>
+        <field name="question_type">simple_choice</field>
+        <field name="constr_mandatory" eval="True"/>
+    </record>
+    <record model="survey.question.answer" id="ws_fb_s3_q2_a1">
+        <field name="question_id" ref="ws_fb_s3_q2"/>
+        <field name="sequence">1</field>
+        <field name="value">Very easy – no issues</field>
+    </record>
+    <record model="survey.question.answer" id="ws_fb_s3_q2_a2">
+        <field name="question_id" ref="ws_fb_s3_q2"/>
+        <field name="sequence">2</field>
+        <field name="value">Minor issues, resolved quickly</field>
+    </record>
+    <record model="survey.question.answer" id="ws_fb_s3_q2_a3">
+        <field name="question_id" ref="ws_fb_s3_q2"/>
+        <field name="sequence">3</field>
+        <field name="value">Significant issues that slowed me down</field>
+    </record>
+    <record model="survey.question.answer" id="ws_fb_s3_q2_a4">
+        <field name="question_id" ref="ws_fb_s3_q2"/>
+        <field name="sequence">4</field>
+        <field name="value">I was unable to complete the setup</field>
+    </record>
+
+    <record model="survey.question" id="ws_fb_s3_q3">
+        <field name="survey_id" ref="survey_tvbo_workshop_feedback"/>
+        <field name="sequence">33</field>
+        <field name="title">Please rate the following tools based on your workshop experience.</field>
+        <field name="question_type">matrix</field>
+        <field name="matrix_subtype">simple</field>
+        <field name="constr_mandatory" eval="False"/>
+    </record>
+    <!-- Columns -->
+    <record model="survey.question.answer" id="ws_fb_s3_q3_col1">
+        <field name="question_id" ref="ws_fb_s3_q3"/>
+        <field name="sequence">1</field>
+        <field name="value">1 – Poor</field>
+    </record>
+    <record model="survey.question.answer" id="ws_fb_s3_q3_col2">
+        <field name="question_id" ref="ws_fb_s3_q3"/>
+        <field name="sequence">2</field>
+        <field name="value">2</field>
+    </record>
+    <record model="survey.question.answer" id="ws_fb_s3_q3_col3">
+        <field name="question_id" ref="ws_fb_s3_q3"/>
+        <field name="sequence">3</field>
+        <field name="value">3 – OK</field>
+    </record>
+    <record model="survey.question.answer" id="ws_fb_s3_q3_col4">
+        <field name="question_id" ref="ws_fb_s3_q3"/>
+        <field name="sequence">4</field>
+        <field name="value">4</field>
+    </record>
+    <record model="survey.question.answer" id="ws_fb_s3_q3_col5">
+        <field name="question_id" ref="ws_fb_s3_q3"/>
+        <field name="sequence">5</field>
+        <field name="value">5 – Excellent</field>
+    </record>
+    <!-- Rows -->
+    <record model="survey.question.answer" id="ws_fb_s3_q3_row1">
+        <field name="matrix_question_id" ref="ws_fb_s3_q3"/>
+        <field name="sequence">1</field>
+        <field name="value">TVB (tvb-library / tvb-contrib)</field>
+    </record>
+    <record model="survey.question.answer" id="ws_fb_s3_q3_row2">
+        <field name="matrix_question_id" ref="ws_fb_s3_q3"/>
+        <field name="sequence">2</field>
+        <field name="value">TVB-O (ontology-driven specification)</field>
+    </record>
+    <record model="survey.question.answer" id="ws_fb_s3_q3_row3">
+        <field name="matrix_question_id" ref="ws_fb_s3_q3"/>
+        <field name="sequence">3</field>
+        <field name="value">TVB-Optim (gradient-based optimization)</field>
+    </record>
+    <record model="survey.question.answer" id="ws_fb_s3_q3_row4">
+        <field name="matrix_question_id" ref="ws_fb_s3_q3"/>
+        <field name="sequence">4</field>
+        <field name="value">EBRAINS JupyterHub environment</field>
+    </record>
+    <record model="survey.question.answer" id="ws_fb_s3_q3_row5">
+        <field name="matrix_question_id" ref="ws_fb_s3_q3"/>
+        <field name="sequence">5</field>
+        <field name="value">Workshop notebooks and documentation</field>
+    </record>
+
+    <!-- ============================================================
+         Section 4: Overall assessment
+         ============================================================ -->
+    <record model="survey.question" id="ws_fb_s4">
+        <field name="survey_id" ref="survey_tvbo_workshop_feedback"/>
+        <field name="sequence">40</field>
+        <field name="title">Overall assessment</field>
+        <field name="is_page" eval="True"/>
+        <field name="question_type" eval="False"/>
+    </record>
+
+    <record model="survey.question" id="ws_fb_s4_q1">
+        <field name="survey_id" ref="survey_tvbo_workshop_feedback"/>
+        <field name="sequence">41</field>
+        <field name="title">Overall, how would you rate this workshop?</field>
+        <field name="question_type">simple_choice</field>
+        <field name="constr_mandatory" eval="True"/>
+    </record>
+    <record model="survey.question.answer" id="ws_fb_s4_q1_a1">
+        <field name="question_id" ref="ws_fb_s4_q1"/>
+        <field name="sequence">1</field>
+        <field name="value">1 – Poor</field>
+    </record>
+    <record model="survey.question.answer" id="ws_fb_s4_q1_a2">
+        <field name="question_id" ref="ws_fb_s4_q1"/>
+        <field name="sequence">2</field>
+        <field name="value">2</field>
+    </record>
+    <record model="survey.question.answer" id="ws_fb_s4_q1_a3">
+        <field name="question_id" ref="ws_fb_s4_q1"/>
+        <field name="sequence">3</field>
+        <field name="value">3 – Satisfactory</field>
+    </record>
+    <record model="survey.question.answer" id="ws_fb_s4_q1_a4">
+        <field name="question_id" ref="ws_fb_s4_q1"/>
+        <field name="sequence">4</field>
+        <field name="value">4 – Good</field>
+    </record>
+    <record model="survey.question.answer" id="ws_fb_s4_q1_a5">
+        <field name="question_id" ref="ws_fb_s4_q1"/>
+        <field name="sequence">5</field>
+        <field name="value">5 – Excellent</field>
+    </record>
+
+    <record model="survey.question" id="ws_fb_s4_q2">
+        <field name="survey_id" ref="survey_tvbo_workshop_feedback"/>
+        <field name="sequence">42</field>
+        <field name="title">Would you recommend this workshop to a colleague?</field>
+        <field name="question_type">simple_choice</field>
+        <field name="constr_mandatory" eval="True"/>
+    </record>
+    <record model="survey.question.answer" id="ws_fb_s4_q2_a1">
+        <field name="question_id" ref="ws_fb_s4_q2"/>
+        <field name="sequence">1</field>
+        <field name="value">Definitely yes</field>
+    </record>
+    <record model="survey.question.answer" id="ws_fb_s4_q2_a2">
+        <field name="question_id" ref="ws_fb_s4_q2"/>
+        <field name="sequence">2</field>
+        <field name="value">Probably yes</field>
+    </record>
+    <record model="survey.question.answer" id="ws_fb_s4_q2_a3">
+        <field name="question_id" ref="ws_fb_s4_q2"/>
+        <field name="sequence">3</field>
+        <field name="value">Not sure</field>
+    </record>
+    <record model="survey.question.answer" id="ws_fb_s4_q2_a4">
+        <field name="question_id" ref="ws_fb_s4_q2"/>
+        <field name="sequence">4</field>
+        <field name="value">Probably not</field>
+    </record>
+    <record model="survey.question.answer" id="ws_fb_s4_q2_a5">
+        <field name="question_id" ref="ws_fb_s4_q2"/>
+        <field name="sequence">5</field>
+        <field name="value">Definitely not</field>
+    </record>
+
+    <record model="survey.question" id="ws_fb_s4_q3">
+        <field name="survey_id" ref="survey_tvbo_workshop_feedback"/>
+        <field name="sequence">43</field>
+        <field name="title">What did you like most about the workshop?</field>
+        <field name="question_type">text_box</field>
+        <field name="constr_mandatory" eval="False"/>
+    </record>
+
+    <record model="survey.question" id="ws_fb_s4_q4">
+        <field name="survey_id" ref="survey_tvbo_workshop_feedback"/>
+        <field name="sequence">44</field>
+        <field name="title">What could be improved for the next edition?</field>
+        <field name="question_type">text_box</field>
+        <field name="constr_mandatory" eval="False"/>
+    </record>
+
+    <record model="survey.question" id="ws_fb_s4_q5">
+        <field name="survey_id" ref="survey_tvbo_workshop_feedback"/>
+        <field name="sequence">45</field>
+        <field name="title">Which topics would you like to see added or expanded in future workshops?</field>
+        <field name="question_type">multiple_choice</field>
+        <field name="comments_allowed" eval="True"/>
+        <field name="comment_count_as_answer" eval="False"/>
+        <field name="comments_message">Other topics (please specify)</field>
+        <field name="constr_mandatory" eval="False"/>
+    </record>
+    <record model="survey.question.answer" id="ws_fb_s4_q5_a1">
+        <field name="question_id" ref="ws_fb_s4_q5"/>
+        <field name="sequence">1</field>
+        <field name="value">More clinical use-cases (DBS, Alzheimer's, epilepsy)</field>
+    </record>
+    <record model="survey.question.answer" id="ws_fb_s4_q5_a2">
+        <field name="question_id" ref="ws_fb_s4_q5"/>
+        <field name="sequence">2</field>
+        <field name="value">Deeper mathematical treatment of mean-field models</field>
+    </record>
+    <record model="survey.question.answer" id="ws_fb_s4_q5_a3">
+        <field name="question_id" ref="ws_fb_s4_q5"/>
+        <field name="sequence">3</field>
+        <field name="value">More on parameter fitting and Bayesian methods</field>
+    </record>
+    <record model="survey.question.answer" id="ws_fb_s4_q5_a4">
+        <field name="question_id" ref="ws_fb_s4_q5"/>
+        <field name="sequence">4</field>
+        <field name="value">Multi-scale and spiking network models</field>
+    </record>
+    <record model="survey.question.answer" id="ws_fb_s4_q5_a5">
+        <field name="question_id" ref="ws_fb_s4_q5"/>
+        <field name="sequence">5</field>
+        <field name="value">Integration with EEG / MEG source imaging</field>
+    </record>
+    <record model="survey.question.answer" id="ws_fb_s4_q5_a6">
+        <field name="question_id" ref="ws_fb_s4_q5"/>
+        <field name="sequence">6</field>
+        <field name="value">Longer hackathon / more time with own data</field>
+    </record>
+    <record model="survey.question.answer" id="ws_fb_s4_q5_a7">
+        <field name="question_id" ref="ws_fb_s4_q5"/>
+        <field name="sequence">7</field>
+        <field name="value">Advanced JAX / GPU computing for large-scale simulations</field>
+    </record>
+
+    <record model="survey.question" id="ws_fb_s4_q6">
+        <field name="survey_id" ref="survey_tvbo_workshop_feedback"/>
+        <field name="sequence">46</field>
+        <field name="title">Any other comments or questions for the organizers?</field>
+        <field name="question_type">text_box</field>
+        <field name="constr_mandatory" eval="False"/>
+    </record>
+
+</data></odoo>
