@@ -26,7 +26,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # Pre-install all tvbo core dependencies so the editable mount is instant
-RUN uv pip install --ignore-installed typing-extensions \
+RUN uv pip install --reinstall typing-extensions \
     scipy numpy pandas \
     pydantic linkml-runtime PyYAML \
     owlready2 rdflib \
