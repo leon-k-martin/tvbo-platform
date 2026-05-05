@@ -1,0 +1,322 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo><data noupdate="1">
+
+    <!-- ============================================================
+         TVB / TVB-O / TVB-Optim Pre-Workshop Survey
+         FAIR Brain Data Science Bootcamp – Track 4, May 12–13 2026
+         ============================================================ -->
+    <record model="survey.survey" id="survey_tvbo_preworkshop">
+        <field name="title">Pre-Workshop Survey: TVB / TVB-O / TVB-Optim (May 2026)</field>
+        <field name="access_token">a1b2c3d4-e5f6-7890-abcd-ef1234567890</field>
+        <field name="survey_type">survey</field>
+        <field name="user_id" ref="base.user_admin"/>
+        <field name="access_mode">public</field>
+        <field name="users_can_go_back" eval="True"/>
+        <field name="questions_layout">page_per_section</field>
+        <field name="lang_ids" eval="False"/>
+        <field name="description" type="html">
+<p>Welcome to the <strong>TVB / TVB-O / TVB-Optim Workshop</strong> at the
+FAIR Brain Data Science Bootcamp (Charité – BIH, May 12–13 2026).</p>
+<p>Please take 3 minutes to fill in this short pre-workshop survey. Your answers help us
+tailor the sessions to your background and expectations. All answers are anonymous.</p>
+        </field>
+        <field name="description_done" type="html">
+<p>Thank you! We look forward to seeing you at the workshop.</p>
+        </field>
+    </record>
+
+    <!-- ============================================================
+         Section 1: Background
+         ============================================================ -->
+    <record model="survey.question" id="ws_pre_s1">
+        <field name="survey_id" ref="survey_tvbo_preworkshop"/>
+        <field name="sequence">10</field>
+        <field name="title">Your Background</field>
+        <field name="is_page" eval="True"/>
+        <field name="question_type" eval="False"/>
+    </record>
+
+    <!-- Career stage -->
+    <record model="survey.question" id="ws_pre_s1_q1">
+        <field name="survey_id" ref="survey_tvbo_preworkshop"/>
+        <field name="sequence">11</field>
+        <field name="title">What is your career stage?</field>
+        <field name="question_type">simple_choice</field>
+        <field name="constr_mandatory" eval="True"/>
+    </record>
+    <record model="survey.question.answer" id="ws_pre_s1_q1_a1">
+        <field name="question_id" ref="ws_pre_s1_q1"/>
+        <field name="sequence">1</field>
+        <field name="value">Bachelor / Master student</field>
+    </record>
+    <record model="survey.question.answer" id="ws_pre_s1_q1_a2">
+        <field name="question_id" ref="ws_pre_s1_q1"/>
+        <field name="sequence">2</field>
+        <field name="value">PhD student</field>
+    </record>
+    <record model="survey.question.answer" id="ws_pre_s1_q1_a3">
+        <field name="question_id" ref="ws_pre_s1_q1"/>
+        <field name="sequence">3</field>
+        <field name="value">Postdoctoral researcher</field>
+    </record>
+    <record model="survey.question.answer" id="ws_pre_s1_q1_a4">
+        <field name="question_id" ref="ws_pre_s1_q1"/>
+        <field name="sequence">4</field>
+        <field name="value">Faculty / Senior researcher</field>
+    </record>
+    <record model="survey.question.answer" id="ws_pre_s1_q1_a5">
+        <field name="question_id" ref="ws_pre_s1_q1"/>
+        <field name="sequence">5</field>
+        <field name="value">Clinician</field>
+    </record>
+    <record model="survey.question.answer" id="ws_pre_s1_q1_a6">
+        <field name="question_id" ref="ws_pre_s1_q1"/>
+        <field name="sequence">6</field>
+        <field name="value">Engineer / Data scientist (industry)</field>
+    </record>
+    <record model="survey.question.answer" id="ws_pre_s1_q1_a7">
+        <field name="question_id" ref="ws_pre_s1_q1"/>
+        <field name="sequence">7</field>
+        <field name="value">Other</field>
+    </record>
+
+    <!-- ============================================================
+         Section 2: Experience with brain models
+         ============================================================ -->
+    <record model="survey.question" id="ws_pre_s2">
+        <field name="survey_id" ref="survey_tvbo_preworkshop"/>
+        <field name="sequence">20</field>
+        <field name="title">Experience with Brain Models</field>
+        <field name="is_page" eval="True"/>
+        <field name="question_type" eval="False"/>
+        <field name="description" type="html">
+<p>Please rate your level of experience with the following types of brain models.</p>
+        </field>
+    </record>
+
+    <!-- Large-scale whole-brain network modelling experience -->
+    <record model="survey.question" id="ws_pre_s2_q1">
+        <field name="survey_id" ref="survey_tvbo_preworkshop"/>
+        <field name="sequence">21</field>
+        <field name="title">Large-scale whole-brain network modelling (e.g. TVB, BrainPy, PyRates, NetPyNE at network scale)</field>
+        <field name="question_type">simple_choice</field>
+        <field name="constr_mandatory" eval="True"/>
+    </record>
+    <record model="survey.question.answer" id="ws_pre_s2_q1_a1">
+        <field name="question_id" ref="ws_pre_s2_q1"/>
+        <field name="sequence">1</field>
+        <field name="value">No experience</field>
+    </record>
+    <record model="survey.question.answer" id="ws_pre_s2_q1_a2">
+        <field name="question_id" ref="ws_pre_s2_q1"/>
+        <field name="sequence">2</field>
+        <field name="value">Beginner — read about it or attended a demo</field>
+    </record>
+    <record model="survey.question.answer" id="ws_pre_s2_q1_a3">
+        <field name="question_id" ref="ws_pre_s2_q1"/>
+        <field name="sequence">3</field>
+        <field name="value">Intermediate — ran simulations independently</field>
+    </record>
+    <record model="survey.question.answer" id="ws_pre_s2_q1_a4">
+        <field name="question_id" ref="ws_pre_s2_q1"/>
+        <field name="sequence">4</field>
+        <field name="value">Advanced — customised models or contributed to a modelling framework</field>
+    </record>
+
+    <!-- Small-scale spiking models experience -->
+    <record model="survey.question" id="ws_pre_s2_q2">
+        <field name="survey_id" ref="survey_tvbo_preworkshop"/>
+        <field name="sequence">22</field>
+        <field name="title">Small-scale spiking neural network models (e.g. NEST, Brian2, NEURON)</field>
+        <field name="question_type">simple_choice</field>
+        <field name="constr_mandatory" eval="True"/>
+    </record>
+    <record model="survey.question.answer" id="ws_pre_s2_q2_a1">
+        <field name="question_id" ref="ws_pre_s2_q2"/>
+        <field name="sequence">1</field>
+        <field name="value">No experience</field>
+    </record>
+    <record model="survey.question.answer" id="ws_pre_s2_q2_a2">
+        <field name="question_id" ref="ws_pre_s2_q2"/>
+        <field name="sequence">2</field>
+        <field name="value">Beginner — read about it or attended a demo</field>
+    </record>
+    <record model="survey.question.answer" id="ws_pre_s2_q2_a3">
+        <field name="question_id" ref="ws_pre_s2_q2"/>
+        <field name="sequence">3</field>
+        <field name="value">Intermediate — ran simulations independently</field>
+    </record>
+    <record model="survey.question.answer" id="ws_pre_s2_q2_a4">
+        <field name="question_id" ref="ws_pre_s2_q2"/>
+        <field name="sequence">4</field>
+        <field name="value">Advanced — customised models or contributed to a simulator</field>
+    </record>
+
+    <!-- ============================================================
+         Section 3: Coding and technical setup
+         ============================================================ -->
+    <record model="survey.question" id="ws_pre_s3">
+        <field name="survey_id" ref="survey_tvbo_preworkshop"/>
+        <field name="sequence">30</field>
+        <field name="title">Coding and Technical Setup</field>
+        <field name="is_page" eval="True"/>
+        <field name="question_type" eval="False"/>
+    </record>
+
+    <!-- Python experience -->
+    <record model="survey.question" id="ws_pre_s3_q1">
+        <field name="survey_id" ref="survey_tvbo_preworkshop"/>
+        <field name="sequence">31</field>
+        <field name="title">How would you describe your Python programming experience?</field>
+        <field name="question_type">simple_choice</field>
+        <field name="constr_mandatory" eval="True"/>
+    </record>
+    <record model="survey.question.answer" id="ws_pre_s3_q1_a1">
+        <field name="question_id" ref="ws_pre_s3_q1"/>
+        <field name="sequence">1</field>
+        <field name="value">No Python experience</field>
+    </record>
+    <record model="survey.question.answer" id="ws_pre_s3_q1_a2">
+        <field name="question_id" ref="ws_pre_s3_q1"/>
+        <field name="sequence">2</field>
+        <field name="value">Beginner — familiar with basic syntax and notebooks</field>
+    </record>
+    <record model="survey.question.answer" id="ws_pre_s3_q1_a3">
+        <field name="question_id" ref="ws_pre_s3_q1"/>
+        <field name="sequence">3</field>
+        <field name="value">Intermediate — write scripts and use scientific libraries (NumPy, SciPy, matplotlib)</field>
+    </record>
+    <record model="survey.question.answer" id="ws_pre_s3_q1_a4">
+        <field name="question_id" ref="ws_pre_s3_q1"/>
+        <field name="sequence">4</field>
+        <field name="value">Advanced — develop packages, use JAX/PyTorch, contribute to open-source</field>
+    </record>
+
+    <!-- Other coding languages -->
+    <record model="survey.question" id="ws_pre_s3_q2">
+        <field name="survey_id" ref="survey_tvbo_preworkshop"/>
+        <field name="sequence">32</field>
+        <field name="title">Which other programming languages do you use regularly? (select all that apply)</field>
+        <field name="question_type">multiple_choice</field>
+        <field name="constr_mandatory" eval="False"/>
+    </record>
+    <record model="survey.question.answer" id="ws_pre_s3_q2_a1">
+        <field name="question_id" ref="ws_pre_s3_q2"/>
+        <field name="sequence">1</field>
+        <field name="value">MATLAB</field>
+    </record>
+    <record model="survey.question.answer" id="ws_pre_s3_q2_a2">
+        <field name="question_id" ref="ws_pre_s3_q2"/>
+        <field name="sequence">2</field>
+        <field name="value">R</field>
+    </record>
+    <record model="survey.question.answer" id="ws_pre_s3_q2_a3">
+        <field name="question_id" ref="ws_pre_s3_q2"/>
+        <field name="sequence">3</field>
+        <field name="value">Julia</field>
+    </record>
+    <record model="survey.question.answer" id="ws_pre_s3_q2_a4">
+        <field name="question_id" ref="ws_pre_s3_q2"/>
+        <field name="sequence">4</field>
+        <field name="value">C / C++</field>
+    </record>
+    <record model="survey.question.answer" id="ws_pre_s3_q2_a5">
+        <field name="question_id" ref="ws_pre_s3_q2"/>
+        <field name="sequence">5</field>
+        <field name="value">None besides Python</field>
+    </record>
+
+    <!-- Operating system -->
+    <record model="survey.question" id="ws_pre_s3_q3">
+        <field name="survey_id" ref="survey_tvbo_preworkshop"/>
+        <field name="sequence">33</field>
+        <field name="title">Which operating system will you use during the workshop?</field>
+        <field name="question_type">simple_choice</field>
+        <field name="constr_mandatory" eval="True"/>
+    </record>
+    <record model="survey.question.answer" id="ws_pre_s3_q3_a1">
+        <field name="question_id" ref="ws_pre_s3_q3"/>
+        <field name="sequence">1</field>
+        <field name="value">macOS</field>
+    </record>
+    <record model="survey.question.answer" id="ws_pre_s3_q3_a2">
+        <field name="question_id" ref="ws_pre_s3_q3"/>
+        <field name="sequence">2</field>
+        <field name="value">Linux</field>
+    </record>
+    <record model="survey.question.answer" id="ws_pre_s3_q3_a3">
+        <field name="question_id" ref="ws_pre_s3_q3"/>
+        <field name="sequence">3</field>
+        <field name="value">Windows</field>
+    </record>
+    <record model="survey.question.answer" id="ws_pre_s3_q3_a4">
+        <field name="question_id" ref="ws_pre_s3_q3"/>
+        <field name="sequence">4</field>
+        <field name="value">I will use EBRAINS JupyterHub (cloud — no local install)</field>
+    </record>
+
+    <!-- ============================================================
+         Section 4: Expectations
+         ============================================================ -->
+    <record model="survey.question" id="ws_pre_s4">
+        <field name="survey_id" ref="survey_tvbo_preworkshop"/>
+        <field name="sequence">40</field>
+        <field name="title">Expectations</field>
+        <field name="is_page" eval="True"/>
+        <field name="question_type" eval="False"/>
+    </record>
+
+    <!-- What do you hope to learn -->
+    <record model="survey.question" id="ws_pre_s4_q1">
+        <field name="survey_id" ref="survey_tvbo_preworkshop"/>
+        <field name="sequence">41</field>
+        <field name="title">What are you most hoping to get out of the workshop? (select up to 3)</field>
+        <field name="question_type">multiple_choice</field>
+        <field name="constr_mandatory" eval="True"/>
+    </record>
+    <record model="survey.question.answer" id="ws_pre_s4_q1_a1">
+        <field name="question_id" ref="ws_pre_s4_q1"/>
+        <field name="sequence">1</field>
+        <field name="value">Understanding whole-brain network modelling concepts</field>
+    </record>
+    <record model="survey.question.answer" id="ws_pre_s4_q1_a2">
+        <field name="question_id" ref="ws_pre_s4_q1"/>
+        <field name="sequence">2</field>
+        <field name="value">Hands-on experience running whole-brain network simulations</field>
+    </record>
+    <record model="survey.question.answer" id="ws_pre_s4_q1_a3">
+        <field name="question_id" ref="ws_pre_s4_q1"/>
+        <field name="sequence">3</field>
+        <field name="value">Learning about FAIR / open-science practices for brain models</field>
+    </record>
+    <record model="survey.question.answer" id="ws_pre_s4_q1_a4">
+        <field name="question_id" ref="ws_pre_s4_q1"/>
+        <field name="sequence">4</field>
+        <field name="value">Bifurcation analysis and understanding model dynamics</field>
+    </record>
+    <record model="survey.question.answer" id="ws_pre_s4_q1_a5">
+        <field name="question_id" ref="ws_pre_s4_q1"/>
+        <field name="sequence">5</field>
+        <field name="value">Parameter optimisation / model fitting to empirical data</field>
+    </record>
+    <record model="survey.question.answer" id="ws_pre_s4_q1_a6">
+        <field name="question_id" ref="ws_pre_s4_q1"/>
+        <field name="sequence">6</field>
+        <field name="value">Brain stimulation modelling (VEPs / TMS)</field>
+    </record>
+    <record model="survey.question.answer" id="ws_pre_s4_q1_a7">
+        <field name="question_id" ref="ws_pre_s4_q1"/>
+        <field name="sequence">7</field>
+        <field name="value">Networking and meeting the community</field>
+    </record>
+
+    <!-- Free-text expectations -->
+    <record model="survey.question" id="ws_pre_s4_q2">
+        <field name="survey_id" ref="survey_tvbo_preworkshop"/>
+        <field name="sequence">42</field>
+        <field name="title">Anything specific you would like us to cover or address during the workshop?</field>
+        <field name="question_type">text_box</field>
+        <field name="constr_mandatory" eval="False"/>
+    </record>
+
+</data></odoo>

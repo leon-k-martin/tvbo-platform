@@ -23,7 +23,7 @@ workshops. All answers are anonymous.</p>
         <field name="description_done" type="html">
 <p>Thank you for your feedback! We really appreciate it.</p>
 <p>Stay in touch via the <a href="https://virtual-twin.github.io/tvbo">TVB-O website</a>
-or join the TVB community forum.</p>
+or join the brain network modelling community.</p>
         </field>
     </record>
 
@@ -87,7 +87,7 @@ or join the TVB community forum.</p>
     <record model="survey.question" id="ws_fb_s1_q2">
         <field name="survey_id" ref="survey_tvbo_workshop_feedback"/>
         <field name="sequence">12</field>
-        <field name="title">How would you describe your prior experience with The Virtual Brain (TVB)?</field>
+        <field name="title">How would you describe your prior experience with whole-brain network modelling?</field>
         <field name="question_type">simple_choice</field>
         <field name="constr_mandatory" eval="True"/>
     </record>
@@ -99,22 +99,22 @@ or join the TVB community forum.</p>
     <record model="survey.question.answer" id="ws_fb_s1_q2_a2">
         <field name="question_id" ref="ws_fb_s1_q2"/>
         <field name="sequence">2</field>
-        <field name="value">Heard of it but never used it</field>
+        <field name="value">Heard of it but never used a simulator</field>
     </record>
     <record model="survey.question.answer" id="ws_fb_s1_q2_a3">
         <field name="question_id" ref="ws_fb_s1_q2"/>
         <field name="sequence">3</field>
-        <field name="value">Used TVB in a course or tutorial</field>
+        <field name="value">Used a brain network modelling framework in a course or tutorial</field>
     </record>
     <record model="survey.question.answer" id="ws_fb_s1_q2_a4">
         <field name="question_id" ref="ws_fb_s1_q2"/>
         <field name="sequence">4</field>
-        <field name="value">Used TVB in my own research</field>
+        <field name="value">Applied brain network modelling in my own research</field>
     </record>
     <record model="survey.question.answer" id="ws_fb_s1_q2_a5">
         <field name="question_id" ref="ws_fb_s1_q2"/>
         <field name="sequence">5</field>
-        <field name="value">I am an active TVB contributor</field>
+        <field name="value">I actively contribute to a brain modelling framework</field>
     </record>
 
     <record model="survey.question" id="ws_fb_s1_q3">
@@ -194,7 +194,7 @@ or join the TVB community forum.</p>
     <record model="survey.question.answer" id="ws_fb_s2_q1_row1">
         <field name="matrix_question_id" ref="ws_fb_s2_q1"/>
         <field name="sequence">1</field>
-        <field name="value">Intro to The Virtual Brain and applications</field>
+        <field name="value">Intro to whole-brain network modelling and applications</field>
     </record>
     <record model="survey.question.answer" id="ws_fb_s2_q1_row2">
         <field name="matrix_question_id" ref="ws_fb_s2_q1"/>
@@ -235,7 +235,7 @@ or join the TVB community forum.</p>
     <record model="survey.question.answer" id="ws_fb_s2_q2_a1">
         <field name="question_id" ref="ws_fb_s2_q2"/>
         <field name="sequence">1</field>
-        <field name="value">Intro to TVB and applications</field>
+        <field name="value">Intro to whole-brain network modelling</field>
     </record>
     <record model="survey.question.answer" id="ws_fb_s2_q2_a2">
         <field name="question_id" ref="ws_fb_s2_q2"/>

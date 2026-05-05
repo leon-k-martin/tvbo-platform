@@ -8,7 +8,7 @@
     'author': 'Charité Universitätsmedizin Berlin',
     'website': 'https://github.com/virtual-twin/tvbo',
     'license': 'LGPL-3',
-    'depends': ['base', 'website', 'survey'],
+    'depends': ['base', 'website', 'survey', 'mass_mailing'],
     'data': [
         'security/ir.model.access.csv',
         'data/data_imaging_modality.xml',
@@ -42,6 +42,7 @@
         'data/database_observations.xml',
         'data/database_experiments.xml',
         'data/database_software.xml',
+        'data/survey_workshop_preworkshop.xml',
         'data/survey_workshop_feedback.xml',
         'data/website_config.xml',
         'views/website_templates.xml',
