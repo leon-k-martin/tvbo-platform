@@ -121,6 +121,14 @@ header.tvbo-header.o_header_affixed .navbar {
     display: none !important;
 }
 
+/* Collapse the survey cover header — Odoo 17 defaults it to 100vh which
+   creates a massive blank area when no cover image is set. */
+.o_survey_header {
+    min-height: unset !important;
+    height: auto !important;
+    padding: 3rem 0 !important;
+}
+
 /* Keep the survey progress bar and nav inside the survey page,
    above the website footer (z-index lower than header) */
 .o_survey_main {
