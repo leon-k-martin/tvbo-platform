@@ -113,6 +113,29 @@ header.tvbo-header.o_header_affixed .navbar {
 }
 
 /* ========================================
+   Survey Overrides
+   ======================================== */
+
+/* Hide the "Powered by Odoo" branding on surveys */
+.o_survey_brand_message {
+    display: none !important;
+}
+
+/* Keep the survey progress bar and nav inside the survey page,
+   above the website footer (z-index lower than header) */
+.o_survey_main {
+    position: relative;
+    z-index: auto;
+}
+
+/* Prevent the sticky survey bottom bar from overlapping the footer */
+.o_survey_form_footer {
+    position: relative !important;
+    z-index: auto !important;
+}
+
+
+/* ========================================
    General Page Styles
    ======================================== */
 

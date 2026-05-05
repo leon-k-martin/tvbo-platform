@@ -22,8 +22,6 @@ workshops. All answers are anonymous.</p>
         </field>
         <field name="description_done" type="html">
 <p>Thank you for your feedback! We really appreciate it.</p>
-<p>Stay in touch via the <a href="https://virtual-twin.github.io/tvbo">TVB-O website</a>
-or join the brain network modelling community.</p>
         </field>
     </record>
 
