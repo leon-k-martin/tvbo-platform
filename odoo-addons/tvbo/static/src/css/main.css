@@ -129,6 +129,25 @@ header.tvbo-header.o_header_affixed .navbar {
     padding: 3rem 0 !important;
 }
 
+/* The survey landing screen should start near the top of the page, not in the
+   middle of a full-height flex container. */
+.o_survey-fill-form[data-is-start-screen="true"] {
+    align-items: flex-start !important;
+}
+
+.o_survey_form:has(.o_survey-fill-form[data-is-start-screen="true"]) {
+    min-height: auto !important;
+}
+
+.o_survey_form:has(.o_survey-fill-form[data-is-start-screen="true"]) > .d-flex.flex-wrap.flex-md-nowrap.justify-content-between {
+    display: none !important;
+}
+
+.o_survey_form:has(.o_survey-fill-form[data-is-start-screen="true"]) .o_survey_start {
+    width: 100%;
+    padding-top: 1rem;
+}
+
 /* Keep the survey progress bar and nav inside the survey page,
    above the website footer (z-index lower than header) */
 .o_survey_main {
