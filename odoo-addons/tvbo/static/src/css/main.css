@@ -130,20 +130,25 @@ header.tvbo-header.o_header_affixed .navbar {
 }
 
 /* The survey landing screen should start near the top of the page, not in the
-   middle of a full-height flex container. */
-.o_survey-fill-form[data-is-start-screen="true"] {
+   middle of a full-height flex container. Odoo renders Python booleans as
+   "True"/"False" in data attributes. */
+.o_survey-fill-form[data-is-start-screen="true"],
+.o_survey-fill-form[data-is-start-screen="True"] {
     align-items: flex-start !important;
 }
 
-.o_survey_form:has(.o_survey-fill-form[data-is-start-screen="true"]) {
+.o_survey_form:has(.o_survey-fill-form[data-is-start-screen="true"]),
+.o_survey_form:has(.o_survey-fill-form[data-is-start-screen="True"]) {
     min-height: auto !important;
 }
 
-.o_survey_form:has(.o_survey-fill-form[data-is-start-screen="true"]) > .d-flex.flex-wrap.flex-md-nowrap.justify-content-between {
+.o_survey_form:has(.o_survey-fill-form[data-is-start-screen="true"]) > .d-flex.flex-wrap.flex-md-nowrap.justify-content-between,
+.o_survey_form:has(.o_survey-fill-form[data-is-start-screen="True"]) > .d-flex.flex-wrap.flex-md-nowrap.justify-content-between {
     display: none !important;
 }
 
-.o_survey_form:has(.o_survey-fill-form[data-is-start-screen="true"]) .o_survey_start {
+.o_survey_form:has(.o_survey-fill-form[data-is-start-screen="true"]) .o_survey_start,
+.o_survey_form:has(.o_survey-fill-form[data-is-start-screen="True"]) .o_survey_start {
     width: 100%;
     padding-top: 1rem;
 }
