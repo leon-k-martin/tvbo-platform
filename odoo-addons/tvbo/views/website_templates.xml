@@ -14,11 +14,11 @@
         </xpath>
     </template>
 
-    <!-- Hide Odoo's empty survey navigation header on the start screen.
-         The visible survey title and CTA are rendered by survey_fill_form_start. -->
-    <template id="tvbo_survey_start_without_empty_header" inherit_id="survey.survey_page_fill" name="TVBO Survey Start Without Empty Header">
+    <!-- Keep Odoo's survey header in the DOM: the start-screen submit code reads
+         lang_code from its hidden selector. Visual hiding is handled in CSS. -->
+    <template id="tvbo_survey_start_without_empty_header" inherit_id="survey.survey_page_fill" name="TVBO Survey Header DOM Preservation">
         <xpath expr="//t[@t-call='survey.survey_fill_header']" position="replace">
-            <t t-if="answer.state != 'new'" t-call="survey.survey_fill_header" />
+            <t t-call="survey.survey_fill_header" />
         </xpath>
     </template>
 
