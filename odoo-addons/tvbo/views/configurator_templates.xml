@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data>
-        <template id="model_configurator_template" name="Model Configurator">
+        <template id="model_configurator_template" name="Experiment Builder">
             <t t-call="website.layout">
                 <div id="wrap" class="oe_structure">
                     <!-- Load required JavaScript files -->
@@ -11,7 +11,7 @@
 
                     <div class="container-fluid" style="max-width: 1400px; margin: 0 auto; padding: 20px;">
                         <div class="header" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #e5e7eb;">
-                            <h1 style="margin: 0; color: #1f2937; font-size: 2rem;">Simulation Experiment Configurator</h1>
+                            <h1 style="margin: 0; color: #1f2937; font-size: 2rem;">Experiment Builder</h1>
                             <div style="display: flex; gap: 10px;">
                                 <button id="builderCopyPython" class="btn btn-secondary">Copy Python</button>
                                 <button id="builderDownloadYaml" class="btn btn-secondary">Download YAML</button>
@@ -155,8 +155,11 @@
                                 <div style="background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                                     <h5 class="mb-3" style="color: #1f2937;">General Configuration</h5>
 
-                                    <!-- Load Existing Experiment -->
-                                    <div class="row g-3 mb-4">
+                                    <!-- Load Existing Experiment (hidden: entry is now via the
+                                         Knowledge Graph "Open in Experiment Builder" deep link,
+                                         ?experiment=<id>. The select is kept for backward-compat
+                                         and is still wired in JS.) -->
+                                    <div class="row g-3 mb-4" style="display:none;">
                                         <div class="col-12">
                                             <div class="card" style="border: 2px dashed #d1d5db; background: #f9fafb;">
                                                 <div class="card-body">
@@ -766,47 +769,109 @@
                         const downloadBtn = document.getElementById('builderDownloadYaml');
                         const loadExperimentSelect = document.getElementById('loadExistingExperiment');
 
-                        // Handle loading existing experiment
-                        if (loadExperimentSelect) {
-                            loadExperimentSelect.addEventListener('change', async function(e) {
-                                const experimentId = e.target.value;
-                                if (!experimentId) return;
+                        // Reusable loader: hydrate the builder from a stored experiment.
+                        // Primary entry point is a ?experiment=&lt;id&gt; URL (so the Knowledge
+                        // Graph can deep-link straight into the builder); the legacy
+                        // dropdown, if present, just calls this too.
+                        window.loadExperimentById = async function(experimentId) {
+                            if (!experimentId) {
+                                if (window.setBaseSpec) window.setBaseSpec(null);
+                                if (window.updateLiveYaml) window.updateLiveYaml();
+                                return;
+                            }
+                            const spinner = document.getElementById('experimentLoadingSpinner');
+                            try {
+                                if (spinner) spinner.style.display = 'inline-block';
+                                if (window.initializeAllTabs) window.initializeAllTabs();
 
-                                const spinner = document.getElementById('experimentLoadingSpinner');
+                                const response = await fetch(`/tvbo/api/configurator/experiment/${experimentId}`);
+                                const result = await response.json();
+                                if (!result.success) {
+                                    console.error('[Configurator] Error loading experiment:', result.error);
+                                    return;
+                                }
+                                window.prefillExperiment(result.data);
+
+                                // Capture the server-validated, schema-shaped spec as the
+                                // assembly base (full-fidelity reproduce on download).
                                 try {
-                                    if (spinner) spinner.style.display = 'inline-block';
-                                    loadExperimentSelect.disabled = true;
-
-                                    // Ensure all tabs are initialized so DOM elements exist
-                                    if (window.initializeAllTabs) window.initializeAllTabs();
-
-                                    // Fetch deep-resolved experiment from API
-                                    const response = await fetch(`/tvbo/api/configurator/experiment/${experimentId}`);
-                                    const result = await response.json();
-
-                                    if (!result.success) {
-                                        console.error('[Configurator] Error loading experiment:', result.error);
-                                        alert('Error loading experiment: ' + result.error);
-                                        return;
+                                    const specResp = await fetch(`/tvbo/api/configurator/experiment/${experimentId}/spec`);
+                                    const specJson = await specResp.json();
+                                    if (window.setBaseSpec) {
+                                        window.setBaseSpec(specJson &amp;&amp; specJson.success ? specJson.data : null);
                                     }
+                                } catch (specErr) {
+                                    if (window.setBaseSpec) window.setBaseSpec(null);
+                                }
 
-                                    // Schema-driven prefill: NO hardcoded field mappings
-                                    window.prefillExperiment(result.data);
-
-                                    // Hydrate the schema-driven editor for advanced sections.
+                                // Hydrate the schema-driven editor (best-effort).
+                                try {
                                     if (window.SchemaEditor &amp;&amp; window.SchemaEditor.loadExperiment) {
                                         window.SchemaEditor.loadExperiment(result.data);
                                     }
-
-                                } catch (err) {
-                                    console.error('[Configurator] Error loading experiment:', err);
-                                    alert('Error loading experiment: ' + err.message);
-                                } finally {
-                                    if (spinner) spinner.style.display = 'none';
-                                    loadExperimentSelect.disabled = false;
+                                } catch (sdeErr) {
+                                    console.warn('[Configurator] SchemaEditor.loadExperiment failed:', sdeErr);
                                 }
+
+                                if (window.updateLiveYaml) window.updateLiveYaml();
+                            } catch (err) {
+                                console.error('[Configurator] Error loading experiment:', err);
+                            } finally {
+                                if (spinner) spinner.style.display = 'none';
+                            }
+                        };
+
+                        // Legacy dropdown (hidden) still works if present.
+                        if (loadExperimentSelect) {
+                            loadExperimentSelect.addEventListener('change', function(e) {
+                                window.loadExperimentById(e.target.value);
                             });
                         }
+
+                        // Seed a NEW experiment from a single building block (KG card
+                        // deep link, e.g. /tvbo/configurator?dynamics=&lt;id&gt;).
+                        window.seedFromBlock = async function(cls, recId, section) {
+                            try {
+                                const r = await fetch(`/tvbo/api/configurator/instances/${cls}/${recId}/spec`);
+                                const j = await r.json();
+                                if (!j.success) { console.warn('[Configurator] seed failed:', j.error, j.errors); return; }
+                                if (window.initializeAllTabs) window.initializeAllTabs();
+                                const base = { id: 1, label: (j.data.label || j.data.name || 'New Experiment') };
+                                if (section === 'observations') {
+                                    base.observations = {}; base.observations[j.data.name || 'observation'] = j.data;
+                                } else {
+                                    base[section] = j.data;
+                                }
+                                if (window.setBaseSpec) window.setBaseSpec(base);
+                                if (window.updateLiveYaml) window.updateLiveYaml();
+                            } catch (e) { console.warn('[Configurator] seed error:', e); }
+                        };
+
+                        // Knowledge Graph -> Experiment Builder deep link.
+                        // ?experiment=&lt;id&gt; loads a full experiment; ?dynamics=&lt;id&gt; (etc.)
+                        // seeds a new experiment from that building block.
+                        (function autoLoadFromUrl() {
+                            const sp = new URLSearchParams(window.location.search);
+                            let expId = sp.get('experiment');
+                            if (!expId &amp;&amp; window.location.hash) {
+                                const m = window.location.hash.match(/experiment=([^&amp;]+)/);
+                                if (m) expId = decodeURIComponent(m[1]);
+                            }
+                            if (expId) {
+                                if (loadExperimentSelect) { try { loadExperimentSelect.value = expId; } catch (e) {} }
+                                window.loadExperimentById(expId);
+                                return;
+                            }
+                            const SEED = {
+                                dynamics: ['Dynamics', 'dynamics'], network: ['Network', 'network'],
+                                coupling: ['Coupling', 'coupling'], observation: ['Observation', 'observations'],
+                                integration: ['Integrator', 'integration']
+                            };
+                            for (const param in SEED) {
+                                const v = sp.get(param);
+                                if (v) { window.seedFromBlock(SEED[param][0], v, SEED[param][1]); break; }
+                            }
+                        })();
 
                         // Initialize tabs manually
                         const tabs = document.querySelectorAll('[data-bs-toggle="tab"]');
@@ -937,7 +1002,7 @@
 
                                     if (data.result &amp;&amp; data.result.success) {
                                         alert(data.result.message || 'Model saved successfully!');
-                                        window.location.reload();
+                                        window.location.href = data.result.manage_url || '/my/models';
                                     } else {
                                         alert('Error: ' + (data.result ? data.result.error : 'Unknown error'));
                                     }
@@ -963,40 +1028,41 @@
 
                             const loadSelect = document.getElementById('loadExistingExperiment');
                             const experimentId = loadSelect ? loadSelect.value : null;
-                            const sdeHasState = window.SchemaEditor &amp;&amp; window.SchemaEditor.state &amp;&amp;
-                                                Object.keys(window.SchemaEditor.state).length > 0;
-
                             try {
-                                let yamlText = null;
+                                // Single source of truth: assemble a schema-shaped spec and
+                                // validate/serialise it server-side via tvbo.utils.pydantic_loader.
+                                let header = '';
+                                let yamlText = '';
 
-                                // Build the merged state dict (legacy collectors + SDE state).
-                                let mergedExp = null;
-                                if (typeof window.collectFullExperiment === 'function') {
-                                    try { mergedExp = window.collectFullExperiment() || {}; } catch (e) { mergedExp = {}; }
+                                if (typeof window.assembleExperimentSpec === 'function' &amp;&amp;
+                                    typeof window.serializeExperiment === 'function') {
+                                    const spec = window.assembleExperimentSpec();
+                                    const res = await window.serializeExperiment(spec);
+                                    if (res.ok) {
+                                        header = '# ✓ valid tvbo SimulationExperiment\n\n';
+                                        yamlText = res.yaml || '';
+                                    } else {
+                                        if (res.errors &amp;&amp; res.errors.length) {
+                                            header = '# ⚠ not valid yet:\n' +
+                                                res.errors.slice(0, 12).map(function (er) {
+                                                    return '#   - ' + ((er.loc || []).join('.') || '(root)') + ': ' + er.msg;
+                                                }).join('\n') + '\n\n';
+                                        } else {
+                                            header = '# ⚠ ' + (res.error || 'could not serialize') + '\n\n';
+                                        }
+                                        // Show the unvalidated assembled spec so progress stays visible.
+                                        try {
+                                            const raw = await fetch('/tvbo/api/configurator/experiment/dump_yaml', {
+                                                method: 'POST',
+                                                headers: { 'Content-Type': 'application/json' },
+                                                body: JSON.stringify({ jsonrpc: '2.0', method: 'call', id: 1, params: { experiment: spec } })
+                                            }).then(function (r) { return r.json(); });
+                                            if (raw &amp;&amp; raw.result &amp;&amp; raw.result.yaml) yamlText = raw.result.yaml;
+                                        } catch (rawErr) { /* ignore */ }
+                                    }
                                 }
-                                if (window.SchemaEditor &amp;&amp; window.SchemaEditor.mergeInto) {
-                                    mergedExp = window.SchemaEditor.mergeInto(mergedExp || {});
-                                }
 
-                                const mergedHasContent = mergedExp &amp;&amp; Object.keys(mergedExp).some(k =>
-                                    mergedExp[k] !== undefined &amp;&amp; mergedExp[k] !== null &amp;&amp; mergedExp[k] !== ''
-                                );
-
-                                if (sdeHasState || mergedHasContent) {
-                                    yamlText = await window.SchemaEditor.dumpYaml(mergedExp || {});
-                                }
-
-                                if (!yamlText &amp;&amp; experimentId) {
-                                    const r = await fetch(`/tvbo/api/configurator/experiment/${experimentId}/yaml_raw`);
-                                    if (r.ok) yamlText = await r.text();
-                                }
-
-                                if (!yamlText &amp;&amp; typeof initializePreviewTab === 'function') {
-                                    initializePreviewTab();
-                                    yamlText = previewYaml ? previewYaml.textContent : '';
-                                }
-
-                                targets.forEach(t => { t.textContent = yamlText || ''; });
+                                targets.forEach(function (t) { t.textContent = header + yamlText; });
                             } catch (e) {
                                 console.warn('[Configurator] Live YAML update failed:', e);
                             }

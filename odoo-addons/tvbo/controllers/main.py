@@ -13,18 +13,37 @@ class TVBOWebsite(http.Controller):
 
     @http.route('/tvbo/models', type='http', auth='public', website=True)
     def models(self, **kw):
-        """List all neural models."""
-        models = request.env['tvbo.dynamics'].sudo().search([])
+        """List neural models: the public ground-truth DB plus shared user models.
+
+        Private user-saved models are excluded so they never leak into the
+        public gallery — their owner finds them under /my/models instead.
+        """
+        private_ids = request.env['tvbo.model_share'].sudo().search(
+            [('visibility', '=', 'private')]).mapped('dynamics_id').ids
+        domain = [('id', 'not in', private_ids)] if private_ids else []
+        models = request.env['tvbo.dynamics'].sudo().search(domain)
         return request.render('tvbo.tvbo_models_list', {
             'models': models,
         })
 
     @http.route('/tvbo/model/<int:model_id>', type='http', auth='public', website=True)
     def model_detail(self, model_id, **kw):
-        """Show detailed neural model information."""
+        """Show detailed neural model information.
+
+        A user's private model is viewable only by its owner; ground-truth and
+        shared models are public.
+        """
         model = request.env['tvbo.dynamics'].sudo().browse(model_id)
+        if not model.exists():
+            return request.not_found()
+        share = request.env['tvbo.model_share'].sudo().search(
+            [('dynamics_id', '=', model_id)], limit=1)
+        if (share and share.visibility != 'shared'
+                and share.owner_user_id.id != request.env.user.id):
+            return request.not_found()
         return request.render('tvbo.tvbo_model_detail', {
             'model': model,
+            'share': share,
         })
 
     @http.route('/tvbo/integrators', type='http', auth='public', website=True)
@@ -55,3 +74,8 @@ class TVBOWebsite(http.Controller):
     def knowledge_graph(self, **kw):
         """Knowledge Graph Browser - API-powered search interface."""
         return request.render('tvbo.tvbo_kg_browser', {})
+
+    @http.route('/tvbo/agents', type='http', auth='public', website=True)
+    def agentic_coding(self, **kw):
+        """Agentic Coding with TVBO — high-level intro for all user groups."""
+        return request.render('tvbo.tvbo_agents_page', {})

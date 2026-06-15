@@ -178,7 +178,7 @@
                         <field name="key"/>
                         <field name="model"/>
                         <field name="sample"/>
-                        <field name="simulation_experiments"/>
+                        <field name="experiments"/>
                     </group>
                 </sheet>
             </form>
@@ -383,7 +383,6 @@
                         <field name="network"/>
                         <field name="coupling"/>
                         <field name="observations"/>
-                        <field name="derived_observations"/>
                         <field name="functions"/>
                         <field name="stimulation"/>
                         <field name="field_dynamics"/>

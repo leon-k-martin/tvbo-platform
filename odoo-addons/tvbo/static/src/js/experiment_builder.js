@@ -827,74 +827,195 @@
     };
   }
 
-  function copyPythonCode() {
-    const section = document.getElementById('builderContent');
-    if (!section) {
-      alert('Please configure a model first');
-      return;
-    }
+  // =========================================================================
+  // tvbo-native experiment assembly + server-side validation
+  // -------------------------------------------------------------------------
+  // The LinkML schema is the single source of truth. We assemble a
+  // schema-shaped SimulationExperiment (keyed-dict collections, bare top
+  // level) and let the server (tvbo.utils.pydantic_loader) validate it. The
+  // loaded library experiment — fetched already-validated from
+  // /experiment/<id>/spec — is the base; the builder overlays the user's
+  // edits on top, so "load + tweak + download" preserves full fidelity while
+  // "from scratch" still produces valid YAML.
+  // =========================================================================
 
-    const spec = collectSpec(section, { models: STATE.data || [] });
-    const pythonCode = generatePythonCode(spec);
+  function byId(id) { return document.getElementById(id); }
 
-    navigator.clipboard.writeText(pythonCode).then(() => {
-      alert('Python code copied to clipboard!');
-    }).catch(err => {
-      alert('Failed to copy: ' + err.message);
+  // [{name, ...}, ...] -> {name: {...}}; pass objects through unchanged.
+  function keyByName(list) {
+    if (!list) return undefined;
+    if (!Array.isArray(list)) return list;
+    const out = {};
+    list.forEach((item, i) => {
+      if (!item || typeof item !== 'object') return;
+      out[String(item.name || item.id || `item_${i}`)] = item;
     });
+    return Object.keys(out).length ? out : undefined;
   }
 
-  function downloadYaml() {
-    // Check if we have a loaded experiment - use server-side Pydantic serialization
-    const loadSelect = document.getElementById('loadExistingExperiment');
-    const experimentId = loadSelect ? loadSelect.value : null;
+  // Recursively drop undefined/null/'' and empty objects/arrays.
+  function pruneEmpty(value) {
+    if (Array.isArray(value)) {
+      return value.map(pruneEmpty).filter(v => v !== undefined && v !== null);
+    }
+    if (value && typeof value === 'object') {
+      const out = {};
+      Object.keys(value).forEach(k => {
+        const v = pruneEmpty(value[k]);
+        if (v === undefined || v === null || v === '') return;
+        if (typeof v === 'object' && !Array.isArray(v) && Object.keys(v).length === 0) return;
+        if (Array.isArray(v) && v.length === 0) return;
+        out[k] = v;
+      });
+      return out;
+    }
+    return value;
+  }
 
-    if (experimentId) {
-      // Fetch YAML from server. Try the strict Pydantic path first, fall
-      // back to the raw cleaned dump so the user always gets a complete
-      // file even if the DB record doesn't pass current Pydantic validation.
-      fetch(`/tvbo/api/configurator/experiment/${experimentId}/yaml`)
-        .then(r => r.ok ? r.text().then(t => ({ok: true, text: t, ct: r.headers.get('Content-Type') || ''})) : ({ok: false}))
-        .then(res => {
-          if (res && res.ok && res.ct.includes('yaml')) return res.text;
-          return fetch(`/tvbo/api/configurator/experiment/${experimentId}/yaml_raw`)
-            .then(r => r.text());
-        })
-        .then(yamlText => {
-          const blob = new Blob([yamlText], { type: 'text/yaml' });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = `experiment_${experimentId}.yaml`;
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          URL.revokeObjectURL(url);
-        })
-        .catch(err => alert('Download failed: ' + err.message));
-      return;
+  // Base spec captured from a loaded library experiment (already validated,
+  // schema-shaped). Set by the experiment loader; null when building anew.
+  function setBaseSpec(spec) { STATE.baseSpec = spec || null; }
+  window.setBaseSpec = setBaseSpec;
+
+  // Schema-shaped network from the Network tab. Custom mode -> number_of_nodes
+  // + conduction_speed parameter (node/edge detail is reproduced from the base
+  // spec when an experiment is loaded). Returns undefined when not configured.
+  function collectNetworkSchema() {
+    const cfg = collectNetworkConfig();
+    if (!cfg || cfg.mode === 'not configured' || cfg.mode === 'yaml') return undefined;
+    const net = {};
+    if (cfg.label) net.label = cfg.label;
+    const n = cfg.number_of_nodes || (cfg.nodes ? cfg.nodes.length : undefined);
+    if (n) net.number_of_nodes = n;
+    if (cfg.conduction_speed) {
+      net.parameters = { conduction_speed: { value: cfg.conduction_speed, unit: 'mm_per_ms' } };
+    }
+    return Object.keys(net).length ? net : undefined;
+  }
+
+  // Assemble a schema-shaped SimulationExperiment. Collections are emitted as
+  // keyed dicts. To preserve fidelity of a loaded experiment, collection
+  // sections it already provides are kept as-is unless empty; scalar/general
+  // fields and freshly-entered sections are overlaid.
+  function assembleExperimentSpec() {
+    const hasBase = !!STATE.baseSpec;
+    const spec = hasBase ? JSON.parse(JSON.stringify(STATE.baseSpec)) : {};
+
+    // id is required by the schema.
+    if (spec.id === undefined || spec.id === null) spec.id = 1;
+
+    // --- General ---
+    const label = byId('experimentLabel')?.value || byId('builderSpecName')?.value || byId('experimentName')?.value;
+    const desc = byId('experimentDescription')?.value;
+    const refs = byId('experimentReferences')?.value;
+    if (label) spec.label = label;
+    if (desc) spec.description = desc;
+    if (refs) {
+      const list = refs.split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
+      if (list.length) spec.references = list;
     }
 
-    // Fallback: generate from form (for new experiments not yet saved)
-    const section = document.getElementById('builderContent');
-    if (!section) {
-      alert('Please configure a model first');
-      return;
+    // --- Dynamics ---
+    const dynCfg = collectDynamicsConfig();
+    if (dynCfg && (dynCfg.model || dynCfg.name)) {
+      const dyn = Object.assign({}, spec.dynamics || {});
+      dyn.name = dynCfg.model || dynCfg.name;
+      if (!spec.dynamics) {
+        // Building dynamics from scratch: include collected detail.
+        const pd = keyByName(dynCfg.parameters); if (pd) dyn.parameters = pd;
+        const sv = keyByName(dynCfg.state_variables); if (sv) dyn.state_variables = sv;
+        const dv = keyByName(dynCfg.derived_variables); if (dv) dyn.derived_variables = dv;
+        const dp = keyByName(dynCfg.derived_parameters); if (dp) dyn.derived_parameters = dp;
+        const fn = keyByName(dynCfg.functions); if (fn) dyn.functions = fn;
+      }
+      spec.dynamics = dyn;
     }
 
-    const spec = collectSpec(section, { models: STATE.data || [] });
-    const yamlContent = generateYamlContent(spec);
-    const modelName = spec.model.name || 'CustomModel';
+    // --- Integration (scalar fields; safe to overlay) ---
+    const integ = collectIntegrationConfig();
+    if (integ && Object.keys(integ).length) spec.integration = Object.assign({}, spec.integration, integ);
 
-    const blob = new Blob([yamlContent], { type: 'text/yaml' });
+    // --- Coupling (name; safe to overlay) ---
+    const couplingName = byId('couplingFunction')?.value;
+    if (couplingName) spec.coupling = Object.assign({}, spec.coupling, { name: couplingName });
+
+    // --- Sections only filled when the base spec lacks them (avoid clobbering
+    //     a loaded experiment's full-fidelity collections with simpler UI rows) ---
+    if (!spec.network) { const net = collectNetworkSchema(); if (net) spec.network = net; }
+    if (!spec.observations) { const obs = keyByName(collectObservationsConfig()); if (obs) spec.observations = obs; }
+    if (!spec.functions) { const fns = keyByName(collectFunctionsConfig()); if (fns) spec.functions = fns; }
+    if (!spec.execution) { const exec = collectExecutionConfig(); if (exec && Object.keys(exec).length) spec.execution = exec; }
+
+    return pruneEmpty(spec);
+  }
+  window.assembleExperimentSpec = assembleExperimentSpec;
+
+  // POST an assembled experiment to the server validator/serializer.
+  // Returns { ok, yaml, data, error, errors }.
+  async function serializeExperiment(spec, format) {
+    try {
+      const resp = await fetch('/tvbo/api/configurator/experiment/serialize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jsonrpc: '2.0', method: 'call', id: 1,
+          params: { experiment: spec, format: format || 'yaml' },
+        }),
+      });
+      const data = await resp.json();
+      const result = (data && data.result) || {};
+      if (result.success) return { ok: true, yaml: result.yaml, data: result.data };
+      return { ok: false, error: result.error, errors: result.errors };
+    } catch (e) {
+      return { ok: false, error: String(e) };
+    }
+  }
+  window.serializeExperiment = serializeExperiment;
+
+  function _formatValidationErrors(res) {
+    if (res.errors && res.errors.length) {
+      return res.errors.map(e => `  - ${(e.loc || []).join('.') || '(root)'}: ${e.msg}`).join('\n');
+    }
+    return res.error || 'unknown error';
+  }
+
+  function triggerDownload(text, filename) {
+    const blob = new Blob([text], { type: 'application/x-yaml' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${modelName}.yaml`;
+    a.download = filename;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+  }
+
+  async function copyPythonCode() {
+    const res = await serializeExperiment(assembleExperimentSpec());
+    if (!res.ok) {
+      alert('Experiment is not valid yet:\n' + _formatValidationErrors(res));
+      return;
+    }
+    const code =
+      'from tvbo.classes.experiment import SimulationExperiment\n\n' +
+      'exp = SimulationExperiment.from_string("""\n' + (res.yaml || '') + '""")\n\n' +
+      '# results = exp.run()\n';
+    navigator.clipboard.writeText(code).then(
+      () => alert('Python snippet copied to clipboard!'),
+      err => alert('Failed to copy: ' + err.message)
+    );
+  }
+
+  async function downloadYaml() {
+    const res = await serializeExperiment(assembleExperimentSpec());
+    if (!res.ok) {
+      alert('Experiment is not valid yet:\n' + _formatValidationErrors(res));
+      return;
+    }
+    const spec = assembleExperimentSpec();
+    const fname = String(spec.label || 'experiment').replace(/[^\w.-]+/g, '_');
+    triggerDownload(res.yaml, `${fname}.yaml`);
   }
 
   function generatePythonCode(spec) {
@@ -3334,8 +3455,10 @@
       const period = row.querySelector('.obs-period')?.value?.trim();
 
       if (name) {
-        const obs = { name, type: type || 'monitor' };
-        if (source) obs.source = source;
+        // Schema Observation has no `type`; map the UI fields onto valid slots.
+        const obs = { name };
+        if (type) obs.imaging_modality = type;
+        if (source) obs.source = [source];
         if (period) obs.period = parseFloat(period);
         observations.push(obs);
       }

@@ -913,12 +913,29 @@ class KnowledgeGraphBrowser {
                 ? `<div class="card-tags">${item.tags.map(t => `<span class="tag-pill">${this.escapeHtml(t)}</span>`).join('')}</div>`
                 : '';
 
+            // "Open in Experiment Builder": deep-link a card into the builder.
+            // Experiments load fully; building blocks seed a new experiment.
+            const builderParam = {
+                experiment: 'experiment', dynamics: 'dynamics', network: 'network',
+                coupling: 'coupling', observation: 'observation', integrator: 'integration',
+            }[type];
+            const openInBuilder = (builderParam && item.id != null)
+                ? `<div class="card-actions" style="margin-top:8px;">
+                       <a class="kg-open-builder" href="/tvbo/configurator?${builderParam}=${encodeURIComponent(item.id)}"
+                          onclick="event.stopPropagation()" title="Open in Experiment Builder"
+                          style="display:inline-flex;align-items:center;gap:6px;font-size:0.85rem;font-weight:600;color:#3b4ce2;text-decoration:none;">
+                          <span class="material-icons" style="font-size:16px;">open_in_new</span>Open in Experiment Builder
+                       </a>
+                   </div>`
+                : '';
+
             return `
                 <div class="result-card" data-idx="${originalIdx}">
                     ${header}
                     ${studyMeta}
                     ${body}
                     ${tags}
+                    ${openInBuilder}
                 </div>
             `;
         }).join('');

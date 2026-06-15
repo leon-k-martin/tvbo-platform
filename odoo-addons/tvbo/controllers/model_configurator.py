@@ -124,9 +124,11 @@ class ModelConfiguratorController(http.Controller):
 
     @http.route('/tvbo/api/configurator/monitors', type='http', auth='public', methods=['GET'], csrf=False)
     def api_monitors(self, **kwargs):
-        """Get all monitors"""
+        """Get all monitors. The schema folds monitors into Observation, so this
+        serves tvbo.observation records (kept under the /monitors path for the
+        existing frontend)."""
         try:
-            records = request.env['tvbo.monitor'].sudo().search([])
+            records = request.env['tvbo.observation'].sudo().search([])
             data = records.read()
             return self._json_response({'success': True, 'data': data})
         except Exception as e:
@@ -201,27 +203,43 @@ class ModelConfiguratorController(http.Controller):
 
     @http.route('/tvbo/api/configurator/experiment/<int:experiment_id>/yaml', type='http', auth='public', methods=['GET'], csrf=False)
     def api_experiment_yaml(self, experiment_id, **kwargs):
-        """Export experiment as YAML using Pydantic SimulationExperiment model"""
+        """Export a stored experiment as schema-valid, bare TVBO YAML.
+
+        Deep-resolves the Odoo record, cleans Odoo placeholders/metadata and
+        restores schema slot names, then validates + serialises through
+        ``tvbo.utils.pydantic_loader`` (which coerces Odoo's many2many lists into
+        the schema's keyed-dict collections). The output is exactly what
+        ``SimulationExperiment.from_file`` expects.
+        """
         try:
-            from tvbo.datamodel.tvbopydantic import SimulationExperiment
-            import yaml
+            import re
+            import unicodedata
+            from tvbo.utils import pydantic_loader
+            from .building_blocks_api import validate_experiment
 
             exp = request.env['tvbo.simulation_experiment'].sudo().browse(experiment_id)
             if not exp.exists():
                 return self._json_response({'success': False, 'error': 'Experiment not found'})
 
-            # Convert Odoo record to Pydantic model
-            pydantic_exp = self._odoo_to_pydantic(exp)
+            obj, errors = validate_experiment(experiment_id)
+            if errors:
+                _logger.warning("experiment %s failed schema validation: %s", experiment_id, errors)
+                return self._json_response({
+                    'success': False, 'error': 'validation_error', 'errors': errors,
+                })
 
-            # Export to YAML using Pydantic's model_dump
-            data = pydantic_exp.model_dump(exclude_none=True, exclude_unset=True)
-            yaml_content = yaml.dump(data, default_flow_style=False, sort_keys=False, allow_unicode=True)
-
+            yaml_content = pydantic_loader.dump(obj)
+            # ASCII-safe filename: HTTP headers are Latin-1, and labels can contain
+            # non-ASCII characters (e.g. em-dashes, Greek letters in bifurcation
+            # experiments), which would break the Content-Disposition header.
+            raw_name = exp.label or exp.name or 'experiment'
+            ascii_name = unicodedata.normalize('NFKD', raw_name).encode('ascii', 'ignore').decode('ascii')
+            filename = re.sub(r'[^\w.-]+', '_', ascii_name).strip('_') or 'experiment'
             return request.make_response(
                 yaml_content,
                 headers=[
-                    ('Content-Type', 'text/yaml'),
-                    ('Content-Disposition', f'attachment; filename="{exp.label or exp.name or "experiment"}.yaml"')
+                    ('Content-Type', 'application/x-yaml; charset=utf-8'),
+                    ('Content-Disposition', f'attachment; filename="{filename}.yaml"'),
                 ]
             )
         except ImportError as e:
@@ -230,115 +248,6 @@ class ModelConfiguratorController(http.Controller):
         except Exception as e:
             _logger.error(f"Error in api_experiment_yaml: {e}", exc_info=True)
             return self._json_response({'success': False, 'error': str(e)})
-
-    def _odoo_to_pydantic(self, odoo_record, pydantic_class=None):
-        """
-        Schema-driven conversion from Odoo record to Pydantic model.
-        
-        Design principle: Both Odoo and Pydantic models are generated from the same 
-        LinkML schema, so field names match. No manual unpacking - iterate over 
-        Pydantic model fields and pull corresponding values from Odoo.
-        
-        Raises on missing fields rather than silently skipping - we need to know
-        when schema is out of sync.
-        """
-        from tvbo.datamodel import tvbopydantic as pyd
-        from pydantic import BaseModel
-        from odoo.fields import Many2one, Many2many
-        
-        if not odoo_record:
-            return None
-            
-        # Infer Pydantic class from Odoo model name if not provided
-        if pydantic_class is None:
-            # tvbo.simulation_experiment -> SimulationExperiment
-            model_name = odoo_record._name.replace('tvbo.', '')
-            class_name = ''.join(word.capitalize() for word in model_name.split('_'))
-            pydantic_class = getattr(pyd, class_name)
-        
-        # Build kwargs from Pydantic model fields
-        kwargs = {}
-        for field_name, field_info in pydantic_class.model_fields.items():
-            # Skip internal fields
-            if field_name in ('linkml_meta',):
-                continue
-                
-            # Get value from Odoo record
-            if not hasattr(odoo_record, field_name):
-                continue  # Field not in Odoo model (e.g., computed field in Pydantic)
-            
-            odoo_value = getattr(odoo_record, field_name)
-            odoo_field = odoo_record._fields.get(field_name)
-            
-            if odoo_value is False or odoo_value is None:
-                # Odoo uses False for empty values
-                kwargs[field_name] = None
-                continue
-            
-            # Handle relation fields
-            if odoo_field and isinstance(odoo_field, Many2one):
-                # Recursively convert related record
-                related_type = self._get_pydantic_type_from_annotation(field_info.annotation)
-                if related_type and issubclass(related_type, BaseModel):
-                    kwargs[field_name] = self._odoo_to_pydantic(odoo_value, related_type)
-                else:
-                    # Fallback: just get the ID or name
-                    kwargs[field_name] = odoo_value.id if hasattr(odoo_value, 'id') else odoo_value
-                    
-            elif odoo_field and isinstance(odoo_field, Many2many):
-                # Convert Many2many to dict (keyed by name) or list
-                related_type = self._get_pydantic_type_from_annotation(field_info.annotation)
-                if related_type and issubclass(related_type, BaseModel):
-                    # Check if target is dict[str, X] or list[X]
-                    origin = getattr(field_info.annotation, '__origin__', None)
-                    if origin is dict:
-                        kwargs[field_name] = {
-                            rec.name: self._odoo_to_pydantic(rec, related_type)
-                            for rec in odoo_value if hasattr(rec, 'name')
-                        }
-                    else:
-                        kwargs[field_name] = [
-                            self._odoo_to_pydantic(rec, related_type) for rec in odoo_value
-                        ]
-                else:
-                    # Fallback: list of names or IDs
-                    kwargs[field_name] = [rec.name if hasattr(rec, 'name') else rec.id for rec in odoo_value]
-            else:
-                # Simple field - direct assignment
-                kwargs[field_name] = odoo_value
-        
-        return pydantic_class(**kwargs)
-    
-    def _get_pydantic_type_from_annotation(self, annotation):
-        """Extract the base Pydantic model class from a type annotation."""
-        from pydantic import BaseModel
-        import typing
-        
-        # Handle Optional[X], dict[str, X], list[X], etc.
-        origin = getattr(annotation, '__origin__', None)
-        args = getattr(annotation, '__args__', ())
-        
-        if origin is type(None):
-            return None
-        elif origin in (dict, typing.Dict):
-            # dict[str, X] -> return X
-            if len(args) >= 2:
-                return self._get_pydantic_type_from_annotation(args[1])
-        elif origin in (list, typing.List):
-            # list[X] -> return X
-            if args:
-                return self._get_pydantic_type_from_annotation(args[0])
-        elif origin is typing.Union:
-            # Optional[X] = Union[X, None] -> return X
-            for arg in args:
-                if arg is not type(None):
-                    result = self._get_pydantic_type_from_annotation(arg)
-                    if result:
-                        return result
-        elif isinstance(annotation, type) and issubclass(annotation, BaseModel):
-            return annotation
-        
-        return None
 
     @http.route('/tvbo/configurator/save', type='jsonrpc', auth='user', website=True, csrf=True)
     def save_model(self, **kwargs):
@@ -350,6 +259,10 @@ class ModelConfiguratorController(http.Controller):
 
             _logger.info(f"Saving model: {data.get('name')}")
 
+            # request.env.user is the real session user even though we create
+            # with sudo() below — capture it before sudo to stamp ownership.
+            owner_id = request.env.user.id
+
             # Create the neural mass model
             model_vals = {
                 'name': data.get('name'),
@@ -358,10 +271,8 @@ class ModelConfiguratorController(http.Controller):
                 'number_of_modes': data.get('number_of_modes', 1),
             }
 
-            # First create the Dynamics record (since NeuralMassModel inherits from it)
-            dynamics = request.env['tvbo.dynamics'].sudo().create(model_vals)
-
-            # Create parameters
+            # Build the child records first — independent of whether we end up
+            # creating a new model or updating one the user already owns.
             param_ids = []
             for param_data in data.get('parameters', []):
                 # Create domain (Range) if provided
@@ -448,18 +359,46 @@ class ModelConfiguratorController(http.Controller):
                 ct = request.env['tvbo.parameter'].sudo().create(ct_vals)
                 ct_ids.append(ct.id)
 
-            # Update the dynamics record with all relationships
-            dynamics.write({
+            relations = {
                 'parameters': [(6, 0, param_ids)],
                 'state_variables': [(6, 0, sv_ids)],
                 'derived_variables': [(6, 0, dv_ids)],
                 'coupling_terms': [(6, 0, ct_ids)],
-            })
+            }
+
+            Dynamics = request.env['tvbo.dynamics'].sudo()
+            Share = request.env['tvbo.model_share'].sudo()
+
+            # Update-in-place: if the user already owns a model with this name,
+            # update it instead of creating a duplicate (and drop the children it
+            # previously owned so they don't pile up as orphans).
+            owned = Share.search([('owner_user_id', '=', owner_id)]).dynamics_id
+            existing = owned.filtered(lambda d: d.name == model_vals['name'])[:1]
+
+            if existing:
+                dynamics = existing
+                stale_children = dynamics._saved_model_children()
+                dynamics.write({**model_vals, **relations})
+                dynamics._unlink_saved_children(stale_children)
+                action = 'updated'
+            else:
+                dynamics = Dynamics.create(model_vals)
+                dynamics.write(relations)
+                # Platform-only ownership/sharing record (kept off tvbo.dynamics
+                # so it never leaks into the schema-validated serialization).
+                Share.create({
+                    'dynamics_id': dynamics.id,
+                    'owner_user_id': owner_id,
+                    'visibility': 'private',
+                })
+                action = 'saved'
 
             return {
                 'success': True,
                 'model_id': dynamics.id,
-                'message': f'Model "{data.get("name")}" created successfully!'
+                'view_url': f'/tvbo/model/{dynamics.id}',
+                'manage_url': '/my/models',
+                'message': f'Model "{data.get("name")}" {action} to your account!'
             }
 
         except Exception as e:
