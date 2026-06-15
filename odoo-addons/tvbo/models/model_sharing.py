@@ -12,53 +12,72 @@ One share row per saved model:
 - saving a model in the builder creates a row owned by the saver, ``private``;
 - the owner can flip it to ``shared`` to expose it in the community gallery.
 """
-from odoo import fields, models
+from odoo import api, fields, models
+from odoo.exceptions import ValidationError
 
 
 class ModelShare(models.Model):
     _name = 'tvbo.model_share'
-    _description = 'Ownership and sharing metadata for a user-saved model (platform-only)'
-    _rec_name = 'dynamics_id'
+    _description = 'Ownership and sharing metadata for a user-saved element (platform-only)'
+    _rec_name = 'owner_user_id'
 
+    # A share targets exactly one saved element: a model (Dynamics) or a
+    # SimulationExperiment. Both FKs are optional; the constraint below enforces
+    # exactly-one. NULLs are distinct in Postgres, so unique(dynamics_id) /
+    # unique(experiment_id) act as one-share-per-target without clashing.
     dynamics_id = fields.Many2one(
-        'tvbo.dynamics',
-        string='Model',
-        required=True,
-        ondelete='cascade',
-        index=True,
+        'tvbo.dynamics', string='Model', ondelete='cascade', index=True,
         help='The saved model this ownership/sharing record describes.',
     )
+    experiment_id = fields.Many2one(
+        'tvbo.simulation_experiment', string='Experiment', ondelete='cascade', index=True,
+        help='The saved experiment this ownership/sharing record describes.',
+    )
     owner_user_id = fields.Many2one(
-        'res.users',
-        string='Owner',
-        required=True,
-        ondelete='cascade',
-        index=True,
-        help='User who saved the model through the builder.',
+        'res.users', string='Owner', required=True, ondelete='cascade', index=True,
+        help='User who saved the element.',
     )
     visibility = fields.Selection(
         selection=[('private', 'Private'), ('shared', 'Shared')],
-        string='Visibility',
-        default='private',
-        required=True,
-        index=True,
-        help='Private models are visible only to their owner. Shared models '
+        string='Visibility', default='private', required=True, index=True,
+        help='Private elements are visible only to their owner. Shared elements '
              'appear in the community gallery for every logged-in user.',
     )
 
     # Odoo 19: SQL constraints are declared as models.Constraint attributes.
     _dynamics_uniq = models.Constraint(
-        'unique(dynamics_id)',
-        'Each model can have only one sharing record.',
-    )
+        'unique(dynamics_id)', 'Each model can have only one sharing record.')
+    _experiment_uniq = models.Constraint(
+        'unique(experiment_id)', 'Each experiment can have only one sharing record.')
+
+    @api.constrains('dynamics_id', 'experiment_id')
+    def _check_single_target(self):
+        for share in self:
+            if bool(share.dynamics_id) == bool(share.experiment_id):
+                raise ValidationError(
+                    'A share must reference exactly one of a model or an experiment.')
+
+    @property
+    def res_model(self):
+        self.ensure_one()
+        return 'tvbo.dynamics' if self.dynamics_id else 'tvbo.simulation_experiment'
+
+    @property
+    def target(self):
+        """The shared record itself (a dynamics or an experiment)."""
+        self.ensure_one()
+        return self.dynamics_id or self.experiment_id
 
     def purge_model(self):
-        """Delete the linked model (and its exclusive child records).
+        """Delete the linked element (and a model's exclusive children).
 
-        Removing the dynamics cascades to this share row (ondelete='cascade').
+        Removing the target cascades to this share row (ondelete='cascade').
         """
         for share in self:
-            share.dynamics_id.purge_saved_model()
+            if share.dynamics_id:
+                share.dynamics_id.purge_saved_model()
+            elif share.experiment_id:
+                share.experiment_id.unlink()
 
 
 class Dynamics(models.Model):

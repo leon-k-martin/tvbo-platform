@@ -76,6 +76,7 @@
                                         </a>
                                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="tvboUserDropdown">
                                             <li><a class="dropdown-item" href="/my/models">My Models</a></li>
+                                            <li><a class="dropdown-item" href="/my/api-keys">API Keys</a></li>
                                             <li><a class="dropdown-item" href="/my">Account</a></li>
                                             <li><hr class="dropdown-divider"/></li>
                                             <li><a class="dropdown-item" href="/web/session/logout">Log out</a></li>

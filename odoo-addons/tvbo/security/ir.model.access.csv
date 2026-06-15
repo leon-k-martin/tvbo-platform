@@ -36,6 +36,7 @@ access_tvbo_algorithm,tvbo.algorithm,model_tvbo_algorithm,base.group_user,1,1,1,
 access_tvbo_algorithm_include,tvbo.algorithm_include,model_tvbo_algorithm_include,base.group_user,1,1,1,1
 access_tvbo_argument,tvbo.argument,model_tvbo_argument,base.group_user,1,1,1,1
 access_tvbo_bids_entities,tvbo.bids_entities,model_tvbo_bids_entities,base.group_user,1,1,1,1
+access_tvbo_binding,tvbo.binding,model_tvbo_binding,base.group_user,1,1,1,1
 access_tvbo_boundary_condition,tvbo.boundary_condition,model_tvbo_boundary_condition,base.group_user,1,1,1,1
 access_tvbo_brain_atlas,tvbo.brain_atlas,model_tvbo_brain_atlas,base.group_user,1,1,1,1
 access_tvbo_brain_region_series,tvbo.brain_region_series,model_tvbo_brain_region_series,base.group_user,1,1,1,1
@@ -100,6 +101,8 @@ access_tvbo_parcellation,tvbo.parcellation,model_tvbo_parcellation,base.group_us
 access_tvbo_parcellation_entity,tvbo.parcellation_entity,model_tvbo_parcellation_entity,base.group_user,1,1,1,1
 access_tvbo_parcellation_terminology,tvbo.parcellation_terminology,model_tvbo_parcellation_terminology,base.group_user,1,1,1,1
 access_tvbo_phenotype,tvbo.phenotype,model_tvbo_phenotype,base.group_user,1,1,1,1
+access_tvbo_procedure,tvbo.procedure,model_tvbo_procedure,base.group_user,1,1,1,1
+access_tvbo_procedure_step,tvbo.procedure_step,model_tvbo_procedure_step,base.group_user,1,1,1,1
 access_tvbo_provenance,tvbo.provenance,model_tvbo_provenance,base.group_user,1,1,1,1
 access_tvbo_random_stream,tvbo.random_stream,model_tvbo_random_stream,base.group_user,1,1,1,1
 access_tvbo_range,tvbo.range,model_tvbo_range,base.group_user,1,1,1,1
@@ -121,6 +124,7 @@ access_tvbo_state_value,tvbo.state_value,model_tvbo_state_value,base.group_user,
 access_tvbo_state_variable,tvbo.state_variable,model_tvbo_state_variable,base.group_user,1,1,1,1
 access_tvbo_stimulation_setting,tvbo.stimulation_setting,model_tvbo_stimulation_setting,base.group_user,1,1,1,1
 access_tvbo_stimulus,tvbo.stimulus,model_tvbo_stimulus,base.group_user,1,1,1,1
+access_tvbo_study,tvbo.study,model_tvbo_study,base.group_user,1,1,1,1
 access_tvbo_subject,tvbo.subject,model_tvbo_subject,base.group_user,1,1,1,1
 access_tvbo_temporal_applicable_equation,tvbo.temporal_applicable_equation,model_tvbo_temporal_applicable_equation,base.group_user,1,1,1,1
 access_tvbo_time_series,tvbo.time_series,model_tvbo_time_series,base.group_user,1,1,1,1

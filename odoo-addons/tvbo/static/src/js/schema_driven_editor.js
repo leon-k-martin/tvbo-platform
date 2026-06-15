@@ -188,10 +188,22 @@
     return wrap;
   }
 
+  // Bound on nested class-editor recursion. The tvbo schema has cycles
+  // (e.g. Network -> nodes -> Node -> subnetwork -> Network), and rendering
+  // nested editors eagerly would recurse until the call stack overflows.
+  const MAX_NEST_DEPTH = 6;
+  function nestedPlaceholder(rangeClass, multi, reason) {
+    return el('details', { class: 'sde-nested border rounded p-2' },
+      el('summary', { class: 'small text-muted' },
+        `${rangeClass}${multi ? ' list' : ''} — nested (${reason}); edit in its own building-block view`));
+  }
+
   // ----------------- Class editor ---------------------------------
   // Renders all slots of a class. `value` may be undefined (blank).
   function classEditor(className, value, onUpdate, opts) {
     opts = opts || {};
+    const depth = opts.depth || 0;
+    const path = opts.path || [];
     const cls = SDE.schema.classes[className];
     const wrap = el('div', { class: 'sde-class-editor' });
 
@@ -255,10 +267,17 @@
         col.appendChild(el('div', { class: 'form-text small text-muted mb-1', style: 'font-size:11px' }, slot.description));
       }
 
+      const childPath = [...path, className];
+      const guard = SDE.schema.classes[slot.range] &&
+        (depth >= MAX_NEST_DEPTH || childPath.includes(slot.range));
       // Multivalued
       if (slot.multivalued) {
         if (SDE.schema.classes[slot.range]) {
-          col.appendChild(multiValueClassList(slot.range, val, onU));
+          if (guard) {
+            col.appendChild(nestedPlaceholder(slot.range, true, depth >= MAX_NEST_DEPTH ? 'max depth' : 'cycle'));
+          } else {
+            col.appendChild(multiValueClassList(slot.range, val, onU, depth + 1, childPath));
+          }
         } else {
           col.appendChild(stringListEditor(val, onU));
         }
@@ -266,7 +285,12 @@
       }
       // Single-valued nested class
       if (SDE.schema.classes[slot.range]) {
-        const nested = classEditor(slot.range, val, onU, { picker: !!SDE.schema.classes[slot.range].pickable });
+        if (guard) {
+          col.appendChild(nestedPlaceholder(slot.range, false, depth >= MAX_NEST_DEPTH ? 'max depth' : 'cycle'));
+          return col;
+        }
+        const nested = classEditor(slot.range, val, onU,
+          { picker: !!SDE.schema.classes[slot.range].pickable, depth: depth + 1, path: childPath });
         const collapse = el('details', { class: 'sde-nested border rounded p-2' },
           el('summary', { class: 'small text-muted' }, slot.range + (val && val.name ? ` — ${val.name}` : '')),
           nested);
@@ -334,7 +358,7 @@
   }
 
   // ----------------- MultiValue list (of class instances) ---------
-  function multiValueClassList(className, values, onUpdate) {
+  function multiValueClassList(className, values, onUpdate, depth, path) {
     const items = Array.isArray(values) ? [...values] : [];
     const wrap = el('div', { class: 'sde-multi border rounded p-2 bg-light' });
 
@@ -361,7 +385,8 @@
         const editor = classEditor(className, it, (newVal) => {
           items[idx] = newVal;
           emit();
-        }, { picker: !!(SDE.schema.classes[className] && SDE.schema.classes[className].pickable) });
+        }, { picker: !!(SDE.schema.classes[className] && SDE.schema.classes[className].pickable),
+             depth: depth || 0, path: path || [] });
         body.appendChild(editor);
         card.appendChild(header);
         card.appendChild(body);

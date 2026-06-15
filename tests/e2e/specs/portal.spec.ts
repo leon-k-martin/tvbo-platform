@@ -141,6 +141,21 @@ test.describe('TVBO portal: save & share models', () => {
     expect(await mine.text()).not.toContain(SHARED_NAME);
   });
 
+  test('re-saving a model updates in place instead of duplicating', async () => {
+    const name = `E2E-Update-${stamp}`;
+    const r1 = await jsonrpc(alice, '/tvbo/configurator/save', {
+      model_data: { name, label: name, description: 'v1' },
+    });
+    expect(r1.success).toBeTruthy();
+    const r2 = await jsonrpc(alice, '/tvbo/configurator/save', {
+      model_data: { name, label: name, description: 'v2 updated' },
+    });
+    expect(r2.success).toBeTruthy();
+    expect(r2.model_id, 'same record id -> updated, not duplicated').toBe(r1.model_id);
+    expect(r2.message).toContain('updated');
+    await jsonrpc(alice, `/my/models/${r1.model_id}/delete`, {}).catch(() => {});
+  });
+
   test('saving requires authentication', async () => {
     const anon = await newSession();
     const resp = await anon.post('/tvbo/configurator/save', {

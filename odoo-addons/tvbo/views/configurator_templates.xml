@@ -14,9 +14,9 @@
                             <h1 style="margin: 0; color: #1f2937; font-size: 2rem;">Experiment Builder</h1>
                             <div style="display: flex; gap: 10px;">
                                 <button id="builderCopyPython" class="btn btn-secondary">Copy Python</button>
-                                <button id="builderDownloadYaml" class="btn btn-secondary">Download YAML</button>
+                                <button id="builderDownloadYaml" class="btn btn-secondary">Download</button>
                                 <t t-if="not request.env.user._is_public()">
-                                    <button id="saveModelBtn" class="btn btn-success">Save to Database</button>
+                                    <button id="saveModelBtn" class="btn btn-success">Save to my account</button>
                                 </t>
                             </div>
                         </div>
@@ -195,7 +195,7 @@
                                         </div>
                                         <div class="col-12">
                                             <label class="form-label fw-bold">References (DOI/PMID)</label>
-                                            <input type="text" id="experimentReferences" class="form-control" placeholder="e.g., 10.1234/example or PMID:12345678 (comma-separated for multiple)" data-field="references"/>
+                                            <textarea id="experimentReferences" class="form-control" rows="4" placeholder="One reference per line (full citation, DOI, or PMID). Commas within a citation are kept." data-field="references"></textarea>
                                             <small class="text-muted">Enter DOI or PMID identifiers, separated by commas for multiple references.</small>
                                         </div>
                                     </div>
@@ -775,10 +775,12 @@
                         // dropdown, if present, just calls this too.
                         window.loadExperimentById = async function(experimentId) {
                             if (!experimentId) {
+                                window.__loadedExperimentId = null;
                                 if (window.setBaseSpec) window.setBaseSpec(null);
                                 if (window.updateLiveYaml) window.updateLiveYaml();
                                 return;
                             }
+                            window.__loadedExperimentId = experimentId;
                             const spinner = document.getElementById('experimentLoadingSpinner');
                             try {
                                 if (spinner) spinner.style.display = 'inline-block';
@@ -804,14 +806,11 @@
                                     if (window.setBaseSpec) window.setBaseSpec(null);
                                 }
 
-                                // Hydrate the schema-driven editor (best-effort).
-                                try {
-                                    if (window.SchemaEditor &amp;&amp; window.SchemaEditor.loadExperiment) {
-                                        window.SchemaEditor.loadExperiment(result.data);
-                                    }
-                                } catch (sdeErr) {
-                                    console.warn('[Configurator] SchemaEditor.loadExperiment failed:', sdeErr);
-                                }
+                                // NOTE: the schema-driven editor (SchemaEditor) is intentionally
+                                // NOT hydrated here. It renders generic editors into the same
+                                // [data-sde-*] containers that the Experiment Builder owns, so
+                                // running it would overwrite the builder's tabs after load. The
+                                // builder (prefillExperiment above) is the authoritative editor.
 
                                 if (window.updateLiveYaml) window.updateLiveYaml();
                             } catch (err) {
@@ -831,6 +830,9 @@
                         // Seed a NEW experiment from a single building block (KG card
                         // deep link, e.g. /tvbo/configurator?dynamics=&lt;id&gt;).
                         window.seedFromBlock = async function(cls, recId, section) {
+                            // From-scratch seed: clear any prior loaded-experiment id so the
+                            // Download button takes the local-YAML path, not a stale bundle.
+                            window.__loadedExperimentId = null;
                             try {
                                 const r = await fetch(`/tvbo/api/configurator/instances/${cls}/${recId}/spec`);
                                 const j = await r.json();
@@ -913,22 +915,13 @@
 
                         // Note: initializeBuilder is now called when dynamics-tab is shown (see experiment_builder.js)
 
-                        // === Schema-driven editor bootstrap ===
-                        // Mounts dynamic editors into every &lt;div data-sde-class="..."&gt; in the page.
-                        // Edits trigger live YAML refresh via onChange.
-                        if (window.SchemaEditor &amp;&amp; window.SchemaEditor.init) {
-                            window.SchemaEditor.init({
-                                onChange: function () {
-                                    if (typeof scheduleLiveYamlUpdate === 'function') {
-                                        scheduleLiveYamlUpdate();
-                                    }
-                                }
-                            }).catch(function (err) {
-                                console.error('[Configurator] SchemaEditor init failed:', err);
-                            });
-                        }
+                        // === Schema-driven editor (SchemaEditor) — DISABLED ===
+                        // It mounts generic editors into every [data-sde-class] container —
+                        // the same containers the Experiment Builder tabs own — so it would
+                        // overwrite the builder's UI. It also infinite-recursed on the cyclic
+                        // tvbo schema (RangeError). The builder supersedes it; leave it off.
 
-                        // Also initialize immediately so the Dynamics tab works on first page load
+                        // Initialize the builder tabs (Dynamics list + all tab containers).
                         if (window.initializeBuilder) {
                             window.initializeBuilder();
                         }
@@ -944,9 +937,52 @@
 
                         // Download YAML functionality
                         if (downloadBtn) {
-                            downloadBtn.addEventListener('click', function() {
-                                if (window.downloadYaml) {
-                                    window.downloadYaml();
+                            downloadBtn.addEventListener('click', async function() {
+                                const id = window.__loadedExperimentId;
+                                if (!id) {
+                                    if (window.downloadYaml) window.downloadYaml(); // from-scratch: bare YAML
+                                    return;
+                                }
+                                // Loaded experiment: download a self-contained bundle
+                                // (monolithic YAML + connectome HDF5), carrying the edited
+                                // label/description/references through as overrides. Fetch as
+                                // a blob (not an &lt;a href&gt; navigation) so a server error shows
+                                // an alert instead of replacing the builder and losing edits.
+                                const lbl = (document.getElementById('experimentLabel') || {}).value || '';
+                                const desc = (document.getElementById('experimentDescription') || {}).value || '';
+                                const refs = (document.getElementById('experimentReferences') || {}).value || '';
+                                const p = new URLSearchParams();
+                                if (lbl) p.set('label', lbl);
+                                if (desc) p.set('description', desc);
+                                if (refs.trim()) p.set('references', refs);
+                                const url = '/tvbo/api/configurator/experiment/' + id + '/bundle?' + p.toString();
+                                const prev = downloadBtn.textContent;
+                                downloadBtn.disabled = true; downloadBtn.textContent = 'Preparing…';
+                                try {
+                                    const resp = await fetch(url);
+                                    if (!resp.ok) {
+                                        let msg = 'Download failed (HTTP ' + resp.status + ')';
+                                        try {
+                                            const j = await resp.json();
+                                            if (j &amp;&amp; j.errors) msg += ': ' + JSON.stringify(j.errors);
+                                            else if (j &amp;&amp; j.error) msg += ': ' + j.error;
+                                        } catch (e) {}
+                                        alert(msg);
+                                        return;
+                                    }
+                                    const blob = await resp.blob();
+                                    const cd = resp.headers.get('Content-Disposition') || '';
+                                    const m = cd.match(/filename="?([^"]+)"?/);
+                                    const fname = (m &amp;&amp; m[1]) || ('experiment_' + id + '_bundle.zip');
+                                    const objUrl = URL.createObjectURL(blob);
+                                    const a = document.createElement('a');
+                                    a.href = objUrl; a.download = fname;
+                                    document.body.appendChild(a); a.click(); a.remove();
+                                    URL.revokeObjectURL(objUrl);
+                                } catch (err) {
+                                    alert('Download failed: ' + err);
+                                } finally {
+                                    downloadBtn.disabled = false; downloadBtn.textContent = prev;
                                 }
                             });
                         }

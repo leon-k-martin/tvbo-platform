@@ -692,6 +692,9 @@
 
     // Initial render
     renderModelsList();
+    // Expose so prefillExperiment() can refresh the list after loading an
+    // experiment's dynamics into STATE.dynamicsModels.
+    window.renderDynamicsModelsList = renderModelsList;
   }
 
   function updateEquationPreview(row) {
@@ -911,7 +914,8 @@
     if (label) spec.label = label;
     if (desc) spec.description = desc;
     if (refs) {
-      const list = refs.split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
+      // One reference per line — never split on commas (citations contain them).
+      const list = refs.split(/\r?\n+/).map(s => s.trim()).filter(Boolean);
       if (list.length) spec.references = list;
     }
 
@@ -1313,6 +1317,8 @@
   window.addDerivedObservationRow = addDerivedObservationRow;
   window.addOptimizationRow = addOptimizationRow;
   window.addExplorationRow = addExplorationRow;
+  window.addContinuationRow = addContinuationRow;
+  window.addEventRow = addEventRow;
 
   // ========================================================================
   // SCHEMA-DRIVEN PREFILL ENGINE
@@ -1401,25 +1407,6 @@
         addFunctionRow(name, description, equation, module, callable);
       }
     },
-    observations: {
-      containerId: 'observationsRows',
-      handler: (obs) => {
-        const name = obs.name || '';
-        const source = obs.voi || obs.source || '';
-        const type = obs.imaging_modality ? 'monitor' : (obs.data_source ? 'external' : 'metric');
-        const period = obs.period || obs.downsample_period || '';
-        addObservationRow(name, source, type, String(period));
-      }
-    },
-    derived_observations: {
-      containerId: 'derivedObservationsRows',
-      handler: (obs) => {
-        const name = obs.name || '';
-        const sources = obs.source_observations ? resolveValue(obs.source_observations) : '';
-        const pipeline = obs.pipeline ? resolveValue(obs.pipeline) : '';
-        addDerivedObservationRow(name, sources, pipeline);
-      }
-    },
     algorithms: {
       containerId: 'algorithmsRows',
       handler: (alg) => {
@@ -1430,7 +1417,7 @@
         addAlgorithmRow(name, type, String(nIter), String(eta));
       }
     },
-    optimization: {
+    optimizations: {
       containerId: 'optimizationRows',
       handler: (opt) => {
         const name = opt.name || '';
@@ -1460,6 +1447,29 @@
         }
         addExplorationRow(name, params, mode);
       }
+    },
+    continuations: {
+      containerId: 'continuationsRows',
+      handler: (cont) => {
+        const name = cont.name || '';
+        const label = cont.label || '';
+        const freeParams = Array.isArray(cont.free_parameters)
+          ? cont.free_parameters.map(p => (typeof p === 'object' ? (p.name || '') : p)).filter(Boolean).join(', ')
+          : '';
+        const algorithm = cont.algorithm || '';
+        const maxSteps = cont.max_steps ?? '';
+        addContinuationRow(name, label, freeParams, algorithm, String(maxSteps));
+      }
+    },
+    events: {
+      containerId: 'eventsRows',
+      handler: (ev) => {
+        const name = ev.name || '';
+        const type = ev.event_type || '';
+        const target = resolveValue(ev.target_variable) || resolveValue(ev.target_regions) || '';
+        const condition = ev.condition ? resolveValue(ev.condition) : '';
+        addEventRow(name, type, target, condition);
+      }
     }
   };
 
@@ -1472,6 +1482,11 @@
   function prefillExperiment(exp) {
     if (!exp) return;
     console.log('[Prefill] Loading experiment:', exp.display_name || exp.label);
+
+    // Ensure every tab's containers exist before we populate them. They are
+    // otherwise created on a 500ms timer, which can race ahead-of/behind the
+    // loader; calling this here makes prefill self-sufficient.
+    if (window.initializeAllTabs) window.initializeAllTabs();
 
     // 1. General tab (data-section="general" on the general panel)
     prefillSection('general', {
@@ -1497,6 +1512,11 @@
     const net = exp.network || exp.brain_network;
     if (net && typeof net === 'object') {
       prefillSection('network', net);
+      // An explicit node list -> populate the custom node editor (scalar prefill
+      // only fills number_of_nodes / count-mode fields, not the node table).
+      if (Array.isArray(net.nodes) && net.nodes.length > 0 && window.loadNetworkNodes) {
+        window.loadNetworkNodes(net.nodes);
+      }
       // Coupling is nested inside network
       if (net.coupling && Array.isArray(net.coupling) && net.coupling.length > 0) {
         const coupling = net.coupling[0];
@@ -1511,20 +1531,57 @@
       prefillCoupling(exp.coupling);
     }
 
-    // 5. Dynamics: load first dynamics model into the editor
-    const dynamics = Array.isArray(exp.dynamics) ? exp.dynamics : (exp.model ? [exp.model] : []);
-    if (dynamics.length > 0 && window.initializeBuilder) {
+    // 5. Dynamics: an experiment's `dynamics` is a single object (many2one),
+    //    but may also arrive as a list; normalize either to an array.
+    const rawDyn = exp.dynamics || exp.model;
+    const dynamics = Array.isArray(rawDyn) ? rawDyn.filter(Boolean) : (rawDyn ? [rawDyn] : []);
+    if (dynamics.length > 0) {
+      // Populate the "Local Dynamics" list so the loaded model(s) are visible
+      // and editable (the list renders from STATE.dynamicsModels). Re-render if
+      // the Dynamics tab was already initialized.
+      STATE.dynamicsModels = dynamics.slice();
+      if (window.renderDynamicsModelsList) window.renderDynamicsModelsList();
+
+      // Also sync the editor's base-model dropdown to the first model. Set the
+      // value only — do NOT dispatch 'change': that fires loadBaseModel(), an
+      // extra /dynamics/<id> fetch that overwrites the editor with the canonical
+      // base model instead of the experiment's (possibly edited) dynamics. The
+      // editor populates from STATE.dynamicsModels on open, so the sync isn't needed.
       const dyn = dynamics[0];
       const baseModelSelect = document.getElementById('editorBaseModel');
-      if (baseModelSelect) {
+      if (baseModelSelect && dyn.name) {
         for (const opt of baseModelSelect.options) {
           if (opt.dataset.name === dyn.name || opt.textContent.trim() === dyn.name) {
             baseModelSelect.value = opt.value;
-            baseModelSelect.dispatchEvent(new Event('change'));
             break;
           }
         }
       }
+    }
+
+    // 5b. Observations: the experiment carries one `observations` list; route
+    //     pipeline-/source-derived ones to the Derived Observations tab and the
+    //     rest to the Observations tab (there is no separate API field).
+    const allObs = Array.isArray(exp.observations) ? exp.observations.filter(o => o && typeof o === 'object') : [];
+    if (allObs.length > 0) {
+      const obsContainer = document.getElementById('observationsRows');
+      const dobsContainer = document.getElementById('derivedObservationsRows');
+      if (obsContainer) obsContainer.innerHTML = '';
+      if (dobsContainer) dobsContainer.innerHTML = '';
+      allObs.forEach(obs => {
+        const isDerived = !!(obs.pipeline || obs.source_observations);
+        if (isDerived) {
+          const sources = obs.source_observations ? resolveValue(obs.source_observations)
+            : (obs.source ? resolveValue(obs.source) : '');
+          const pipeline = obs.pipeline ? resolveValue(obs.pipeline) : '';
+          addDerivedObservationRow(obs.name || '', sources, pipeline);
+        } else {
+          const source = obs.voi || obs.source || '';
+          const type = obs.imaging_modality ? 'monitor' : (obs.data_source ? 'external' : 'metric');
+          const period = obs.period || obs.downsample_period || '';
+          addObservationRow(obs.name || '', resolveValue(source), type, String(period));
+        }
+      });
     }
 
     // 6. Array sections: iterate API arrays, create rows via handlers
@@ -2484,6 +2541,29 @@
       return row;
     }
 
+    // Load an explicit node list (from a loaded experiment) into the custom
+    // node editor: switch to custom mode, clear, and create a row per node.
+    window.loadNetworkNodes = function (nodes) {
+      if (!Array.isArray(nodes) || nodes.length === 0) return;
+      const customRadio = document.querySelector('input[name="networkMode"][value="custom"]');
+      if (customRadio) { customRadio.checked = true; customRadio.dispatchEvent(new Event('change')); }
+      nodesContainer.innerHTML = '';
+      const clean = (v) => (v === false || v === null || v === undefined ? '' : v);
+      nodes.forEach((node, idx) => {
+        const id = (node.id === false || node.id === null || node.id === undefined) ? idx : node.id;
+        const pos = node.position || {};
+        let x = '', y = '', z = '';
+        if (Array.isArray(pos)) { [x = '', y = '', z = ''] = pos; }
+        else if (pos && typeof pos === 'object') { x = pos.x; y = pos.y; z = pos.z; }
+        const dynName = (node.dynamics && typeof node.dynamics === 'object')
+          ? (node.dynamics.name || '') : (node.dynamics || '');
+        nodesContainer.appendChild(
+          createNodeRow(id, clean(node.label), clean(x), clean(y), clean(z), dynName));
+      });
+      if (typeof updateEdgeNodeOptions === 'function') updateEdgeNodeOptions();
+      updateGraph3D();
+    };
+
     // Update 3D visualization
     function updateGraph3D() {
       if (window.NetworkGraph3D && window.NetworkGraph3D.update) {
@@ -2744,6 +2824,28 @@
         <input id="stimulusRegions" class="builder-input" placeholder="0,1,2" data-field="target_regions" />
       </div>
     `;
+  }
+
+  function initializeEventsTab() {
+    const content = document.getElementById('eventsContent');
+    if (!content) return;
+
+    content.innerHTML = `
+      <div class="builder-field">
+        <div class="builder-subtitle">Events</div>
+        <p class="text-muted" style="font-size: 0.9em;">
+          Discrete events applied during simulation (parameter changes, state resets, triggers).
+        </p>
+        <div id="eventsRows" class="builder-rows"></div>
+        <div class="builder-actions">
+          <button class="btn btn-sm btn-secondary" id="addEvent">Add Event</button>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('addEvent')?.addEventListener('click', function() {
+      addEventRow();
+    });
   }
 
   // ========================================================================
@@ -3011,6 +3113,65 @@
       <button class="btn btn-sm btn-danger exp-del" title="Remove">✕</button>
     `;
     div.querySelector('.exp-del').addEventListener('click', () => div.remove());
+    container.appendChild(div);
+  }
+
+  function initializeContinuationsTab() {
+    const content = document.getElementById('continuationsContent');
+    if (!content) return;
+
+    content.innerHTML = `
+      <div class="builder-field">
+        <div class="builder-subtitle">Continuations</div>
+        <p class="text-muted" style="font-size: 0.9em;">
+          Numerical continuation / bifurcation analysis (equilibrium branches, codim-2 curves, periodic orbits).
+        </p>
+        <div id="continuationsRows" class="builder-rows"></div>
+        <div class="builder-actions">
+          <button class="btn btn-sm btn-secondary" id="addContinuation">Add Continuation</button>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('addContinuation')?.addEventListener('click', function() {
+      addContinuationRow();
+    });
+  }
+
+  function addContinuationRow(name = '', label = '', freeParams = '', algorithm = '', maxSteps = '') {
+    const container = document.getElementById('continuationsRows');
+    if (!container) return;
+
+    const div = document.createElement('div');
+    div.className = 'builder-row';
+    div.style.gridTemplateColumns = '1fr 1.4fr 1.4fr 1fr 0.8fr auto';
+    div.innerHTML = `
+      <input class="builder-input cont-name" placeholder="branch_name" value="${escapeAttr(name)}" />
+      <input class="builder-input cont-label" placeholder="label" value="${escapeAttr(label)}" />
+      <input class="builder-input cont-params" placeholder="free params (comma-sep)" value="${escapeAttr(freeParams)}" />
+      <input class="builder-input cont-algorithm" placeholder="algorithm" value="${escapeAttr(algorithm)}" />
+      <input class="builder-input cont-maxsteps" type="number" placeholder="max steps" value="${escapeAttr(maxSteps)}" />
+      <button class="btn btn-sm btn-danger cont-del" title="Remove">✕</button>
+    `;
+    div.querySelector('.cont-del').addEventListener('click', () => div.remove());
+    container.appendChild(div);
+  }
+
+  function addEventRow(name = '', type = '', target = '', condition = '') {
+    const container = document.getElementById('eventsRows');
+    if (!container) return;
+
+    const div = document.createElement('div');
+    div.className = 'builder-row';
+    div.style.gridTemplateColumns = '1fr 1fr 1.2fr 1.4fr auto';
+    div.innerHTML = `
+      <input class="builder-input ev-name" placeholder="event_name" value="${escapeAttr(name)}" />
+      <input class="builder-input ev-type" placeholder="event_type" value="${escapeAttr(type)}" />
+      <input class="builder-input ev-target" placeholder="target (var/regions)" value="${escapeAttr(target)}" />
+      <input class="builder-input ev-condition" placeholder="condition" value="${escapeAttr(condition)}" />
+      <button class="btn btn-sm btn-danger ev-del" title="Remove">✕</button>
+    `;
+    div.querySelector('.ev-del').addEventListener('click', () => div.remove());
     container.appendChild(div);
   }
 
@@ -4704,12 +4865,14 @@
     initializeCouplingTab();
     initializeNetworkTab();
     initializeStimulusTab();
+    initializeEventsTab();
     initializeFunctionsTab();
     initializeObservationsTab();
     initializeDerivedObservationsTab();
     initializeAlgorithmsTab();
     initializeOptimizationTab();
     initializeExplorationsTab();
+    initializeContinuationsTab();
     initializeExecutionTab();
     initializeObservationModelsTab();
     initializeRunTab();

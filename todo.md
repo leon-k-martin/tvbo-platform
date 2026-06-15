@@ -58,14 +58,55 @@ review / future work.
 
 ## Review / follow-ups
 
-### MEDIUM — categories not seeding (fringe pydantic drift)
-- **GraphGenerator 0/9** and **SimulationStudy 0/120** fail strict pydantic
-  (`bindings`/`iri`/param `range`/`type` on GraphGenerator; several on Study).
-  These validate fine under the lenient LinkML JSON-schema, so the **generated
-  `tvbo.datamodel.pydantic` lags the schema** for these classes. Regenerate it
-  (`linkml gen-pydantic`) and they'll seed. Not used by the Experiment Builder.
-- Dynamics 77/98: the gap is the excluded `database/models/neuroml/` staging import
-  (raw NeuroML → not curated) — intentional (see below).
+### RESOLVED — GraphGenerator + studies now seed (schema↔data drift fixed)
+The earlier "regenerate pydantic" hypothesis was wrong (pydantic was already
+current). Both were genuine schema↔data drift in the tvbo repo:
+- **GraphGenerator (9/9 now)**: the curated files carry a richer shape than the
+  schema class (`iri`, per-backend `bindings`, a symbolic `procedure`, and
+  parameter *specs* with `range`/`required`/`ifabsent`; no `type`). Extended the
+  tvbo `GraphGenerator` class to match — added `iri` (reused the shared slot),
+  `bindings` (→ new `Binding`, keyed by backend `name`), `procedure` (→ new
+  `Procedure` + `ProcedureStep` reusing `Equation`), switched `parameters` to a
+  new `ParameterSpec`, made `type` optional. (`schema/tvbo_datamodel.yaml`.)
+- **studies (120/120 now)**: the `studies/*.yaml` are BibTeX-style bibliographic
+  records, not `SimulationStudy` experiment containers. Added a minimal `Study`
+  anchor class (`name`/`citekey`/`type`/`title`/`authors`/`year`/`doi`) and made
+  `SimulationStudy is_a Study`. We do **not** replicate BibTeX: full citation
+  detail stays in `references.bib` (1557 entries; 93/120 citekeys already there),
+  joined by `citekey`. Ingest seeds `Study` with `drop_unknown=True` so the
+  BibTeX extras (journal/volume/pages/…) are dropped, keeping the citekey-anchored
+  KG node. Registry maps `Study → studies/` (kept `SimulationStudy → studies/`).
+- Regenerated `tvbo/datamodel/{pydantic,schema}.py` and the platform's
+  `schema_models.py` (133 models, +5) + `ir.model.access.csv`. `pydantic_loader`
+  `load`/`loads` now forward `drop_unknown`.
+- **Verified**: pydantic_loader validates GraphGenerator 9/9 and Study 120/120;
+  222/222 loader tests pass; the Odoo registry loads the new models cleanly; a
+  **clean-room install** ran `post_init_hook` end-to-end → **graph_generator 9/9,
+  study 120/120, DONE: 313 records** (was 184), with bindings/parameter_spec/
+  procedure_step nested records created via the real Odoo ORM.
+- Dynamics 77/98: unchanged baseline — the gap is the excluded
+  `database/models/neuroml/` staging import (intentional, see below). (8 of the
+  21 are pre-existing `InFailedSqlTransaction` failures, not caused by this work.)
+
+### KNOWN — in-place upgrade of an existing DB needs a stale-relation drop
+On a **fresh install** everything seeds cleanly (verified). Upgrading a DB that
+already had the old schema fails once: `graph_generator.parameters` changed its
+comodel (`Parameter` → `ParameterSpec`) but reuses the auto-named m2m relation
+`tvbo_graph_generator_parameters_rel`, whose old table still has the
+`tvbo_parameter_id` column → FK error on `tvbo_parameter_spec_id`. The relation
+is empty (graph_generator had 0 rows before). Fix for an in-place upgrade: drop
+that stale relation table, then `TVBO_UPGRADE=1`. Cleaner long-term: a module
+pre-migration script, or a fresh `RESET_DB=1` reinstall. (The running `tvbo_dev`
+has the new models in code but the new tables are not yet created.)
+
+### Study ↔ concept edges (Phase 1 — KG rendering)
+The links are already in the data: dynamics/experiments/networks carry their
+source papers as **citekeys** in `references:` (91 distinct; 79 match a study).
+Phase 0 keeps `references` as a string slot (changing its global range to `Study`
+is high blast-radius — it is shared and a few experiments use prose, not
+citekeys), so the citekeys are stored as Text on each concept and the
+study↔concept join is rendered in the KG browser in Phase 1. Phase 2 adds the
+`Disease`/clinical metadata class + links (Epileptor → epilepsy, `Proix2017`).
 
 ### MEDIUM — NeuroML import staging excluded
 - `ingest.py` skips `tvbo/database/.../neuroml/` (the "… as LEMS" experiments and exotic

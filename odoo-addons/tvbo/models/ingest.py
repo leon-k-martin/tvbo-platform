@@ -30,6 +30,9 @@ _EXCLUDE_PATH_PARTS = ("/neuroml/",)
 
 # (pydantic class, registry category) for the building blocks to ingest.
 # Curated to avoid the Observation/Function overlap on observation_models.
+# ``Study`` (bibliographic sources) is seeded from the studies/ directory; the
+# files are BibTeX-style records (a Study), not SimulationStudy experiment
+# containers — full bibliographic detail stays in references.bib (citekey join).
 _INGEST = [
     ("Dynamics", "Dynamics"),
     ("Coupling", "Coupling"),
@@ -39,9 +42,14 @@ _INGEST = [
     ("Network", "Network"),
     ("Observation", "Observation"),
     ("Continuation", "Continuation"),
-    ("SimulationStudy", "SimulationStudy"),
+    ("Study", "Study"),
     ("SimulationExperiment", "SimulationExperiment"),
 ]
+
+# Classes whose ground-truth files intentionally carry fields the schema does
+# not model (Study mirrors BibTeX: journal/volume/pages/… live in references.bib
+# and are dropped on ingest, keeping only the citekey-anchored KG node).
+_DROP_UNKNOWN = {"Study"}
 
 
 # Best-effort audit trail to a file in the data volume, because addon logging
@@ -217,7 +225,10 @@ def seed_database(env):
                 # Savepoint per record: a DB-level error rolls back just this
                 # record instead of aborting the whole install transaction.
                 with env.cr.savepoint():
-                    obj = pydantic_loader.load(path, pyd_cls_name)
+                    obj = pydantic_loader.load(
+                        path, pyd_cls_name,
+                        drop_unknown=(pyd_cls_name in _DROP_UNKNOWN),
+                    )
                     data = obj.model_dump(mode="python", by_alias=True, exclude_none=True)
                     _create_record(env, model_name, data, cache)
                 ok += 1

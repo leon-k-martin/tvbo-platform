@@ -156,6 +156,88 @@
     </template>
 
     <!-- ============================================================= -->
+    <!-- /my/api-keys — personal API keys for the Python client        -->
+    <!-- ============================================================= -->
+    <template id="portal_api_keys" name="API Keys">
+        <t t-call="website.layout">
+            <div id="wrap">
+                <t t-call="tvbo.tvbo_models_styles"/>
+                <div class="tvbo-models-wrap">
+                    <div class="tvbo-models-head">
+                        <div>
+                            <h1>API Keys</h1>
+                            <p class="lead">Use a key as a bearer token to load and push your models and experiments from Python with the tvbo client.</p>
+                        </div>
+                        <a href="/my/models" class="btn btn-outline-primary">My Models</a>
+                    </div>
+
+                    <div class="tvbo-model-card mb-4">
+                        <div class="d-flex gap-2 align-items-end flex-wrap">
+                            <div class="flex-grow-1">
+                                <label class="form-label fw-bold mb-1">Create a new key</label>
+                                <input id="apiKeyName" class="form-control" placeholder="Label, e.g. laptop"/>
+                            </div>
+                            <div>
+                                <label class="form-label fw-bold mb-1">Expires</label>
+                                <select id="apiKeyExpires" class="form-select">
+                                    <option value="0">Never</option>
+                                    <option value="30">In 30 days</option>
+                                    <option value="90">In 90 days</option>
+                                    <option value="365">In 1 year</option>
+                                </select>
+                            </div>
+                            <button id="apiKeyCreate" class="btn btn-success">Create key</button>
+                        </div>
+                        <div id="apiKeyReveal" class="alert alert-success mt-3" style="display:none;">
+                            <strong>Copy your key now — it won't be shown again:</strong>
+                            <div class="d-flex gap-2 mt-2">
+                                <code id="apiKeyValue" class="flex-grow-1 p-2" style="background:#0b132016;border-radius:6px;word-break:break-all;"></code>
+                                <button id="apiKeyCopy" class="btn btn-sm btn-outline-secondary">Copy</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <t t-if="not keys">
+                        <div class="tvbo-empty"><h3>No API keys yet</h3><p>Create one above to get started.</p></div>
+                    </t>
+                    <t t-else="">
+                        <div class="tvbo-model-card">
+                            <table class="table mb-0 align-middle">
+                                <thead><tr><th>Name</th><th>Prefix</th><th>Last used</th><th>Created</th><th>Expires</th><th></th></tr></thead>
+                                <tbody>
+                                    <t t-foreach="keys" t-as="key">
+                                        <tr>
+                                            <td t-esc="key.name"/>
+                                            <td><code t-esc="(key.key_prefix or '') + '…'"/></td>
+                                            <td><span t-if="key.last_used" t-field="key.last_used" t-options='{"widget": "datetime"}'/><span t-if="not key.last_used" class="text-muted">never</span></td>
+                                            <td><span t-field="key.create_date" t-options='{"widget": "date"}'/></td>
+                                            <td><span t-if="key.expires" t-field="key.expires" t-options='{"widget": "date"}'/><span t-if="not key.expires" class="text-muted">never</span></td>
+                                            <td class="text-end">
+                                                <button class="btn btn-sm btn-outline-danger" data-action="revoke-key" t-att-data-key-id="key.id">Revoke</button>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                        </div>
+                    </t>
+
+                    <div class="tvbo-model-card mt-4">
+                        <h5 class="mb-2">Use it from Python</h5>
+                        <pre class="mb-0" style="white-space:pre-wrap;"><code>from tvbo.platform import TVBOPlatform
+
+tvbo = TVBOPlatform(base_url="<t t-esc="request.httprequest.host_url.rstrip('/')"/>", api_key="tvbo_…")
+exp = tvbo.load_experiment(123)        # -&gt; tvbo SimulationExperiment
+mine = tvbo.list_models(mine=True)
+tvbo.push_experiment(exp, visibility="shared")</code></pre>
+                    </div>
+                </div>
+                <script src="/tvbo/static/src/js/portal_api_keys.js"></script>
+            </div>
+        </t>
+    </template>
+
+    <!-- ============================================================= -->
     <!-- /tvbo/models — public list (ground truth + shared)            -->
     <!-- ============================================================= -->
     <template id="tvbo_models_list" name="TVBO Models List">

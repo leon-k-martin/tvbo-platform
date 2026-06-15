@@ -337,7 +337,7 @@ class Algorithm(models.Model):
     _description = 'A complete specification of an iterative parameter tuning algorithm. Combines update rules, objectives, observations, and hyperparameters.'
     _rec_name = 'name'
 
-    name = fields.Char(index=True, help='Globally unique identifier for the entity.')
+    name = fields.Char(required=True, index=True, help='Globally unique identifier for the entity.')
     description = fields.Text()
     execution = fields.Many2one(comodel_name='tvbo.execution_config', help='Per-algorithm execution configuration (overrides experiment-level defaults). Useful for setting random_seed per algorithm to ensure reproducibility.')
     type = fields.Char(help="Algorithm type: 'fic', 'eib', 'homeostatic', 'custom'")
@@ -387,6 +387,17 @@ class BidsEntities(models.Model):
     atlas = fields.Char(help='BIDS atlas- entity (e.g., Schaefer2018, HCPMMP1)')
     acquisition = fields.Char(help='BIDS acq- entity (e.g., EEGstandard1005, MEGBrainstorm)')
     hemi = fields.Char(help='BIDS hemi- entity (L or R) for hemisphere-specific surface/volume data')
+
+
+class Binding(models.Model):
+    _name = 'tvbo.binding'
+    _description = 'Per-backend construction binding for a GraphGenerator: how to build the graph in a specific target library.  Keyed by backend id — the ``name`` is the backend (e.g. python, julia, networkx).'
+    _rec_name = 'name'
+
+    name = fields.Char(required=True, index=True, help='Globally unique identifier for the entity.')
+    library = fields.Char(help='Native library/module providing the callable.')
+    callable = fields.Char(help='Name of the constructor function in the library.')
+    args = fields.Text(help='Ordered parameter names passed to the callable.')
 
 
 class BoundaryCondition(models.Model):
@@ -917,7 +928,10 @@ class Event(models.Model):
     target_component = fields.Char(help="Component to attach this event to. Can be a node label, edge label, or 'all_edges'/'all_vertices' for broadcast. If not specified, event is experiment-level.")
     equation = fields.Many2one(comodel_name='tvbo.equation', help='Stimulus equation for stimulus-type events. Legacy compatibility with Stimulus class.')
     regions = fields.Text(help='Target regions for stimulus-type events.')
-    weighting = fields.Text(help='Per-region weighting for stimulus-type events.')
+    weighting = fields.Text(help='Per-region weighting for stimulus-type events (explicit values).')
+    weight_distribution = fields.Many2one(comodel_name='tvbo.distribution', help="Distribution to sample per-region stimulus weights from, as an alternative to the explicit `weighting` array (e.g. Uniform(-1, 1) per node). When set, the codegen samples one weight per target region using the distribution's seed.")
+    target_variable = fields.Char(help="State variable that a stimulus-type event drives — the variable its signal is injected into (e.g. 'y_0' for Jansen-Rit, or a named 'stimulus' input exposed to coupling). If absent, the stimulus adds to the model's default external-input variable.")
+    target_regions = fields.Text(help="Regions a stimulus-type event targets: 'all' (broadcast to every node) or explicit region labels / indices. More expressive than the integer-only `regions` slot; when both are absent the event applies to all regions.")
     duration = fields.Float(help='Duration of stimulus-type events.')
 
 
@@ -945,6 +959,7 @@ class Exploration(models.Model):
     execution = fields.Many2one(comodel_name='tvbo.execution_config', help='Per-exploration execution configuration (overrides experiment-level defaults). Useful for setting random_seed, n_workers for parallel grid search.')
     space = fields.Many2many(comodel_name='tvbo.exploration_axis', relation='tvbo_exploration_space_rel', help='Ordered list of exploration axes spanning the search space. Each axis references an existing Parameter (by dotted name, e.g. "ReducedWongWang.w" or "FastLinearCoupling.G") and supplies the Range to sweep. No new Parameter is created here.')
     parameters = fields.Many2many(comodel_name='tvbo.parameter', relation='tvbo_exploration_parameters_rel', help='Hyper-parameters of the exploration itself (e.g. tolerances, sampler settings, grid-refinement controls). Distinct from `space`, which defines what is being swept.')
+    algorithms = fields.Text(help="Names of the experiment's algorithms (keys in `experiment.algorithms`) to run AT EACH exploration point, in order, BEFORE computing the observable. Explicitly wires algorithms into the exploration so per-point tuning / constraints are applied at every sweep point — e.g. FIC re-tuning J_i at each E/I ratio. With this set, the sweep evaluates the full algorithm→observation pipeline per point (executed sequentially), not a bare simulation. Empty/absent = bare simulation per point. This is the declarative replacement for any Python per-point driver: the composition is derived entirely from YAML metadata.")
     mode = fields.Char(default='product', help="Combination mode: 'product' (full grid), 'zip' (paired)")
     observable = fields.Many2one(comodel_name='tvbo.function_call', help='Observable to compute at each point. Use function: obs_name for simple observation, or function: func_name + arguments for FunctionCall.')
     n_parallel = fields.Integer(help='Parallel evaluations')
@@ -1072,15 +1087,18 @@ class FunctionCall(models.Model):
 
 class GraphGenerator(models.Model):
     _name = 'tvbo.graph_generator'
-    _description = 'Backend-agnostic graph generator specification.  Captures the mathematical family (type) and its parameters so that each backend can emit the correct constructor call (Graphs.jl, NetworkX, etc.). The number of nodes i...'
+    _description = 'Backend-agnostic graph generator specification.  Captures the mathematical family and its parameter declarations so that each backend can emit the correct constructor call (Graphs.jl, NetworkX, etc.) via per-backend `...'
     _rec_name = 'name'
 
     name = fields.Char(required=True, index=True, help='Globally unique identifier for the entity.')
     description = fields.Text()
-    type = fields.Char(required=True, help='Graph family name.  Use a StandardGraphType value for automatic backend mapping, or any custom string for documentation purposes.')
+    iri = fields.Char(help='Optional stable IRI (or compact URI) for this entity in an external ontology or knowledge base. Used to load metadata from an external source; not required when the entity is fully self-contained (equations, parameters, etc. defined in the file itself).')
+    type = fields.Char(help='Optional graph family name.  Use a StandardGraphType value for automatic backend mapping, or any custom string for documentation purposes.  When absent, the backend ``bindings`` determine construction directly.')
     seed = fields.Integer(help='Random seed for reproducible graph generation.')
     directed = fields.Boolean(default=False, help='Whether to generate a directed graph.')
-    parameters = fields.Many2many(comodel_name='tvbo.parameter', relation='tvbo_graph_generator_parameters_rel', help='Generator parameters (e.g. k, p, dims).  Names are matched by the backend mapping to construct the call.')
+    parameters = fields.Many2many(comodel_name='tvbo.parameter', relation='tvbo_graph_generator_parameters_rel', help='Generator parameters (e.g. n, k, p, seed), keyed by name, each carrying a concrete ``value`` (Parameter). Builder (Callable) generators receive these as keyword arguments; declarative library generators may additionally use the ``bindings`` map to the native constructor call.')
+    bindings = fields.Many2many(comodel_name='tvbo.binding', relation='tvbo_graph_generator_bindings_rel', help='Per-backend construction bindings, keyed by backend id (e.g. python, julia, networkx).  Each names the native library, callable and the ordered parameter names to pass.')
+    procedure = fields.Many2one(comodel_name='tvbo.procedure', help='Optional symbolic procedure for derived generators (e.g. null-model shuffles): ordered steps and named outputs, each carrying an Equation.')
     builder = fields.Many2one(comodel_name='tvbo.callable', help='Optional Python callable that builds the network at YAML load time. When set, ``Network._resolve`` imports ``<module>.<name>`` and invokes it with the ``parameters`` block as keyword arguments. The callable must return either a ``Network`` instance or a tuple ``(weights, lengths, node_params)``. Use the existing ``Callable`` slots (``name`` is the function name, ``module`` is its dotted module path). Reuses the same idiom as TVB monitor class references; no free ``module:function`` strings.')
 
 
@@ -1497,6 +1515,24 @@ class Phenotype(models.Model):
     provenance = fields.Many2one(comodel_name='tvbo.provenance', help='W3C PROV-O metadata for the source of these scores.')
 
 
+class Procedure(models.Model):
+    _name = 'tvbo.procedure'
+    _description = "Symbolic procedure: an ordered list of steps producing named outputs.  Documents a derived generator's algorithm independently of any backend binding."
+
+    steps = fields.Many2many(comodel_name='tvbo.procedure_step', relation='tvbo_procedure_steps_rel', help='Ordered intermediate steps.')
+    output = fields.Many2many(comodel_name='tvbo.procedure_step', relation='tvbo_procedure_output_rel', help="Named outputs (keyed by name), e.g. 'weights'.")
+
+
+class ProcedureStep(models.Model):
+    _name = 'tvbo.procedure_step'
+    _description = 'A single named step (or output) in a Procedure, carrying the Equation that defines it.'
+    _rec_name = 'name'
+
+    name = fields.Char(required=True, index=True, help='Globally unique identifier for the entity.')
+    description = fields.Text()
+    equation = fields.Many2one(comodel_name='tvbo.equation', help='The equation defining this step/output.')
+
+
 class Provenance(models.Model):
     _name = 'tvbo.provenance'
     _description = 'W3C PROV-O aligned provenance. Reusable on any entity (Network, TimeSeries, Dynamics, etc.).'
@@ -1592,7 +1628,7 @@ class SimulationExperiment(models.Model):
 
     model = fields.Many2one(comodel_name='tvbo.dynamics')
     references = fields.Text()
-    record_id = fields.Integer()
+    record_id = fields.Integer(required=True)
     description = fields.Text()
     additional_equations = fields.Many2many(comodel_name='tvbo.equation', relation='tvbo_simulation_experiment_additional_equations_rel')
     label = fields.Char(index=True)
@@ -1624,14 +1660,17 @@ class SimulationStudy(models.Model):
     label = fields.Char(index=True)
     derived_from = fields.Char()
     model = fields.Many2one(comodel_name='tvbo.dynamics')
-    description = fields.Text()
     references = fields.Text()
-    key = fields.Char()
-    title = fields.Char()
-    year = fields.Integer()
-    doi = fields.Char()
+    key = fields.Char(help='Deprecated alias of the inherited ``citekey``; retained for back-compatibility with existing tooling.')
     sample = fields.Many2one(comodel_name='tvbo.sample')
     experiments = fields.Many2many(comodel_name='tvbo.simulation_experiment', relation='tvbo_simulation_study_experiments_rel')
+    description = fields.Text()
+    citekey = fields.Char(help='BibTeX citation key; the join key into references.bib for full bibliographic detail. A study is identified by its key/citekey and described by its title — no ``name`` needed.')
+    type = fields.Char(help='Publication type (article, book, inproceedings, …).')
+    title = fields.Char()
+    authors = fields.Text(help='Author display strings (full detail in references.bib).')
+    year = fields.Integer()
+    doi = fields.Char()
 
 
 class SimulationTool(models.Model):
@@ -1821,6 +1860,20 @@ class Stimulus(models.Model):
     regions = fields.Text()
     weighting = fields.Text()
     noise = fields.Many2one(comodel_name='tvbo.noise', help="Optional stochastic contribution to the stimulus. Mirrors state_variables.noise on the Dynamics side. The stimulus value at each integration step is the sum of `equation`'s evaluation (deterministic, if set) and a draw from this Noise process. When only `noise` is set and `equation` is absent, the stimulus IS the noise (pure stochastic source — e.g. iid uniform driver for memory-capacity benchmarks; signal+noise paradigms for psychophysics).")
+
+
+class Study(models.Model):
+    _name = 'tvbo.study'
+    _description = 'Bibliographic anchor for a source publication, identified by its citation key (``citekey``).  The full bibliographic record lives in the project BibTeX library (references.bib) and is resolved by citekey; this node ca...'
+    _rec_name = 'title'
+
+    description = fields.Text()
+    citekey = fields.Char(help='BibTeX citation key; the join key into references.bib for full bibliographic detail. A study is identified by its key/citekey and described by its title — no ``name`` needed.')
+    type = fields.Char(help='Publication type (article, book, inproceedings, …).')
+    title = fields.Char()
+    authors = fields.Text(help='Author display strings (full detail in references.bib).')
+    year = fields.Integer()
+    doi = fields.Char()
 
 
 class Subject(models.Model):

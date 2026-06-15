@@ -92,7 +92,18 @@ test.describe('TVBO model/experiment builder', () => {
 
     // Deep link the same way a Knowledge-Graph card's "Open in Experiment Builder" does.
     await page.goto(`${CONFIGURATOR}?experiment=${exp.id}`);
-    await page.waitForTimeout(5000); // allow the auto-loader to hydrate the base spec
+    // The base spec loads via a slow (tvbo-importing) /spec fetch that completes
+    // AFTER prefill. Wait until it's applied (assembled spec carries the loaded
+    // observations) before downloading — clicking earlier hits a half-loaded spec
+    // and downloadYaml()'s validation alert() would block the test until timeout.
+    await expect(page.locator('#dynamicsModelsList .card')).not.toHaveCount(0, { timeout: 40_000 });
+    await expect
+      .poll(async () => page.evaluate(() => {
+        try { return !!(window.assembleExperimentSpec() as any).observations; } catch { return false; }
+      }), { timeout: 60_000 })
+      .toBeTruthy();
+    // Safety net: surface an unexpected validation alert instead of hanging 60s.
+    page.on('dialog', (d) => { void d.dismiss(); throw new Error(`unexpected dialog: ${d.message()}`); });
 
     const downloadPromise = page.waitForEvent('download', { timeout: 60_000 });
     await page.locator('#builderDownloadYaml').click();
@@ -104,6 +115,172 @@ test.describe('TVBO model/experiment builder', () => {
 
     const report = validateYaml(yamlText);
     expect(report.valid, `downloaded YAML invalid for exp ${exp.id}: ${summarize(report)}`).toBeTruthy();
+  });
+
+  test('UI: ?experiment deep-link populates the Dynamics tab (regression: empty Local Dynamics)', async ({ page, request }) => {
+    // Find a seeded experiment that actually carries a dynamics model, and the
+    // model's name, straight from the same API the builder loads from.
+    const list = (await (await request.get('/tvbo/api/configurator/experiments')).json()).data || [];
+    expect(list.length, 'seeded experiments present').toBeGreaterThan(0);
+    let targetId: number | null = null;
+    let dynName = '';
+    for (const e of list) {
+      const det = (await (await request.get(`/tvbo/api/configurator/experiment/${e.id}`)).json()).data;
+      const dyn = Array.isArray(det?.dynamics) ? det.dynamics[0] : det?.dynamics;
+      if (dyn && dyn.name) { targetId = e.id; dynName = dyn.name; break; }
+    }
+    expect(targetId, 'a seeded experiment with dynamics exists').not.toBeNull();
+
+    await page.goto(`${CONFIGURATOR}?experiment=${targetId}`);
+    await page.locator('#dynamics-tab').click();
+
+    // The loaded model must surface in the "Local Dynamics" list — not the empty
+    // placeholder. (The downloaded-YAML check above passes from baseSpec even when
+    // this list is broken, so assert the tab's own rendered state here.)
+    const modelsList = page.locator('#dynamicsModelsList');
+    await expect(modelsList).not.toContainText('No dynamics models added yet', { timeout: 30_000 });
+    await expect(modelsList.locator('.card')).not.toHaveCount(0, { timeout: 30_000 });
+    await expect(modelsList).toContainText(dynName, { timeout: 30_000 });
+  });
+
+  test('UI: loading an experiment populates EVERY tab that has data (full sweep)', async ({ page, request }) => {
+    test.setTimeout(300_000);
+    // prefillExperiment() fills every list container synchronously regardless of
+    // which tab is active, so once the Dynamics list has hydrated we can read all
+    // row counts at once. Observations split into base vs derived (pipeline/source).
+    const isDerived = (o: any) => !!(o && (o.pipeline || o.source_observations));
+    const list = (await (await request.get('/tvbo/api/configurator/experiments')).json()).data || [];
+    expect(list.length, 'seeded experiments present').toBeGreaterThan(0);
+
+    let checked = 0;
+    for (const e of list) {
+      const det = (await (await request.get(`/tvbo/api/configurator/experiment/${e.id}`)).json()).data;
+      const checks: Array<{ sel: string; n: number; what: string }> = [];
+      const push = (field: string, sel: string) => {
+        if (Array.isArray(det[field]) && det[field].length) checks.push({ sel, n: det[field].length, what: field });
+      };
+      push('functions', '#functionsRows .builder-row');
+      push('algorithms', '#algorithmsRows .builder-row');
+      push('optimizations', '#optimizationRows .builder-row');
+      push('explorations', '#explorationsRows .builder-row');
+      push('continuations', '#continuationsRows .builder-row');
+      const obs = Array.isArray(det.observations) ? det.observations : [];
+      const base = obs.filter((o: any) => !isDerived(o)).length;
+      const der = obs.filter((o: any) => isDerived(o)).length;
+      if (base) checks.push({ sel: '#observationsRows .builder-row', n: base, what: 'observations(base)' });
+      if (der) checks.push({ sel: '#derivedObservationsRows .builder-row', n: der, what: 'derived observations' });
+      const hasDyn = !!det.dynamics;
+      if (!checks.length && !hasDyn) continue;
+
+      await page.goto(`${CONFIGURATOR}?experiment=${e.id}`);
+      // Hydration barrier: prefill runs synchronously, so once a dynamics card is
+      // rendered, every list container is filled too.
+      if (hasDyn) {
+        await expect(
+          page.locator('#dynamicsModelsList .card'),
+          `exp ${e.id}: Dynamics tab empty but experiment has a dynamics model`,
+        ).not.toHaveCount(0, { timeout: 60_000 });
+        checked++;
+      }
+      for (const c of checks) {
+        await expect
+          .soft(page.locator(c.sel), `exp ${e.id}: "${c.what}" rows != API count (${c.n})`)
+          .toHaveCount(c.n, { timeout: 15_000 });
+        checked++;
+      }
+    }
+    expect(checked, 'list/dynamics tabs exercised across experiments').toBeGreaterThan(0);
+  });
+
+  test('UI: synthetic experiment loads events + explicit network nodes', async ({ page, request }) => {
+    // No seeded experiment exercises events or an explicit node list. Deep-link a
+    // real experiment first so every tab is fully initialized, then drive
+    // prefillExperiment() with a synthetic spec and assert events + node tabs.
+    const list = (await (await request.get('/tvbo/api/configurator/experiments')).json()).data || [];
+    expect(list.length).toBeGreaterThan(0);
+    await page.goto(`${CONFIGURATOR}?experiment=${list[0].id}`);
+    // Dynamics card == prefill ran == every tab container (events, custom nodes)
+    // is initialized in the DOM (some are in hidden panels, hence no visible wait).
+    await expect(page.locator('#dynamicsModelsList .card')).not.toHaveCount(0, { timeout: 40_000 });
+    await page.evaluate(() => {
+      window.prefillExperiment({
+        label: 'Synthetic events + nodes',
+        dynamics: { name: 'JansenRit' },
+        events: [
+          { name: 'ev_a', event_type: 'parameter_change', target_variable: 'a', condition: 't > 100' },
+          { name: 'ev_b', event_type: 'reset', target_regions: '0,1' },
+        ],
+        network: {
+          number_of_nodes: 2,
+          nodes: [
+            { id: 0, label: 'L', position: { x: 1, y: 2, z: 3 }, dynamics: { name: 'JansenRit' } },
+            { id: 1, label: 'R', position: { x: 4, y: 5, z: 6 } },
+          ],
+        },
+      });
+    });
+    await expect(page.locator('#eventsRows .builder-row'), 'events not loaded').toHaveCount(2, { timeout: 15_000 });
+    await expect(page.locator('#customNetworkNodes .builder-row'), 'explicit nodes not loaded').toHaveCount(2, {
+      timeout: 15_000,
+    });
+    // The loaded node label/coords must round-trip into the row inputs.
+    await expect(page.locator('#customNetworkNodes .builder-row').first().locator('.node-label')).toHaveValue('L');
+  });
+
+  test('UI: scalar object sections (integration) prefill their fields', async ({ page, request }) => {
+    // prefillSection() fills [data-field] inputs; verify a loaded experiment's
+    // integration settings actually reach the Integration tab inputs.
+    const list = (await (await request.get('/tvbo/api/configurator/experiments')).json()).data || [];
+    let target: number | null = null;
+    for (const e of list) {
+      const det = (await (await request.get(`/tvbo/api/configurator/experiment/${e.id}`)).json()).data;
+      if (det.integration && typeof det.integration === 'object') { target = e.id; break; }
+    }
+    expect(target, 'an experiment with integration settings exists').not.toBeNull();
+
+    await page.goto(`${CONFIGURATOR}?experiment=${target}`);
+    await page.locator('#integration-tab').click();
+    // At least one [data-field] input in the integration section must be filled.
+    await expect
+      .poll(async () =>
+        page.evaluate(() => {
+          const c = document.querySelector('[data-section="integration"]');
+          if (!c) return -1;
+          return Array.from(c.querySelectorAll('[data-field]')).filter(
+            (el) => (el as HTMLInputElement).value && (el as HTMLInputElement).value.trim() !== '',
+          ).length;
+        }),
+        { timeout: 30_000 },
+      )
+      .toBeGreaterThan(0);
+  });
+
+  test('UI: references round-trip intact (commas within a citation are preserved)', async ({ page, request }) => {
+    // Find an experiment whose references are multi-line citations containing
+    // commas — the exact shape that the old comma-split shattered.
+    const list = (await (await request.get('/tvbo/api/configurator/experiments')).json()).data || [];
+    let target: number | null = null;
+    let expectedRefs: string[] = [];
+    for (const e of list) {
+      const det = (await (await request.get(`/tvbo/api/configurator/experiment/${e.id}`)).json()).data;
+      if (typeof det.references === 'string' && det.references.includes(',') && det.references.includes('\n')) {
+        target = e.id;
+        expectedRefs = det.references.split(/\r?\n+/).map((s: string) => s.trim()).filter(Boolean);
+        break;
+      }
+    }
+    expect(target, 'an experiment with multi-line, comma-containing references exists').not.toBeNull();
+    expect(expectedRefs.length).toBeGreaterThan(1);
+
+    await page.goto(`${CONFIGURATOR}?experiment=${target}`);
+    await expect(page.locator('#dynamicsModelsList .card')).not.toHaveCount(0, { timeout: 40_000 });
+    // The references textarea is filled during prefill (general section).
+    await expect.poll(async () => page.locator('#experimentReferences').inputValue().catch(() => '')).not.toBe('');
+
+    // The assembled spec must list one entry per citation, NOT comma-fragments.
+    const refs = await page.evaluate(() => (window.assembleExperimentSpec() as { references?: string[] }).references);
+    expect(Array.isArray(refs), 'references serialized as a list').toBeTruthy();
+    expect(refs, 'each reference is a full citation, not a comma-fragment').toEqual(expectedRefs);
   });
 
   test('instance /spec endpoint returns a schema-valid building block', async ({ request }) => {
@@ -199,5 +376,6 @@ declare global {
     assembleExperimentSpec: () => Record<string, unknown>;
     serializeExperiment: (spec: unknown, format?: string) => Promise<{ ok: boolean; yaml?: string; data?: unknown; error?: string; errors?: Array<{ loc: string[]; msg: string }> }>;
     setBaseSpec: (spec: unknown) => void;
+    prefillExperiment: (exp: Record<string, unknown>) => void;
   }
 }

@@ -10,7 +10,10 @@ table (see models/model_sharing.py); the schema entity ``tvbo.dynamics`` carries
 none of it. Reads use ``sudo()`` to reach the shared/ground-truth records, but
 every query is scoped by owner/visibility and mutations verify ownership first.
 """
-from odoo import http
+from datetime import timedelta
+
+from odoo import fields, http
+from odoo.exceptions import ValidationError
 from odoo.http import request
 
 
@@ -28,7 +31,8 @@ class TVBOPortal(http.Controller):
         if request.env.user._is_public():
             return request.redirect('/web/login?redirect=/my/models')
         shares = self._shares().search(
-            [('owner_user_id', '=', request.env.user.id)], order='write_date desc')
+            [('owner_user_id', '=', request.env.user.id), ('dynamics_id', '!=', False)],
+            order='write_date desc')
         return request.render('tvbo.portal_my_models', {
             'shares': shares,
             'page_name': 'my_models',
@@ -40,7 +44,8 @@ class TVBOPortal(http.Controller):
         if request.env.user._is_public():
             return request.redirect('/web/login?redirect=/tvbo/models/shared')
         shares = self._shares().search(
-            [('visibility', '=', 'shared')], order='write_date desc')
+            [('visibility', '=', 'shared'), ('dynamics_id', '!=', False)],
+            order='write_date desc')
         return request.render('tvbo.portal_shared_models', {
             'shares': shares,
             'current_uid': request.env.user.id,
@@ -79,4 +84,47 @@ class TVBOPortal(http.Controller):
         # Deletes the model and its exclusive child records; removing the model
         # cascades to its share row (ondelete='cascade').
         share.purge_model()
+        return {'success': True}
+
+    # ------------------------------------------------------------------ #
+    # API keys (self-service) — for the Python REST client
+    # ------------------------------------------------------------------ #
+    @http.route('/my/api-keys', type='http', auth='public', website=True)
+    def api_keys(self, **kw):
+        """Manage personal API keys used by the tvbo Python client."""
+        if request.env.user._is_public():
+            return request.redirect('/web/login?redirect=/my/api-keys')
+        keys = request.env['tvbo.api_key'].sudo().search(
+            [('user_id', '=', request.env.user.id)], order='create_date desc')
+        return request.render('tvbo.portal_api_keys', {
+            'keys': keys,
+            'page_name': 'api_keys',
+        })
+
+    @http.route('/my/api-keys/create', type='jsonrpc', auth='user', csrf=False)
+    def api_key_create(self, name=None, expires_days=None, **kw):
+        """Mint a key for the caller; returns the raw token once.
+
+        ``expires_days`` (optional, int) sets an expiry that many days out; 0 or
+        empty means the key never expires.
+        """
+        try:
+            days = int(expires_days) if expires_days else 0
+        except (TypeError, ValueError):
+            days = 0
+        expires = fields.Datetime.now() + timedelta(days=days) if days > 0 else False
+        try:
+            record, raw = request.env['tvbo.api_key'].sudo().generate(
+                name, user=request.env.user, expires=expires)
+        except ValidationError as exc:
+            return {'success': False, 'error': exc.args[0] if exc.args else str(exc)}
+        return {'success': True, 'id': record.id, 'name': record.name, 'key': raw}
+
+    @http.route('/my/api-keys/<int:key_id>/revoke', type='jsonrpc', auth='user', csrf=False)
+    def api_key_revoke(self, key_id, **kw):
+        """Revoke (delete) one of the caller's own keys."""
+        key = request.env['tvbo.api_key'].sudo().browse(key_id)
+        if not key.exists() or key.user_id.id != request.env.user.id:
+            return {'success': False, 'error': 'not found or not owner'}
+        key.unlink()
         return {'success': True}

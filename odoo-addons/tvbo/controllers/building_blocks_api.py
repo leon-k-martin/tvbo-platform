@@ -480,7 +480,7 @@ class BuildingBlocksController(http.Controller):
 
     @http.route(
         '/tvbo/api/configurator/instances/<string:class_name>',
-        type='json', auth='user', methods=['POST'], csrf=False,
+        type='jsonrpc', auth='user', methods=['POST'], csrf=False,
     )
     def api_instance_create(self, class_name, **kwargs):
         """Save a customised building block back to the library.
@@ -532,7 +532,7 @@ class BuildingBlocksController(http.Controller):
     # ---- 3. Serialize -------------------------------------------------------
     @http.route(
         '/tvbo/api/configurator/experiment/serialize',
-        type='json', auth='public', methods=['POST'], csrf=False,
+        type='jsonrpc', auth='public', methods=['POST'], csrf=False,
     )
     def api_experiment_serialize(self, **kwargs):
         """Validate assembled experiment JSON and return schema-correct YAML.
@@ -676,7 +676,7 @@ class BuildingBlocksController(http.Controller):
 
     @http.route(
         '/tvbo/api/configurator/experiment/dump_yaml',
-        type='json', auth='public', methods=['POST'], csrf=False,
+        type='jsonrpc', auth='public', methods=['POST'], csrf=False,
     )
     def api_experiment_dump_yaml(self, **kwargs):
         """Same as yaml_raw but takes the JSON state in the request body.

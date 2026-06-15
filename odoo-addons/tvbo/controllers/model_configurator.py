@@ -249,6 +249,133 @@ class ModelConfiguratorController(http.Controller):
             _logger.error(f"Error in api_experiment_yaml: {e}", exc_info=True)
             return self._json_response({'success': False, 'error': str(e)})
 
+    @http.route('/tvbo/api/configurator/experiment/<int:experiment_id>/bundle', type='http', auth='public', methods=['GET'], csrf=False)
+    def api_experiment_bundle(self, experiment_id, **kwargs):
+        """Download a self-contained experiment bundle: one monolithic YAML plus
+        the network connectome as an HDF5 companion (+ sidecar), zipped.
+
+        The bundled YAML references the connectome via ``network.data_file`` so it
+        loads standalone with ``SimulationExperiment.from_file`` — no external BIDS
+        directory needed. Experiments without a multi-node network (e.g. single-node
+        bifurcation studies) bundle to just the YAML. ``label``/``description`` query
+        params override the corresponding fields (so builder edits carry through).
+        """
+        import json as _json
+
+        def _err(status, payload):
+            # Binary-download route: signal failure with a real HTTP status so the
+            # client can distinguish it from a valid ZIP (never a 200 JSON body).
+            return request.make_response(_json.dumps(payload), status=status,
+                                         headers=[('Content-Type', 'application/json')])
+        try:
+            import io
+            import os
+            import re
+            import shutil
+            import tempfile
+            import unicodedata
+            import zipfile
+            from pathlib import Path
+            import yaml as _yaml
+            import tvbo
+            from tvbo.utils import pydantic_loader
+            from tvbo.classes.experiment import SimulationExperiment
+            from tvbo.classes.network import Network
+            from .building_blocks_api import validate_experiment
+
+            exp_rec = request.env['tvbo.simulation_experiment'].sudo().browse(experiment_id)
+            if not exp_rec.exists():
+                return _err(404, {'success': False, 'error': 'Experiment not found'})
+
+            # Respect model-sharing visibility: a private experiment is downloadable
+            # only by its owner. Curated experiments have no share row -> public.
+            share = request.env['tvbo.model_share'].sudo().search(
+                [('experiment_id', '=', experiment_id)], limit=1)
+            if share and share.visibility == 'private':
+                user = request.env.user
+                if user._is_public() or share.owner_user_id.id != user.id:
+                    return _err(403, {'success': False, 'error': 'forbidden'})
+
+            obj, errors = validate_experiment(experiment_id)
+            if errors:
+                return _err(422, {'success': False, 'error': 'validation_error', 'errors': errors})
+
+            spec = _yaml.safe_load(pydantic_loader.dump(obj))
+            for k in ('label', 'description'):  # not 'name' — schema identifier slot
+                if kwargs.get(k):
+                    spec[k] = kwargs[k]
+            # References edited in the builder (one per line). Only override when the
+            # existing value is absent or a plain list of citekey strings, so we never
+            # clobber object-shaped reference entries the schema may require.
+            refs = (kwargs.get('references') or '').strip()
+            if refs:
+                cur = spec.get('references')
+                if cur is None or (isinstance(cur, list) and all(isinstance(x, str) for x in cur)):
+                    spec['references'] = [r.strip() for r in refs.splitlines() if r.strip()]
+
+            tmp = tempfile.mkdtemp(prefix='tvbo_bundle_')
+            try:
+                # Resolve a relative bids_dir against tvbo's experiments dir so the
+                # connectome resolves regardless of the temp file's location.
+                db_exp = Path(tvbo.__file__).resolve().parent / 'database' / 'experiments'
+                net_spec = spec.get('network')
+                if isinstance(net_spec, dict) and net_spec.get('bids_dir') and not os.path.isabs(net_spec['bids_dir']):
+                    net_spec['bids_dir'] = str((db_exp / net_spec['bids_dir']).resolve())
+
+                exp_path = os.path.join(tmp, 'experiment.yaml')
+                with open(exp_path, 'w') as fh:
+                    _yaml.safe_dump(spec, fh, sort_keys=False, allow_unicode=True)
+
+                experiment = SimulationExperiment.from_file(exp_path)
+                files = ['experiment.yaml']
+                if isinstance(net_spec, dict) and (getattr(experiment.network, 'number_of_nodes', 0) or 0) > 1:
+                    n = experiment.network
+                    if not isinstance(n, Network):
+                        n.__class__ = Network
+                    if getattr(n, 'bids_dir', None):
+                        try:
+                            n.bids_dir = None
+                        except Exception:  # noqa: BLE001
+                            object.__setattr__(n, 'bids_dir', None)
+                    n.save(os.path.join(tmp, 'connectome.yaml'), binary_format='h5')
+                    # Load weights from the HDF5 companion, but KEEP the inline network
+                    # (normalization transforms, coupling, parameters). Collapsing the
+                    # network to {label, data_file} drops the `W / W_max` transform, so
+                    # the standalone run gets raw weights and diverges to all-NaN.
+                    net_block = {k: v for k, v in net_spec.items() if k != 'bids_dir'}
+                    net_block['data_file'] = 'connectome.h5'
+                    transforms = net_block.get('transforms') or []
+                    if not any(isinstance(t, dict) and t.get('name') == 'weight' for t in transforms):
+                        net_block['transforms'] = list(transforms) + [
+                            {'name': 'weight', 'equation': {'rhs': 'W / W_max'}}]
+                    spec['network'] = net_block
+                    with open(exp_path, 'w') as fh:
+                        _yaml.safe_dump(spec, fh, sort_keys=False, allow_unicode=True)
+                    files += ['connectome.yaml', 'connectome.h5']
+
+                buf = io.BytesIO()
+                with zipfile.ZipFile(buf, 'w', zipfile.ZIP_DEFLATED) as z:
+                    for fn in files:
+                        p = os.path.join(tmp, fn)
+                        if os.path.exists(p):
+                            z.write(p, fn)
+                data = buf.getvalue()
+            finally:
+                shutil.rmtree(tmp, ignore_errors=True)
+
+            ascii_name = unicodedata.normalize('NFKD', exp_rec.label or 'experiment').encode('ascii', 'ignore').decode('ascii')
+            filename = re.sub(r'[^\w.-]+', '_', ascii_name).strip('_') or 'experiment'
+            return request.make_response(data, headers=[
+                ('Content-Type', 'application/zip'),
+                ('Content-Disposition', f'attachment; filename="{filename}_bundle.zip"'),
+            ])
+        except ImportError as e:
+            _logger.error(f"tvbo package not available: {e}")
+            return _err(500, {'success': False, 'error': 'tvbo package not installed'})
+        except Exception as e:  # noqa: BLE001
+            _logger.error(f"Error in api_experiment_bundle: {e}", exc_info=True)
+            return _err(500, {'success': False, 'error': str(e)})
+
     @http.route('/tvbo/configurator/save', type='jsonrpc', auth='user', website=True, csrf=True)
     def save_model(self, **kwargs):
         """Save a new neural mass model configuration to database"""
