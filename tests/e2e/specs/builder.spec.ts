@@ -1,4 +1,6 @@
 import { test, expect, APIRequestContext } from '@playwright/test';
+import { readFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
 import { validateYaml, validateYamls, summarize } from '../helpers/validate';
 
 const CONFIGURATOR = '/tvbo/configurator';
@@ -85,6 +87,9 @@ test.describe('TVBO model/experiment builder', () => {
   });
 
   test('UI: ?experiment deep-link (KG -> builder) loads and downloads valid YAML', async ({ page, request }) => {
+    // Loaded experiments download a bundle whose connectome HDF5 is built
+    // server-side (heavy, cold tvbo import); allow generous headroom on a busy stack.
+    test.setTimeout(240_000);
     const body = await (await request.get('/tvbo/api/configurator/experiments')).json();
     const experiments = body.data || [];
     expect(experiments.length, 'seeded experiments present').toBeGreaterThan(0);
@@ -105,13 +110,17 @@ test.describe('TVBO model/experiment builder', () => {
     // Safety net: surface an unexpected validation alert instead of hanging 60s.
     page.on('dialog', (d) => { void d.dismiss(); throw new Error(`unexpected dialog: ${d.message()}`); });
 
-    const downloadPromise = page.waitForEvent('download', { timeout: 60_000 });
+    const downloadPromise = page.waitForEvent('download', { timeout: 120_000 });
     await page.locator('#builderDownloadYaml').click();
     const download = await downloadPromise;
-    const stream = await download.createReadStream();
-    const chunks: Buffer[] = [];
-    for await (const c of stream) chunks.push(Buffer.from(c));
-    const yamlText = Buffer.concat(chunks).toString('utf-8');
+    // Read from the completed file (createReadStream can race the still-writing
+    // download). A LOADED experiment downloads a self-contained bundle ZIP
+    // (experiment.yaml + connectome); from-scratch downloads bare YAML. Handle both.
+    const dlPath = await download.path();
+    const isZip = readFileSync(dlPath).subarray(0, 2).toString('latin1') === 'PK';
+    const yamlText = isZip
+      ? execFileSync('unzip', ['-p', dlPath, 'experiment.yaml'], { maxBuffer: 16 * 1024 * 1024 }).toString('utf-8')
+      : readFileSync(dlPath, 'utf-8');
 
     const report = validateYaml(yamlText);
     expect(report.valid, `downloaded YAML invalid for exp ${exp.id}: ${summarize(report)}`).toBeTruthy();

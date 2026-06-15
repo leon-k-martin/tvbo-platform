@@ -4859,8 +4859,14 @@
 
 
   // Eagerly initialize all tabs so prefill from loaded experiments works.
-  // Also re-init preview each time the preview tab is shown.
+  let _allTabsInitialized = false;
+  // Idempotent: each initialize*Tab resets its container's innerHTML, so a second
+  // call (the 500ms boot timer AND prefillExperiment both call this) would WIPE
+  // rows that prefill already populated. Run the destructive init exactly once;
+  // afterwards the containers persist and prefill clears+fills the row lists itself.
   function initializeAllTabs() {
+    if (_allTabsInitialized) return;
+    _allTabsInitialized = true;
     initializeIntegratorTab();
     initializeCouplingTab();
     initializeNetworkTab();

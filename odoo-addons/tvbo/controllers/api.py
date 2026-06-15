@@ -183,20 +183,26 @@ class TVBOApi(http.Controller):
         data = obj.model_dump(mode='python', by_alias=True, exclude_none=True)
         name = data.get('name') or data.get('label')
 
-        # Replace-on-name: if the user already owns an element of this kind with
-        # the same identifier, drop it first so pushes update in place. Compare on
-        # each target's own ``_rec_name`` (``name`` for models, ``label`` for
-        # experiments) so this works for both kinds.
+        # Replace-on-name: find the user's existing same-name element(s) of this
+        # kind. Compare on each target's own ``_rec_name`` (``name`` for models,
+        # ``label`` for experiments). IMPORTANT: resolve these BEFORE creating the
+        # new record and only purge them AFTER the create succeeds — otherwise a
+        # failing create (e.g. a missing required field) would delete the user's
+        # existing record with no replacement.
         owned = self._shares().search(
             [(share_field, '!=', False), ('owner_user_id', '=', user.id)])
-        if name:
-            stale = owned.filtered(
-                lambda s: s.target[s.target._rec_name] == name)
-            stale.purge_model()
+        stale = owned.filtered(
+            lambda s: name and s.target[s.target._rec_name] == name)
 
-        rec_id = _create_record(request.env, model_name, data, {})
+        try:
+            rec_id = _create_record(request.env, model_name, data, {})
+        except Exception as exc:  # noqa: BLE001 - surface a clean error, keep old record
+            return self._resp({'error': 'create_failed', 'detail': str(exc)}, status=422)
         if not rec_id:
             return self._resp({'error': 'create_failed'}, status=500)
+
+        # Create succeeded -> now it is safe to drop the prior same-name record.
+        stale.purge_model()
         self._shares().create({
             share_field: rec_id, 'owner_user_id': user.id, 'visibility': visibility})
         return self._resp(

@@ -36,9 +36,16 @@ class ModelConfiguratorController(http.Controller):
 
     @http.route('/tvbo/api/configurator/experiments', type='http', auth='public', methods=['GET'], csrf=False)
     def api_experiments(self, **kwargs):
-        """Get all simulation experiments"""
+        """List simulation experiments visible to the caller: curated/ground-truth
+        (no share row), shared, and the caller's own. Other users' private
+        experiments are excluded so their labels/ids don't leak via this list."""
         try:
-            records = request.env['tvbo.simulation_experiment'].sudo().search([])
+            private_others = request.env['tvbo.model_share'].sudo().search([
+                ('experiment_id', '!=', False), ('visibility', '=', 'private'),
+                ('owner_user_id', '!=', request.env.user.id),
+            ]).mapped('experiment_id').ids
+            domain = [('id', 'not in', private_others)] if private_others else []
+            records = request.env['tvbo.simulation_experiment'].sudo().search(domain)
             data = records.read()
             return self._json_response({'success': True, 'data': data})
         except Exception as e:
@@ -135,6 +142,21 @@ class ModelConfiguratorController(http.Controller):
             _logger.error(f"Error in api_monitors: {e}", exc_info=True)
             return self._json_response({'success': False, 'error': str(e)})
 
+    def _experiment_readable(self, experiment_id):
+        """True if the experiment is public (no share row), shared, or owned by
+        the current user. Private experiments belonging to someone else are not
+        readable through these public endpoints — mirrors the access control in
+        controllers/api.py so a user-saved private experiment can't be fetched by
+        enumerating ids."""
+        share = request.env['tvbo.model_share'].sudo().search(
+            [('experiment_id', '=', experiment_id)], limit=1)
+        if not share:
+            return True  # ground-truth / public experiment
+        if share.visibility == 'shared':
+            return True
+        user = request.env.user
+        return bool(user) and not user._is_public() and share.owner_user_id.id == user.id
+
     @http.route('/tvbo/api/configurator/experiment/<int:experiment_id>', type='http', auth='public', methods=['GET'], csrf=False)
     def api_experiment_detail(self, experiment_id, **kwargs):
         """
@@ -145,7 +167,7 @@ class ModelConfiguratorController(http.Controller):
         """
         try:
             exp = request.env['tvbo.simulation_experiment'].sudo().browse(experiment_id)
-            if not exp.exists():
+            if not exp.exists() or not self._experiment_readable(experiment_id):
                 return self._json_response({'success': False, 'error': 'Experiment not found'})
 
             # Schema-driven deep resolution - no manual unpacking
@@ -218,7 +240,7 @@ class ModelConfiguratorController(http.Controller):
             from .building_blocks_api import validate_experiment
 
             exp = request.env['tvbo.simulation_experiment'].sudo().browse(experiment_id)
-            if not exp.exists():
+            if not exp.exists() or not self._experiment_readable(experiment_id):
                 return self._json_response({'success': False, 'error': 'Experiment not found'})
 
             obj, errors = validate_experiment(experiment_id)
@@ -342,8 +364,16 @@ class ModelConfiguratorController(http.Controller):
                     # (normalization transforms, coupling, parameters). Collapsing the
                     # network to {label, data_file} drops the `W / W_max` transform, so
                     # the standalone run gets raw weights and diverges to all-NaN.
-                    net_block = {k: v for k, v in net_spec.items() if k != 'bids_dir'}
+                    # Freeze the connectome to the HDF5 companion: drop resolution
+                    # directives (bids_dir/parcellation/…) so a standalone load uses
+                    # the explicit data rather than re-resolving, and pin the node
+                    # count to the resolved value (the Odoo record may store a
+                    # placeholder of 1).
+                    net_block = {k: v for k, v in net_spec.items()
+                                 if k not in ('bids_dir', 'parcellation', 'tractogram', 'graph_generator')}
                     net_block['data_file'] = 'connectome.h5'
+                    if getattr(n, 'number_of_nodes', None):
+                        net_block['number_of_nodes'] = n.number_of_nodes
                     transforms = net_block.get('transforms') or []
                     if not any(isinstance(t, dict) and t.get('name') == 'weight' for t in transforms):
                         net_block['transforms'] = list(transforms) + [
