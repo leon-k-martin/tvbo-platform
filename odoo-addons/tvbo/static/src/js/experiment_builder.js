@@ -1488,6 +1488,18 @@
     // loader; calling this here makes prefill self-sufficient.
     if (window.initializeAllTabs) window.initializeAllTabs();
 
+    // Start each load from a clean slate: empty every per-section row container.
+    // initializeAllTabs() is idempotent (runs once), so without this an earlier
+    // load's rows would persist into a later experiment that OMITS that section
+    // (the populate steps below only clear a container when the new experiment
+    // actually has items for it). Reachable via the "load existing" dropdown.
+    ['functionsRows', 'observationsRows', 'derivedObservationsRows', 'algorithmsRows',
+     'optimizationRows', 'explorationsRows', 'continuationsRows', 'eventsRows',
+     'customNetworkNodes', 'couplingParamsContainer'].forEach(id => {
+      const c = document.getElementById(id);
+      if (c) c.innerHTML = '';
+    });
+
     // 1. General tab (data-section="general" on the general panel)
     prefillSection('general', {
       name: exp.name || exp.display_name,

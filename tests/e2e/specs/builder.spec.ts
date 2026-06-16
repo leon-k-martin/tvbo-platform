@@ -201,6 +201,31 @@ test.describe('TVBO model/experiment builder', () => {
     expect(checked, 'list/dynamics tabs exercised across experiments').toBeGreaterThan(0);
   });
 
+  test('UI: loading a second experiment does not leak the first one rows (dropdown multi-load)', async ({ page, request }) => {
+    test.setTimeout(180_000);
+    // Pick experiment A (has functions) and B (no functions) to exercise the leak
+    // fixed by clearing row containers at the start of prefill.
+    const list = (await (await request.get('/tvbo/api/configurator/experiments')).json()).data || [];
+    let withFns: number | null = null;
+    let withoutFns: number | null = null;
+    for (const e of list) {
+      const det = (await (await request.get(`/tvbo/api/configurator/experiment/${e.id}`)).json()).data;
+      const n = Array.isArray(det.functions) ? det.functions.length : 0;
+      if (n > 0 && withFns === null) withFns = e.id;
+      if (n === 0 && withoutFns === null) withoutFns = e.id;
+    }
+    expect(withFns, 'a seeded experiment WITH functions exists').not.toBeNull();
+    expect(withoutFns, 'a seeded experiment WITHOUT functions exists').not.toBeNull();
+
+    // Load A then B in the SAME page (no reload) — the path the dropdown takes.
+    await page.goto(CONFIGURATOR);
+    await page.evaluate(async (id) => { await window.loadExperimentById(String(id)); }, withFns);
+    await expect(page.locator('#functionsRows .builder-row'), 'A loaded its functions').not.toHaveCount(0, { timeout: 40_000 });
+    await page.evaluate(async (id) => { await window.loadExperimentById(String(id)); }, withoutFns);
+    // B has no functions -> A's function rows must NOT linger.
+    await expect(page.locator('#functionsRows .builder-row'), "B has no functions; A's rows leaked").toHaveCount(0, { timeout: 40_000 });
+  });
+
   test('UI: synthetic experiment loads events + explicit network nodes', async ({ page, request }) => {
     // No seeded experiment exercises events or an explicit node list. Deep-link a
     // real experiment first so every tab is fully initialized, then drive
@@ -386,5 +411,6 @@ declare global {
     serializeExperiment: (spec: unknown, format?: string) => Promise<{ ok: boolean; yaml?: string; data?: unknown; error?: string; errors?: Array<{ loc: string[]; msg: string }> }>;
     setBaseSpec: (spec: unknown) => void;
     prefillExperiment: (exp: Record<string, unknown>) => void;
+    loadExperimentById: (id: string) => Promise<void>;
   }
 }
