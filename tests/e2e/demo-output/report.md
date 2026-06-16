@@ -1,8 +1,8 @@
 
 
-**JR peak frequency — my run**
+**JR peak-frequency — my run**
 
-Customized Jansen-Rit peak-frequency experiment from the knowledge graph.
+Customized Jansen-Rit experiment from the knowledge graph.
 
 
 
@@ -90,6 +90,8 @@ $$sigm_{y1 y2} = \frac{2.0 \cdot \nu_{max}}{1.0 + e^{r \cdot \left(v_{0} + y_{2}
 
 **Brain Network: Desikan-Killiany**
 
+Structural connectivity from dk_average dataset
+
 
 | Setting | Value |
 |:--------|:------|
@@ -98,31 +100,38 @@ $$sigm_{y1 y2} = \frac{2.0 \cdot \nu_{max}}{1.0 + e^{r \cdot \left(v_{0} + y_{2}
 | Distance unit | mm |
 | Time unit | ms |
 | Data file | connectome.h5 |
+| Transform (weight) | $M_{\text{out}} = \frac{W}{W_{max}}$ |
+| Structural measures | streamlineCount, tractLength |
 | Nodes | 84 explicit nodes |
-| Weights | shape=84x84, dtype=float32 |
+| Weights | shape=84x84, format=Format(layout=Layout(major_to_minor=(0, 1), tiling=(), sub_byte_element_size_in_bits=0), sharding=SingleDeviceSharding(device=CpuDevice(id=0), memory_kind=device)), dtype=float32 |
 
 
-**Coupling: Linear**
+**Coupling: Delayed Sigmoidal Jansen-Rit Coupling**
 
-$$c = b + a \cdot \sum_{j=0}^{-1 + N} {{y_{4}}_{j}}_{j} \cdot {w}_{i,j}$$
+Sigmoidal Jansen-Rit coupling function with delays
+
+$$c = G \cdot \sum_{j=0}^{-1 + N} \left(cmin + \frac{cmax - cmin}{1.0 + e^{r \cdot \left(midpoint - \left({y_{1}}_{j} - {y_{2}}_{j}\right)\right)}}\right) \cdot {w}_{i,j}$$
 
 | Property | Value |
 |:---------|:------|
-| Incoming states | $y_{4}$ |
+| Incoming states | $y_{1}$, $y_{2}$ |
 | Delays | enabled |
 | Symmetry | directed |
 
-Receives $y_{4}$ from connected regions with conduction delays.
+Receives $y_{1}$, $y_{2}$ from connected regions with conduction delays.
 
-**Pre-synaptic:** $c_{\text{pre}} = x_{j}$
+**Pre-synaptic:** $c_{\text{pre}} = cmin + \frac{cmax - cmin}{1.0 + e^{r \cdot \left(midpoint + y_{2} - y_{1}\right)}}$
 
-**Post-synaptic:** $c_{\text{post}} = b + a \cdot gx$
+**Post-synaptic:** $c_{\text{post}} = G \cdot gx$
 
 
 | Parameter | Value | Unit | Domain / Sampling | Flags | Description |
 |:----------|------:|:-----|:------------------|:------|:------------|
-| $a$ | 0.00390625 | — | — | — | Linear scaling factor of the coupled (delayed) input. |
-| $b$ | 0.0 | — | — | — | Shifts the base of the connection strength while maintaining the absolute difference between different values. |
+| $G$ | 15.0 | — | — | free, optimum=0.0 | Global coupling strength |
+| $cmax$ | 0.005 | — | — | optimum=0.0 | 2 * nu_max from TVB default |
+| $cmin$ | None | — | — | optimum=0.0 |  |
+| $midpoint$ | 6.0 | — | — | optimum=0.0 |  |
+| $r$ | 0.56 | — | — | optimum=0.0 |  |
 
 
 **Numerical Integration**

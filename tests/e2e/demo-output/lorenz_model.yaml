@@ -1,0 +1,23 @@
+name: LorenzAttractor
+parameters:
+  sigma:
+    value: 10
+    label: Prandtl number
+  rho:
+    value: 28
+    label: Rayleigh number
+  beta:
+    value: 2.6666666666666665
+state_variables:
+  X:
+    equation:
+      lhs: \dot{X}
+      rhs: sigma * (Y - X)
+  Y:
+    equation:
+      lhs: \dot{Y}
+      rhs: X * (rho - Z) - Y
+  Z:
+    equation:
+      lhs: \dot{Z}
+      rhs: X * Y - beta * Z

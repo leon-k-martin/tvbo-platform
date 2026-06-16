@@ -3,3 +3,7 @@ test-results/
 playwright-report/
 blob-report/
 .playwright/
+
+# Raw per-page Playwright recordings — large, intermediate; the final composited
+# demo-output/*.mp4 are what we keep.
+demo-output/video-raw*/
