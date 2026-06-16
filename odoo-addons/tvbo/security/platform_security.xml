@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Access for the platform-only sharing model. Kept in XML (not the
+         generated ir.model.access.csv) so regenerating the schema models does
+         not wipe it. App flows reach this model through sudo controllers (which
+         bypass record rules); the record rules below still scope EVERY
+         non-superuser (internal users included) to their own + shared rows. -->
+    <record id="access_tvbo_model_share_user" model="ir.model.access">
+        <field name="name">tvbo.model_share user</field>
+        <field name="model_id" ref="model_tvbo_model_share"/>
+        <field name="group_id" ref="base.group_user"/>
+        <field name="perm_read" eval="1"/>
+        <field name="perm_write" eval="1"/>
+        <field name="perm_create" eval="1"/>
+        <field name="perm_unlink" eval="1"/>
+    </record>
+    <!-- Portal users reach sharing through sudo controllers, but grant ORM read
+         too so non-sudo/API paths can use the record rules below. -->
+    <record id="access_tvbo_model_share_portal" model="ir.model.access">
+        <field name="name">tvbo.model_share portal</field>
+        <field name="model_id" ref="model_tvbo_model_share"/>
+        <field name="group_id" ref="base.group_portal"/>
+        <field name="perm_read" eval="1"/>
+        <field name="perm_write" eval="1"/>
+        <field name="perm_create" eval="1"/>
+        <field name="perm_unlink" eval="1"/>
+    </record>
+
+    <!-- Defense-in-depth record rules: even outside the sudo controllers, a user
+         can only READ their own + shared rows, and only MODIFY their own. The
+         schema entity tvbo.dynamics stays field-free, so private-model visibility
+         is enforced in the controllers; these rules protect the sharing data. -->
+    <record id="rule_model_share_read" model="ir.rule">
+        <field name="name">model_share: read own and shared</field>
+        <field name="model_id" ref="model_tvbo_model_share"/>
+        <field name="domain_force">['|', ('owner_user_id', '=', user.id), ('visibility', '=', 'shared')]</field>
+        <field name="perm_read" eval="1"/>
+        <field name="perm_write" eval="0"/>
+        <field name="perm_create" eval="0"/>
+        <field name="perm_unlink" eval="0"/>
+        <field name="groups" eval="[(4, ref('base.group_user')), (4, ref('base.group_portal'))]"/>
+    </record>
+    <record id="rule_model_share_write_own" model="ir.rule">
+        <field name="name">model_share: modify only own</field>
+        <field name="model_id" ref="model_tvbo_model_share"/>
+        <field name="domain_force">[('owner_user_id', '=', user.id)]</field>
+        <field name="perm_read" eval="0"/>
+        <field name="perm_write" eval="1"/>
+        <field name="perm_create" eval="1"/>
+        <field name="perm_unlink" eval="1"/>
+        <field name="groups" eval="[(4, ref('base.group_user')), (4, ref('base.group_portal'))]"/>
+    </record>
+
+    <!-- Personal API keys: users manage their own; the raw key_hash field is
+         already restricted to base.group_system on the model. -->
+    <record id="access_tvbo_api_key_user" model="ir.model.access">
+        <field name="name">tvbo.api_key user</field>
+        <field name="model_id" ref="model_tvbo_api_key"/>
+        <field name="group_id" ref="base.group_user"/>
+        <field name="perm_read" eval="1"/>
+        <field name="perm_write" eval="1"/>
+        <field name="perm_create" eval="1"/>
+        <field name="perm_unlink" eval="1"/>
+    </record>
+    <record id="access_tvbo_api_key_portal" model="ir.model.access">
+        <field name="name">tvbo.api_key portal</field>
+        <field name="model_id" ref="model_tvbo_api_key"/>
+        <field name="group_id" ref="base.group_portal"/>
+        <field name="perm_read" eval="1"/>
+        <field name="perm_write" eval="1"/>
+        <field name="perm_create" eval="1"/>
+        <field name="perm_unlink" eval="1"/>
+    </record>
+    <record id="rule_api_key_own" model="ir.rule">
+        <field name="name">api_key: only own</field>
+        <field name="model_id" ref="model_tvbo_api_key"/>
+        <field name="domain_force">[('user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('base.group_user')), (4, ref('base.group_portal'))]"/>
+    </record>
+</odoo>

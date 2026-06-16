@@ -52,6 +52,8 @@ services:
       USER: odoo
       PASSWORD: odoo
       DB_NAME: tvbo_dev
+      # Pass RESET_DB=1 on the CLI to drop+recreate+reseed on startup; defaults off.
+      RESET_DB: ${RESET_DB:-0}
     volumes:
       # Mount code for immediate updates (no rebuild!)
       - ./odoo-addons/tvbo:/mnt/extra-addons/tvbo:ro

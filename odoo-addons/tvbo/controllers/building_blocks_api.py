@@ -179,6 +179,15 @@ _SKIP_FIELDS = {
     'write_uid', 'write_date', '__last_update', 'record_id',
 }
 
+# Pure ORM bookkeeping to strip from resolved data. Crucially this does NOT
+# include the reserved-renamed schema slots (``record_id`` -> ``id``,
+# ``is_modified`` -> ``modified``): those carry real schema values and are
+# restored by ``_rename_reserved`` after cleaning.
+_ODOO_METADATA = {
+    'id', 'display_name', 'create_uid', 'create_date',
+    'write_uid', 'write_date', '__last_update',
+}
+
 
 def _clean(value):
     """Recursively drop Odoo's ``False`` placeholders and metadata keys,
@@ -193,7 +202,7 @@ def _clean(value):
     if isinstance(value, dict):
         out = {}
         for k, v in value.items():
-            if k in _SKIP_FIELDS:
+            if k in _ODOO_METADATA:
                 continue
             cv = _clean(v)
             if cv is None or cv == [] or cv == {}:
@@ -203,22 +212,108 @@ def _clean(value):
     return value
 
 
-def _resolve_record_deep(record, depth=4):
+# Field-name divergences between the platform's generated Odoo models and the
+# current tvbo Pydantic datamodel. Invert them when turning Odoo records back
+# into schema-shaped data. (See todo.md: the durable fix is to regenerate the
+# Odoo models + seed from the current tvbo schema so these vanish.)
+#   record_id/is_modified : reserved ORM names (generate_odoo_models)
+#   lefthandside/righthandside : Equation slots renamed to lhs/rhs upstream
+_ODOO_RESERVED_INVERSE = {
+    'record_id': 'id',
+    'is_modified': 'modified',
+    'lefthandside': 'lhs',
+    'righthandside': 'rhs',
+}
+
+
+def _rename_reserved(value):
+    """Recursively restore schema slot names from Odoo's field-name renames."""
+    if isinstance(value, list):
+        return [_rename_reserved(v) for v in value]
+    if isinstance(value, dict):
+        return {
+            _ODOO_RESERVED_INVERSE.get(k, k): _rename_reserved(v)
+            for k, v in value.items()
+        }
+    return value
+
+
+def _flatten_parent_links(value):
+    """Flatten Odoo inheritance parent-links into their owner.
+
+    ``generate_odoo_models`` models LinkML ``is_a`` inheritance as a
+    ``<parent>_id`` Many2one holding the inherited slots (e.g. an Integrator's
+    Solver fields live under ``solver_id``). The schema inlines those slots, so
+    we merge any ``*_id`` whose value is a (resolved) record dict up into its
+    owner — the owner's own keys win on collision.
+    """
+    if isinstance(value, list):
+        return [_flatten_parent_links(v) for v in value]
+    if not isinstance(value, dict):
+        return value
+    merged = {}
+    own = {}
+    for k, v in value.items():
+        v = _flatten_parent_links(v)
+        if k.endswith('_id') and isinstance(v, dict):
+            merged.update(v)  # inherited fields (lowest priority)
+        else:
+            own[k] = v
+    merged.update(own)  # owner's own fields win
+    return merged
+
+
+def _is_enum_model(recordset):
+    """Enum lookup models (generated as name/technical_name/description) are the
+    only models carrying a ``technical_name`` field — used to collapse enum
+    relations back to their permissible-value string on export."""
+    return 'technical_name' in recordset._fields and 'name' in recordset._fields
+
+
+def _resolve_record_deep(record, depth=8, _seen=None, _memo=None):
+    """Deep-resolve an Odoo record to a nested dict.
+
+    Uses a memo (resolve each record once, deep-copy on reuse) so shared records
+    referenced from many places aren't re-resolved combinatorially, plus a
+    path-scoped ``_seen`` set to break reference cycles. This keeps complex
+    experiments (e.g. bifurcation continuations that re-reference a Dynamics)
+    fast instead of exploding.
+    """
+    import copy as _copy
     if not record or depth <= 0:
         return None
-    data = record.read()[0]
-    for field_name, field_obj in record._fields.items():
-        if field_name in _SKIP_FIELDS:
-            continue
-        value = getattr(record, field_name, None)
-        if not value:
-            continue
-        if field_obj.type == 'many2one':
-            data[field_name] = _resolve_record_deep(value, depth - 1)
-        elif field_obj.type in ('many2many', 'one2many'):
-            data[field_name] = [
-                _resolve_record_deep(r, depth - 1) for r in value
-            ]
+    if _seen is None:
+        _seen = set()
+    if _memo is None:
+        _memo = {}
+    key = (record._name, record.id)
+    if key in _memo:
+        return _copy.deepcopy(_memo[key])
+    if key in _seen:
+        # Reference cycle: return a shallow reference instead of recursing forever.
+        return {'name': record.name} if 'name' in record._fields else None
+    _seen.add(key)
+    try:
+        data = record.read()[0]
+        for field_name, field_obj in record._fields.items():
+            if field_name in _SKIP_FIELDS:
+                continue
+            value = getattr(record, field_name, None)
+            if not value:
+                continue
+            if field_obj.type == 'many2one':
+                # Enum relation -> the permissible-value string the schema expects.
+                data[field_name] = value.name if _is_enum_model(value) else _resolve_record_deep(value, depth - 1, _seen, _memo)
+            elif field_obj.type in ('many2many', 'one2many'):
+                if _is_enum_model(value):
+                    data[field_name] = value.mapped('name')
+                else:
+                    data[field_name] = [
+                        _resolve_record_deep(r, depth - 1, _seen, _memo) for r in value
+                    ]
+    finally:
+        _seen.discard(key)
+    _memo[key] = data
     return data
 
 
@@ -230,6 +325,80 @@ def _record_summary(record):
         'label': getattr(record, 'label', None) or getattr(record, 'name', None) or str(record.id),
         'description': (getattr(record, 'description', None) or '')[:240],
     }
+
+
+def experiment_to_schema_dict(rec_id, depth=8):
+    """Deep-resolve a stored experiment into a schema-shaped, JSON/YAML-ready dict.
+
+    Cleans Odoo placeholders/metadata and restores schema slot names; the
+    keyed-dict vs list shape is settled later by ``pydantic_loader`` (which
+    coerces Odoo's many2many lists into the schema's keyed dicts). Returns
+    ``None`` when the record does not exist.
+    """
+    rec = request.env['tvbo.simulation_experiment'].sudo().browse(rec_id)
+    if not rec.exists():
+        return None
+    resolved = _clean(_resolve_record_deep(rec, depth=depth)) or {}
+    data = _rename_reserved(_flatten_parent_links(resolved))
+
+    # The current schema folds derived observations into `observations`
+    # (Observation records carrying source_observations); the platform's Odoo
+    # model still keeps a separate `derived_observations` m2m. Merge it back.
+    derived = data.pop('derived_observations', None)
+    if derived:
+        derived = derived if isinstance(derived, list) else [derived]
+        obs = data.get('observations')
+        if isinstance(obs, list):
+            obs.extend(derived)
+        elif obs:
+            data['observations'] = [obs] + derived
+        else:
+            data['observations'] = derived
+
+    return data
+
+
+def validate_experiment(rec_id, depth=8):
+    """Return ``(pydantic_obj, errors)`` for a stored experiment.
+
+    ``(None, 'not_found')`` if missing, ``(None, [pydantic errors])`` if the
+    stored data does not satisfy the schema, ``(obj, None)`` on success. Shared
+    by the YAML download, the JSON ``/spec`` endpoint and anything else that
+    needs a validated experiment.
+    """
+    from tvbo.utils import pydantic_loader
+    from pydantic import ValidationError
+
+    data = experiment_to_schema_dict(rec_id, depth=depth)
+    if data is None:
+        return None, 'not_found'
+    try:
+        # drop_unknown: ignore platform-only Odoo fields (e.g. portal
+        # visibility/owner) that aren't part of the tvbo schema.
+        obj = pydantic_loader.validate(data, 'SimulationExperiment', drop_unknown=True)
+        return obj, None
+    except ValidationError as ve:
+        return None, ve.errors()
+
+
+def validate_instance(class_name, rec_id, depth=6):
+    """Validate any single building block (Dynamics, Network, Coupling, ...) by
+    class + id, returning ``(pydantic_obj, errors)`` like :func:`validate_experiment`.
+    Lets the Experiment Builder seed a new experiment from a Knowledge-Graph card."""
+    from tvbo.utils import pydantic_loader
+    from pydantic import ValidationError
+
+    model_name = _class_to_odoo_model(class_name)
+    if not model_name:
+        return None, 'not_found'
+    rec = request.env[model_name].sudo().browse(rec_id)
+    if not rec.exists():
+        return None, 'not_found'
+    data = _rename_reserved(_flatten_parent_links(_clean(_resolve_record_deep(rec, depth=depth)) or {}))
+    try:
+        return pydantic_loader.validate(data, class_name, drop_unknown=True), None
+    except ValidationError as ve:
+        return None, ve.errors()
 
 
 # ---------------------------------------------------------------------------
@@ -311,7 +480,7 @@ class BuildingBlocksController(http.Controller):
 
     @http.route(
         '/tvbo/api/configurator/instances/<string:class_name>',
-        type='json', auth='user', methods=['POST'], csrf=False,
+        type='jsonrpc', auth='user', methods=['POST'], csrf=False,
     )
     def api_instance_create(self, class_name, **kwargs):
         """Save a customised building block back to the library.
@@ -363,17 +532,28 @@ class BuildingBlocksController(http.Controller):
     # ---- 3. Serialize -------------------------------------------------------
     @http.route(
         '/tvbo/api/configurator/experiment/serialize',
-        type='json', auth='public', methods=['POST'], csrf=False,
+        type='jsonrpc', auth='public', methods=['POST'], csrf=False,
     )
     def api_experiment_serialize(self, **kwargs):
-        """Convert raw experiment JSON to schema-correct YAML via Pydantic.
+        """Validate assembled experiment JSON and return schema-correct YAML.
 
-        Body: { "experiment": {...}, "format": "yaml"|"json" (default yaml) }
+        This is the single source of truth for the builder's YAML download,
+        "Copy" buttons and live preview. Validation goes through
+        ``tvbo.utils.pydantic_loader`` (strict Pydantic, ``extra="forbid"``),
+        which normalises TVBO's keyed-dict collections (``parameters: {a: ...}``
+        -> ``name: a``) and strips file-envelope keys before validating. The
+        emitted YAML is *bare* (``id`` at the top level), exactly the shape
+        ``SimulationExperiment.from_file`` / ``from_string`` expect.
+
+        Body: {
+          "experiment": {...},                 # required
+          "format": "yaml"|"json",             # default yaml
+          "target_class": "SimulationExperiment"  # default; any tvbo class
+        }
         """
         try:
-            from tvbo.datamodel.tvbopydantic import SimulationExperiment
+            from tvbo.utils import pydantic_loader
             from pydantic import ValidationError
-            import yaml
 
             payload = kwargs.get('experiment')
             if payload is None:
@@ -382,9 +562,10 @@ class BuildingBlocksController(http.Controller):
                 return {'success': False, 'error': 'experiment must be an object'}
 
             fmt = (kwargs.get('format') or 'yaml').lower()
+            target = kwargs.get('target_class') or 'SimulationExperiment'
 
             try:
-                exp = SimulationExperiment.model_validate(payload)
+                obj = pydantic_loader.validate(payload, target)
             except ValidationError as ve:
                 return {
                     'success': False,
@@ -392,17 +573,16 @@ class BuildingBlocksController(http.Controller):
                     'errors': ve.errors(),
                 }
 
-            data = exp.model_dump(exclude_none=True, exclude_unset=False)
-            wrapped = {'simulation_experiment': data}
             if fmt == 'json':
-                return {'success': True, 'format': 'json', 'data': wrapped}
+                return {
+                    'success': True,
+                    'format': 'json',
+                    'data': obj.model_dump(mode='json', by_alias=True, exclude_none=True),
+                }
             return {
                 'success': True,
                 'format': 'yaml',
-                'yaml': yaml.dump(
-                    wrapped, default_flow_style=False,
-                    sort_keys=False, allow_unicode=True,
-                ),
+                'yaml': pydantic_loader.dump(obj),
             }
         except ImportError as e:
             _logger.error('tvbo package missing: %s', e)
@@ -410,6 +590,56 @@ class BuildingBlocksController(http.Controller):
         except Exception as e:
             _logger.error('serialize failed: %s', e, exc_info=True)
             return {'success': False, 'error': str(e)}
+
+    # ---- 3b. Validated experiment spec (schema-shaped JSON) -----------------
+    # The builder hydrates from this on load: a validated, schema-shaped dict
+    # (keyed-dict collections, bare top level). The JS edits it in place and
+    # POSTs it back to /serialize, so the client never has to reshape Odoo data.
+    @http.route(
+        '/tvbo/api/configurator/experiment/<int:rec_id>/spec',
+        type='http', auth='public', methods=['GET'], csrf=False,
+    )
+    def api_experiment_spec(self, rec_id, **kwargs):
+        try:
+            obj, errors = validate_experiment(rec_id)
+            if errors == 'not_found':
+                return _json({'success': False, 'error': 'Not found'}, status=404)
+            if errors:
+                return _json({'success': False, 'error': 'validation_error', 'errors': errors})
+            return _json({
+                'success': True,
+                'data': obj.model_dump(mode='json', by_alias=True, exclude_none=True),
+            })
+        except ImportError:
+            return _json({'success': False, 'error': 'tvbo Python package not installed'}, status=500)
+        except Exception as e:
+            _logger.error('experiment spec failed: %s', e, exc_info=True)
+            return _json({'success': False, 'error': str(e)}, status=500)
+
+    # ---- 3c. Validated single building-block spec (schema-shaped JSON) ------
+    # Lets the Experiment Builder seed a new experiment from a KG card
+    # ("Open in Experiment Builder" on a Dynamics/Network/Coupling/... card).
+    @http.route(
+        '/tvbo/api/configurator/instances/<string:class_name>/<int:rec_id>/spec',
+        type='http', auth='public', methods=['GET'], csrf=False,
+    )
+    def api_instance_spec(self, class_name, rec_id, **kwargs):
+        try:
+            obj, errors = validate_instance(class_name, rec_id)
+            if errors == 'not_found':
+                return _json({'success': False, 'error': 'Not found'}, status=404)
+            if errors:
+                return _json({'success': False, 'error': 'validation_error', 'errors': errors})
+            return _json({
+                'success': True,
+                'class': class_name,
+                'data': obj.model_dump(mode='json', by_alias=True, exclude_none=True),
+            })
+        except ImportError:
+            return _json({'success': False, 'error': 'tvbo Python package not installed'}, status=500)
+        except Exception as e:
+            _logger.error('instance spec failed: %s', e, exc_info=True)
+            return _json({'success': False, 'error': str(e)}, status=500)
 
     # ---- 4. Raw YAML dump (no Pydantic validation) --------------------------
     # Pragmatic path used by the configurator's live preview pane and the
@@ -433,10 +663,9 @@ class BuildingBlocksController(http.Controller):
             if not rec.exists():
                 return _json({'success': False, 'error': 'Not found'}, status=404)
             data = _clean(_resolve_record_deep(rec, depth=d)) or {}
-            wrapped = {'simulation_experiment': data}
             return request.make_response(
                 yaml.dump(
-                    wrapped, default_flow_style=False,
+                    data, default_flow_style=False,
                     sort_keys=False, allow_unicode=True,
                 ),
                 headers=[('Content-Type', 'application/x-yaml; charset=utf-8')],
@@ -447,7 +676,7 @@ class BuildingBlocksController(http.Controller):
 
     @http.route(
         '/tvbo/api/configurator/experiment/dump_yaml',
-        type='json', auth='public', methods=['POST'], csrf=False,
+        type='jsonrpc', auth='public', methods=['POST'], csrf=False,
     )
     def api_experiment_dump_yaml(self, **kwargs):
         """Same as yaml_raw but takes the JSON state in the request body.
@@ -460,11 +689,10 @@ class BuildingBlocksController(http.Controller):
             if payload is None:
                 return {'success': False, 'error': 'experiment is required'}
             data = _clean(payload) or {}
-            wrapped = {'simulation_experiment': data}
             return {
                 'success': True,
                 'yaml': yaml.dump(
-                    wrapped, default_flow_style=False,
+                    data, default_flow_style=False,
                     sort_keys=False, allow_unicode=True,
                 ),
             }

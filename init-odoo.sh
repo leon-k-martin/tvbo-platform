@@ -49,17 +49,26 @@ DB_NAME=${DB_NAME:-tvbo}
 
 export PGPASSWORD="$DB_PASSWORD"
 
-# Install tvbo: prefer mounted source (dev), fall back to pip, then pre-installed (production)
-if [ -d "/tmp/tvbo" ] && [ -f "/tmp/tvbo/pyproject.toml" ]; then
+# Install tvbo. The /tmp/tvbo editable mount makes the package importable once
+# linked; an existing install survives container restarts and works offline, so
+# prefer it. Otherwise do an editable install without build isolation (no network
+# needed when the build backend is already present), then fall back to PyPI.
+# Never hard-fail here (set -e): if tvbo ends up importable, that's enough.
+if python3 -c "import tvbo" 2>/dev/null; then
+  log "✓ tvbo already importable (editable mount)"
+elif [ -d "/tmp/tvbo" ] && [ -f "/tmp/tvbo/pyproject.toml" ]; then
   log "Installing tvbo from /tmp/tvbo in editable mode..."
-  pip3 install --break-system-packages -e /tmp/tvbo > /dev/null 2>&1
-  log "✓ tvbo installed in editable mode"
-elif python3 -c "import tvbo" 2>/dev/null; then
-  log "✓ tvbo already installed"
+  if pip3 install --break-system-packages --no-build-isolation -e /tmp/tvbo > /dev/null 2>&1; then
+    log "✓ tvbo installed in editable mode"
+  elif python3 -c "import tvbo" 2>/dev/null; then
+    log "✓ tvbo importable despite editable-install error"
+  else
+    log "⚠ tvbo editable install failed and tvbo is not importable"
+  fi
 else
   log "Installing tvbo from PyPI..."
-  pip3 install --break-system-packages tvbo > /dev/null 2>&1
-  log "✓ tvbo installed from PyPI"
+  pip3 install --break-system-packages tvbo > /dev/null 2>&1 || log "⚠ tvbo PyPI install failed"
+  log "✓ tvbo install attempted from PyPI"
 fi
 
 # Wait for PostgreSQL to be ready

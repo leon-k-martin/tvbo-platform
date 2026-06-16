@@ -52,17 +52,37 @@
                                     <a class="nav-link" href="/tvbo/kg">Knowledge Graph</a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link" href="/tvbo/configurator">Model Builder</a>
+                                    <a class="nav-link" href="/tvbo/configurator">Experiment Builder</a>
                                 </li>
-                                <li class="nav-item">
-                                    <a class="nav-link" href="/tvbo/parser">Document Parser</a>
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle" href="#" id="tvboAboutDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">About</a>
+                                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="tvboAboutDropdown">
+                                        <li><a class="dropdown-item" href="/tvbo/agents">AI Agents</a></li>
+                                        <li><a class="dropdown-item" href="https://virtual-twin.github.io/tvbo/" target="_blank">Docs</a></li>
+                                    </ul>
                                 </li>
-                                <li class="nav-item">
-                                    <a class="nav-link" href="https://virtual-twin.github.io/tvbo/" target="_blank">Docs</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link btn btn-light btn-sm ms-2" href="/web/login">Sign In</a>
-                                </li>
+                                <t t-if="request.env.user._is_public()">
+                                    <li class="nav-item">
+                                        <a class="nav-link btn btn-light btn-sm ms-2" href="/web/login">Sign In</a>
+                                    </li>
+                                </t>
+                                <t t-else="">
+                                    <li class="nav-item">
+                                        <a class="nav-link" href="/tvbo/models/shared">Shared Models</a>
+                                    </li>
+                                    <li class="nav-item dropdown">
+                                        <a class="nav-link dropdown-toggle" href="#" id="tvboUserDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <span t-esc="request.env.user.name"/>
+                                        </a>
+                                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="tvboUserDropdown">
+                                            <li><a class="dropdown-item" href="/my/models">My Models</a></li>
+                                            <li><a class="dropdown-item" href="/my/api-keys">API Keys</a></li>
+                                            <li><a class="dropdown-item" href="/my">Account</a></li>
+                                            <li><hr class="dropdown-divider"/></li>
+                                            <li><a class="dropdown-item" href="/web/session/logout">Log out</a></li>
+                                        </ul>
+                                    </li>
+                                </t>
                             </ul>
                         </div>
                     </div>
@@ -481,6 +501,265 @@
                         <script src="/tvbo/static/src/js/kg_components.js"></script>
                         <script src="/tvbo/static/src/js/kg_graph.js"></script>
                         <script src="/tvbo/static/src/js/kg_browser.js"></script>
+                    </div>
+                </t>
+            </t>
+        </field>
+    </record>
+
+    <!-- Agentic Coding with TVBO — high-level intro for all user groups -->
+    <record id="tvbo_agents_page" model="ir.ui.view">
+        <field name="name">Agentic Coding with TVBO</field>
+        <field name="type">qweb</field>
+        <field name="arch" type="xml">
+            <t t-name="tvbo_agents_page">
+                <t t-call="website.layout">
+                    <div id="wrap">
+                        <style>
+                            .tvbo-agents-hero {
+                                background: linear-gradient(135deg, #2C3E50 0%, #4A6FA5 100%);
+                                color: white;
+                                padding: 4rem 0 3rem;
+                            }
+                            .tvbo-agents-hero h1 { font-weight: 700; font-size: 2.5rem; margin-bottom: 1rem; }
+                            .tvbo-agents-hero .lead { font-size: 1.15rem; opacity: 0.92; max-width: 760px; }
+                            .tvbo-agents-section { padding: 3rem 0; }
+                            .tvbo-agents-section:nth-of-type(even) { background-color: #f7f9fc; }
+                            .tvbo-agents-card {
+                                background: white;
+                                border: 1px solid #e3e9f0;
+                                border-radius: 10px;
+                                padding: 1.75rem;
+                                height: 100%;
+                                transition: transform 0.15s ease, box-shadow 0.15s ease;
+                            }
+                            .tvbo-agents-card:hover {
+                                transform: translateY(-2px);
+                                box-shadow: 0 8px 24px rgba(44, 62, 80, 0.10);
+                            }
+                            .tvbo-agents-card h3 {
+                                font-weight: 600;
+                                font-size: 1.2rem;
+                                color: #2C3E50;
+                                margin-bottom: 0.75rem;
+                            }
+                            .tvbo-agents-card .badge {
+                                font-size: 0.7rem;
+                                font-weight: 600;
+                                letter-spacing: 0.5px;
+                                padding: 0.25rem 0.6rem;
+                                border-radius: 4px;
+                                margin-bottom: 0.75rem;
+                                display: inline-block;
+                            }
+                            .badge-beginner { background: #d4edda; color: #155724; }
+                            .badge-intermediate { background: #fff3cd; color: #856404; }
+                            .badge-expert { background: #f8d7da; color: #721c24; }
+                            pre.tvbo-code {
+                                background: #2C3E50;
+                                color: #ECF0F1;
+                                padding: 1rem 1.25rem;
+                                border-radius: 6px;
+                                font-size: 0.92rem;
+                                overflow-x: auto;
+                            }
+                            .tvbo-code code { color: inherit; background: transparent; padding: 0; }
+                            .tvbo-skill-row {
+                                display: flex;
+                                gap: 1rem;
+                                padding: 1rem 0;
+                                border-bottom: 1px solid #e3e9f0;
+                            }
+                            .tvbo-skill-row:last-child { border-bottom: none; }
+                            .tvbo-skill-name {
+                                font-family: monospace;
+                                font-weight: 600;
+                                color: #4A6FA5;
+                                min-width: 220px;
+                            }
+                            .tvbo-cta {
+                                display: inline-block;
+                                padding: 0.85rem 1.75rem;
+                                background: #4A6FA5;
+                                color: white !important;
+                                border-radius: 6px;
+                                font-weight: 600;
+                                text-decoration: none;
+                                transition: background 0.15s ease;
+                            }
+                            .tvbo-cta:hover { background: #2C3E50; }
+                            .tvbo-cta-outline {
+                                background: transparent;
+                                border: 2px solid white;
+                                color: white !important;
+                            }
+                            .tvbo-cta-outline:hover { background: white; color: #2C3E50 !important; }
+                        </style>
+
+                        <!-- Hero -->
+                        <section class="tvbo-agents-hero">
+                            <div class="container">
+                                <div class="row align-items-center">
+                                    <div class="col-md-9">
+                                        <span style="display:inline-block; background: rgba(255,255,255,0.18); padding: 0.3rem 0.85rem; border-radius: 4px; font-size: 0.8rem; letter-spacing: 1px; margin-bottom: 1rem;">NEW</span>
+                                        <h1>Agentic Coding with TVBO</h1>
+                                        <p class="lead">
+                                            Your AI coding assistant — Claude, Cursor, Copilot, or a local model — doesn't know what TVBO is until you tell it.
+                                            We ship a bundle of focused skills that teaches your assistant about the three pillars, the model spec format,
+                                            backend choices, and this platform. Install once, then every session benefits.
+                                        </p>
+                                        <div style="margin-top: 1.75rem;">
+                                            <a href="https://virtual-twin.github.io/tvbo/agents/" target="_blank" class="tvbo-cta">Read the full guide</a>
+                                            <a href="#install" class="tvbo-cta tvbo-cta-outline" style="margin-left: 0.75rem;">Quick install</a>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3 text-center d-none d-md-block">
+                                        <i class="fa-solid fa-robot" style="font-size: 7rem; opacity: 0.85;"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- Why -->
+                        <section class="tvbo-agents-section">
+                            <div class="container">
+                                <h2 style="font-weight: 700; color: #2C3E50; margin-bottom: 1.5rem;">Why ship skills with TVBO?</h2>
+                                <div class="row g-4">
+                                    <div class="col-md-4">
+                                        <div class="tvbo-agents-card">
+                                            <h3><i class="fa-solid fa-brain" style="color: #4A6FA5; margin-right: 0.5rem;"></i> Context, not boilerplate</h3>
+                                            <p>Large language models are powerful but oblivious. Without context they hallucinate parameter names, pick the wrong backend, or hand-edit generated code. The skills carry the rules they need.</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="tvbo-agents-card">
+                                            <h3><i class="fa-solid fa-shuffle" style="color: #4A6FA5; margin-right: 0.5rem;"></i> One source, many tools</h3>
+                                            <p>The same canonical skill renders as a Claude Code skill, a Copilot instruction, a Cursor rule, or a raw system prompt. Pick the target that fits your workflow — no copy-paste between formats.</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="tvbo-agents-card">
+                                            <h3><i class="fa-solid fa-arrows-rotate" style="color: #4A6FA5; margin-right: 0.5rem;"></i> Always in sync</h3>
+                                            <p>Skills evolve as TVBO evolves. Re-running <code>tvbo skills install</code> after an upgrade keeps your assistant aligned with the current API, schema, and backend support.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- Pick your path -->
+                        <section class="tvbo-agents-section">
+                            <div class="container">
+                                <h2 style="font-weight: 700; color: #2C3E50; margin-bottom: 0.5rem;">Pick your path</h2>
+                                <p style="color: #5a6c7d; margin-bottom: 2rem;">The skills work for every level. Here's where to start.</p>
+
+                                <div class="row g-4">
+                                    <div class="col-md-4">
+                                        <div class="tvbo-agents-card">
+                                            <span class="badge badge-beginner">BEGINNER</span>
+                                            <h3>I've never used TVBO</h3>
+                                            <p>Let the AI assistant teach you. Install the skills, then ask <em>"What is TVBO and how do I write my first model?"</em> — you'll get a guided walkthrough with copy-pasteable code.</p>
+                                            <p style="margin-top: 1rem;"><strong>Best target:</strong> <code>claude-code</code> or <code>cursor</code>.</p>
+                                            <a href="https://virtual-twin.github.io/tvbo/agents/beginner.html" target="_blank" style="color: #4A6FA5; font-weight: 600;">Beginner guide →</a>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="tvbo-agents-card">
+                                            <span class="badge badge-intermediate">INTERMEDIATE</span>
+                                            <h3>I use TVBO regularly</h3>
+                                            <p>You know the YAML format and have a backend preference. The skills stop your assistant from making rookie mistakes (label vs name, value on a state variable, wrong extras for a backend).</p>
+                                            <p style="margin-top: 1rem;"><strong>Best target:</strong> <code>claude-code</code> + <code>agents-md</code> for your project repo.</p>
+                                            <a href="https://virtual-twin.github.io/tvbo/agents/installing-skills.html" target="_blank" style="color: #4A6FA5; font-weight: 600;">Install &amp; tune →</a>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="tvbo-agents-card">
+                                            <span class="badge badge-expert">EXPERT</span>
+                                            <h3>I contribute to TVBO</h3>
+                                            <p>Six maintainer skills ship in the TVBO repository itself — covering git policy, surgical coding discipline, LinkML schema regen, codegen templates, the pytest marker matrix, and the design-review workflow.</p>
+                                            <p style="margin-top: 1rem;"><strong>Best target:</strong> repo-local — they're already in <code>.claude/skills/</code> when you clone.</p>
+                                            <a href="https://virtual-twin.github.io/tvbo/agents/maintainer-guide.html" target="_blank" style="color: #4A6FA5; font-weight: 600;">Maintainer guide →</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- Install -->
+                        <section class="tvbo-agents-section" id="install">
+                            <div class="container">
+                                <h2 style="font-weight: 700; color: #2C3E50; margin-bottom: 1.5rem;">Install in 30 seconds</h2>
+                                <div class="row g-4">
+                                    <div class="col-md-6">
+                                        <h4 style="font-weight: 600; color: #2C3E50;">1. Install the package</h4>
+                                        <pre class="tvbo-code"><code>pip install tvbo</code></pre>
+                                        <h4 style="font-weight: 600; color: #2C3E50; margin-top: 1.5rem;">2. Install the skills</h4>
+                                        <pre class="tvbo-code"><code># Default: Claude Code, user scope
+tvbo skills install
+
+# Or Cursor:
+tvbo skills install --target cursor
+
+# Or a system prompt for raw API / local model:
+tvbo skills install --target prompt > tvbo-system.md</code></pre>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h4 style="font-weight: 600; color: #2C3E50;">3. Verify</h4>
+                                        <pre class="tvbo-code"><code># Show what would be installed
+tvbo skills install --dry-run
+
+# List installed skills
+ls ~/.claude/skills/tvbo-*
+
+# Remove cleanly when you're done
+tvbo skills uninstall</code></pre>
+                                        <p style="color: #5a6c7d; margin-top: 1rem;">
+                                            TVBO marks every file it writes with a <code>managed-by: tvbo</code>
+                                            frontmatter line. Upgrades overwrite our own files safely; files you've
+                                            customised are left alone unless you pass <code>--force</code>.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- Skill catalog -->
+                        <section class="tvbo-agents-section">
+                            <div class="container">
+                                <h2 style="font-weight: 700; color: #2C3E50; margin-bottom: 0.5rem;">What's in the bundle?</h2>
+                                <p style="color: #5a6c7d; margin-bottom: 2rem;">Four user skills land on your machine. Each fires <strong>on demand</strong> when the conversation matches its topic — they cost nothing when you're working on something else.</p>
+
+                                <div class="tvbo-skill-row">
+                                    <div class="tvbo-skill-name">tvbo-overview</div>
+                                    <div>The three pillars (LinkML datamodel, ontology, Python package) plus the Odoo platform. Fires on <em>"what is TVBO?"</em> -style questions.</div>
+                                </div>
+                                <div class="tvbo-skill-row">
+                                    <div class="tvbo-skill-name">tvbo-writing-models</div>
+                                    <div>How to specify a <code>Dynamics</code> in YAML or Python. Catches the common errors: putting <code>value</code> on a state variable, mixing LaTeX and Python syntax, name mismatches in the equation RHS.</div>
+                                </div>
+                                <div class="tvbo-skill-row">
+                                    <div class="tvbo-skill-name">tvbo-running-simulations</div>
+                                    <div>The <code>SimulationExperiment(dynamics).run().plot()</code> pattern, which extra to install per backend (<code>tvbo[jax]</code>, <code>tvbo[tvb]</code>, <code>tvbo[pyrates]</code>, <code>tvbo[julia]</code>), Intel-Mac pinning quirks.</div>
+                                </div>
+                                <div class="tvbo-skill-row">
+                                    <div class="tvbo-skill-name">tvbo-platform</div>
+                                    <div>How to use <strong>this platform</strong> from Python — retrieve curated knowledge, manage your account, share <code>SimulationExperiment</code>s and <code>SimulationStudy</code>s (public, or private with an API key), and load shared records back into Python.</div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- Footer CTA -->
+                        <section class="tvbo-agents-section" style="background: #2C3E50; color: white;">
+                            <div class="container text-center">
+                                <h2 style="font-weight: 700; margin-bottom: 1rem;">Ready to ship your first agent-assisted TVBO model?</h2>
+                                <p style="opacity: 0.92; max-width: 720px; margin: 0 auto 1.75rem; font-size: 1.05rem;">
+                                    Once your assistant knows TVBO, it can scaffold a Dynamics, pick the right backend, run a simulation, plot the result, and even push the experiment to this platform — all in a single conversation.
+                                </p>
+                                <a href="https://virtual-twin.github.io/tvbo/agents/" target="_blank" class="tvbo-cta">Read the full guide</a>
+                                <a href="https://github.com/virtual-twin/tvbo" target="_blank" class="tvbo-cta tvbo-cta-outline" style="margin-left: 0.75rem;">View on GitHub</a>
+                            </div>
+                        </section>
+
                     </div>
                 </t>
             </t>
