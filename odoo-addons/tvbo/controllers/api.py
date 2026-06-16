@@ -194,17 +194,21 @@ class TVBOApi(http.Controller):
         stale = owned.filtered(
             lambda s: name and s.target[s.target._rec_name] == name)
 
+        # Atomic replace: create the new record + its share row and drop the prior
+        # same-name one inside a single savepoint. Any failure rolls back ALL of
+        # it, so a bad push never leaves orphaned child records, never purges the
+        # user's existing record without a replacement, and never leaves the new
+        # record share-less (which _can_read would treat as public).
         try:
-            rec_id = _create_record(request.env, model_name, data, {})
-        except Exception as exc:  # noqa: BLE001 - surface a clean error, keep old record
+            with request.env.cr.savepoint():
+                rec_id = _create_record(request.env, model_name, data, {})
+                if not rec_id:
+                    raise ValueError('record could not be created')
+                stale.purge_model()
+                self._shares().create({
+                    share_field: rec_id, 'owner_user_id': user.id, 'visibility': visibility})
+        except Exception as exc:  # noqa: BLE001 - savepoint rolled back; old record intact
             return self._resp({'error': 'create_failed', 'detail': str(exc)}, status=422)
-        if not rec_id:
-            return self._resp({'error': 'create_failed'}, status=500)
-
-        # Create succeeded -> now it is safe to drop the prior same-name record.
-        stale.purge_model()
-        self._shares().create({
-            share_field: rec_id, 'owner_user_id': user.id, 'visibility': visibility})
         return self._resp(
             {'success': True, 'id': rec_id, 'name': name, 'visibility': visibility},
             status=201)

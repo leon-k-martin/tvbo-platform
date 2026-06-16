@@ -1,10 +1,14 @@
 from tvbo.classes.experiment import SimulationExperiment
 
-# 1. Load the experiment you downloaded (YAML + connectome.h5 in the same folder)
+# Load the experiment you downloaded (experiment.yaml + connectome.h5)
 exp = SimulationExperiment.from_file("experiment.yaml")
 
-# 2. Run the simulation and plot the results
-exp.plot()
+# Plot the structural connectome on the cortical surface
+exp.network.plot_brain_surface()
 
-# 3. Render a Markdown report of the experiment
+# Run the simulation, then plot one region's activity
+result = exp.run()
+result.sel(node="L.PrCG").plot()
+
+# Render a Markdown report of the full experiment
 exp.render("markdown")
