@@ -537,7 +537,17 @@ class KnowledgeGraphAPI(http.Controller):
                         data['equation_latex'] = eq_latex
                     break
 
-        return get_ontology_api().enrich_database_item(data, entity_type)
+        # Ontology enrichment is best-effort: it cross-links the record to ontology
+        # concepts via a SPARQL label search. A record whose name/title carries
+        # SPARQL-special characters (parentheses, ||, quotes — common in
+        # bibliographic study titles) makes owlready2's lexer raise, which must NOT
+        # take down the whole entity list. Fall back to the un-enriched row.
+        try:
+            return get_ontology_api().enrich_database_item(data, entity_type)
+        except Exception as exc:  # noqa: BLE001
+            _logger.warning("KG ontology enrichment skipped for %s '%s': %s",
+                            entity_type, data.get('name') or data.get('title'), exc)
+            return data
 
     def _get_entity_items(self, entity_type):
         """Fetch and serialize all records for one KG entity type.
