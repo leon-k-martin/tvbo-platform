@@ -11,8 +11,10 @@ version-INDEPENDENT counterpart: it is run before every ``odoo -u tvbo`` (see
 ``init-odoo.sh``) and applies the idempotent, crash-preventing bridges that
 Odoo's automatic ``ALTER COLUMN`` schema sync cannot do on its own.
 
-Three passes, all derived from the generated model source on disk (no Odoo
-registry needed) and safe to re-run:
+Four bridges across two phases, all derived from the generated model source on
+disk (no Odoo registry needed) and safe to re-run.
+
+PRE phase (``reconcile_pre``, before ``-u tvbo``):
 
 1. **rename** — a slot renamed in the schema keeps its old name(s) as LinkML
    ``aliases``; the generator emits these as ``_FIELD_ALIASES``. For each
@@ -22,9 +24,7 @@ registry needed) and safe to re-run:
 2. **enum-stash** (free text -> Many2one) — a column that became a Many2one but
    still holds old free text (e.g. ``"mV"``) is renamed to ``<col>__legacy_txt``
    so Odoo creates a clean integer FK column instead of aborting on
-   ``invalid input syntax for type integer``. The version-gated
-   ``post-migrate.py`` re-links the stashed text to enum records (needs the Odoo
-   registry, so it stays there; data is preserved meanwhile).
+   ``invalid input syntax for type integer``.
 
 3. **reverse-fk-drop** (Many2one -> scalar) — a former Many2one (integer column
    with a FK) that is now a non-relational scalar is dropped, so Odoo recreates
@@ -32,11 +32,21 @@ registry needed) and safe to re-run:
    incompatible type. The stored integer is a dead FK id, meaningless as the new
    type.
 
-Run standalone:
-    python3 reconcile_schema.py --db-host H --db-user U --db-password P \
-        --db-name tvbo --models-dir /mnt/extra-addons/tvbo/models [--dry-run]
+POST phase (``reconcile_post``, after ``-u tvbo`` has created the fresh FK column):
 
-Or call ``reconcile(cr, models_dir)`` with any DB-API cursor (e.g. Odoo's ``cr``).
+4. **enum-relink** — match each ``<col>__legacy_txt`` value against the target
+   enum's ``name`` / ``technical_name`` (comodel resolved from the generated
+   ``comodel_name=``, so no Odoo registry is needed), write the FK id back into
+   the new column, audit anything unmatched into ``tvbo_enum_migration_unmatched``,
+   then drop the legacy column. This was previously a version-gated
+   ``post-migrate.py`` step; running it here makes it fire on every upgrade.
+
+Run standalone (init-odoo.sh runs --phase pre before -u tvbo, --phase post after):
+    python3 reconcile_schema.py --phase pre  --models-dir DIR --db-host H ... [--dry-run]
+    python3 reconcile_schema.py --phase post --models-dir DIR --db-host H ... [--dry-run]
+
+Or call ``reconcile_pre(cr, models_dir)`` / ``reconcile_post(cr, models_dir)``
+with any DB-API cursor (e.g. Odoo's ``cr``).
 """
 import argparse
 import ast
@@ -317,10 +327,133 @@ def _reverse_fk_pass(cr, models_dir, dry_run):
     return dropped
 
 
-def reconcile(cr, models_dir, dry_run=False):
-    """Run all bridges against ``cr`` (any DB-API cursor). Idempotent.
-    Order matters: rename first (so later passes act on the new column name),
-    then enum-stash, then reverse-fk-drop."""
+def _ensure_audit_table(cr, dry_run):
+    _ddl(
+        cr,
+        "CREATE TABLE IF NOT EXISTS %s ("
+        " id serial PRIMARY KEY,"
+        " table_name varchar NOT NULL,"
+        " column_name varchar NOT NULL,"
+        " res_id integer NOT NULL,"
+        " legacy_value text,"
+        " migrated_at timestamp DEFAULT now())" % _ident(AUDIT_TABLE),
+        dry_run,
+    )
+
+
+def _legacy_columns(cr):
+    cr.execute(
+        r"""
+        SELECT table_name, column_name
+          FROM information_schema.columns
+         WHERE table_schema = current_schema()
+           AND table_name LIKE 'tvbo\_%%'
+           AND column_name LIKE %s
+        """,
+        ("%" + LEGACY_SUFFIX,),
+    )
+    return cr.fetchall()
+
+
+def _relink_one(cr, table, legacy_col, orig, comodel, dry_run):
+    cr.execute(
+        "SELECT DISTINCT %s FROM %s WHERE %s IS NOT NULL AND %s <> ''"
+        % (_ident(legacy_col), _ident(table), _ident(legacy_col), _ident(legacy_col))
+    )
+    values = [r[0] for r in cr.fetchall()]
+    if not values:
+        return 0, 0
+
+    mapped = {}
+    if comodel and _column_type(cr, comodel, "id") is not None:
+        match_fields = [f for f in MATCH_FIELDS if _column_type(cr, comodel, f) is not None]
+        for val in values:
+            for mf in match_fields:
+                cr.execute(
+                    "SELECT id FROM %s WHERE lower(%s) = lower(%%s) LIMIT 1"
+                    % (_ident(comodel), _ident(mf)),
+                    (val,),
+                )
+                row = cr.fetchone()
+                if row:
+                    mapped[val] = row[0]
+                    break
+
+    linked = 0
+    for val, rec_id in mapped.items():
+        if dry_run:
+            _logger.info("reconcile relink [dry-run]: %s.%s = %s WHERE %s=%r",
+                         table, orig, rec_id, legacy_col, val)
+            linked += 1
+            continue
+        cr.execute(
+            "UPDATE %s SET %s = %%s WHERE %s = %%s"
+            % (_ident(table), _ident(orig), _ident(legacy_col)),
+            (rec_id, val),
+        )
+        linked += cr.rowcount
+
+    unmatched_vals = [v for v in values if v not in mapped]
+    if unmatched_vals and not dry_run:
+        cr.execute(
+            "INSERT INTO %s (table_name, column_name, res_id, legacy_value) "
+            "SELECT %%s, %%s, id, %s FROM %s WHERE %s = ANY(%%s)"
+            % (_ident(AUDIT_TABLE), _ident(legacy_col), _ident(table), _ident(legacy_col)),
+            (table, orig, list(unmatched_vals)),
+        )
+    if unmatched_vals:
+        _logger.warning(
+            "reconcile relink: %s.%s -> %s: %s value(s) unmapped (audited): %s",
+            table, orig, comodel or "?", len(unmatched_vals), sorted(unmatched_vals)[:20],
+        )
+    return linked, len(unmatched_vals)
+
+
+def _relink_pass(cr, models_dir, dry_run):
+    """Re-link text stashed as ``<col>__legacy_txt`` to enum FK ids, then drop the
+    legacy column. Runs AFTER Odoo creates the fresh integer FK column. Each
+    column is handled in its own savepoint so one failure never aborts the rest."""
+    legacy = _legacy_columns(cr)
+    if not legacy:
+        _logger.info("reconcile relink: no __legacy_txt columns to re-link")
+        return {"linked": 0, "unmatched": 0}
+    comodels = _enum_comodels(models_dir)
+    linked = unmatched = 0
+    audit_ready = False
+    for table, legacy_col in legacy:
+        orig = legacy_col[: -len(LEGACY_SUFFIX)]
+        # The fresh FK column must exist (Odoo creates it during -u); otherwise
+        # leave the legacy column in place and re-link on a later run.
+        if _column_type(cr, table, orig) is None:
+            _logger.info(
+                "reconcile relink: %s.%s not created yet; keeping %s for next run",
+                table, orig, legacy_col,
+            )
+            continue
+        cr.execute("SAVEPOINT reconcile_relink")
+        try:
+            if not audit_ready:
+                _ensure_audit_table(cr, dry_run)
+                audit_ready = True
+            l, u = _relink_one(cr, table, legacy_col, orig, comodels.get((table, orig)), dry_run)
+            linked += l
+            unmatched += u
+            _ddl(cr, "ALTER TABLE %s DROP COLUMN %s" % (_ident(table), _ident(legacy_col)), dry_run)
+            cr.execute("RELEASE SAVEPOINT reconcile_relink")
+        except Exception:  # noqa: BLE001 - never let one column abort the rest
+            cr.execute("ROLLBACK TO SAVEPOINT reconcile_relink")
+            _logger.exception(
+                "reconcile relink: failed on %s.%s; leaving %s for manual review",
+                table, orig, legacy_col,
+            )
+    _logger.info("reconcile relink: linked %s value(s), audited %s unmatched", linked, unmatched)
+    return {"linked": linked, "unmatched": unmatched}
+
+
+def reconcile_pre(cr, models_dir, dry_run=False):
+    """Bridges to run BEFORE ``-u tvbo`` (idempotent). Order matters: rename via
+    aliases first (so later passes see the new column name), then enum-stash,
+    then reverse-fk-drop."""
     if not os.path.isdir(models_dir):
         _logger.error("reconcile: models dir not found at %s", models_dir)
         return {"renamed": 0, "stashed": 0, "dropped": 0}
@@ -329,6 +462,19 @@ def reconcile(cr, models_dir, dry_run=False):
         "stashed": _enum_stash_pass(cr, models_dir, dry_run),
         "dropped": _reverse_fk_pass(cr, models_dir, dry_run),
     }
+
+
+def reconcile_post(cr, models_dir, dry_run=False):
+    """Bridge to run AFTER ``-u tvbo`` (idempotent): re-link stashed enum text to
+    the fresh FK columns Odoo just created."""
+    if not os.path.isdir(models_dir):
+        _logger.error("reconcile: models dir not found at %s", models_dir)
+        return {"linked": 0, "unmatched": 0}
+    return _relink_pass(cr, models_dir, dry_run)
+
+
+# Back-compat alias: the pre-`-u` bridges were originally exposed as reconcile().
+reconcile = reconcile_pre
 
 
 def main(argv=None):
@@ -340,6 +486,9 @@ def main(argv=None):
     parser.add_argument("--db-name", default=os.environ.get("DB_NAME", "tvbo"))
     parser.add_argument("--models-dir", required=True,
                         help="Path to the generated Odoo models dir (has schema_models.py).")
+    parser.add_argument("--phase", choices=("pre", "post"), default="pre",
+                        help="'pre' (before -u tvbo): rename/stash/drop. "
+                             "'post' (after -u tvbo): re-link stashed enum text.")
     parser.add_argument("--dry-run", action="store_true",
                         help="Log intended DDL without executing it.")
     args = parser.parse_args(argv)
@@ -351,9 +500,10 @@ def main(argv=None):
         host=args.db_host, port=args.db_port, user=args.db_user,
         password=args.db_password, dbname=args.db_name,
     )
+    run = reconcile_post if args.phase == "post" else reconcile_pre
     try:
         with conn.cursor() as cr:
-            summary = reconcile(cr, args.models_dir, dry_run=args.dry_run)
+            summary = run(cr, args.models_dir, dry_run=args.dry_run)
         if args.dry_run:
             conn.rollback()
         else:

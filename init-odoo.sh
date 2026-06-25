@@ -34,6 +34,34 @@ run_odoo() {
   fi
 }
 
+# Version-independent schema reconciler (scripts/reconcile_schema.py).
+#   $1 = phase: "pre"  (before -u tvbo) renames/stashes/drops conflicting columns;
+#               "post" (after  -u tvbo) re-links stashed enum text to FK ids.
+# Bridges schema shape changes that arrive on a follow-latest rebuild without a
+# module version bump (Odoo's version-gated migrations would not run for those).
+# Non-fatal: on failure we log and continue, which is no worse than skipping it.
+reconcile_schema() {
+  local phase="$1"
+  local recon="${TVBO_RECONCILE_PY:-/opt/tvbo/reconcile_schema.py}"
+  local models_dir="/mnt/extra-addons/tvbo/models"
+  if [ ! -f "$recon" ]; then
+    log "⚠ reconcile_schema.py not found at $recon; skipping $phase bridges"
+    return 0
+  fi
+  log "Schema reconcile ($phase)..."
+  set +e
+  python3 "$recon" --phase "$phase" \
+    --db-host "$DB_HOST" --db-user "$DB_USER" --db-password "$DB_PASSWORD" \
+    --db-name "$DB_NAME" --models-dir "$models_dir" 2>&1 | tee -a "$UPGRADE_LOG"
+  local rc=${PIPESTATUS[0]}
+  set -e
+  if [ "$rc" -ne 0 ]; then
+    log "⚠ schema reconcile ($phase) exited $rc (non-fatal); continuing"
+  else
+    log "✓ schema reconcile ($phase) complete"
+  fi
+}
+
 # Rotate upgrade log: keep previous as .prev so it survives container restart
 mkdir -p "$(dirname "$UPGRADE_LOG")"
 if [ -f "$UPGRADE_LOG" ]; then
@@ -98,36 +126,15 @@ if psql -h "$DB_HOST" -U "$DB_USER" -d postgres -tAc "SELECT 1 FROM pg_database 
     log "Database is initialized"
     # Only upgrade if explicitly requested via TVBO_UPGRADE=1
     if [ "${TVBO_UPGRADE:-0}" = "1" ]; then
-      # Version-independent schema reconcile BEFORE Odoo's auto schema sync.
-      # Bridges shape changes (renames via LinkML aliases, free-text->Many2one,
-      # Many2one->scalar) that arrive on a follow-latest rebuild without a module
-      # version bump — Odoo's version-gated migrations would not run for those.
-      # Idempotent and non-fatal: on failure we fall through to -u tvbo (which is
-      # no worse than before this step existed).
-      RECONCILE_PY="${TVBO_RECONCILE_PY:-/opt/tvbo/reconcile_schema.py}"
-      MODELS_DIR="/mnt/extra-addons/tvbo/models"
-      if [ -f "$RECONCILE_PY" ]; then
-        log "Reconciling DB schema to generated models (pre-upgrade bridges)..."
-        set +e
-        python3 "$RECONCILE_PY" \
-          --db-host "$DB_HOST" --db-user "$DB_USER" --db-password "$DB_PASSWORD" \
-          --db-name "$DB_NAME" --models-dir "$MODELS_DIR" 2>&1 | tee -a "$UPGRADE_LOG"
-        reconcile_rc=${PIPESTATUS[0]}
-        set -e
-        if [ "$reconcile_rc" -ne 0 ]; then
-          log "⚠ schema reconcile exited $reconcile_rc (non-fatal); continuing to -u tvbo"
-        else
-          log "✓ schema reconcile complete"
-        fi
-      else
-        log "⚠ reconcile_schema.py not found at $RECONCILE_PY; skipping pre-upgrade bridges"
-      fi
+      reconcile_schema pre   # bridge conflicting columns before Odoo's auto sync
 
       log "Upgrading TVBO module..."
       run_odoo -d "$DB_NAME" -u tvbo --stop-after-init --without-demo=True \
         --db_host="$DB_HOST" --db_user="$DB_USER" --db_password="$DB_PASSWORD" \
         --log-level=info
       log "✓ TVBO module upgraded"
+
+      reconcile_schema post  # re-link stashed enum text now that FK columns exist
     else
       log "Skipping upgrade (set TVBO_UPGRADE=1 to force)"
     fi

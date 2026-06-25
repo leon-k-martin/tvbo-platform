@@ -53,5 +53,5 @@ def migrate(cr, version):
             "reconciler (init-odoo.sh) to have bridged the schema already."
         )
         return
-    summary = mod.reconcile(cr, _MODELS_DIR)
-    _logger.info("pre-migrate: schema reconcile summary %s", summary)
+    summary = mod.reconcile_pre(cr, _MODELS_DIR)
+    _logger.info("pre-migrate: schema reconcile (pre) summary %s", summary)
