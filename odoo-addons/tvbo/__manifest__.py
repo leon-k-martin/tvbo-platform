@@ -20,6 +20,7 @@
         'data/survey_workshop_feedback.xml',
         'data/website_config.xml',
         'views/website_templates.xml',
+        'views/survey_customizations.xml',
         'views/portal_templates.xml',
         'views/configurator_templates.xml',
         'views/database_views.xml',

@@ -31,7 +31,8 @@
               name="TVBO: survey-type-aware Start button">
         <xpath expr="//button[@value='start']" position="replace">
             <button type="submit" value="start" class="btn btn-primary btn-lg disabled">
-                <t t-if="survey.survey_type == 'assessment'">Start Assessment</t>
+                <t t-if="survey.start_button_label" t-out="survey.start_button_label"/>
+                <t t-elif="survey.survey_type == 'assessment'">Start Assessment</t>
                 <t t-else="">Start Survey</t>
             </button>
         </xpath>

@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- 1) Per-survey custom Start-button label, in the survey Options tab. -->
+    <record id="tvbo_survey_form_start_button_label" model="ir.ui.view">
+        <field name="name">tvbo.survey.form.start_button_label</field>
+        <field name="model">survey.survey</field>
+        <field name="inherit_id" ref="survey.survey_survey_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='options']/group[@name='options']" position="inside">
+                <group string="Start screen">
+                    <field name="start_button_label"
+                           placeholder="Defaults to the survey type, e.g. Start Exam"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- 2) Import-questions wizard: copy questions (with answers) from another survey. -->
+    <record id="tvbo_survey_question_import_form" model="ir.ui.view">
+        <field name="name">tvbo.survey.question.import.form</field>
+        <field name="model">tvbo.survey.question.import</field>
+        <field name="arch" type="xml">
+            <form string="Import Questions">
+                <p class="text-muted">
+                    Copy questions (with their answer options) from another survey into this one.
+                    Each survey question belongs to a single survey, so they are copied, not linked.
+                </p>
+                <group>
+                    <field name="target_survey_id" invisible="1"/>
+                    <field name="source_survey_id" options="{'no_create': True}"
+                           domain="[('id','!=',target_survey_id)]"/>
+                    <field name="question_ids" widget="many2many"
+                           options="{'no_create': True}"
+                           domain="[('survey_id','=',source_survey_id),('is_page','=',False)]"
+                           invisible="not source_survey_id"/>
+                </group>
+                <footer>
+                    <button string="Import" name="action_import" type="object" class="btn-primary"/>
+                    <button string="Cancel" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="tvbo_survey_question_import_action" model="ir.actions.act_window">
+        <field name="name">Import Questions from Another Survey</field>
+        <field name="res_model">tvbo.survey.question.import</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <!-- Wizard access for survey users (the model is platform-only, not in the
+         generated schema ir.model.access.csv). -->
+    <record id="access_tvbo_survey_question_import" model="ir.model.access">
+        <field name="name">tvbo.survey.question.import user</field>
+        <field name="model_id" ref="model_tvbo_survey_question_import"/>
+        <field name="group_id" ref="survey.group_survey_user"/>
+        <field name="perm_read" eval="1"/>
+        <field name="perm_write" eval="1"/>
+        <field name="perm_create" eval="1"/>
+        <field name="perm_unlink" eval="1"/>
+    </record>
+
+    <!-- "Import Questions" button in the survey form header. -->
+    <record id="tvbo_survey_form_import_button" model="ir.ui.view">
+        <field name="name">tvbo.survey.form.import_button</field>
+        <field name="model">survey.survey</field>
+        <field name="inherit_id" ref="survey.survey_survey_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header/button[@name='action_test_survey']" position="before">
+                <button name="%(tvbo_survey_question_import_action)d" type="action"
+                        string="Import Questions" context="{'active_id': id}"
+                        invisible="not active"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>
