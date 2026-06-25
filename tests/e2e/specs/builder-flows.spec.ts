@@ -16,6 +16,18 @@ async function getJson(request: APIRequestContext, url: string) {
   return r.json();
 }
 
+/** Call an Odoo type="jsonrpc" controller and return its `result`. */
+async function rpc(request: APIRequestContext, url: string, params: Record<string, unknown>) {
+  const resp = await request.post(url, {
+    headers: { 'Content-Type': 'application/json' },
+    data: { jsonrpc: '2.0', method: 'call', params, id: 1 },
+  });
+  expect(resp.ok(), `${url} HTTP ${resp.status()}`).toBeTruthy();
+  const body = await resp.json();
+  expect(body.error, `${url} JSON-RPC error: ${JSON.stringify(body.error)}`).toBeFalsy();
+  return body.result;
+}
+
 /** Wait until the builder has hydrated an assembled spec carrying dynamics. */
 async function waitForAssembled(page: any) {
   await expect(page.locator('#dynamicsModelsList .card')).not.toHaveCount(0, { timeout: 60_000 });
@@ -244,5 +256,50 @@ test.describe('Experiment builder — the three core flows', () => {
     expect(r.yaml, 'refinement present in the experiment YAML').toContain('refined_gain');
     const rep = validateYaml(r.yaml);
     expect(rep.valid, `YAML invalid: ${summarize(rep)}`).toBeTruthy();
+  });
+});
+
+// Section coverage: a single from-scratch experiment exercising every major
+// section at once (dynamics + network + coupling + integration + observations),
+// serialized through the same endpoint the builder uses. API-driven, so it has
+// no UI-timing flakiness and complements the UI flows above.
+test.describe('Experiment builder — full-section serialization coverage', () => {
+  test('a complete experiment (network + coupling + integration + unified observations) serializes valid', async ({ request }) => {
+    const experiment = {
+      id: 1,
+      label: 'Full Section Coverage',
+      description: 'Every major section assembled from building blocks.',
+      dynamics: {
+        name: 'ReducedWongWang',
+        parameters: { w: { value: 0.9 }, J_N: { value: 0.2609 } },
+        state_variables: { S: { name: 'S', equation: { rhs: '-S / tau_s + w' }, initial_value: 0.1 } },
+      },
+      // Multi-node network with the connectome weight normalization transform.
+      network: {
+        number_of_nodes: 2,
+        parameters: { conduction_speed: { value: 3.0, unit: 'mm_per_ms' } },
+        transforms: [{ name: 'weight', equation: { rhs: 'W / W_max' } }],
+      },
+      coupling: { name: 'Linear' },
+      integration: { method: 'Heun', step_size: 0.1, duration: 1000 },
+      // Unified Observation: a plain monitor + an external/library one via class_reference.
+      observations: {
+        raw: { name: 'raw', source: ['S'], period: 1 },
+        bold: {
+          name: 'bold',
+          class_reference: { module: 'tvboptim.observations.tvb_monitors', name: 'Bold' },
+        },
+      },
+    };
+    const res = await rpc(request, '/tvbo/api/configurator/experiment/serialize', { experiment });
+    expect(res.success, `serialize failed: ${JSON.stringify(res.errors || res.error)}`).toBeTruthy();
+
+    // Every section must survive into the YAML...
+    for (const token of ['ReducedWongWang', 'Linear', 'Heun', 'conduction_speed', 'W / W_max', 'class_reference']) {
+      expect(res.yaml, `"${token}" present`).toContain(token);
+    }
+    // ...and the whole thing must be tvbo-valid.
+    const rep = validateYaml(res.yaml);
+    expect(rep.valid, `complete experiment invalid: ${summarize(rep)}`).toBeTruthy();
   });
 });

@@ -38,9 +38,15 @@ PRE phase (``reconcile_pre``, before ``-u tvbo``):
    USING (``to_jsonb`` wraps any scalar as valid jsonb), or dropped if even that
    fails. Without this Odoo aborts with ``cannot cast type ... to jsonb``.
 
+5. **m2m-reset** (stale relation tables) — a Many2many ``_rel`` table left from an
+   earlier generation can have different join-column names than the current model
+   expects. Odoo never adds columns to an existing m2m table, so it later aborts
+   adding the FK on a column that does not exist. The table is dropped and Odoo
+   recreates it with the right columns (link rows are repopulated on ingest).
+
 POST phase (``reconcile_post``, after ``-u tvbo`` has created the fresh FK column):
 
-5. **enum-relink** — match each ``<col>__legacy_txt`` value against the target
+6. **enum-relink** — match each ``<col>__legacy_txt`` value against the target
    enum's ``name`` / ``technical_name`` (comodel resolved from the generated
    ``comodel_name=``, so no Odoo registry is needed), write the FK id back into
    the new column, audit anything unmatched into ``tvbo_enum_migration_unmatched``,
@@ -221,6 +227,57 @@ def _enum_comodels(models_dir):
     return out
 
 
+def _many2many_relations(models_dir):
+    """Yield ``(rel_table, col1, col2)`` for each Many2many. Column names follow
+    Odoo: explicit ``column1``/``column2`` when set (self-referential fields),
+    else the defaults ``<model_table>_id`` / ``<comodel_table>_id``."""
+    for path in _model_files(models_dir):
+        try:
+            with open(path, encoding="utf-8") as fh:
+                tree = ast.parse(fh.read(), filename=path)
+        except (OSError, SyntaxError):
+            continue
+        for node in tree.body:
+            if not isinstance(node, ast.ClassDef):
+                continue
+            table = None
+            m2m = []
+            for stmt in node.body:
+                if not isinstance(stmt, ast.Assign) or len(stmt.targets) != 1:
+                    continue
+                target = stmt.targets[0]
+                if not isinstance(target, ast.Name):
+                    continue
+                if (
+                    target.id == "_name"
+                    and isinstance(stmt.value, ast.Constant)
+                    and isinstance(stmt.value.value, str)
+                ):
+                    table = stmt.value.value.replace(".", "_")
+                elif (
+                    isinstance(stmt.value, ast.Call)
+                    and isinstance(stmt.value.func, ast.Attribute)
+                    and stmt.value.func.attr == "Many2many"
+                ):
+                    kw = {
+                        k.arg: k.value.value
+                        for k in stmt.value.keywords
+                        if isinstance(k.value, ast.Constant)
+                    }
+                    m2m.append(kw)
+            if not table:
+                continue
+            for kw in m2m:
+                rel = kw.get("relation")
+                if not rel:
+                    continue
+                comodel = (kw.get("comodel_name") or "").replace(".", "_")
+                col1 = kw.get("column1") or "%s_id" % table
+                col2 = kw.get("column2") or ("%s_id" % comodel if comodel else None)
+                if col1 and col2:
+                    yield rel, col1, col2
+
+
 # ---- DB introspection ----------------------------------------------------
 
 def _column_type(cr, table, column):
@@ -236,6 +293,17 @@ def _column_type(cr, table, column):
     )
     row = cr.fetchone()
     return row[0] if row else None
+
+
+def _table_exists(cr, table):
+    cr.execute(
+        """
+        SELECT 1 FROM information_schema.tables
+         WHERE table_schema = current_schema() AND table_name = %s
+        """,
+        (table,),
+    )
+    return cr.fetchone() is not None
 
 
 def _fk_constraints_on(cr, table, column):
@@ -388,6 +456,33 @@ def _coerce_pass(cr, models_dir, dry_run):
     return converted
 
 
+def _m2m_pass(cr, models_dir, dry_run):
+    """Drop stale Many2many relation tables. A ``_rel`` table left from an earlier
+    generation can have different join-column names than the current model
+    expects; Odoo never adds columns to an existing m2m table, so it later aborts
+    adding the FK on a column that does not exist. Dropping it lets Odoo recreate
+    the table with the right columns (the link rows are repopulated on ingest)."""
+    dropped = 0
+    seen = set()
+    for rel, col1, col2 in _many2many_relations(models_dir):
+        if rel in seen:
+            continue
+        seen.add(rel)
+        if not _table_exists(cr, rel):
+            continue  # Odoo will create it fresh
+        missing = [c for c in (col1, col2) if _column_type(cr, rel, c) is None]
+        if not missing:
+            continue  # table already has the expected join columns
+        _logger.info(
+            "reconcile m2m: %s missing join column(s) %s; dropping stale relation "
+            "table (Odoo recreates it)", rel, missing,
+        )
+        _ddl(cr, "DROP TABLE %s" % _ident(rel), dry_run)
+        dropped += 1
+    _logger.info("reconcile m2m: %s stale relation table(s) dropped", dropped)
+    return dropped
+
+
 def _ensure_audit_table(cr, dry_run):
     _ddl(
         cr,
@@ -523,6 +618,7 @@ def reconcile_pre(cr, models_dir, dry_run=False):
         "stashed": _enum_stash_pass(cr, models_dir, dry_run),
         "dropped": _reverse_fk_pass(cr, models_dir, dry_run),
         "coerced": _coerce_pass(cr, models_dir, dry_run),
+        "m2m_reset": _m2m_pass(cr, models_dir, dry_run),
     }
 
 
