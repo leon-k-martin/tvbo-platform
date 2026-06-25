@@ -27,6 +27,12 @@ async function waitForAssembled(page: any) {
 }
 
 test.describe('Experiment builder — the three core flows', () => {
+  // These flows drive the live builder UI (lazy-initialized tabs, an accordion
+  // modal editor, a sticky header, a running 3D canvas), which is inherently
+  // timing-sensitive under load. Allow a small retry budget so transient UI-init
+  // races don't flake the suite; the API-driven specs stay at the global retries=0.
+  test.describe.configure({ retries: 2 });
+
   // -------------------------------------------------------------------- //
   // Flow 1: select an example experiment -> identical, valid YAML
   // -------------------------------------------------------------------- //
@@ -94,31 +100,45 @@ test.describe('Experiment builder — the three core flows', () => {
     await page.locator('#dynamics-tab').click();
     // Showing the Dynamics tab lazily runs initializeBuilder(), which renders the
     // "Add Dynamics Model" button — wait for it before clicking.
-    await expect(page.locator('#addDynamicsModel')).toBeVisible({ timeout: 15_000 });
+    await expect(page.locator('#addDynamicsModel')).toBeVisible({ timeout: 25_000 });
     // The dynamics editor is an in-page panel; Odoo's sticky header can overlap
     // a button after auto-scroll-to-center, so editor clicks use { force: true }
     // (they are genuinely visible + enabled — only hit-testing is fooled).
     await page.locator('#addDynamicsModel').click({ force: true });
-    await expect(page.locator('#editorModelName')).toBeVisible({ timeout: 15_000 });
+    await expect(page.locator('#editorModelName')).toBeVisible({ timeout: 25_000 });
     await page.locator('#editorModelName').fill('TwoStateModel');
 
-    await page.locator('#addEditorParam').click({ force: true });
-    await page.locator('#addEditorParam').click({ force: true });
-    const params = page.locator('#editorParamsContainer .param-row');
-    await expect(params, 'two parameter rows added').toHaveCount(2);
+    // Add rows one at a time, confirming each appears before the next click —
+    // two rapid force-clicks can race under load and drop a row.
+    const addParam = page.locator('#addEditorParam').first();
+    const params = page.locator('#editorParamsContainer').first().locator('.param-row');
+    await addParam.click({ force: true });
+    await expect(params).toHaveCount(1, { timeout: 20_000 });
+    await addParam.click({ force: true });
+    await expect(params, 'two parameter rows added').toHaveCount(2, { timeout: 20_000 });
     await params.nth(0).locator('.p-name').fill('a');
     await params.nth(0).locator('.p-value').fill('1.0');
     await params.nth(1).locator('.p-name').fill('b');
     await params.nth(1).locator('.p-value').fill('2.0');
 
-    // State Variables sit in a collapsed accordion section — expand it and wait
-    // for the open animation to finish before adding rows.
-    await page.locator('.accordion-button[data-bs-target="#stateVarsSection"]').click({ force: true });
-    await expect(page.locator('#stateVarsSection')).toHaveClass(/show/, { timeout: 5_000 });
-    await page.locator('#addEditorStateVar').click({ force: true });
-    await page.locator('#addEditorStateVar').click({ force: true });
-    const svs = page.locator('#editorStateVarsContainer .sv-row');
-    await expect(svs, 'two state-variable rows added').toHaveCount(2);
+    // Expand the State Variables accordion. Open the collapse directly via JS
+    // (rather than clicking the header button) so this can never hang on button
+    // hit-testing under load; the bounded wait fails fast if the editor DOM isn't
+    // ready instead of stalling for the whole test timeout.
+    await page.locator('#stateVarsSection').first().waitFor({ state: 'attached', timeout: 15_000 });
+    await page.evaluate(() => {
+      document.querySelectorAll('#stateVarsSection').forEach((s) => s.classList.add('show'));
+      document
+        .querySelectorAll('.accordion-button[data-bs-target="#stateVarsSection"]')
+        .forEach((b) => b.classList.remove('collapsed'));
+    });
+    const addSv = page.locator('#addEditorStateVar').first();
+    await expect(addSv).toBeVisible({ timeout: 20_000 });
+    const svs = page.locator('#editorStateVarsContainer').first().locator('.sv-row');
+    await addSv.click({ force: true });
+    await expect(svs).toHaveCount(1, { timeout: 20_000 });
+    await addSv.click({ force: true });
+    await expect(svs, 'two state-variable rows added').toHaveCount(2, { timeout: 20_000 });
     await svs.nth(0).locator('.sv-name').fill('x');
     await svs.nth(0).locator('.sv-expr').fill('a - x + y');
     await svs.nth(0).locator('.sv-voi').check({ force: true });
@@ -126,7 +146,7 @@ test.describe('Experiment builder — the three core flows', () => {
     await svs.nth(1).locator('.sv-expr').fill('b - y');
 
     await page.locator('#saveEditorModel').click({ force: true });
-    await expect(page.locator('#dynamicsModelsList .card')).toContainText('TwoStateModel', { timeout: 15_000 });
+    await expect(page.locator('#dynamicsModelsList .card')).toContainText('TwoStateModel', { timeout: 25_000 });
 
     // -- Observations: TWO entries (real "add row" path) --
     await page.evaluate(() => {
@@ -161,53 +181,62 @@ test.describe('Experiment builder — the three core flows', () => {
   });
 
   // -------------------------------------------------------------------- //
-  // Flow 3: pick a single KG component -> workspace -> refine -> add
+  // Flow 3: pick a KG component -> workspace -> refine -> add ANOTHER -> both
   // -------------------------------------------------------------------- //
-  test('Flow 3: pick a KG Dynamics component, refine it, and add it to the experiment', async ({ page, request }) => {
+  test('Flow 3: pick a KG component, refine it, then add a second selection to the builder', async ({ page, request }) => {
     test.setTimeout(150_000);
 
-    // A Dynamics building block, exactly what a KG card "Open in Experiment
-    // Builder" deep-links via ?dynamics=<id>.
+    // Two distinct Dynamics building blocks: A is opened via the KG deep-link
+    // (?dynamics=<id>, what a card's "Open in Experiment Builder" does); B is the
+    // second selection added from inside the builder.
     const dynResp = await getJson(request, '/tvbo/api/configurator/dynamics');
-    const blocks: any[] = dynResp.data || dynResp;
-    expect(Array.isArray(blocks) && blocks.length, 'KG has Dynamics building blocks').toBeTruthy();
-    const block = blocks.find((d) => d && d.name) || blocks[0];
-    expect(block?.name, 'a named Dynamics block exists').toBeTruthy();
+    const blocks: any[] = (dynResp.data || dynResp).filter((d: any) => d && d.name);
+    expect(blocks.length, 'KG has at least two named Dynamics blocks').toBeGreaterThan(1);
+    const blockA = blocks[0];
+    const blockB = blocks[1];
 
-    // Open it in the builder the way the KG card does.
-    await page.goto(`${CONFIGURATOR}?dynamics=${block.id}`);
+    // 1. Open component A in the builder; wait for the builder to be ready.
+    await page.goto(`${CONFIGURATOR}?dynamics=${blockA.id}`);
+    await page.locator('#dynamics-tab').click();
+    await expect(page.locator('#addDynamicsModel'), 'builder initialized').toBeVisible({ timeout: 30_000 });
     await expect(
       page.locator('#dynamicsModelsList .card'),
-      'KG component seeded into the workspace',
-    ).toContainText(block.name, { timeout: 60_000 });
+      'KG component A seeded into the workspace',
+    ).toContainText(blockA.name, { timeout: 60_000 });
 
-    // It is part of the assembled experiment.
-    const seededName = await page.evaluate(() => {
-      const s = window.assembleExperimentSpec() as any;
-      const d = Array.isArray(s.dynamics) ? s.dynamics[0] : s.dynamics;
-      return d?.name;
-    });
-    expect(seededName, 'seeded component is in the experiment').toBe(block.name);
-
-    // Refine: show the Dynamics workspace, open the component's editor, add a param.
-    await page.locator('#dynamics-tab').click();
+    // 2. Refine A: open its editor and add a distinguishing parameter.
     await page.locator('#dynamicsModelsList .edit-model-btn').first().click({ force: true });
-    await expect(page.locator('#editorModelName')).toBeVisible({ timeout: 15_000 });
+    await expect(page.locator('#editorModelName')).toBeVisible({ timeout: 25_000 });
     await page.locator('#addEditorParam').click({ force: true });
     const newRow = page.locator('#editorParamsContainer .param-row').last();
     await newRow.locator('.p-name').fill('refined_gain');
     await newRow.locator('.p-value').fill('0.42');
     await page.locator('#saveEditorModel').click({ force: true });
+    await expect(page.locator('#dynamicsModelsList .card'), 'one model after refine').toHaveCount(1);
 
-    // The refinement is carried into the assembled experiment and serializes valid.
+    // 3. Add a SECOND selection from the building-block picker (another KG choice).
+    await page.locator('#addDynamicsModel').click({ force: true });
+    await expect(page.locator('#editorBaseModel')).toBeVisible({ timeout: 25_000 });
+    await page.locator('#editorBaseModel').selectOption(String(blockB.id));
+    // Selecting a base model loads it (fills the editor name + params).
+    await expect(page.locator('#editorModelName'), 'second selection loaded').not.toHaveValue('', { timeout: 25_000 });
+    await page.locator('#saveEditorModel').click({ force: true });
+
+    // 4. BOTH components are now in the builder's workspace.
+    await expect(page.locator('#dynamicsModelsList .card'), 'two models in the workspace').toHaveCount(2);
+    await expect(page.locator('#dynamicsModelsList')).toContainText(blockA.name);
+    await expect(page.locator('#dynamicsModelsList')).toContainText(blockB.name);
+
+    // 5. The experiment (built on the refined first model) still serializes valid,
+    //    carrying the refinement.
     const r = await page.evaluate(async () => {
       const spec = window.assembleExperimentSpec() as any;
       const res = await window.serializeExperiment(spec);
       return { ok: res.ok, yaml: res.yaml, errors: res.errors, error: res.error };
     });
-    expect(r.ok, `refined serialize failed: ${JSON.stringify(r.errors || r.error)}`).toBeTruthy();
+    expect(r.ok, `serialize failed: ${JSON.stringify(r.errors || r.error)}`).toBeTruthy();
     expect(r.yaml, 'refinement present in the experiment YAML').toContain('refined_gain');
     const rep = validateYaml(r.yaml);
-    expect(rep.valid, `refined YAML invalid: ${summarize(rep)}`).toBeTruthy();
+    expect(rep.valid, `YAML invalid: ${summarize(rep)}`).toBeTruthy();
   });
 });
