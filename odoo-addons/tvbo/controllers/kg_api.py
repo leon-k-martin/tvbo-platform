@@ -527,15 +527,44 @@ class KnowledgeGraphAPI(http.Controller):
         return get_ontology_api().enrich_database_item(data, entity_type)
 
     def _get_entity_items(self, entity_type):
-        """Fetch and serialize all records for one KG entity type."""
+        """Fetch and serialize all records for one KG entity type.
+
+        Respects model-sharing visibility: a record that is PRIVATE to another
+        user (a ``tvbo.model_share`` with ``visibility='private'``) is excluded,
+        so the unified Knowledge Graph shows curated ground-truth + shared
+        community elements but never someone else's private model. Curated records
+        have no share row and are always public; this is why shared models live in
+        the KG rather than a separate gallery.
+        """
         cfg = _KG_ENTITY_CONFIG[entity_type]
         if _get_model_or_none(cfg['model']) is None:
             return []
         rows = _safe_search_read(
             cfg['model'],
             _get_model_field_names(cfg['model'], include_relations=False),
+            domain=self._visibility_domain(cfg['model']),
         )
         return [self._serialize_entity_row(entity_type, row, detail=False) for row in rows]
+
+    def _visibility_domain(self, model_name):
+        """Domain that hides elements private to *other* users.
+
+        Sharing only targets models (Dynamics) and SimulationExperiments; every
+        other KG entity type is curated/public and returns an empty domain.
+        """
+        share_field = {
+            'tvbo.dynamics': 'dynamics_id',
+            'tvbo.simulation_experiment': 'experiment_id',
+        }.get(model_name)
+        if not share_field or _get_model_or_none('tvbo.model_share') is None:
+            return []
+        share_dom = [('visibility', '=', 'private')]
+        user = request.env.user
+        if not user._is_public():
+            share_dom.append(('owner_user_id', '!=', user.id))  # keep my own private models
+        private = request.env['tvbo.model_share'].sudo().search(share_dom)
+        private_ids = [s[share_field].id for s in private if s[share_field]]
+        return [('id', 'not in', private_ids)] if private_ids else []
 
     def _expand_relations(self, model_name, row):
         """Expand x2many fields into nested related records for detail endpoints."""

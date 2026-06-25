@@ -9,29 +9,76 @@ log() {
   echo "[$(date -u +"%Y-%m-%d %H:%M:%S UTC")] $*"
 }
 
-# Run odoo command with error capture (set -e would hide the traceback)
+# Run odoo commands with error capture (set -e would hide the traceback).
 # Mirror output to /var/lib/odoo/upgrade.log so it survives container restart.
 UPGRADE_LOG=/var/lib/odoo/upgrade.log
-run_odoo() {
+
+# Report an odoo failure: dump context, optionally hold the pod for debugging,
+# then exit. Split out so a caller that can self-heal (see the upgrade block) may
+# attempt recovery before deciding the failure is terminal.
+handle_odoo_failure() {
+  local rc="$1"; shift
+  log "ERROR: odoo command failed with exit code $rc" | tee -a "$UPGRADE_LOG"
+  log "Command was: odoo $*" | tee -a "$UPGRADE_LOG"
+  log "Last 50 lines of upgrade log:" | tee -a "$UPGRADE_LOG"
+  tail -50 "$UPGRADE_LOG" || true
+  if [ "$rc" -eq 137 ] || [ "$rc" -eq 255 ]; then
+    log "Checking dmesg for OOM..."
+    dmesg 2>/dev/null | tail -20 || true
+  fi
+  if [ "${TVBO_KEEP_ALIVE_ON_FAIL:-0}" = "1" ]; then
+    log "TVBO_KEEP_ALIVE_ON_FAIL=1 set; sleeping forever for kubectl exec debugging"
+    sleep infinity
+  fi
+  exit "$rc"
+}
+
+# Run odoo, tee output to the persistent log, and RETURN its exit code without
+# exiting. ODOO_LOG_LEVEL, when set, overrides the per-command --log-level; when
+# unset each caller's explicit --log-level applies (no forced debug default —
+# that was making "info" upgrades emit full DEBUG output).
+run_odoo_soft() {
   set +e
-  odoo "$@" --log-level=${ODOO_LOG_LEVEL:-debug} 2>&1 | tee -a "$UPGRADE_LOG"
+  odoo "$@" ${ODOO_LOG_LEVEL:+--log-level="$ODOO_LOG_LEVEL"} 2>&1 | tee -a "$UPGRADE_LOG"
   local rc=${PIPESTATUS[0]}
   set -e
-  if [ $rc -ne 0 ]; then
-    log "ERROR: odoo command failed with exit code $rc" | tee -a "$UPGRADE_LOG"
-    log "Command was: odoo $*" | tee -a "$UPGRADE_LOG"
-    log "Last 50 lines of upgrade log:" | tee -a "$UPGRADE_LOG"
-    tail -50 "$UPGRADE_LOG" || true
-    if [ $rc -eq 137 ] || [ $rc -eq 255 ]; then
-      log "Checking dmesg for OOM..."
-      dmesg 2>/dev/null | tail -20 || true
+  return "$rc"
+}
+
+# Run odoo; on failure report + (optionally hold) + exit. For steps that have
+# nothing to recover.
+run_odoo() {
+  local rc=0
+  run_odoo_soft "$@" || rc=$?
+  [ "$rc" -eq 0 ] || handle_odoo_failure "$rc" "$*"
+}
+
+# Self-heal the known "stale Many2many _rel table" upgrade abort. When a slot's
+# m2m relation is regenerated with different join columns, the old _rel table
+# survives and Odoo aborts adding the FK on a column that no longer exists:
+#   bad query: ... ALTER TABLE "<rel>" ADD FOREIGN KEY ("<col>") ...
+#   ERROR: column "<col>" referenced in foreign key constraint does not exist
+# reconcile_schema's m2m pass should catch this from the model source, but it
+# can miss inherited/relation-less m2m. As a backstop we pull the offending
+# table straight from the failed upgrade log and drop it (Odoo recreates it with
+# the right columns; link rows are repopulated on ingest). Only *_rel tables are
+# ever dropped, never a real entity table. Returns 0 iff something was dropped.
+drop_stale_m2m_from_log() {
+  local logfile="$1" tables t dropped=0
+  tables=$(grep -B1 'referenced in foreign key constraint does not exist' "$logfile" 2>/dev/null \
+    | grep -oE 'ALTER TABLE "[a-z0-9_]+_rel"' \
+    | sed -E 's/.*"([a-z0-9_]+)".*/\1/' | sort -u) || true
+  [ -n "$tables" ] || return 1
+  for t in $tables; do
+    log "↻ m2m self-heal: dropping stale relation table '$t' (Odoo will recreate it)"
+    if psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" \
+        -c "DROP TABLE IF EXISTS \"$t\" CASCADE;" >> "$UPGRADE_LOG" 2>&1; then
+      dropped=1
+    else
+      log "⚠ m2m self-heal: failed to drop '$t'"
     fi
-    if [ "${TVBO_KEEP_ALIVE_ON_FAIL:-0}" = "1" ]; then
-      log "TVBO_KEEP_ALIVE_ON_FAIL=1 set; sleeping forever for kubectl exec debugging"
-      sleep infinity
-    fi
-    exit $rc
-  fi
+  done
+  [ "$dropped" = "1" ]
 }
 
 # Version-independent schema reconciler (scripts/reconcile_schema.py).
@@ -129,9 +176,23 @@ if psql -h "$DB_HOST" -U "$DB_USER" -d postgres -tAc "SELECT 1 FROM pg_database 
       reconcile_schema pre   # bridge conflicting columns before Odoo's auto sync
 
       log "Upgrading TVBO module..."
-      run_odoo -d "$DB_NAME" -u tvbo --stop-after-init --without-demo=True \
+      upgrade_rc=0
+      run_odoo_soft -d "$DB_NAME" -u tvbo --stop-after-init --without-demo=True \
         --db_host="$DB_HOST" --db_user="$DB_USER" --db_password="$DB_PASSWORD" \
-        --log-level=info
+        --log-level=info || upgrade_rc=$?
+      if [ "$upgrade_rc" -ne 0 ]; then
+        # Known stale-Many2many-_rel abort: drop the offending table and retry
+        # once. Anything else is a real failure — surface it normally.
+        if drop_stale_m2m_from_log "$UPGRADE_LOG"; then
+          log "Retrying TVBO upgrade after dropping stale relation table(s)..."
+          run_odoo -d "$DB_NAME" -u tvbo --stop-after-init --without-demo=True \
+            --db_host="$DB_HOST" --db_user="$DB_USER" --db_password="$DB_PASSWORD" \
+            --log-level=info
+        else
+          handle_odoo_failure "$upgrade_rc" \
+            "-d $DB_NAME -u tvbo (no recoverable stale _rel table in log)"
+        fi
+      fi
       log "✓ TVBO module upgraded"
 
       reconcile_schema post  # re-link stashed enum text now that FK columns exist
@@ -180,5 +241,5 @@ log "Starting Odoo server on port 8069..."
 exec odoo -d "$DB_NAME" \
   --db_host="$DB_HOST" --db_user="$DB_USER" --db_password="$DB_PASSWORD" \
   --db-filter="^${DB_NAME}$" \
-  --log-level=info \
+  --log-level=${ODOO_LOG_LEVEL:-info} \
   "$@"

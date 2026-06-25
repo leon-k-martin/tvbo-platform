@@ -22,6 +22,21 @@
         </xpath>
     </template>
 
+    <!-- Type-aware start button. Odoo core labels it "Start Certification" when
+         `certification` is set and "Start Survey" otherwise — but `certification`
+         only means "a certificate is issued at the end", not that the activity is
+         a certification, and "Start Survey" reads wrong for an Assessment (e.g. an
+         exam). So drive the label purely off the survey TYPE. -->
+    <template id="tvbo_survey_type_aware_start_button" inherit_id="survey.survey_fill_form_start"
+              name="TVBO: survey-type-aware Start button">
+        <xpath expr="//button[@value='start']" position="replace">
+            <button type="submit" value="start" class="btn btn-primary btn-lg disabled">
+                <t t-if="survey.survey_type == 'assessment'">Start Assessment</t>
+                <t t-else="">Start Survey</t>
+            </button>
+        </xpath>
+    </template>
+
     <!-- TVBO Custom Header - Replace default website header -->
     <template id="tvbo_header" inherit_id="website.layout" name="TVBO Custom Header">
         <xpath expr="//header" position="replace">
@@ -67,9 +82,8 @@
                                     </li>
                                 </t>
                                 <t t-else="">
-                                    <li class="nav-item">
-                                        <a class="nav-link" href="/tvbo/models/shared">Shared Models</a>
-                                    </li>
+                                    <!-- No separate "Shared Models" nav item: shared/community
+                                         models are browsable in the unified Knowledge Graph. -->
                                     <li class="nav-item dropdown">
                                         <a class="nav-link dropdown-toggle" href="#" id="tvboUserDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                             <span t-esc="request.env.user.name"/>
@@ -497,10 +511,12 @@
                         <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
                         <script src="https://d3js.org/d3.v7.min.js"></script>
 
-                        <!-- KG Browser JavaScript -->
-                        <script src="/tvbo/static/src/js/kg_components.js"></script>
-                        <script src="/tvbo/static/src/js/kg_graph.js"></script>
-                        <script src="/tvbo/static/src/js/kg_browser.js"></script>
+                        <!-- KG Browser JavaScript. Versioned (?v=) so a browser
+                             never serves a stale cached build (the cause of the
+                             "only Ontology shown" report); bump on KG-JS changes. -->
+                        <script src="/tvbo/static/src/js/kg_components.js?v=2"></script>
+                        <script src="/tvbo/static/src/js/kg_graph.js?v=2"></script>
+                        <script src="/tvbo/static/src/js/kg_browser.js?v=2"></script>
                     </div>
                 </t>
             </t>

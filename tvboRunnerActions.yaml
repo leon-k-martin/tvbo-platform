@@ -66,9 +66,21 @@ spec:
             - {name: TVBO_UPGRADE, value: "1"}
             - {name: PYTHONFAULTHANDLER, value: "1"}
             - {name: PYTHONUNBUFFERED, value: "1"}
-            - {name: ODOO_LOG_LEVEL, value: "debug"}
+            - {name: ODOO_LOG_LEVEL, value: "info"}
+            # Holds a failed-upgrade pod for `kubectl exec` debugging instead of
+            # crash-looping. Now backstopped by the readiness probe below: on a
+            # failed upgrade the server never starts, the probe never passes, the
+            # pod stays NotReady and the rollout visibly fails (no silent zombie).
             - {name: TVBO_KEEP_ALIVE_ON_FAIL, value: "1"}
           volumeMounts: [{name: data, mountPath: /var/lib/odoo}]
+          # Gate readiness on the Odoo HTTP server actually being up. The upgrade
+          # phase runs before the server starts, so the pod only goes Ready once
+          # init + `-u tvbo` complete — a hung/failed upgrade can no longer be
+          # reported as a successful rollout.
+          readinessProbe:
+            httpGet: {path: /web/health, port: 8069}
+            initialDelaySeconds: 30
+            periodSeconds: 10
       volumes:
         - name: data
           persistentVolumeClaim:
