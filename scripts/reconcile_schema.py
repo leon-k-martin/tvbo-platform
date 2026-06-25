@@ -55,6 +55,10 @@ INT_TYPES = frozenset(("integer", "bigint", "smallint"))
 # Field constructors that legitimately keep an integer column (or manage their
 # own FK), so a former-Many2one column must NOT be dropped for them.
 KEEP_INT_FIELDS = frozenset(("Many2one", "Many2many", "One2many", "Integer"))
+# Enum lookup fields (in priority order) a stashed legacy text value may equal,
+# and the audit table for values that cannot be matched (relink phase).
+MATCH_FIELDS = ("name", "technical_name")
+AUDIT_TABLE = "tvbo_enum_migration_unmatched"
 _IDENT_RE = re.compile(r"^[a-z_][a-z0-9_]*$")
 
 
@@ -133,6 +137,52 @@ def _field_aliases(models_dir):
                     _logger.exception("reconcile: cannot parse _FIELD_ALIASES in %s", path)
                     return {}
     return {}
+
+
+def _enum_comodels(models_dir):
+    """Map ``(table, column) -> comodel_table`` for every Many2one, read from the
+    generated ``comodel_name=`` kwarg. Lets the relink phase resolve an enum
+    target without the Odoo registry."""
+    out = {}
+    for path in _model_files(models_dir):
+        try:
+            with open(path, encoding="utf-8") as fh:
+                tree = ast.parse(fh.read(), filename=path)
+        except (OSError, SyntaxError):
+            continue
+        for node in tree.body:
+            if not isinstance(node, ast.ClassDef):
+                continue
+            table = None
+            m2o = []
+            for stmt in node.body:
+                if not isinstance(stmt, ast.Assign) or len(stmt.targets) != 1:
+                    continue
+                target = stmt.targets[0]
+                if not isinstance(target, ast.Name):
+                    continue
+                if (
+                    target.id == "_name"
+                    and isinstance(stmt.value, ast.Constant)
+                    and isinstance(stmt.value.value, str)
+                ):
+                    table = stmt.value.value.replace(".", "_")
+                elif (
+                    isinstance(stmt.value, ast.Call)
+                    and isinstance(stmt.value.func, ast.Attribute)
+                    and stmt.value.func.attr == "Many2one"
+                ):
+                    for kw in stmt.value.keywords:
+                        if (
+                            kw.arg == "comodel_name"
+                            and isinstance(kw.value, ast.Constant)
+                            and isinstance(kw.value.value, str)
+                        ):
+                            m2o.append((target.id, kw.value.value.replace(".", "_")))
+            if table:
+                for col, comodel in m2o:
+                    out[(table, col)] = comodel
+    return out
 
 
 # ---- DB introspection ----------------------------------------------------
