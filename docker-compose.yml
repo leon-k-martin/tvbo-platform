@@ -54,11 +54,16 @@ services:
       DB_NAME: tvbo_dev
       # Pass RESET_DB=1 on the CLI to drop+recreate+reseed on startup; defaults off.
       RESET_DB: ${RESET_DB:-0}
+      # Schema reconciler path (the prod image bakes it in at /opt/tvbo; in dev we
+      # mount it below) so init-odoo.sh and the migration hooks can bridge schema
+      # shape changes on `-u tvbo` exactly as production does.
+      TVBO_RECONCILE_PY: /opt/tvbo/reconcile_schema.py
     volumes:
       # Mount code for immediate updates (no rebuild!)
       - ./odoo-addons/tvbo:/mnt/extra-addons/tvbo:ro
       - /Users/leonmartin_bih/tools/tvbo:/tmp/tvbo:ro
       - ./init-odoo.sh:/init-odoo.sh:ro
+      - ./scripts/reconcile_schema.py:/opt/tvbo/reconcile_schema.py:ro
       - tvbo-odoo-data:/var/lib/odoo
     ports:
       - "8169:8069"  # TVBO platform port

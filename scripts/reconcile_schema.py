@@ -32,9 +32,15 @@ PRE phase (``reconcile_pre``, before ``-u tvbo``):
    incompatible type. The stored integer is a dead FK id, meaningless as the new
    type.
 
+4. **coerce** (scalar -> incompatible scalar) — a column whose new type Odoo's
+   naive ``col::<type>`` cast cannot produce (e.g. ``double precision -> jsonb``
+   for a field that became ``Json``) is pre-converted with a data-preserving
+   USING (``to_jsonb`` wraps any scalar as valid jsonb), or dropped if even that
+   fails. Without this Odoo aborts with ``cannot cast type ... to jsonb``.
+
 POST phase (``reconcile_post``, after ``-u tvbo`` has created the fresh FK column):
 
-4. **enum-relink** — match each ``<col>__legacy_txt`` value against the target
+5. **enum-relink** — match each ``<col>__legacy_txt`` value against the target
    enum's ``name`` / ``technical_name`` (comodel resolved from the generated
    ``comodel_name=``, so no Odoo registry is needed), write the FK id back into
    the new column, audit anything unmatched into ``tvbo_enum_migration_unmatched``,
@@ -69,6 +75,26 @@ KEEP_INT_FIELDS = frozenset(("Many2one", "Many2many", "One2many", "Integer"))
 # and the audit table for values that cannot be matched (relink phase).
 MATCH_FIELDS = ("name", "technical_name")
 AUDIT_TABLE = "tvbo_enum_migration_unmatched"
+# Scalar field ctor -> (information_schema data_type, ALTER-TYPE keyword, USING
+# template). When a column's current type differs from this, Odoo's auto sync
+# runs `ALTER COLUMN col TYPE <kw> USING col::<kw>` and aborts the WHOLE upgrade
+# if that cast is unsupported (e.g. double precision -> jsonb, or non-numeric
+# text -> integer). We pre-run the conversion with a data-preserving USING so
+# Odoo then sees a matching type; if even that fails the column is dropped and
+# Odoo recreates it empty. `to_jsonb()` and `::text` never fail; numeric/bool/
+# date casts can, hence the drop fallback. Relational ctors are handled by the
+# enum-stash / reverse-fk passes, not here.
+COERCE_TARGETS = {
+    "Json":     ("jsonb",                       "jsonb",            "to_jsonb(%s)"),
+    "Text":     ("text",                        "text",             "%s::text"),
+    "Html":     ("text",                        "text",             "%s::text"),
+    "Char":     ("character varying",           "varchar",          "%s::varchar"),
+    "Integer":  ("integer",                     "integer",          "%s::integer"),
+    "Float":    ("double precision",            "double precision", "%s::double precision"),
+    "Boolean":  ("boolean",                     "boolean",          "%s::boolean"),
+    "Date":     ("date",                        "date",             "%s::date"),
+    "Datetime": ("timestamp without time zone", "timestamp",        "%s::timestamp"),
+}
 _IDENT_RE = re.compile(r"^[a-z_][a-z0-9_]*$")
 
 
@@ -327,6 +353,41 @@ def _reverse_fk_pass(cr, models_dir, dry_run):
     return dropped
 
 
+def _coerce_pass(cr, models_dir, dry_run):
+    """Pre-convert columns whose new type Odoo's naive ``col::<type>`` cast cannot
+    produce (e.g. double precision -> jsonb), preserving data with a safe USING.
+    Falls back to dropping the column (Odoo recreates it empty) if even that
+    fails — e.g. a former Many2one (integer + FK) now declared Json."""
+    converted = 0
+    seen = set()
+    for table, column, ctor in _declared_fields(models_dir):
+        spec = COERCE_TARGETS.get(ctor)
+        if not spec or (table, column) in seen:
+            continue
+        seen.add((table, column))
+        target_type, alter_kw, using_tmpl = spec
+        cur = _column_type(cr, table, column)
+        if cur is None or cur == target_type:
+            continue  # absent (Odoo will create) or already the right type
+        using = using_tmpl % _ident(column)
+        _logger.info("reconcile coerce: %s.%s %s -> %s (USING %s)",
+                     table, column, cur, target_type, using)
+        cr.execute("SAVEPOINT reconcile_coerce")
+        try:
+            _ddl(cr, "ALTER TABLE %s ALTER COLUMN %s TYPE %s USING %s"
+                 % (_ident(table), _ident(column), alter_kw, using), dry_run)
+            cr.execute("RELEASE SAVEPOINT reconcile_coerce")
+        except Exception:  # noqa: BLE001 - cast failed; drop so Odoo recreates it
+            cr.execute("ROLLBACK TO SAVEPOINT reconcile_coerce")
+            _logger.warning(
+                "reconcile coerce: %s.%s -> %s conversion failed; dropping column "
+                "(Odoo will recreate it empty)", table, column, target_type)
+            _ddl(cr, "ALTER TABLE %s DROP COLUMN %s" % (_ident(table), _ident(column)), dry_run)
+        converted += 1
+    _logger.info("reconcile coerce: %s column(s) coerced", converted)
+    return converted
+
+
 def _ensure_audit_table(cr, dry_run):
     _ddl(
         cr,
@@ -461,6 +522,7 @@ def reconcile_pre(cr, models_dir, dry_run=False):
         "renamed": _rename_pass(cr, models_dir, dry_run),
         "stashed": _enum_stash_pass(cr, models_dir, dry_run),
         "dropped": _reverse_fk_pass(cr, models_dir, dry_run),
+        "coerced": _coerce_pass(cr, models_dir, dry_run),
     }
 
 
