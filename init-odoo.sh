@@ -98,6 +98,31 @@ if psql -h "$DB_HOST" -U "$DB_USER" -d postgres -tAc "SELECT 1 FROM pg_database 
     log "Database is initialized"
     # Only upgrade if explicitly requested via TVBO_UPGRADE=1
     if [ "${TVBO_UPGRADE:-0}" = "1" ]; then
+      # Version-independent schema reconcile BEFORE Odoo's auto schema sync.
+      # Bridges shape changes (renames via LinkML aliases, free-text->Many2one,
+      # Many2one->scalar) that arrive on a follow-latest rebuild without a module
+      # version bump — Odoo's version-gated migrations would not run for those.
+      # Idempotent and non-fatal: on failure we fall through to -u tvbo (which is
+      # no worse than before this step existed).
+      RECONCILE_PY="${TVBO_RECONCILE_PY:-/opt/tvbo/reconcile_schema.py}"
+      MODELS_DIR="/mnt/extra-addons/tvbo/models"
+      if [ -f "$RECONCILE_PY" ]; then
+        log "Reconciling DB schema to generated models (pre-upgrade bridges)..."
+        set +e
+        python3 "$RECONCILE_PY" \
+          --db-host "$DB_HOST" --db-user "$DB_USER" --db-password "$DB_PASSWORD" \
+          --db-name "$DB_NAME" --models-dir "$MODELS_DIR" 2>&1 | tee -a "$UPGRADE_LOG"
+        reconcile_rc=${PIPESTATUS[0]}
+        set -e
+        if [ "$reconcile_rc" -ne 0 ]; then
+          log "⚠ schema reconcile exited $reconcile_rc (non-fatal); continuing to -u tvbo"
+        else
+          log "✓ schema reconcile complete"
+        fi
+      else
+        log "⚠ reconcile_schema.py not found at $RECONCILE_PY; skipping pre-upgrade bridges"
+      fi
+
       log "Upgrading TVBO module..."
       run_odoo -d "$DB_NAME" -u tvbo --stop-after-init --without-demo=True \
         --db_host="$DB_HOST" --db_user="$DB_USER" --db_password="$DB_PASSWORD" \

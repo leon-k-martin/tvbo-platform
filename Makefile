@@ -3,7 +3,24 @@
 
 .PHONY: help dev-up dev-down dev-restart dev-update dev-logs dev-logs-odoo dev-build dev-shell \
         dev-logs-ocr up down restart update-odoo logs logs-odoo logs-api logs-ocr status forward forward-all \
-        render-thumbnails render-reports
+        render-thumbnails render-reports generate generate-check
+
+# ================================
+# SCHEMA / MODEL GENERATION
+# ================================
+# schema_models.py + ir.model.access.csv are GENERATED from the tvbo LinkML
+# ground truth — never committed (the Docker build emits them; see Dockerfile.odoo).
+# Run this locally before tests / local Odoo so the addon has its model layer.
+
+generate:
+	@echo "Generating Odoo model layer from the tvbo ground truth..."
+	python scripts/generate_odoo_models.py
+	@echo "✓ Wrote odoo-addons/tvbo/models/schema_models.py + security/ir.model.access.csv"
+
+# Exit non-zero if the on-disk generated files differ from a fresh generation
+# (handy as a local sanity check; CI does not gate on this since nothing is committed).
+generate-check:
+	python scripts/generate_odoo_models.py --check
 
 # ================================
 # DEVELOPMENT MODE (Docker Compose)

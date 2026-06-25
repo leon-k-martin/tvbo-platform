@@ -1,7 +1,43 @@
-# Odoo container with tvbo Python package for API integration
-# Heavy computations run in separate tvbo container via API
-FROM odoo:19
+# Odoo container with the tvbo Python package + an Odoo model layer GENERATED
+# from the tvbo LinkML ground-truth at build time.
+#
+# There is no committed schema_models.py / ir.model.access.csv: both are emitted
+# here from the installed tvbo schema, so the platform always follows the ground
+# truth and there is nothing to keep in sync by hand. Heavy computations run in a
+# separate tvbo container via API.
+#
+# NOTE: "follow latest" — each build installs the newest tvbo and regenerates the
+# Odoo layer against it. The runtime stage is pinned to the exact version the
+# models were generated from (image self-consistency). To freeze the schema for a
+# release, pass --build-arg TVBO_VERSION=X.Y.Z.
 
+ARG TVBO_VERSION=
+
+# ---- Stage 1: generate the Odoo model layer from the tvbo ground truth ------
+FROM odoo:19 AS schemagen
+USER root
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+ENV UV_SYSTEM_PYTHON=1 \
+    UV_BREAK_SYSTEM_PACKAGES=1
+
+# tvbo = ground-truth schema; linkml = the generator engine (build-time only,
+# kept out of the runtime image by this separate stage).
+ARG TVBO_VERSION
+RUN uv pip install --reinstall typing-extensions linkml "tvbo${TVBO_VERSION:+==$TVBO_VERSION}"
+
+# Record the exact tvbo version resolved here so the runtime stage installs the
+# same one the models were generated against.
+RUN python3 -c "import importlib.metadata as m; print(m.version('tvbo'))" > /opt/tvbo_version.txt
+
+# Generate schema_models.py + security/ir.model.access.csv from the installed
+# schema (a single --out drives both outputs under the addon root).
+COPY scripts /opt/gen/scripts
+RUN python3 /opt/gen/scripts/generate_odoo_models.py \
+        --out /opt/out/tvbo/models/schema_models.py \
+    && echo "Generated tvbo Odoo layer for tvbo==$(cat /opt/tvbo_version.txt)"
+
+# ---- Stage 2: runtime image -------------------------------------------------
+FROM odoo:19
 USER root
 
 # Set locale
@@ -14,11 +50,25 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 ENV UV_SYSTEM_PYTHON=1 \
     UV_BREAK_SYSTEM_PACKAGES=1
 
-# Install tvbo Python package (for model loading, not heavy compute)
-RUN uv pip install --reinstall typing-extensions tvbo
+# Install the SAME tvbo the models were generated from (for model loading and the
+# REST API; not heavy compute). No linkml here — the runtime never generates.
+COPY --from=schemagen /opt/tvbo_version.txt /opt/tvbo_version.txt
+RUN uv pip install --reinstall typing-extensions "tvbo==$(cat /opt/tvbo_version.txt)"
 
-# Copy the Odoo addons
+# Copy the hand-written addon sources (schema_models.py / ir.model.access.csv are
+# excluded via .dockerignore — they are supplied by the generator below).
 COPY odoo-addons /mnt/extra-addons
+
+# Overlay the generated, ground-truth-derived model layer.
+COPY --from=schemagen /opt/out/tvbo/models/schema_models.py \
+     /mnt/extra-addons/tvbo/models/schema_models.py
+COPY --from=schemagen /opt/out/tvbo/security/ir.model.access.csv \
+     /mnt/extra-addons/tvbo/security/ir.model.access.csv
+
+# Version-independent schema reconciler, run before every -u tvbo by init-odoo.sh
+# (bridges follow-latest schema changes that arrive without a module version bump).
+COPY scripts/reconcile_schema.py /opt/tvbo/reconcile_schema.py
+ENV TVBO_RECONCILE_PY=/opt/tvbo/reconcile_schema.py
 
 # Force rebuild from here when init script changes
 ARG CACHE_BUST=1

@@ -1,145 +1,57 @@
 # -*- coding: utf-8 -*-
-"""Pre-migration: bridge enum fields that changed from free text to Many2one.
+"""Pre-migration: bridge schema shape changes before Odoo's auto schema sync.
 
-The LinkML-generated schema turned a number of formerly free-text columns
-(``unit``, ``terminology``, ``domain``, ``distribution``, ``software``, …) into
-``Many2one`` references to controlled-vocabulary ("enum") models. On an
-existing database those columns still hold the old text (e.g. ``"mV"``), so
-Odoo's automatic schema sync issues ``ALTER COLUMN ... TYPE int4`` and Postgres
-aborts the whole upgrade with::
+This delegates to ``scripts/reconcile_schema.py`` — the single, version-
+independent implementation of the schema bridges (rename via LinkML aliases,
+free-text -> Many2one stash, Many2one -> scalar drop). The same reconciler is
+run before every ``odoo -u tvbo`` by ``init-odoo.sh`` (so follow-latest schema
+changes are handled even without a version bump); this hook is the belt-and-
+suspenders copy for the version boundary and for deploys that bypass
+``init-odoo.sh``. It is idempotent, so running both is harmless.
 
-    psycopg2.errors.InvalidTextRepresentation:
-        invalid input syntax for type integer: "mV"
-
-To make the upgrade survive without losing data, we rename every conflicting
-text column to ``<col>__legacy_txt`` *before* the schema sync runs. Odoo then
-creates a clean, empty integer FK column, and ``post-migrate.py`` re-links the
-stashed values to enum records (auditing anything it can't map).
-
-At the ``pre`` stage the module's new models are not yet loaded into the
-registry, so we discover the set of ``Many2one`` columns by statically parsing
-the model source on disk. This keeps the migration correct as the schema
-evolves, and covers *every* affected column rather than only the one that
-happened to crash first.
+The enum *re-link* of stashed text (which needs the Odoo registry) stays in
+``post-migrate.py``.
 """
-import ast
+import importlib.util
 import logging
 import os
-import re
 
 _logger = logging.getLogger(__name__)
 
-LEGACY_SUFFIX = "__legacy_txt"
-# Postgres character types we treat as "old free text that must be bridged".
-CHAR_TYPES = frozenset(
-    ("character varying", "character", "text", '"char"', "varchar", "bpchar")
+# Where the generated model layer lives, and where the reconciler may be found.
+_MODELS_DIR = os.path.normpath(
+    os.path.join(os.path.dirname(__file__), "..", "..", "models")
 )
-_IDENT_RE = re.compile(r"^[a-z_][a-z0-9_]*$")
 
 
-def _ident(name):
-    """Validate and double-quote a SQL identifier (names come from our own
-    source, but we never interpolate anything unvalidated into DDL)."""
-    if not _IDENT_RE.match(name or ""):
-        raise ValueError("unexpected SQL identifier: %r" % (name,))
-    return '"%s"' % name
-
-
-def _many2one_columns(models_dir):
-    """Yield ``(table, column)`` for every stored Many2one field declared in
-    the module's model files."""
-    for fname in sorted(os.listdir(models_dir)):
-        if not fname.endswith(".py") or fname == "__init__.py":
-            continue
-        path = os.path.join(models_dir, fname)
-        try:
-            with open(path, encoding="utf-8") as fh:
-                tree = ast.parse(fh.read(), filename=path)
-        except (OSError, SyntaxError):
-            _logger.exception("enum-fk migration: cannot parse %s", path)
-            continue
-        for node in tree.body:
-            if not isinstance(node, ast.ClassDef):
-                continue
-            table = None
-            m2o_cols = []
-            for stmt in node.body:
-                if not isinstance(stmt, ast.Assign) or len(stmt.targets) != 1:
-                    continue
-                target = stmt.targets[0]
-                if not isinstance(target, ast.Name):
-                    continue
-                # _name = 'tvbo.xxx'  ->  physical table 'tvbo_xxx'
-                if (
-                    target.id == "_name"
-                    and isinstance(stmt.value, ast.Constant)
-                    and isinstance(stmt.value.value, str)
-                ):
-                    table = stmt.value.value.replace(".", "_")
-                # field = fields.Many2one(...)
-                elif isinstance(stmt.value, ast.Call):
-                    func = stmt.value.func
-                    if isinstance(func, ast.Attribute) and func.attr == "Many2one":
-                        m2o_cols.append(target.id)
-            if table:
-                for col in m2o_cols:
-                    yield table, col
+def _load_reconciler():
+    """Locate and import scripts/reconcile_schema.py across layouts (image at
+    /opt/tvbo, repo checkout, or an explicit TVBO_RECONCILE_PY)."""
+    candidates = [os.environ.get("TVBO_RECONCILE_PY")]
+    here = os.path.dirname(__file__)
+    # repo layout: odoo-addons/tvbo/migrations/<ver>/ -> <repo>/scripts/
+    candidates.append(os.path.normpath(
+        os.path.join(here, "..", "..", "..", "..", "scripts", "reconcile_schema.py")))
+    candidates += [
+        "/opt/tvbo/reconcile_schema.py",
+        "/opt/tvbo-scripts/reconcile_schema.py",
+    ]
+    for path in candidates:
+        if path and os.path.isfile(path):
+            spec = importlib.util.spec_from_file_location("tvbo_reconcile_schema", path)
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            return mod
+    return None
 
 
 def migrate(cr, version):
-    models_dir = os.path.normpath(
-        os.path.join(os.path.dirname(__file__), "..", "..", "models")
-    )
-    if not os.path.isdir(models_dir):
-        _logger.error("enum-fk migration: models dir not found at %s", models_dir)
+    mod = _load_reconciler()
+    if mod is None:
+        _logger.warning(
+            "pre-migrate: reconcile_schema.py not found; relying on the boot-time "
+            "reconciler (init-odoo.sh) to have bridged the schema already."
+        )
         return
-
-    stashed = 0
-    seen = set()
-    for table, column in _many2one_columns(models_dir):
-        if (table, column) in seen:
-            continue
-        seen.add((table, column))
-
-        # Is there an existing column of a character type to bridge?
-        cr.execute(
-            """
-            SELECT data_type
-              FROM information_schema.columns
-             WHERE table_schema = current_schema()
-               AND table_name = %s
-               AND column_name = %s
-            """,
-            (table, column),
-        )
-        row = cr.fetchone()
-        if not row:
-            continue  # brand-new field: nothing to convert
-        if row[0] not in CHAR_TYPES:
-            continue  # already an int FK (or otherwise non-text): no conflict
-
-        legacy = column + LEGACY_SUFFIX
-        cr.execute(
-            """
-            SELECT 1
-              FROM information_schema.columns
-             WHERE table_schema = current_schema()
-               AND table_name = %s
-               AND column_name = %s
-            """,
-            (table, legacy),
-        )
-        if cr.fetchone():
-            continue  # already stashed by an earlier (interrupted) run
-
-        _logger.info(
-            "enum-fk migration: stashing %s.%s (%s) -> %s",
-            table, column, row[0], legacy,
-        )
-        cr.execute(
-            "ALTER TABLE %s RENAME COLUMN %s TO %s"
-            % (_ident(table), _ident(column), _ident(legacy))
-        )
-        stashed += 1
-
-    _logger.info("enum-fk migration: pre-migrate stashed %s text column(s)", stashed)
+    summary = mod.reconcile(cr, _MODELS_DIR)
+    _logger.info("pre-migrate: schema reconcile summary %s", summary)

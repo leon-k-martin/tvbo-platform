@@ -3,3 +3,14 @@
 __pycache__/
 *.pyc
 .DS_Store
+
+# Huge, build-irrelevant dirs (keep the Docker build context small)
+.venv/
+builds/
+_archive/
+_dev/
+
+# Generated at build time from the tvbo ground truth (see Dockerfile.odoo) —
+# never bake a committed/working-tree snapshot; the build emits these fresh.
+odoo-addons/tvbo/models/schema_models.py
+odoo-addons/tvbo/security/ir.model.access.csv

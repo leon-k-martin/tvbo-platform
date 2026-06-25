@@ -99,9 +99,16 @@ class OdooGenerator(OOCodeGenerator):
     def _py_class(class_name: str) -> str:
         return camelcase(class_name)
 
-    def _field_name(self, slot: SlotDefinition) -> str:
-        name = underscore(slot.alias or slot.name)
+    @staticmethod
+    def _normalize_name(raw: str) -> str:
+        """Slot/alias text -> Odoo column name (snake + reserved-word remap).
+        Applied identically to a slot's current name and its historical aliases,
+        so an alias resolves to the exact column a prior generation emitted."""
+        name = underscore(raw)
         return _RESERVED.get(name, name)
+
+    def _field_name(self, slot: SlotDefinition) -> str:
+        return self._normalize_name(slot.alias or slot.name)
 
     def _rel_table(self, model_snake: str, field_name: str) -> str:
         """Odoo m2m relation table name, kept within Postgres' 63-char limit."""
@@ -238,6 +245,34 @@ class OdooGenerator(OOCodeGenerator):
         body = field_lines or ["    pass"]
         return "\n".join(head) + "\n\n" + "\n".join(body) + "\n"
 
+    def _alias_map(self) -> dict:
+        """Map ``(model_name, new_column) -> [old_column, ...]`` from LinkML slot
+        ``aliases``. A renamed slot keeps its former name(s) as aliases (e.g.
+        ``nodes`` aliases ``regions``), so this records the rename lineage that
+        migrations replay as ``RENAME COLUMN`` to carry data across renames."""
+        sv = self.schemaview
+        any_classes = self._any_classes()
+        out = {}
+        for class_name in sorted(sv.all_classes()):
+            if class_name in any_classes:
+                continue
+            model = self._model_name(class_name)
+            for slot in sv.class_induced_slots(class_name):
+                aliases = getattr(slot, "aliases", None) or []
+                if not aliases:
+                    continue
+                new = self._field_name(slot)
+                seen = {new}
+                olds = []
+                for a in aliases:
+                    old = self._normalize_name(a)
+                    if old not in seen:
+                        seen.add(old)
+                        olds.append(old)
+                if olds:
+                    out[(model, new)] = olds
+        return out
+
     # ---- entrypoint ------------------------------------------------------
     def serialize(self) -> str:
         sv = self.schemaview
@@ -249,6 +284,22 @@ class OdooGenerator(OOCodeGenerator):
             "",
             "",
         ]
+
+        # Rename lineage from LinkML slot `aliases`, consumed by migrations
+        # (pre-migrate) to RENAME COLUMN and preserve data across schema renames.
+        alias_map = self._alias_map()
+        alias_lines = [
+            "# Column renames recorded as LinkML slot `aliases`"
+            " (new_column -> [old_columns]).",
+            "# Migrations replay these as RENAME COLUMN so data survives slot renames.",
+            "_FIELD_ALIASES = {",
+        ]
+        for key in sorted(alias_map):
+            model, new = key
+            alias_lines.append(f"    ({model!r}, {new!r}): {alias_map[key]!r},")
+        alias_lines.append("}")
+        parts.append("\n".join(alias_lines))
+        parts.append("")
         for enum_name in sorted(sv.all_enums()):
             parts.append(self._enum_model(enum_name))
             parts.append("")

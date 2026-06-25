@@ -355,6 +355,19 @@ def experiment_to_schema_dict(rec_id, depth=8):
         else:
             data['observations'] = derived
 
+    # `number_of_nodes` is only authoritative for a fully artificial network that
+    # defines its size by count alone. Whenever the network carries a node source
+    # — explicit `nodes`, or a connectome to resolve (`bids_dir` / `data_file` /
+    # `parcellation` / `graph_generator` / `tractogram`) — the count is derivable,
+    # and emitting the stored Odoo placeholder (e.g. 1) would misrepresent a
+    # resolved connectome. Drop it in that case and let tvbo compute it on load.
+    net = data.get('network')
+    if isinstance(net, dict) and net.get('number_of_nodes') is not None:
+        if any(net.get(k) for k in (
+                'nodes', 'bids_dir', 'data_file', 'parcellation',
+                'graph_generator', 'tractogram')):
+            net.pop('number_of_nodes', None)
+
     return data
 
 

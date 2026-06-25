@@ -1,3 +1,8 @@
 builds
 _archive
 _dev
+
+# Generated from the tvbo LinkML ground truth at build time (Dockerfile.odoo)
+# and locally via `make generate`. Not a source of truth — do not commit.
+odoo-addons/tvbo/models/schema_models.py
+odoo-addons/tvbo/security/ir.model.access.csv
