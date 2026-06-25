@@ -45,10 +45,23 @@ _KG_ENTITY_CONFIG = {
         'thumbnail': 'experiments',
         'report': 'experiments',
     },
+    # The ingested bibliographic studies live in tvbo.study (rec_name=title);
+    # tvbo.simulation_study is a distinct, currently-empty experiment-container
+    # concept, so pointing the KG 'study' card there showed 0 results.
     'study': {
-        'model': 'tvbo.simulation_study',
+        'model': 'tvbo.study',
         'thumbnail': 'studies',
         'report': 'studies',
+    },
+    'graph_generator': {
+        'model': 'tvbo.graph_generator',
+        'thumbnail': 'graph_generators',
+        'report': 'graph_generators',
+    },
+    'continuation': {
+        'model': 'tvbo.continuation',
+        'thumbnail': 'continuations',
+        'report': 'continuations',
     },
     'coupling': {
         'model': 'tvbo.coupling',
