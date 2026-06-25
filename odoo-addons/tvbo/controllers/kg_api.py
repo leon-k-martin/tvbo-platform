@@ -743,6 +743,20 @@ class KnowledgeGraphAPI(http.Controller):
 
         return json_response(data)
 
+    @http.route('/tvbo/api/kg/graph_generator/<int:record_id>', type='http', auth='public', methods=['GET'], csrf=False)
+    def get_graph_generator_detail(self, record_id, **kw):
+        data = self._get_entity_detail('graph_generator', record_id)
+        if not data:
+            return json_response({"error": "Not found"}, 404)
+        return json_response(data)
+
+    @http.route('/tvbo/api/kg/continuation/<int:record_id>', type='http', auth='public', methods=['GET'], csrf=False)
+    def get_continuation_detail(self, record_id, **kw):
+        data = self._get_entity_detail('continuation', record_id)
+        if not data:
+            return json_response({"error": "Not found"}, 404)
+        return json_response(data)
+
     @http.route('/tvbo/api/kg/observation/<int:record_id>', type='http', auth='public', methods=['GET'], csrf=False)
     def get_observation_detail(self, record_id, **kw):
         data = self._get_entity_detail('observation', record_id)
