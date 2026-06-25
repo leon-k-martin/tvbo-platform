@@ -3669,9 +3669,11 @@
       const period = row.querySelector('.obs-period')?.value?.trim();
 
       if (name) {
-        // Schema Observation has no `type`; map the UI fields onto valid slots.
+        // The UI `type` (monitor/metric/external) is an organizational category,
+        // not a schema slot: `imaging_modality` is an enum (BOLD/EEG/MEG/SEEG/IEEG),
+        // so the old `obs.imaging_modality = type` produced invalid YAML. Leave it
+        // unset and map only the real slots.
         const obs = { name };
-        if (type) obs.imaging_modality = type;
         if (source) obs.source = [source];
         if (period) obs.period = parseFloat(period);
         observations.push(obs);

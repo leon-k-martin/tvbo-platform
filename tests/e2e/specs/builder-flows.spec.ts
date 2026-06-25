@@ -92,6 +92,9 @@ test.describe('Experiment builder — the three core flows', () => {
 
     // -- Dynamics: a model with TWO parameters and TWO state variables --
     await page.locator('#dynamics-tab').click();
+    // Showing the Dynamics tab lazily runs initializeBuilder(), which renders the
+    // "Add Dynamics Model" button — wait for it before clicking.
+    await expect(page.locator('#addDynamicsModel')).toBeVisible({ timeout: 15_000 });
     // The dynamics editor is an in-page panel; Odoo's sticky header can overlap
     // a button after auto-scroll-to-center, so editor clicks use { force: true }
     // (they are genuinely visible + enabled — only hit-testing is fooled).
