@@ -109,6 +109,47 @@ reconcile_schema() {
   fi
 }
 
+# Seed the building-block records (dynamics, couplings, integrators, networks,
+# observations, experiments, …) from the tvbo ground-truth YAML.
+#
+# These are normally seeded by the module's post_init_hook (models/ingest.py),
+# but Odoo runs post_init_hook ONLY on install (-i), never on upgrade (-u). On a
+# deploy (TVBO_UPGRADE=1) the upgrade prunes the legacy XML-seeded records as
+# orphaned ir.model.data and nothing re-seeds them, so the Knowledge Graph ends
+# up showing ONLY the ontology (loaded from the tvbo package) with zero database
+# items. This re-runs the ingestion when the building blocks are missing.
+#
+# Idempotent by a coarse guard: it only seeds when tvbo.dynamics is empty, so it
+# never duplicates records and never touches user-created data. (The ingest
+# itself is create-only; the guard is what makes re-running safe.)
+seed_building_blocks_if_missing() {
+  local count
+  count=$(psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" -tAc \
+    "SELECT count(*) FROM tvbo_dynamics" 2>/dev/null | tr -cd '0-9')
+  if [ -n "$count" ] && [ "$count" -gt 0 ]; then
+    log "✓ building blocks present ($count dynamics records); skipping reseed"
+    return 0
+  fi
+  log "⚠ no building-block records found — re-running ground-truth ingestion (KG would otherwise show only the ontology)..."
+  set +e
+  printf '%s\n' \
+    'from odoo.addons.tvbo.models.ingest import seed_database' \
+    'seed_database(env)' \
+    'env.cr.commit()' \
+    | odoo shell -d "$DB_NAME" \
+        --db_host="$DB_HOST" --db_user="$DB_USER" --db_password="$DB_PASSWORD" \
+        --log-level=info 2>&1 | tee -a "$UPGRADE_LOG"
+  set -e
+  # Verify it actually populated — a silent empty ingest is worse than a loud fail.
+  count=$(psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" -tAc \
+    "SELECT count(*) FROM tvbo_dynamics" 2>/dev/null | tr -cd '0-9')
+  if [ -n "$count" ] && [ "$count" -gt 0 ]; then
+    log "✓ building blocks re-seeded ($count dynamics records)"
+  else
+    log "⚠ building-block reseed produced no dynamics records; see $UPGRADE_LOG and /var/lib/odoo/tvbo_ingest.log"
+  fi
+}
+
 # Rotate upgrade log: keep previous as .prev so it survives container restart
 mkdir -p "$(dirname "$UPGRADE_LOG")"
 if [ -f "$UPGRADE_LOG" ]; then
@@ -225,6 +266,11 @@ else
     --log-level=info
   log "✓ TVBO module installed"
 fi
+
+# Ensure the KG's database side is populated. On a fresh install the module's
+# post_init_hook already seeded it (guard below sees records and skips); on an
+# upgrade-only deploy the hook never ran, so this re-seeds from ground truth.
+seed_building_blocks_if_missing
 
 # Mark website configurator as done to skip the wizard
 log "Configuring website..."

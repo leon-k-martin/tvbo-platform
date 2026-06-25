@@ -38,6 +38,46 @@
         </xpath>
     </template>
 
+    <!-- Render LaTeX in survey questions/answers. Survey question titles and
+         answer values are plain-text fields, so authors write inline math as
+         $...$ / \(...\); MathJax (v3 tex-svg) typesets it on load. It also
+         re-typesets on AJAX page navigation (the survey moves between pages
+         without a full reload). -->
+    <template id="tvbo_survey_mathjax" inherit_id="survey.survey_page_fill"
+              name="TVBO: render LaTeX math in surveys">
+        <xpath expr="//div[hasclass('o_survey_form')]" position="inside">
+            <script>
+                window.MathJax = window.MathJax || {
+                    tex: {
+                        inlineMath: [['$', '$'], ['\\(', '\\)']],
+                        displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                        processEscapes: true
+                    },
+                    svg: { fontCache: 'global' },
+                    options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'] }
+                };
+            </script>
+            <script id="MathJax-script" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+            <script>
+                // Survey navigates between pages via AJAX (no full reload), so
+                // re-typeset whenever the question container is replaced.
+                document.addEventListener('DOMContentLoaded', function () {
+                    var root = document.querySelector('.o_survey_form');
+                    if (!root || !window.MutationObserver) return;
+                    var pending;
+                    new MutationObserver(function () {
+                        clearTimeout(pending);
+                        pending = setTimeout(function () {
+                            if (window.MathJax &amp;&amp; window.MathJax.typesetPromise) {
+                                window.MathJax.typesetPromise([root]).catch(function () {});
+                            }
+                        }, 150);
+                    }).observe(root, { childList: true, subtree: true });
+                });
+            </script>
+        </xpath>
+    </template>
+
     <!-- TVBO Custom Header - Replace default website header -->
     <template id="tvbo_header" inherit_id="website.layout" name="TVBO Custom Header">
         <xpath expr="//header" position="replace">
