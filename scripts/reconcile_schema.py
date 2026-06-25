@@ -473,10 +473,6 @@ def reconcile_post(cr, models_dir, dry_run=False):
     return _relink_pass(cr, models_dir, dry_run)
 
 
-# Back-compat alias: the pre-`-u` bridges were originally exposed as reconcile().
-reconcile = reconcile_pre
-
-
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--db-host", default=os.environ.get("DB_HOST", "localhost"))
