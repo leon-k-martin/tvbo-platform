@@ -148,10 +148,12 @@ test.describe('Experiment builder — the three core flows', () => {
     await page.locator('#saveEditorModel').click({ force: true });
     await expect(page.locator('#dynamicsModelsList .card')).toContainText('TwoStateModel', { timeout: 25_000 });
 
-    // -- Observations: TWO entries (real "add row" path) --
+    // -- Observations: TWO entries on the unified Observation model --
     await page.evaluate(() => {
-      window.addObservationRow('raw', 'x', 'monitor', '1');
-      window.addObservationRow('avg', 'y', 'monitor', '10');
+      // a basic monitor: source = a state variable + sampling period
+      window.addObservationRow('raw', 'x', '1');
+      // an external/library monitor via class_reference (no deprecated type)
+      window.addObservationRow('bold', 'S_e', '1000', 'tvboptim.observations.tvb_monitors:Bold');
     });
     await expect(page.locator('#observationsRows .builder-row'), 'two observation rows').toHaveCount(2);
 
@@ -175,9 +177,13 @@ test.describe('Experiment builder — the three core flows', () => {
     // ...and the YAML is tvbo-valid and carries every hand-entered item.
     const rep = validateYaml(r.yaml);
     expect(rep.valid, `hand-built YAML invalid: ${summarize(rep)}`).toBeTruthy();
-    for (const token of ['TwoStateModel', 'a', 'b', 'x', 'y', 'raw', 'avg']) {
+    for (const token of ['TwoStateModel', 'a', 'b', 'x', 'y', 'raw', 'bold']) {
       expect(r.yaml, `"${token}" present in YAML`).toContain(token);
     }
+    // the external monitor maps onto the unified Observation's class_reference
+    // (proving monitor/imaging_modality are no longer needed)
+    expect(r.yaml, 'class_reference present').toContain('class_reference');
+    expect(r.yaml).toContain('tvboptim');
   });
 
   // -------------------------------------------------------------------- //

@@ -1630,9 +1630,12 @@
           addDerivedObservationRow(obs.name || '', sources, pipeline);
         } else {
           const source = obs.voi || obs.source || '';
-          const type = obs.imaging_modality ? 'monitor' : (obs.data_source ? 'external' : 'metric');
           const period = obs.period || obs.downsample_period || '';
-          addObservationRow(obs.name || '', resolveValue(source), type, String(period));
+          const cr = obs.class_reference;
+          const classRef = cr && typeof cr === 'object'
+            ? [cr.module, cr.name].filter(Boolean).join(':')
+            : (typeof cr === 'string' ? cr : '');
+          addObservationRow(obs.name || '', resolveValue(source), String(period), classRef);
         }
       });
     }
@@ -2969,29 +2972,25 @@
     });
   }
 
-  function addObservationRow(name = '', source = '', type = 'monitor', period = '') {
+  function addObservationRow(name = '', source = '', period = '', classRef = '') {
     const container = document.getElementById('observationsRows');
     if (!container) return;
 
+    // Unified tvbo `Observation`: a name + source (a state variable or another
+    // observation) + sampling period, plus an optional class_reference for
+    // external/library monitors (e.g. "module:Bold"). The deprecated
+    // monitor/metric/external `type` and `imaging_modality` are not modelled.
     const div = document.createElement('div');
     div.className = 'builder-row';
-    div.style.gridTemplateColumns = '1fr 1fr 1fr 1fr auto auto';
+    div.style.gridTemplateColumns = '1fr 1.3fr 1fr 1.4fr auto';
     div.innerHTML = `
       <input class="builder-input obs-name" placeholder="bold" value="${escapeAttr(name)}" />
-      <select class="builder-select obs-type">
-        <option value="monitor" ${type === 'monitor' ? 'selected' : ''}>Monitor</option>
-        <option value="metric" ${type === 'metric' ? 'selected' : ''}>Metric</option>
-        <option value="external" ${type === 'external' ? 'selected' : ''}>External Data</option>
-      </select>
-      <input class="builder-input obs-source" placeholder="state variable (e.g., S)" value="${escapeAttr(source)}" />
+      <input class="builder-input obs-source" placeholder="source: state variable or observation (e.g., S_e)" value="${escapeAttr(source)}" />
       <input class="builder-input obs-period" type="number" placeholder="period (ms)" value="${escapeAttr(period)}" />
-      <button class="btn btn-sm btn-info obs-pipeline" title="Configure Pipeline">⚙️</button>
+      <input class="builder-input obs-class" placeholder="class_reference (optional, e.g. module:Bold)" value="${escapeAttr(classRef)}" />
       <button class="btn btn-sm btn-danger obs-del" title="Remove">✕</button>
     `;
     div.querySelector('.obs-del').addEventListener('click', () => div.remove());
-    div.querySelector('.obs-pipeline').addEventListener('click', () => {
-      alert('Pipeline configuration UI - TBD');
-    });
     container.appendChild(div);
   }
 
@@ -3664,18 +3663,23 @@
     const observations = [];
     obsRows.forEach(row => {
       const name = row.querySelector('.obs-name')?.value?.trim();
-      const type = row.querySelector('.obs-type')?.value;
       const source = row.querySelector('.obs-source')?.value?.trim();
       const period = row.querySelector('.obs-period')?.value?.trim();
+      const cls = row.querySelector('.obs-class')?.value?.trim();
 
       if (name) {
-        // The UI `type` (monitor/metric/external) is an organizational category,
-        // not a schema slot: `imaging_modality` is an enum (BOLD/EEG/MEG/SEEG/IEEG),
-        // so the old `obs.imaging_modality = type` produced invalid YAML. Leave it
-        // unset and map only the real slots.
+        // Map onto the unified `Observation` schema: a `source` list + sampling
+        // `period`, plus an optional `class_reference` (module + name) for
+        // external/library monitors. (`type`/`imaging_modality` are deprecated.)
         const obs = { name };
         if (source) obs.source = [source];
         if (period) obs.period = parseFloat(period);
+        if (cls) {
+          let mod = '', cname = cls;
+          if (cls.includes(':')) { const p = cls.split(':'); mod = p[0].trim(); cname = (p[1] || '').trim(); }
+          else if (cls.includes('.')) { const i = cls.lastIndexOf('.'); mod = cls.slice(0, i); cname = cls.slice(i + 1); }
+          if (cname) obs.class_reference = mod ? { module: mod, name: cname } : { name: cname };
+        }
         observations.push(obs);
       }
     });
