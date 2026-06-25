@@ -457,7 +457,19 @@
     // Open the model editor
     function openEditor(index = null) {
       currentEditIndex = index;
-      modelEditor.style.display = 'block';
+      // Present the editor as a centered modal overlay ABOVE the sticky header so
+      // its controls are always reachable. (Previously it rendered inline in the
+      // tab and could scroll under the fixed header, making buttons un-clickable.)
+      // The overlay IS its own backdrop (flex-centered + scrollable); the inner
+      // `.card` is the dialog and stays topmost at its own points, so clicks never
+      // land on a backdrop behind it. Clicking the dimmed area closes the editor.
+      modelEditor.style.cssText =
+        'display:flex; position:fixed; inset:0; z-index:2000;'
+        + ' align-items:flex-start; justify-content:center; overflow:auto;'
+        + ' padding:3vh 1rem; background:rgba(0,0,0,.45);';
+      modelEditor.onclick = (e) => { if (e.target === modelEditor) closeEditor(); };
+      const _card = modelEditor.querySelector('.card');
+      if (_card) _card.style.cssText = 'width:min(980px,96vw); max-width:100%; margin:auto;';
 
       const model = index !== null ? STATE.dynamicsModels[index] : {};
       root.querySelector('#editorTitle').textContent = index !== null ? 'Edit Model' : 'Add New Model';
@@ -897,6 +909,22 @@
     if (cfg.conduction_speed) {
       net.parameters = { conduction_speed: { value: cfg.conduction_speed, unit: 'mm_per_ms' } };
     }
+    // Emit explicit nodes when any carries a per-node dynamics assignment, an
+    // explicit label, or a non-origin position — so a multi-model network (a
+    // workspace model assigned per node) reaches the experiment. A bare
+    // count-only network omits the node list and stays count-based.
+    if (Array.isArray(cfg.nodes) && cfg.nodes.length) {
+      const nodes = cfg.nodes.map(nd => {
+        const out = { id: nd.id };
+        if (nd.label) out.label = nd.label;
+        const p = nd.position;
+        if (p && (p.x || p.y || p.z)) out.position = p;
+        const dynName = nd.dynamics && nd.dynamics.name;
+        if (dynName) out.dynamics = { name: dynName };  // per-node model reference
+        return out;
+      });
+      if (nodes.some(nd => nd.dynamics || nd.position || nd.label)) net.nodes = nodes;
+    }
     return Object.keys(net).length ? net : undefined;
   }
 
@@ -959,22 +987,14 @@
       const dp = keyByName(editorModel.derived_parameters); if (dp) dyn.derived_parameters = dp;
       const fn = keyByName(editorModel.functions); if (fn) dyn.functions = fn;
       spec.dynamics = dyn;
-    } else {
-      const dynCfg = collectDynamicsConfig();
-      if (dynCfg && (dynCfg.model || dynCfg.name)) {
-        const dyn = Object.assign({}, spec.dynamics || {});
-        dyn.name = dynCfg.model || dynCfg.name;
-        if (!spec.dynamics) {
-          // Building dynamics from scratch: include collected detail.
-          const pd = keyByName(dynCfg.parameters); if (pd) dyn.parameters = pd;
-          const sv = keyByName(dynCfg.state_variables); if (sv) dyn.state_variables = sv;
-          const dv = keyByName(dynCfg.derived_variables); if (dv) dyn.derived_variables = dv;
-          const dp = keyByName(dynCfg.derived_parameters); if (dp) dyn.derived_parameters = dp;
-          const fn = keyByName(dynCfg.functions); if (fn) dyn.functions = fn;
-        }
-        spec.dynamics = dyn;
-      }
     }
+    // No legacy fallback: the dynamics editor (STATE.dynamicsModels) is the
+    // authoritative source. An unedited loaded experiment keeps its
+    // server-cleaned spec.dynamics (already copied from baseSpec); a from-scratch
+    // build with no model omits dynamics. The former collectDynamicsConfig() path
+    // read the legacy model-builder UI (#modelParamsRows / #modelSelect) that the
+    // editor replaced and that is no longer rendered, so it only ever returned
+    // empty here.
 
     // --- Integration (scalar fields; safe to overlay) ---
     const integ = collectIntegrationConfig();
@@ -2559,10 +2579,20 @@
     }
 
     function createNodeRow(id = 0, label = '', x = '', y = '', z = '', dynamics = '') {
-      // Get available models for the dropdown
-      const allModels = window.searchData || [
+      // Per-node model choices: the workspace models (built/refined/picked in the
+      // builder) FIRST, then the DB catalogue — so a node can be assigned a model
+      // the user just added, not only library models.
+      const dbModels = window.searchData || [
         {name: 'Generic2dOscillator'}, {name: 'JansenRit'}, {name: 'WilsonCowan'}, {name: 'Epileptor'}
       ];
+      const workspaceModels = (typeof STATE !== 'undefined' && Array.isArray(STATE.dynamicsModels))
+        ? STATE.dynamicsModels : [];
+      const _seenModels = new Set();
+      const allModels = [];
+      workspaceModels.concat(dbModels).forEach(m => {
+        const nm = (m && (m.name || m.label)) || (typeof m === 'string' ? m : '');
+        if (nm && !_seenModels.has(nm)) { _seenModels.add(nm); allModels.push({ name: nm }); }
+      });
 
       const row = document.createElement('div');
       row.className = 'builder-row mb-2 p-2 border rounded bg-light d-flex align-items-center gap-2';

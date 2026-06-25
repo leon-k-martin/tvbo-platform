@@ -302,4 +302,55 @@ test.describe('Experiment builder — full-section serialization coverage', () =
     const rep = validateYaml(res.yaml);
     expect(rep.valid, `complete experiment invalid: ${summarize(rep)}`).toBeTruthy();
   });
+
+  test('#4 multi-model: per-node dynamics assigned in the network reach the assembled experiment', async ({ page }) => {
+    test.setTimeout(120_000);
+    await page.goto(CONFIGURATOR);
+    await page.waitForFunction(
+      () => typeof window.prefillExperiment === 'function' && typeof window.assembleExperimentSpec === 'function',
+      { timeout: 30_000 },
+    );
+    // Let the builder finish loading its model catalogue + initializing tabs
+    // before prefilling (the node rows depend on it).
+    await page.waitForTimeout(2500);
+
+    // A 2-node network where each node runs a DIFFERENT model (per-node dynamics)
+    // — the multi-model case. prefill drives the real Network-tab node rows.
+    await page.evaluate(() => {
+      window.prefillExperiment({
+        id: 1,
+        label: 'Per-node dynamics',
+        network: {
+          number_of_nodes: 2,
+          nodes: [
+            { id: 0, label: 'L', position: { x: 1, y: 0, z: 0 }, dynamics: { name: 'JansenRit' } },
+            { id: 1, label: 'R', position: { x: -1, y: 0, z: 0 }, dynamics: { name: 'Generic2dOscillator' } },
+          ],
+        },
+      });
+      const cr = document.getElementById('networkModeCustom');
+      if (cr) (cr as HTMLInputElement).checked = true;
+    });
+    // Node rows must be populated before assembling.
+    await expect(page.locator('#customNetworkNodes .builder-row')).toHaveCount(2, { timeout: 15_000 });
+
+    const r = await page.evaluate(async () => {
+      const spec = window.assembleExperimentSpec() as any;
+      const res = await window.serializeExperiment(spec);
+      const nodes = (spec.network && spec.network.nodes) || [];
+      return {
+        ok: res.ok, yaml: res.yaml, errors: res.errors, error: res.error,
+        nodeDyn: nodes.map((n: any) => n && n.dynamics && n.dynamics.name).filter(Boolean),
+      };
+    });
+
+    expect(r.ok, `per-node serialize failed: ${JSON.stringify(r.errors || r.error)}`).toBeTruthy();
+    // Each node kept its own model — the second model is no longer dropped.
+    expect(r.nodeDyn, 'both per-node models present').toEqual(
+      expect.arrayContaining(['JansenRit', 'Generic2dOscillator']),
+    );
+    const rep = validateYaml(r.yaml);
+    expect(rep.valid, `per-node YAML invalid: ${summarize(rep)}`).toBeTruthy();
+    expect(r.yaml).toContain('JansenRit');
+  });
 });
