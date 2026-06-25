@@ -17,6 +17,7 @@ lookup models are exactly the values the data uses.
 """
 import enum as _enum
 import logging
+import math
 
 _logger = logging.getLogger(__name__)
 
@@ -78,6 +79,30 @@ def _to_text(value):
     return value if isinstance(value, str) else str(value)
 
 
+def _json_safe(value):
+    """Make a value safe for a Postgres json/jsonb column.
+
+    Non-finite floats (inf/-inf/nan) are valid Python-JSON but Postgres rejects
+    them ('invalid input syntax for type json — Token "Infinity" is invalid'),
+    which aborts the INSERT. Because the per-field handler keeps issuing SQL on
+    the now-aborted cursor, the failure cascades (InFailedSqlTransaction) across
+    the rest of the record and the WHOLE record is lost (e.g. dynamics with an
+    unbounded range hi=inf: KIonEx, CoombesByrne, …). Represent the non-finite
+    values as string tokens so the record still ingests and the bound round-trips
+    (YAML .inf <-> "Infinity")."""
+    if isinstance(value, float):
+        if math.isinf(value):
+            return "Infinity" if value > 0 else "-Infinity"
+        if math.isnan(value):
+            return "NaN"
+        return value
+    if isinstance(value, dict):
+        return {k: _json_safe(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_json_safe(v) for v in value]
+    return value
+
+
 def _resolve_one(env, comodel, value, cache):
     """Resolve a single related value to a record id."""
     if comodel not in env:
@@ -119,6 +144,18 @@ def _resolve_many(env, comodel, value, cache):
     return ids
 
 
+def _natural_key(Model, data):
+    """Return ``(odoo_field, value)`` identifying this record for idempotency, or
+    ``(None, None)``. Prefers the schema id (-> record_id), then name, then label —
+    whichever the model actually has and the data provides. Lets the seed run on
+    every deploy as a gap-filling migration (skip what already exists) instead of
+    a one-shot that needs an empty DB / RESET_DB."""
+    for schema_key, odoo_field in (("id", "record_id"), ("name", "name"), ("label", "label")):
+        if odoo_field in Model._fields and data.get(schema_key) not in (None, ""):
+            return odoo_field, data[schema_key]
+    return None, None
+
+
 def _create_record(env, model_name, data, cache):
     """Recursively create an Odoo record from a schema-shaped dict; return id."""
     if model_name not in env:
@@ -134,31 +171,38 @@ def _create_record(env, model_name, data, cache):
         if f is None:
             continue  # field not on this model (e.g. schema extra) -> skip
         try:
-            t = f.type
-            if t in ("char", "text", "html"):
-                vals[fname] = _to_text(value)
-            elif t == "integer":
-                vals[fname] = int(value)
-            elif t == "float":
-                vals[fname] = float(value)
-            elif t == "boolean":
-                vals[fname] = bool(value)
-            elif t in ("date", "datetime"):
-                vals[fname] = value
-            elif t == "selection":
-                vals[fname] = value if isinstance(value, str) else str(value)
-            elif t == "json":
-                vals[fname] = value
-            elif t == "many2one":
-                rid = _resolve_one(env, f.comodel_name, value, cache)
-                if rid:
-                    vals[fname] = rid
-            elif t in ("many2many", "one2many"):
-                ids = _resolve_many(env, f.comodel_name, value, cache)
-                if ids:
-                    vals[fname] = [(6, 0, ids)]
+            # Per-field savepoint: a field whose value triggers a DB error (a bad
+            # nested create, a non-castable value) must NOT abort the surrounding
+            # transaction and cascade InFailedSqlTransaction onto every following
+            # field/record. The savepoint rolls that one field back to a clean
+            # cursor; we skip it and keep the rest of the record.
+            with env.cr.savepoint():
+                t = f.type
+                if t in ("char", "text", "html"):
+                    vals[fname] = _to_text(value)
+                elif t == "integer":
+                    vals[fname] = int(value)
+                elif t == "float":
+                    vals[fname] = float(value)
+                elif t == "boolean":
+                    vals[fname] = bool(value)
+                elif t in ("date", "datetime"):
+                    vals[fname] = value
+                elif t == "selection":
+                    vals[fname] = value if isinstance(value, str) else str(value)
+                elif t == "json":
+                    vals[fname] = _json_safe(value)
+                elif t == "many2one":
+                    rid = _resolve_one(env, f.comodel_name, value, cache)
+                    if rid:
+                        vals[fname] = rid
+                elif t in ("many2many", "one2many"):
+                    ids = _resolve_many(env, f.comodel_name, value, cache)
+                    if ids:
+                        vals[fname] = [(6, 0, ids)]
         except Exception as exc:  # noqa: BLE001
             # Degrade gracefully: skip the problematic field, keep the record.
+            vals.pop(fname, None)
             _logger.warning("tvbo ingest: %s.%s skipped (%s)", model_name, fname, exc)
     return Model.create(vals).id
 
@@ -217,6 +261,7 @@ def seed_database(env):
             _audit(f"cannot list {category}: {exc}")
             continue
         ok = 0
+        skipped = 0
         for name in names:
             try:
                 path = str(registry.resolve(category, name))
@@ -225,18 +270,32 @@ def seed_database(env):
                 # Savepoint per record: a DB-level error rolls back just this
                 # record instead of aborting the whole install transaction.
                 with env.cr.savepoint():
+                    # drop_unknown across the board: the ground-truth YAML carries
+                    # fields the generated schema does not model yet (schema drift,
+                    # e.g. GraphGenerator parameters.*.range/.required), and a single
+                    # extra field otherwise fails pydantic validation and loses the
+                    # ENTIRE record (GraphGenerator was 0/9). Dropping the unknown
+                    # field keeps the record; the proper long-term fix is to bring
+                    # the generated schema back in sync with the data.
                     obj = pydantic_loader.load(
-                        path, pyd_cls_name,
-                        drop_unknown=(pyd_cls_name in _DROP_UNKNOWN),
+                        path, pyd_cls_name, drop_unknown=True,
                     )
                     data = obj.model_dump(mode="python", by_alias=True, exclude_none=True)
+                    # Idempotent: skip a top-level record that already exists (by
+                    # natural key) so this can run on every deploy as a gap-filling
+                    # migration without duplicating or needing RESET_DB. Skipping the
+                    # top level also avoids re-creating its inline children.
+                    kf, kv = _natural_key(env[model_name].sudo(), data)
+                    if kf and env[model_name].sudo().search([(kf, "=", kv)], limit=1):
+                        skipped += 1
+                        continue
                     _create_record(env, model_name, data, cache)
                 ok += 1
             except Exception as exc:  # noqa: BLE001
                 _audit(f"{category}/{name} FAILED: {type(exc).__name__}: {exc}")
-        _audit(f"{model_name} -> {ok}/{len(names)} records")
+        _audit(f"{model_name} -> {ok} created, {skipped} already present / {len(names)} total")
         total += ok
-    _audit(f"DONE: {total} building-block records created")
+    _audit(f"DONE: {total} building-block records created this run")
 
 
 def post_init_hook(env):
