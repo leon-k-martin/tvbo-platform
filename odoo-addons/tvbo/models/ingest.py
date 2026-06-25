@@ -18,11 +18,25 @@ lookup models are exactly the values the data uses.
 import enum as _enum
 import logging
 import math
+import re
 
 _logger = logging.getLogger(__name__)
 
 # Reserved Odoo ORM names: schema slot -> Odoo field (matches the generator).
 _RESERVED = {"id": "record_id", "modified": "is_modified"}
+
+# Synthetic module namespace for the external IDs that make ingestion idempotent.
+# Each ingested ground-truth record gets an ir.model.data row keyed by its
+# (category, registry-name) here, so a re-run skips what already exists — the
+# robust, field-agnostic equivalent of Odoo's own data-file idempotency. It is
+# NOT a real addon, so it never enters the module graph and `-u tvbo`'s orphan
+# cleanup never prunes these rows (unlike the legacy XML data that started this).
+_INGEST_MODULE = "__tvbo_ingest__"
+
+
+def _xmlid(category, name):
+    """Deterministic, collision-free external-id name for a (category, entry)."""
+    return re.sub(r"[^a-z0-9_]+", "_", f"{category}_{name}".lower()).strip("_")
 
 # Registry path fragments to skip: the neuroml/ folder is a raw NeuroML→LEMS
 # import staging area (the "… as LEMS" experiments and exotic dynamics), not
@@ -260,6 +274,8 @@ def seed_database(env):
         except Exception as exc:  # noqa: BLE001
             _audit(f"cannot list {category}: {exc}")
             continue
+        IMD = env["ir.model.data"].sudo()
+        Model = env[model_name].sudo()
         ok = 0
         skipped = 0
         for name in names:
@@ -267,9 +283,18 @@ def seed_database(env):
                 path = str(registry.resolve(category, name))
                 if any(part in path for part in _EXCLUDE_PATH_PARTS):
                     continue  # skip NeuroML import staging
+                xmlid = _xmlid(category, name)
                 # Savepoint per record: a DB-level error rolls back just this
                 # record instead of aborting the whole install transaction.
                 with env.cr.savepoint():
+                    # Idempotent via an external id: if this (category, name) was
+                    # already ingested, skip it. Lets the seed run on every deploy
+                    # as a gap-filling migration — no duplicates, no RESET_DB — and
+                    # works for models with no natural key field (integrator, study).
+                    if IMD.search([("module", "=", _INGEST_MODULE),
+                                   ("name", "=", xmlid)], limit=1):
+                        skipped += 1
+                        continue
                     # drop_unknown across the board: the ground-truth YAML carries
                     # fields the generated schema does not model yet (schema drift,
                     # e.g. GraphGenerator parameters.*.range/.required), and a single
@@ -281,16 +306,22 @@ def seed_database(env):
                         path, pyd_cls_name, drop_unknown=True,
                     )
                     data = obj.model_dump(mode="python", by_alias=True, exclude_none=True)
-                    # Idempotent: skip a top-level record that already exists (by
-                    # natural key) so this can run on every deploy as a gap-filling
-                    # migration without duplicating or needing RESET_DB. Skipping the
-                    # top level also avoids re-creating its inline children.
-                    kf, kv = _natural_key(env[model_name].sudo(), data)
-                    if kf and env[model_name].sudo().search([(kf, "=", kv)], limit=1):
+                    # Back-compat: a record from a pre-external-id ingest may already
+                    # exist; adopt it (attach the external id) instead of duplicating.
+                    kf, kv = _natural_key(Model, data)
+                    prior = Model.search([(kf, "=", kv)], limit=1) if kf else None
+                    if prior:
+                        rec_id = prior.id
                         skipped += 1
-                        continue
-                    _create_record(env, model_name, data, cache)
-                ok += 1
+                    else:
+                        rec_id = _create_record(env, model_name, data, cache)
+                        if rec_id:
+                            ok += 1
+                    if rec_id:
+                        IMD.create({
+                            "module": _INGEST_MODULE, "name": xmlid,
+                            "model": model_name, "res_id": rec_id, "noupdate": True,
+                        })
             except Exception as exc:  # noqa: BLE001
                 _audit(f"{category}/{name} FAILED: {type(exc).__name__}: {exc}")
         _audit(f"{model_name} -> {ok} created, {skipped} already present / {len(names)} total")
