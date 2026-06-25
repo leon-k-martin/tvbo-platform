@@ -92,12 +92,15 @@ test.describe('Experiment builder — the three core flows', () => {
 
     // -- Dynamics: a model with TWO parameters and TWO state variables --
     await page.locator('#dynamics-tab').click();
-    await page.locator('#addDynamicsModel').click();
+    // The dynamics editor is an in-page panel; Odoo's sticky header can overlap
+    // a button after auto-scroll-to-center, so editor clicks use { force: true }
+    // (they are genuinely visible + enabled — only hit-testing is fooled).
+    await page.locator('#addDynamicsModel').click({ force: true });
     await expect(page.locator('#editorModelName')).toBeVisible({ timeout: 15_000 });
     await page.locator('#editorModelName').fill('TwoStateModel');
 
-    await page.locator('#addEditorParam').click();
-    await page.locator('#addEditorParam').click();
+    await page.locator('#addEditorParam').click({ force: true });
+    await page.locator('#addEditorParam').click({ force: true });
     const params = page.locator('#editorParamsContainer .param-row');
     await expect(params, 'two parameter rows added').toHaveCount(2);
     await params.nth(0).locator('.p-name').fill('a');
@@ -105,17 +108,19 @@ test.describe('Experiment builder — the three core flows', () => {
     await params.nth(1).locator('.p-name').fill('b');
     await params.nth(1).locator('.p-value').fill('2.0');
 
-    await page.locator('#addEditorStateVar').click();
-    await page.locator('#addEditorStateVar').click();
+    // State Variables sit in a collapsed accordion section — expand it first.
+    await page.locator('.accordion-button[data-bs-target="#stateVarsSection"]').click({ force: true });
+    await page.locator('#addEditorStateVar').click({ force: true });
+    await page.locator('#addEditorStateVar').click({ force: true });
     const svs = page.locator('#editorStateVarsContainer .sv-row');
     await expect(svs, 'two state-variable rows added').toHaveCount(2);
     await svs.nth(0).locator('.sv-name').fill('x');
     await svs.nth(0).locator('.sv-expr').fill('a - x + y');
-    await svs.nth(0).locator('.sv-voi').check();
+    await svs.nth(0).locator('.sv-voi').check({ force: true });
     await svs.nth(1).locator('.sv-name').fill('y');
     await svs.nth(1).locator('.sv-expr').fill('b - y');
 
-    await page.locator('#saveEditorModel').click();
+    await page.locator('#saveEditorModel').click({ force: true });
     await expect(page.locator('#dynamicsModelsList .card')).toContainText('TwoStateModel', { timeout: 15_000 });
 
     // -- Observations: TWO entries (real "add row" path) --
@@ -179,14 +184,15 @@ test.describe('Experiment builder — the three core flows', () => {
     });
     expect(seededName, 'seeded component is in the experiment').toBe(block.name);
 
-    // Refine: open the component's editor and add a distinguishing parameter.
-    await page.locator('#dynamicsModelsList .edit-model-btn').first().click();
+    // Refine: show the Dynamics workspace, open the component's editor, add a param.
+    await page.locator('#dynamics-tab').click();
+    await page.locator('#dynamicsModelsList .edit-model-btn').first().click({ force: true });
     await expect(page.locator('#editorModelName')).toBeVisible({ timeout: 15_000 });
-    await page.locator('#addEditorParam').click();
+    await page.locator('#addEditorParam').click({ force: true });
     const newRow = page.locator('#editorParamsContainer .param-row').last();
     await newRow.locator('.p-name').fill('refined_gain');
     await newRow.locator('.p-value').fill('0.42');
-    await page.locator('#saveEditorModel').click();
+    await page.locator('#saveEditorModel').click({ force: true });
 
     // The refinement is carried into the assembled experiment and serializes valid.
     const r = await page.evaluate(async () => {

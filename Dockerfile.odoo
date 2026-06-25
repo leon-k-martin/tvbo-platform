@@ -2,16 +2,23 @@
 # from the tvbo LinkML ground-truth at build time.
 #
 # There is no committed schema_models.py / ir.model.access.csv: both are emitted
-# here from the installed tvbo schema, so the platform always follows the ground
-# truth and there is nothing to keep in sync by hand. Heavy computations run in a
-# separate tvbo container via API.
+# here from the tvbo schema, so the platform always follows the ground truth and
+# there is nothing to keep in sync by hand. Heavy computations run in a separate
+# tvbo container via API.
 #
-# NOTE: "follow latest" — each build installs the newest tvbo and regenerates the
-# Odoo layer against it. The runtime stage is pinned to the exact version the
-# models were generated from (image self-consistency). To freeze the schema for a
-# release, pass --build-arg TVBO_VERSION=X.Y.Z.
+# The schema is fetched from the tvbo GitHub repo (a sparse checkout of schema/),
+# NOT from the installed wheel — the wheel doesn't ship it. "Follow latest" =
+# build against TVBO_SCHEMA_REF (default: main). The fetched YAMLs are also staged
+# into the runtime image for /tvbo/api/kg/schema. To freeze for a release, pass
+# --build-arg TVBO_SCHEMA_REF=<tag> (and optionally --build-arg TVBO_VERSION=X.Y.Z
+# to pin the runtime tvbo package).
 
+ARG TVBO_SCHEMA_REPO=https://github.com/virtual-twin/tvbo
+ARG TVBO_SCHEMA_REF=main
 ARG TVBO_VERSION=
+# CI passes CACHE_BUST=${github.sha}; it busts the schema-fetch layer so each
+# build re-clones the latest schema instead of reusing a cached checkout.
+ARG CACHE_BUST=1
 
 # ---- Stage 1: generate the Odoo model layer from the tvbo ground truth ------
 FROM odoo:19 AS schemagen
@@ -20,21 +27,34 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 ENV UV_SYSTEM_PYTHON=1 \
     UV_BREAK_SYSTEM_PACKAGES=1
 
-# tvbo = ground-truth schema; linkml = the generator engine (build-time only,
-# kept out of the runtime image by this separate stage).
-ARG TVBO_VERSION
-RUN uv pip install --reinstall typing-extensions linkml "tvbo${TVBO_VERSION:+==$TVBO_VERSION}"
+# git to fetch the schema; linkml is the generator engine. Both build-time only,
+# kept out of the runtime image by this separate stage. (tvbo itself is NOT needed
+# here: the generator reads the schema via --schema and imports only linkml.)
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends git \
+    && rm -rf /var/lib/apt/lists/*
+RUN uv pip install --reinstall linkml
 
-# Record the exact tvbo version resolved here so the runtime stage installs the
-# same one the models were generated against.
-RUN python3 -c "import importlib.metadata as m; print(m.version('tvbo'))" > /opt/tvbo_version.txt
+# Sparse-checkout just schema/ from the tvbo repo at the requested ref. Pulling
+# the whole dir (not a hardcoded file list) keeps this correct as the schema's
+# LinkML imports evolve.
+ARG TVBO_SCHEMA_REPO
+ARG TVBO_SCHEMA_REF
+ARG CACHE_BUST
+RUN echo "schema fetch (cache-bust=$CACHE_BUST) ref=$TVBO_SCHEMA_REF" \
+    && git clone --depth 1 --filter=blob:none --sparse --branch "$TVBO_SCHEMA_REF" \
+        "$TVBO_SCHEMA_REPO" /opt/tvbo-src \
+    && git -C /opt/tvbo-src sparse-checkout set schema
 
-# Generate schema_models.py + security/ir.model.access.csv from the installed
-# schema (a single --out drives both outputs under the addon root).
+# Generate schema_models.py + security/ir.model.access.csv (a single --out drives
+# both outputs under the addon root), and stage the schema YAMLs for the runtime.
 COPY scripts /opt/gen/scripts
 RUN python3 /opt/gen/scripts/generate_odoo_models.py \
+        --schema /opt/tvbo-src/schema/tvbo_datamodel.yaml \
         --out /opt/out/tvbo/models/schema_models.py \
-    && echo "Generated tvbo Odoo layer for tvbo==$(cat /opt/tvbo_version.txt)"
+    && mkdir -p /opt/out/schema \
+    && cp /opt/tvbo-src/schema/*.yaml /opt/out/schema/ \
+    && echo "Generated tvbo Odoo layer from schema ref '$TVBO_SCHEMA_REF'"
 
 # ---- Stage 2: runtime image -------------------------------------------------
 FROM odoo:19
@@ -50,10 +70,10 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 ENV UV_SYSTEM_PYTHON=1 \
     UV_BREAK_SYSTEM_PACKAGES=1
 
-# Install the SAME tvbo the models were generated from (for model loading and the
-# REST API; not heavy compute). No linkml here — the runtime never generates.
-COPY --from=schemagen /opt/tvbo_version.txt /opt/tvbo_version.txt
-RUN uv pip install --reinstall typing-extensions "tvbo==$(cat /opt/tvbo_version.txt)"
+# Install the tvbo package (for model loading and the REST API; not heavy compute).
+# No linkml here — the runtime never generates. Pin with --build-arg TVBO_VERSION.
+ARG TVBO_VERSION
+RUN uv pip install --reinstall typing-extensions "tvbo${TVBO_VERSION:+==$TVBO_VERSION}"
 
 # Copy the hand-written addon sources (schema_models.py / ir.model.access.csv are
 # excluded via .dockerignore — they are supplied by the generator below).
@@ -65,8 +85,12 @@ COPY --from=schemagen /opt/out/tvbo/models/schema_models.py \
 COPY --from=schemagen /opt/out/tvbo/security/ir.model.access.csv \
      /mnt/extra-addons/tvbo/security/ir.model.access.csv
 
-# Version-independent schema reconciler, run before every -u tvbo by init-odoo.sh
-# (bridges follow-latest schema changes that arrive without a module version bump).
+# Stage the schema YAMLs where building_blocks_api._locate_schema_file() looks, so
+# the runtime /tvbo/api/kg/schema endpoint resolves the same ground truth.
+COPY --from=schemagen /opt/out/schema /tvbo/schema
+
+# Version-independent schema reconciler, run before/after every -u tvbo by
+# init-odoo.sh (bridges follow-latest schema changes with no module version bump).
 COPY scripts/reconcile_schema.py /opt/tvbo/reconcile_schema.py
 ENV TVBO_RECONCILE_PY=/opt/tvbo/reconcile_schema.py
 

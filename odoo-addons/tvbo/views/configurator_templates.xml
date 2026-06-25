@@ -845,6 +845,12 @@
                                     base[section] = j.data;
                                 }
                                 if (window.setBaseSpec) window.setBaseSpec(base);
+                                // Load the seeded block into the editable workspace so it
+                                // renders in the Dynamics list and its tab inputs are filled —
+                                // i.e. it can be REFINED before being added, not merely held as
+                                // the (read-only) base spec. Mirrors how a loaded experiment
+                                // populates the builder.
+                                if (window.prefillExperiment) window.prefillExperiment(base);
                                 if (window.updateLiveYaml) window.updateLiveYaml();
                             } catch (e) { console.warn('[Configurator] seed error:', e); }
                         };
