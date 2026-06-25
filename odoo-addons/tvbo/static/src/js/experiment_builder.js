@@ -650,6 +650,10 @@
         alert('Please enter a model name');
         return;
       }
+      // Mark as user-authored: assembleExperimentSpec() then serializes from this
+      // (clean, input-derived) editor model rather than the server-cleaned base
+      // spec, so picks/builds/refinements actually reach the YAML.
+      model.__edited = true;
       if (currentEditIndex !== null) {
         STATE.dynamicsModels[currentEditIndex] = model;
       } else {
@@ -920,19 +924,56 @@
     }
 
     // --- Dynamics ---
-    const dynCfg = collectDynamicsConfig();
-    if (dynCfg && (dynCfg.model || dynCfg.name)) {
+    // The editable workspace (STATE.dynamicsModels) is the authoritative source:
+    // it holds the model the user picked from the KG / built / refined in the
+    // editor. prefillExperiment() seeds it from a loaded experiment too, so for a
+    // loaded experiment it mirrors spec.dynamics (no-op); for a from-scratch build
+    // or an in-editor refinement it carries the entered detail into the YAML.
+    // keyByName() passes keyed dicts (loaded) through untouched and converts the
+    // editor's row arrays into the schema's keyed-dict collections.
+    // A loaded/seeded model in STATE.dynamicsModels can still carry Odoo `false`
+    // placeholders for unset fields (baseSpec is server-cleaned, the editable copy
+    // is not). Strip `false`/null/'' so serialization doesn't reject e.g.
+    // `symbol: false`; absent booleans default to false, and 0 / real values stay.
+    const _stripFalse = (v) => Array.isArray(v)
+      ? v.map(_stripFalse).filter((x) => x !== false && x !== null && x !== '' && x !== undefined)
+      : (v && typeof v === 'object'
+        ? Object.fromEntries(Object.entries(v)
+            .filter(([, x]) => x !== false && x !== null && x !== '' && x !== undefined)
+            .map(([k, x]) => [k, _stripFalse(x)]))
+        : v);
+    // Only the user-authored editor model (clean, built from input values) is
+    // used here; an unedited loaded/seeded model stays raw, so we fall through to
+    // the server-cleaned base spec for it (no regression for loaded experiments).
+    const _rawModel = (STATE.dynamicsModels && STATE.dynamicsModels[0]) || null;
+    const editorModel = (_rawModel && _rawModel.__edited) ? _stripFalse(_rawModel) : null;
+    if (editorModel && editorModel.name) {
       const dyn = Object.assign({}, spec.dynamics || {});
-      dyn.name = dynCfg.model || dynCfg.name;
-      if (!spec.dynamics) {
-        // Building dynamics from scratch: include collected detail.
-        const pd = keyByName(dynCfg.parameters); if (pd) dyn.parameters = pd;
-        const sv = keyByName(dynCfg.state_variables); if (sv) dyn.state_variables = sv;
-        const dv = keyByName(dynCfg.derived_variables); if (dv) dyn.derived_variables = dv;
-        const dp = keyByName(dynCfg.derived_parameters); if (dp) dyn.derived_parameters = dp;
-        const fn = keyByName(dynCfg.functions); if (fn) dyn.functions = fn;
-      }
+      dyn.name = editorModel.name;
+      if (editorModel.label) dyn.label = editorModel.label;
+      if (editorModel.description) dyn.description = editorModel.description;
+      if (editorModel.system_type) dyn.system_type = editorModel.system_type;
+      const pd = keyByName(editorModel.parameters); if (pd) dyn.parameters = pd;
+      const sv = keyByName(editorModel.state_variables); if (sv) dyn.state_variables = sv;
+      const dv = keyByName(editorModel.derived_variables); if (dv) dyn.derived_variables = dv;
+      const dp = keyByName(editorModel.derived_parameters); if (dp) dyn.derived_parameters = dp;
+      const fn = keyByName(editorModel.functions); if (fn) dyn.functions = fn;
       spec.dynamics = dyn;
+    } else {
+      const dynCfg = collectDynamicsConfig();
+      if (dynCfg && (dynCfg.model || dynCfg.name)) {
+        const dyn = Object.assign({}, spec.dynamics || {});
+        dyn.name = dynCfg.model || dynCfg.name;
+        if (!spec.dynamics) {
+          // Building dynamics from scratch: include collected detail.
+          const pd = keyByName(dynCfg.parameters); if (pd) dyn.parameters = pd;
+          const sv = keyByName(dynCfg.state_variables); if (sv) dyn.state_variables = sv;
+          const dv = keyByName(dynCfg.derived_variables); if (dv) dyn.derived_variables = dv;
+          const dp = keyByName(dynCfg.derived_parameters); if (dp) dyn.derived_parameters = dp;
+          const fn = keyByName(dynCfg.functions); if (fn) dyn.functions = fn;
+        }
+        spec.dynamics = dyn;
+      }
     }
 
     // --- Integration (scalar fields; safe to overlay) ---

@@ -108,8 +108,10 @@ test.describe('Experiment builder — the three core flows', () => {
     await params.nth(1).locator('.p-name').fill('b');
     await params.nth(1).locator('.p-value').fill('2.0');
 
-    // State Variables sit in a collapsed accordion section — expand it first.
+    // State Variables sit in a collapsed accordion section — expand it and wait
+    // for the open animation to finish before adding rows.
     await page.locator('.accordion-button[data-bs-target="#stateVarsSection"]').click({ force: true });
+    await expect(page.locator('#stateVarsSection')).toHaveClass(/show/, { timeout: 5_000 });
     await page.locator('#addEditorStateVar').click({ force: true });
     await page.locator('#addEditorStateVar').click({ force: true });
     const svs = page.locator('#editorStateVarsContainer .sv-row');
