@@ -477,12 +477,20 @@ class KnowledgeGraphAPI(http.Controller):
         # the partial-ingest failures (graph_generator 0/9, software 0/64, …) that
         # a bare "dynamics > 0" check reports as healthy.
         try:
-            from ..models.ingest import kg_completeness
+            from ..models.ingest import kg_completeness, registry_coverage
             completeness = kg_completeness(request.env)
+            uncovered = registry_coverage()
         except Exception as e:  # noqa: BLE001
             completeness = {'verdict': 'KG_UNKNOWN', 'categories': {}, 'shortfalls': [str(e)]}
+            uncovered = []
 
         verdict = completeness['verdict']
+        # A registry category that nothing ingests means records exist in the
+        # ground truth that the KG can never show (the software bug) — a config
+        # defect, not healthy, even if every wired-up category is full. Fold it
+        # into the verdict so the CI gate (which checks verdict==KG_OK) catches it.
+        if uncovered and verdict == 'KG_OK':
+            verdict = 'KG_DEGRADED'
         kg_ok = verdict == 'KG_OK'
         db_total = sum(v for v in counts.values() if isinstance(v, int))
 
@@ -492,8 +500,12 @@ class KnowledgeGraphAPI(http.Controller):
                     'did not populate the DB. Check the pod boot log for the '
                     '"TVBO KG SUMMARY" banner and any "-u tvbo" upgrade failure.')
         elif verdict == 'KG_DEGRADED':
-            hint = ('Some categories ingested fewer records than the ground truth: '
-                    + ', '.join(completeness['shortfalls'])
+            parts = list(completeness['shortfalls'])
+            if uncovered:
+                parts.append('uncovered categories: '
+                             + ', '.join('%s (%s/)' % (u['category'], u['dir']) for u in uncovered)
+                             + ' — add to _INGEST in models/ingest.py')
+            hint = ('KG incomplete vs ground truth: ' + '; '.join(parts)
                     + '. Check /var/lib/odoo/tvbo_ingest.log for per-record FAILED lines.')
 
         return json_response({
@@ -501,6 +513,7 @@ class KnowledgeGraphAPI(http.Controller):
             'verdict': verdict,
             'completeness': completeness['categories'],
             'shortfalls': completeness['shortfalls'],
+            'uncovered_categories': uncovered,
             'database_counts': counts,
             'database_total': db_total,
             'ontology_count': ontology_count,

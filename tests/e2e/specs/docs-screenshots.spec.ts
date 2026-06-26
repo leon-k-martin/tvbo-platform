@@ -1,4 +1,4 @@
-import { test, expect, Page } from '@playwright/test';
+import { test, Page } from '@playwright/test';
 import * as path from 'node:path';
 import * as fs from 'node:fs';
 
@@ -10,19 +10,33 @@ import * as fs from 'node:fs';
  *
  *   BASE_URL=http://localhost:8169 npx playwright test docs-screenshots
  *
- * Auth-gated surfaces (My Models, API Keys) need a logged-in fixture user and
- * are intentionally out of scope here — they are documented in prose.
+ * Account-page shots (My Models, API Keys) sign in as a fixture user via
+ * /web/session/authenticate. Seed it once against the target DB:
+ *   user  DOCS_USER (default docs-demo) / DOCS_PASS (default DocsDemo-2026)
+ *   plus one tvbo.model_share owned by that user so My Models is not empty.
+ * They are skipped automatically if the sign-in fails.
  */
 const BASE = process.env.BASE_URL || 'http://localhost:8169';
+const DB = process.env.DOCS_DB || 'tvbo_dev';
+const USER = process.env.DOCS_USER || 'docs-demo';
+const PASS = process.env.DOCS_PASS || 'DocsDemo-2026';
+const EXP = process.env.DOCS_EXPERIMENT_ID || '2'; // a populated example experiment
 const OUT = path.resolve(__dirname, '..', '..', '..', 'odoo-addons', 'tvbo_platform_docs', 'static', 'img');
-const VP = { width: 1440, height: 900 };
 
-test.use({ viewport: VP, deviceScaleFactor: 2 });
-test.describe.configure({ mode: 'serial', retries: 2 });
+test.use({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 2 });
+test.describe.configure({ retries: 2 });
 
 fs.mkdirSync(OUT, { recursive: true });
 const shot = (page: Page, name: string) => page.screenshot({ path: path.join(OUT, name) });
 const settle = (ms = 1500) => new Promise((r) => setTimeout(r, ms));
+
+async function signIn(page: Page): Promise<boolean> {
+  const res = await page.request.post(`${BASE}/web/session/authenticate`, {
+    data: { jsonrpc: '2.0', method: 'call', params: { db: DB, login: USER, password: PASS } },
+  });
+  const body = await res.json().catch(() => ({}));
+  return !!body?.result?.uid;
+}
 
 test('home', async ({ page }) => {
   await page.goto(`${BASE}/`, { waitUntil: 'networkidle' });
@@ -44,12 +58,15 @@ test('kg-list-view', async ({ page }) => {
 });
 
 test('kg-detail', async ({ page }) => {
+  // Search a well-documented model so the detail card is rich (full parameters).
   await page.goto(`${BASE}/tvbo/kg`, { waitUntil: 'networkidle' });
   await page.waitForSelector('.result-card', { timeout: 30000 });
-  await settle(1500);
+  const search = page.locator('#kgSearchInput, #o_kg_search, input[type="search"]').first();
+  await search.fill('Generic2dOscillator').catch(() => {});
+  await settle(1800);
   await page.locator('.result-card').first().click();
   await page.waitForSelector('.kg-modal-backdrop, .kg-modal', { timeout: 15000 });
-  await settle(2000); // let MathJax/equation render
+  await settle(2000); // MathJax / equation render
   await shot(page, 'kg-detail.png');
 });
 
@@ -68,7 +85,8 @@ test('kg-graph-view', async ({ page }) => {
   await shot(page, 'kg-graph-view.png');
 });
 
-// Experiment Builder — one screenshot per documented tab.
+// Experiment Builder — one shot per documented tab, with a populated example
+// loaded so the tabs show real content (a model, a connectome, observations).
 const TABS: [string, string][] = [
   ['#general-panel', 'builder-general.png'],
   ['#dynamics-panel', 'builder-dynamics.png'],
@@ -77,12 +95,29 @@ const TABS: [string, string][] = [
 ];
 for (const [target, file] of TABS) {
   test(`builder ${file}`, async ({ page }) => {
-    await page.goto(`${BASE}/tvbo/configurator`, { waitUntil: 'networkidle' });
-    await settle(2000);
+    await page.goto(`${BASE}/tvbo/configurator?experiment=${EXP}`, { waitUntil: 'networkidle' });
+    await settle(3000); // let the experiment prefill all tabs
     if (target !== '#general-panel') {
       await page.locator(`[data-bs-target="${target}"]`).click();
-      await settle(1200);
+      await settle(1500);
     }
     await shot(page, file);
   });
 }
+
+// Account pages — require a signed-in fixture user; skip cleanly if unavailable.
+test.describe('account', () => {
+  test('my-models', async ({ page }) => {
+    test.skip(!(await signIn(page)), 'fixture sign-in unavailable');
+    await page.goto(`${BASE}/my/models`, { waitUntil: 'networkidle' });
+    await settle(1500);
+    await shot(page, 'my-models.png');
+  });
+
+  test('api-keys', async ({ page }) => {
+    test.skip(!(await signIn(page)), 'fixture sign-in unavailable');
+    await page.goto(`${BASE}/my/api-keys`, { waitUntil: 'networkidle' });
+    await settle(1500);
+    await shot(page, 'api-keys.png');
+  });
+});

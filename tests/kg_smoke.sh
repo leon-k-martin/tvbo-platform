@@ -22,7 +22,20 @@ FAIL=0
 
 say()  { printf '%s\n' "$*"; }
 pass() { printf '  ✓ %s\n' "$*"; }
+warn() { printf '  ~ %s\n' "$*"; }   # non-fatal
 fail() { printf '  ✗ %s\n' "$*"; FAIL=1; }
+
+# Read a count via $1($2), retrying to ride out transient unavailability.
+# Echoes the value; returns non-zero if still unreadable after retries.
+retry_count() {
+  local fn="$1" arg="$2" v="" i
+  for i in 1 2 3; do
+    v=$("$fn" "$arg")
+    [ -n "$v" ] && [ "$v" != "-1" ] && { printf '%s' "$v"; return 0; }
+    sleep 2
+  done
+  printf '%s' "$v"; return 1
+}
 
 say "== KG completeness smoke =="
 say "KG_URL=$KG_URL  API_URL=$API_URL"
@@ -51,6 +64,10 @@ d = json.load(sys.stdin)
 for cat, c in sorted((d.get("completeness") or {}).items()):
     mark = "ok " if c.get("ok") else "SHORT"
     print(f"      {mark}  {cat}: {c.get(\"actual\")}/{c.get(\"expected\")}")
+unc = d.get("uncovered_categories") or []
+if unc:
+    print("      UNCOVERED registry categories (records the KG can never show):",
+          ", ".join(u.get("category","?") for u in unc))
 ' 2>/dev/null || true
 
 # ---- 2. tvbo-api parity ----------------------------------------------------
@@ -64,10 +81,13 @@ count_kg()  { curl -sS --max-time 30 "$KG_URL/tvbo/api/kg/data?entity=$1" 2>/dev
 # (tvbo-api endpoint, KG entity)
 for pair in "dynamics:dynamics" "networks:network" "experiments:experiment"; do
   api_ep="${pair%%:*}"; kg_ep="${pair##*:}"
-  a=$(count_api "$api_ep"); k=$(count_kg "$kg_ep")
-  if [ -z "$a" ] || [ -z "$k" ] || [ "$k" = "-1" ]; then
-    fail "parity $kg_ep: could not read counts (api=$api_ep:$a kg=$kg_ep:$k)"
-  elif [ "$k" -ge "$a" ]; then
+  # KG side is what we gate — unreadable KG is a hard failure.
+  k=$(retry_count count_kg "$kg_ep") || { fail "parity $kg_ep: KG /data unreadable"; continue; }
+  # tvbo-api is the cross-check — if it's transiently down, /kg/health already
+  # gated completeness, so warn (don't fail the gate on the api's availability).
+  a=$(retry_count count_api "$api_ep") || {
+    warn "parity $kg_ep: tvbo-api /$api_ep unreadable after retries (skipped; /kg/health is authoritative)"; continue; }
+  if [ "$k" -ge "$a" ]; then
     pass "parity $kg_ep: KG $k >= tvbo-api $a"
   else
     fail "parity $kg_ep: KG $k < tvbo-api $a (KG is missing records)"

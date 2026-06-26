@@ -395,6 +395,26 @@ def kg_completeness(env):
     return {"verdict": verdict, "categories": cats, "shortfalls": shortfalls}
 
 
+def registry_coverage():
+    """Registry categories whose data directory NO ``_INGEST`` entry covers.
+
+    The software outage's second act was a category present in the ground-truth
+    registry (``software/``) that ``_INGEST`` simply forgot to list, so 64 records
+    never reached the KG. This catches that class of bug as a pure config check
+    (no DB needed): every directory the registry exposes for enumeration must be
+    ingested by some ``_INGEST`` entry. Alias categories that resolve to an
+    already-ingested dir (``SimulationStudy``->studies, ``Function``->
+    observation_models) count as covered. Returns ``[]`` when fully covered."""
+    try:
+        from tvbo.data import registry
+        cats = dict(registry._CATEGORIES)
+    except Exception:  # noqa: BLE001
+        return []
+    ingested_dirs = {cats[c] for _, c in _INGEST if c in cats}
+    return [{"category": cat, "dir": d}
+            for cat, d in sorted(cats.items()) if d not in ingested_dirs]
+
+
 def post_init_hook(env):
     """Odoo post_init_hook (env). Never fail the install: ingestion problems are
     logged to the audit file; the module still installs so the platform comes up."""
