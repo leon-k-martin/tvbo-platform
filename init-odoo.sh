@@ -139,7 +139,8 @@ reconcile_schema() {
 # ontology. Callers that run under `set -e` MUST use it in a condition or with
 # `|| true`.
 emit_kg_summary() {
-  local phase="${1:-summary}" dyn net intg coup obs exp std verdict
+  local phase="${1:-summary}" dyn net intg coup obs exp std verdict short audit
+  audit=/var/lib/odoo/tvbo_ingest.log
   count_tbl() { psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" -tAc \
     "SELECT count(*) FROM $1" 2>/dev/null | tr -cd '0-9'; }
   dyn=$(count_tbl tvbo_dynamics);   net=$(count_tbl tvbo_network)
@@ -147,17 +148,28 @@ emit_kg_summary() {
   obs=$(count_tbl tvbo_observation); exp=$(count_tbl tvbo_simulation_experiment)
   std=$(count_tbl tvbo_study)
   dyn=${dyn:-0} net=${net:-0} intg=${intg:-0} coup=${coup:-0} obs=${obs:-0} exp=${exp:-0} std=${std:-0}
-  verdict=KG_OK; [ "$dyn" -eq 0 ] && verdict=KG_EMPTY
+  # Authoritative verdict: the per-category completeness (expected vs ingested)
+  # that seed_database writes after every reconcile. This catches DEGRADED
+  # (e.g. software 0/64, graph_generator 0/9) that a bare dynamics>0 check misses.
+  verdict=$(grep "KG_COMPLETENESS:" "$audit" 2>/dev/null | tail -1 | sed -E 's/.*KG_COMPLETENESS: ([A-Z_]+).*/\1/')
+  short=$(grep "KG_COMPLETENESS:" "$audit" 2>/dev/null | tail -1 | sed -nE 's/.*short: (.*)$/\1/p')
+  [ -n "$verdict" ] || { verdict=KG_OK; [ "$dyn" -eq 0 ] && verdict=KG_EMPTY; }
   log "==================== TVBO KG SUMMARY ($phase) ===================="
   log "  dynamics=$dyn network=$net integrator=$intg coupling=$coup observation=$obs experiment=$exp study=$std"
-  log "  VERDICT: $verdict   (public KG shows the database only when dynamics > 0)"
-  if [ "$verdict" = KG_EMPTY ]; then
-    log "  ⚠ Building-block tables are EMPTY — the KG will show ONLY the ontology."
-    log "  ⚠ Look above for 'seed_database' / 'Reconciling building blocks' errors."
-  fi
+  log "  VERDICT: $verdict"
+  case "$verdict" in
+    KG_OK)       log "  ✓ All ground-truth categories fully ingested." ;;
+    KG_DEGRADED) log "  ⚠ KG INCOMPLETE vs ground truth — short: ${short:-see tvbo_ingest.log}"
+                 log "  ⚠ Serves, but missing records; check tvbo_ingest.log FAILED lines + redeploy." ;;
+    KG_EMPTY)    log "  ⚠ Building-block tables are EMPTY — the KG will show ONLY the ontology."
+                 log "  ⚠ Look above for 'seed_database' / 'Reconciling building blocks' errors." ;;
+    *)           log "  ⚠ Completeness unknown ($verdict)." ;;
+  esac
   log "  HTTP check (no kubectl needed): GET /tvbo/api/kg/health"
   log "================================================================="
-  [ "$verdict" = KG_OK ]
+  # Serviceable (return 0) whenever the building blocks exist — OK or DEGRADED
+  # both have data to serve; only a truly EMPTY KG is a hold-the-pod failure.
+  [ "$dyn" -gt 0 ]
 }
 
 # Non-recoverable `-u tvbo` failure. With no kubectl access a silent hold is

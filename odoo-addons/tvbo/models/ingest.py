@@ -347,6 +347,52 @@ def seed_database(env):
         _audit(f"{model_name} -> {ok} created, {skipped} already present / {len(names)} total")
         total += ok
     _audit(f"DONE: {total} building-block records created this run")
+    comp = kg_completeness(env)
+    _audit("KG_COMPLETENESS: %s%s" % (
+        comp["verdict"],
+        (" | short: " + ", ".join(comp["shortfalls"])) if comp["shortfalls"] else "",
+    ))
+
+
+def kg_completeness(env):
+    """Per-category ground-truth coverage of the KG database side — the single
+    source of truth for /kg/health, the deploy banner (emit_kg_summary), and CI.
+
+    expected = ground-truth entries the registry enumerates for the category
+    (minus path exclusions); actual = number of ``__tvbo_ingest__`` external ids
+    for that model, i.e. top-level ingested records, so nested-created rows never
+    inflate it. Verdict: KG_EMPTY if Dynamics is empty (public KG would show only
+    the ontology), KG_DEGRADED if any category is below its ground-truth count,
+    else KG_OK. Never raises: returns KG_UNKNOWN if the ground truth is missing."""
+    try:
+        from tvbo.data import registry
+    except ImportError as exc:  # pragma: no cover
+        return {"verdict": "KG_UNKNOWN", "categories": {}, "shortfalls": ["tvbo unavailable: %s" % exc]}
+    IMD = env["ir.model.data"].sudo()
+    cats, shortfalls = {}, []
+    for pyd_cls_name, category in _INGEST:
+        model_name = "tvbo." + _camel_to_snake(pyd_cls_name)
+        try:
+            names = registry.list_entries(category)
+            if _EXCLUDE_PATH_PARTS:
+                names = [n for n in names if not any(
+                    p in str(registry.resolve(category, n)) for p in _EXCLUDE_PATH_PARTS)]
+            expected = len(names)
+        except Exception:  # noqa: BLE001
+            expected = None
+        actual = (IMD.search_count([("module", "=", _INGEST_MODULE), ("model", "=", model_name)])
+                  if model_name in env else 0)
+        ok = expected is not None and actual >= expected
+        cats[category] = {"model": model_name, "expected": expected, "actual": actual, "ok": ok}
+        if expected and actual < expected:
+            shortfalls.append("%s %d/%d" % (category, actual, expected))
+    if not cats.get("Dynamics", {}).get("actual"):
+        verdict = "KG_EMPTY"
+    elif shortfalls:
+        verdict = "KG_DEGRADED"
+    else:
+        verdict = "KG_OK"
+    return {"verdict": verdict, "categories": cats, "shortfalls": shortfalls}
 
 
 def post_init_hook(env):

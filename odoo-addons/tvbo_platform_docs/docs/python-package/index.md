@@ -8,26 +8,21 @@ sequence: 10
 
 # The `tvbo` Python package
 
-Everything you build on the platform runs on the open‑source **`tvbo`** Python
-package. The platform is the friendly front end; `tvbo` is the engine — use it
-directly to run experiments, script large parameter sweeps, and integrate with the
-wider TVB / scientific‑Python ecosystem.
+The platform is the front end; **`tvbo`** is the engine. Use it directly to run
+experiments, script parameter sweeps, and integrate with the scientific-Python
+ecosystem.
 
 !!! note "Full API documentation"
-    The complete, versioned package documentation lives at
-    **[virtual-twin.github.io/tvbo](https://virtual-twin.github.io/tvbo/)** — API
-    reference, tutorials, and the data model. This page is just a quick start.
-
-## Install
+    The complete, versioned reference and tutorials live at
+    **[virtual-twin.github.io/tvbo](https://virtual-twin.github.io/tvbo/)**. This is
+    just a quick start.
 
 ```bash
 pip install tvbo
 ```
 
-## Run an experiment you exported
-
-Export an experiment from the [Experiment Builder](../experiment-builder/index.md),
-then:
+Run an experiment you exported from the
+[Experiment Builder](../experiment-builder/index.md):
 
 ```python
 import tvbo
@@ -46,12 +41,3 @@ result.plot()
   Your browser cannot play this video —
   <a href="/tvbo_platform_docs/static/video/tvbo-run-in-python.mp4">download it</a>.
 </video>
-
-## Where to go next
-
-- **[Package documentation](https://virtual-twin.github.io/tvbo/)** — the full
-  reference and tutorials.
-- **[Experiment Builder](../experiment-builder/index.md)** — assemble experiments
-  visually, then export and run them here.
-- **[Knowledge Graph](../knowledge-graph/index.md)** — find models, networks, and
-  studies to build from.

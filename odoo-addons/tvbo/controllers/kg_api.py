@@ -472,22 +472,40 @@ class KnowledgeGraphAPI(http.Controller):
         except Exception:  # noqa: BLE001
             pass
 
-        dynamics = counts.get('dynamics')
-        kg_ok = isinstance(dynamics, int) and dynamics > 0
+        # Ground-truth completeness (expected vs actually-ingested, per category).
+        # KG_DEGRADED when any category is below its ground-truth count — catches
+        # the partial-ingest failures (graph_generator 0/9, software 0/64, …) that
+        # a bare "dynamics > 0" check reports as healthy.
+        try:
+            from ..models.ingest import kg_completeness
+            completeness = kg_completeness(request.env)
+        except Exception as e:  # noqa: BLE001
+            completeness = {'verdict': 'KG_UNKNOWN', 'categories': {}, 'shortfalls': [str(e)]}
+
+        verdict = completeness['verdict']
+        kg_ok = verdict == 'KG_OK'
         db_total = sum(v for v in counts.values() if isinstance(v, int))
+
+        hint = None
+        if verdict == 'KG_EMPTY':
+            hint = ('Building-block tables are empty: the deploy seed_database step '
+                    'did not populate the DB. Check the pod boot log for the '
+                    '"TVBO KG SUMMARY" banner and any "-u tvbo" upgrade failure.')
+        elif verdict == 'KG_DEGRADED':
+            hint = ('Some categories ingested fewer records than the ground truth: '
+                    + ', '.join(completeness['shortfalls'])
+                    + '. Check /var/lib/odoo/tvbo_ingest.log for per-record FAILED lines.')
 
         return json_response({
             'kg_ok': kg_ok,
-            'verdict': 'KG_OK' if kg_ok else 'KG_EMPTY',
+            'verdict': verdict,
+            'completeness': completeness['categories'],
+            'shortfalls': completeness['shortfalls'],
             'database_counts': counts,
             'database_total': db_total,
             'ontology_count': ontology_count,
             'tvbo_version': tvbo_version,
-            'hint': None if kg_ok else (
-                'Building-block tables are empty: the deploy seed_database step '
-                'did not populate the DB. Check the pod boot log for the '
-                '"TVBO KG SUMMARY" banner and any "-u tvbo" upgrade failure.'
-            ),
+            'hint': hint,
         })
 
     # ===================

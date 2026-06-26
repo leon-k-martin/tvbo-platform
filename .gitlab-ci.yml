@@ -88,6 +88,26 @@ deploy-job:
         echo "===== Health check ====="
         kubectl exec -n kube-system "$POD" -- curl -sS -o /dev/null -w "internal HTTP %{http_code}\n" http://localhost:8069/tvbo/api/kg/schema || true
 
-        exit $ROLLOUT_RC
+        echo ""
+        echo "===== KG completeness gate (/tvbo/api/kg/health) ====="
+        # Turn an incomplete KG into a RED pipeline instead of a silent green one.
+        # KG_OK = every ground-truth category fully ingested; KG_DEGRADED/KG_EMPTY
+        # mean records are missing (the failure mode that shipped unnoticed before).
+        KG_HEALTH=$(kubectl exec -n kube-system "$POD" -- curl -sS http://localhost:8069/tvbo/api/kg/health 2>/dev/null)
+        echo "$KG_HEALTH"
+        KG_VERDICT=$(printf '%s' "$KG_HEALTH" | sed -nE 's/.*"verdict"[[:space:]]*:[[:space:]]*"([A-Z_]+)".*/\1/p')
+        KG_RC=0
+        if [ "$KG_VERDICT" = "KG_OK" ]; then
+          echo "✓ KG GATE PASSED: verdict=KG_OK"
+        else
+          echo "✗ KG GATE FAILED: verdict='${KG_VERDICT:-unparseable}' (expected KG_OK)."
+          echo "  Deploy marked FAILED: the Knowledge Graph is incomplete. See 'shortfalls'/'hint'"
+          echo "  above and the pod's 'TVBO KG SUMMARY' banner for the missing categories."
+          KG_RC=1
+        fi
+
+        # Fail on a bad rollout OR an incomplete KG.
+        [ "$ROLLOUT_RC" -ne 0 ] && exit "$ROLLOUT_RC"
+        exit "$KG_RC"
   when: manual
 

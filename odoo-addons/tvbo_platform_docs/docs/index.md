@@ -8,12 +8,11 @@ sequence: 10
 
 # TVBO Platform Guide
 
-Welcome to **The Virtual Brain Ontology (TVBO)** platform. This guide shows you,
-step by step and with short screencasts, how to use the platform — from browsing
-the Knowledge Graph to building and exporting a runnable brain‑simulation
-experiment, and how to keep your work in a personal account.
+How to use **The Virtual Brain Ontology (TVBO)** platform — browse the Knowledge
+Graph, build and export a runnable experiment, and keep your work in an account.
+Short screencasts throughout. Free to use; most of it needs no account.
 
-Everything here is free to use and most of it needs no account at all.
+![The TVBO platform](img/home.png)
 
 ## What you can do
 

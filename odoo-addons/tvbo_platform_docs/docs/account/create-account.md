@@ -6,44 +6,20 @@ sequence: 20
 
 # Create a user account
 
-Creating an account is free and takes under a minute.
-
-## Step 1 — Open the sign‑in page
-
-Go to [`/web/login`]({{base_url}}/web/login). This is the single sign‑in screen for
-the platform.
+Free, under a minute. Browsing and exporting need no account — one only adds a
+place to keep your work.
 
 ![The sign-in screen](img/login.png)
 
-## Step 2 — Choose *Sign up*
+1. Go to [`/web/login`]({{base_url}}/web/login).
+2. If self-registration is enabled, use the **Sign up** link. (If it's absent, your
+   instance creates accounts on request — ask your administrator.)
+3. Enter your **name**, **email** (your login), and a **password**; submit. You may
+   need to confirm your email.
+4. You land at [`/my`]({{base_url}}/my). The **user menu** (top-right) has **My
+   Models**, **API Keys**, and **Account**.
 
-If self‑registration is enabled, click the **Sign up / Don't have an account?**
-link below the form to switch to the registration form. (If you don't see it, your
-instance may create accounts on request — ask your administrator.)
-
-## Step 3 — Fill in your details
-
-Provide:
-
-- your **name**,
-- your **email** (this becomes your login), and
-- a **password**.
-
-Submit the form. Depending on the platform settings you may be asked to confirm
-your email address.
-
-## Step 4 — You're in
-
-After signing up you land on your account area at [`/my`]({{base_url}}/my). From the
-**user menu** in the top‑right of the platform you can reach:
-
-- **My Models** — your saved models and experiments,
-- **API Keys** — tokens for programmatic access, and
-- **Account** — your profile and settings.
-
-## Forgot your password?
-
-On the sign‑in page choose **Reset password** and follow the emailed link.
+Forgot your password? Use **Reset password** on the sign-in screen.
 
 !!! tip "Next"
-    Now [save a model or experiment to your account](save-to-account.md).
+    [Save a model or experiment to your account](save-to-account.md).
