@@ -11,14 +11,6 @@ order. It keeps a single working spec and validates it live in the **YAML
 Specification** panel on the right. There are three ways to start, and you can mix
 them.
 
-## Watch: build an experiment
-
-<video class="o_docs_video" controls preload="metadata" poster="/tvbo_platform_docs/static/img/poster-tvbo-build-an-experiment.jpg">
-  <source src="/tvbo_platform_docs/static/video/tvbo-build-an-experiment.mp4" type="video/mp4"/>
-  Your browser cannot play this video.
-  <a href="/tvbo_platform_docs/static/video/tvbo-build-an-experiment.mp4">Download it</a>.
-</video>
-
 ## Start from an example
 
 Open the load control and pick an example. Every tab is prefilled. Export as is, or
