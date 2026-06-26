@@ -78,8 +78,13 @@ _KG_ENTITY_CONFIG = {
         'thumbnail': 'atlases',
         'report': 'atlases',
     },
+    # The software/ ground truth (neurolib, Brian2, Arbor, …) are SimulationTool
+    # records in tvbo.simulation_tool — NOT tvbo.software_requirement, which is the
+    # narrower per-dependency concept and had only nested records.
     'software': {
-        'model': 'tvbo.software_requirement',
+        'model': 'tvbo.simulation_tool',
+        'thumbnail': 'software',
+        'report': 'software',
     },
 }
 
@@ -177,9 +182,11 @@ def get_ontology_api():
 
 
 def json_response(data, status=200):
-    """Standard JSON response with CORS."""
+    """Standard JSON response with CORS. ``default=str`` so non-JSON-native values
+    (date/datetime — e.g. SimulationTool.date_created — Decimal, etc.) serialize as
+    strings instead of raising and 500-ing the whole endpoint."""
     return Response(
-        json.dumps(data),
+        json.dumps(data, default=str),
         content_type='application/json',
         status=status,
         headers={'Access-Control-Allow-Origin': '*'}
@@ -431,6 +438,57 @@ class KnowledgeGraphAPI(http.Controller):
             }
 
         return json_response(result)
+
+    # ===================
+    # Health / deploy diagnostics
+    # ===================
+
+    @http.route('/tvbo/api/kg/health', type='http', auth='public', methods=['GET'], csrf=False)
+    def get_health(self, **kw):
+        """KG health check — the diagnostic surface reachable without kubectl.
+
+        Returns per-entity database row counts and an overall verdict so the
+        deploy outcome is visible over HTTP. ``kg_ok`` is false when the
+        building-block tables are empty (the public KG would then show only the
+        ontology), which means the deploy's ``seed_database`` step did not run.
+        """
+        counts = {}
+        for entity_type, cfg, model in _iter_available_entity_configs():
+            try:
+                counts[entity_type] = model.search_count([])
+            except Exception as e:  # noqa: BLE001
+                counts[entity_type] = 'error: %s' % e
+
+        ontology_count = None
+        try:
+            ontology_count = len(self._get_ontology_concepts(''))
+        except Exception:  # noqa: BLE001
+            pass
+
+        tvbo_version = None
+        try:
+            import tvbo
+            tvbo_version = getattr(tvbo, '__version__', None)
+        except Exception:  # noqa: BLE001
+            pass
+
+        dynamics = counts.get('dynamics')
+        kg_ok = isinstance(dynamics, int) and dynamics > 0
+        db_total = sum(v for v in counts.values() if isinstance(v, int))
+
+        return json_response({
+            'kg_ok': kg_ok,
+            'verdict': 'KG_OK' if kg_ok else 'KG_EMPTY',
+            'database_counts': counts,
+            'database_total': db_total,
+            'ontology_count': ontology_count,
+            'tvbo_version': tvbo_version,
+            'hint': None if kg_ok else (
+                'Building-block tables are empty: the deploy seed_database step '
+                'did not populate the DB. Check the pod boot log for the '
+                '"TVBO KG SUMMARY" banner and any "-u tvbo" upgrade failure.'
+            ),
+        })
 
     # ===================
     # Main data endpoint

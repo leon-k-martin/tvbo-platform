@@ -38,16 +38,19 @@ def _xmlid(category, name):
     """Deterministic, collision-free external-id name for a (category, entry)."""
     return re.sub(r"[^a-z0-9_]+", "_", f"{category}_{name}".lower()).strip("_")
 
-# Registry path fragments to skip: the neuroml/ folder is a raw NeuroML→LEMS
-# import staging area (the "… as LEMS" experiments and exotic dynamics), not
-# curated building blocks for the model builder.
-_EXCLUDE_PATH_PARTS = ("/neuroml/",)
+# Registry path fragments to skip. Empty: the neuroml/ folder (raw NeuroML→LEMS
+# import staging — the "… as LEMS" experiments and exotic dynamics) is now
+# ingested too, so the KG matches the full tvbo-api ground truth. Re-add
+# "/neuroml/" here to curate it back out.
+_EXCLUDE_PATH_PARTS = ()
 
 # (pydantic class, registry category) for the building blocks to ingest.
 # Curated to avoid the Observation/Function overlap on observation_models.
 # ``Study`` (bibliographic sources) is seeded from the studies/ directory; the
 # files are BibTeX-style records (a Study), not SimulationStudy experiment
 # containers — full bibliographic detail stays in references.bib (citekey join).
+# ``SimulationTool`` is the software/ directory (neurolib, Brian2, Arbor, …) ->
+# tvbo.simulation_tool; requires the "SimulationTool": "software" registry entry.
 _INGEST = [
     ("Dynamics", "Dynamics"),
     ("Coupling", "Coupling"),
@@ -59,6 +62,7 @@ _INGEST = [
     ("Continuation", "Continuation"),
     ("Study", "Study"),
     ("SimulationExperiment", "SimulationExperiment"),
+    ("SimulationTool", "SimulationTool"),
 ]
 
 # Classes whose ground-truth files intentionally carry fields the schema does
@@ -288,13 +292,21 @@ def seed_database(env):
                 # record instead of aborting the whole install transaction.
                 with env.cr.savepoint():
                     # Idempotent via an external id: if this (category, name) was
-                    # already ingested, skip it. Lets the seed run on every deploy
-                    # as a gap-filling migration — no duplicates, no RESET_DB — and
-                    # works for models with no natural key field (integrator, study).
-                    if IMD.search([("module", "=", _INGEST_MODULE),
-                                   ("name", "=", xmlid)], limit=1):
-                        skipped += 1
-                        continue
+                    # already ingested AND its row still exists, skip it. Lets the
+                    # seed run on every deploy as a gap-filling migration — no
+                    # duplicates, no RESET_DB — and works for models with no natural
+                    # key field (integrator, study). A marker whose row was deleted
+                    # out from under it (e.g. an FK cascade bypassing the ORM, which
+                    # would skip Odoo's own ir.model.data cleanup) is stale: drop it
+                    # and re-create, so a dangling marker can never become a
+                    # permanent gap in the KG.
+                    marker = IMD.search([("module", "=", _INGEST_MODULE),
+                                         ("name", "=", xmlid)], limit=1)
+                    if marker:
+                        if Model.browse(marker.res_id).exists():
+                            skipped += 1
+                            continue
+                        marker.unlink()
                     # drop_unknown across the board: the ground-truth YAML carries
                     # fields the generated schema does not model yet (schema drift,
                     # e.g. GraphGenerator parameters.*.range/.required), and a single
@@ -308,8 +320,16 @@ def seed_database(env):
                     data = obj.model_dump(mode="python", by_alias=True, exclude_none=True)
                     # Back-compat: a record from a pre-external-id ingest may already
                     # exist; adopt it (attach the external id) instead of duplicating.
+                    # But NEVER adopt a row another ingest marker already owns: the
+                    # natural key is not guaranteed unique (e.g. two distinct
+                    # experiments both declare id=1, and record_id has no unique
+                    # constraint), and collapsing them would drop one from the KG.
                     kf, kv = _natural_key(Model, data)
                     prior = Model.search([(kf, "=", kv)], limit=1) if kf else None
+                    if prior and IMD.search([("module", "=", _INGEST_MODULE),
+                                             ("model", "=", model_name),
+                                             ("res_id", "=", prior.id)], limit=1):
+                        prior = None
                     if prior:
                         rec_id = prior.id
                         skipped += 1

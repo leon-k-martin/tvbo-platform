@@ -27,8 +27,17 @@ handle_odoo_failure() {
     dmesg 2>/dev/null | tail -20 || true
   fi
   if [ "${TVBO_KEEP_ALIVE_ON_FAIL:-0}" = "1" ]; then
-    log "TVBO_KEEP_ALIVE_ON_FAIL=1 set; sleeping forever for kubectl exec debugging"
-    sleep infinity
+    log "TVBO_KEEP_ALIVE_ON_FAIL=1 set; holding the pod alive."
+    log "This cluster has no kubectl access, so re-emit the failure to STDOUT every"
+    log "5 min — that is the only place the cause is visible."
+    while true; do
+      log "================ TVBO DEPLOY FAILED — POD HELD ================"
+      log "odoo command failed (exit $rc): odoo $*"
+      log "Last 40 lines of the upgrade log follow:"
+      tail -40 "$UPGRADE_LOG" 2>/dev/null || true
+      log "=============================================================="
+      sleep 300
+    done
   fi
   exit "$rc"
 }
@@ -124,6 +133,58 @@ reconcile_schema() {
 # so running it every deploy is safe: it creates only what is missing, never
 # duplicates, and never touches user-created data. It also back-fills records that
 # a previous ingestion lost (e.g. after an ingest bug fix) without a DB reset.
+# Print a loud, greppable summary of the Knowledge Graph's database state to
+# STDOUT (the only log surface on this cluster — no kubectl). Returns 0 when the
+# building-block tables are populated, non-zero when the KG would show only the
+# ontology. Callers that run under `set -e` MUST use it in a condition or with
+# `|| true`.
+emit_kg_summary() {
+  local phase="${1:-summary}" t dyn net intg coup obs exp std verdict
+  count_tbl() { psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" -tAc \
+    "SELECT count(*) FROM $1" 2>/dev/null | tr -cd '0-9'; }
+  dyn=$(count_tbl tvbo_dynamics);   net=$(count_tbl tvbo_network)
+  intg=$(count_tbl tvbo_integrator); coup=$(count_tbl tvbo_coupling)
+  obs=$(count_tbl tvbo_observation); exp=$(count_tbl tvbo_simulation_experiment)
+  std=$(count_tbl tvbo_study)
+  dyn=${dyn:-0} net=${net:-0} intg=${intg:-0} coup=${coup:-0} obs=${obs:-0} exp=${exp:-0} std=${std:-0}
+  verdict=KG_OK; [ "$dyn" -eq 0 ] && verdict=KG_EMPTY
+  log "==================== TVBO KG SUMMARY ($phase) ===================="
+  log "  dynamics=$dyn network=$net integrator=$intg coupling=$coup observation=$obs experiment=$exp study=$std"
+  log "  VERDICT: $verdict   (public KG shows the database only when dynamics > 0)"
+  if [ "$verdict" = KG_EMPTY ]; then
+    log "  ⚠ Building-block tables are EMPTY — the KG will show ONLY the ontology."
+    log "  ⚠ Look above for 'seed_database' / 'Reconciling building blocks' errors."
+  fi
+  log "  HTTP check (no kubectl needed): GET /tvbo/api/kg/health"
+  log "================================================================="
+  [ "$verdict" = KG_OK ]
+}
+
+# Non-recoverable `-u tvbo` failure. With no kubectl access a silent hold is
+# useless, so: dump the cause to stdout, salvage the schema + re-seed from ground
+# truth, and — if the DB is then serviceable — fall through to START THE SERVER
+# in DEGRADED mode (a serving pod with a loud banner beats a held pod nobody can
+# reach while the old empty pod keeps serving). Only hold if salvage truly fails.
+recover_or_serve_or_hold() {
+  local rc="$1"
+  log "##############################################################"
+  log "## TVBO UPGRADE FAILED (exit $rc) — attempting self-heal     ##"
+  log "## (no kubectl on this cluster; salvage + serve if possible) ##"
+  log "##############################################################"
+  log "Last 50 lines of the upgrade log (the root cause):"
+  tail -50 "$UPGRADE_LOG" 2>/dev/null || true
+  reconcile_schema post || true
+  reconcile_building_blocks || true
+  if emit_kg_summary "after-failed-upgrade"; then
+    log "✓ Database is serviceable despite the failed upgrade; continuing to serve in DEGRADED mode."
+    log "  Fix the cause above and redeploy to clear DEGRADED state."
+    UPGRADE_DEGRADED=1
+    return 0
+  fi
+  log "✗ KG still empty after salvage — database not serviceable; holding pod."
+  handle_odoo_failure "$rc" "-d $DB_NAME -u tvbo (self-heal could not populate the KG)"
+}
+
 reconcile_building_blocks() {
   local before after
   before=$(psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" -tAc \
@@ -145,6 +206,7 @@ reconcile_building_blocks() {
   else
     log "⚠ building-block reconcile produced no dynamics records; see $UPGRADE_LOG and /var/lib/odoo/tvbo_ingest.log"
   fi
+  emit_kg_summary "post-seed" || true
 }
 
 # Rotate upgrade log: keep previous as .prev so it survives container restart
@@ -226,12 +288,17 @@ if psql -h "$DB_HOST" -U "$DB_USER" -d postgres -tAc "SELECT 1 FROM pg_database 
           run_odoo -d "$DB_NAME" -u tvbo --stop-after-init --without-demo=True \
             --db_host="$DB_HOST" --db_user="$DB_USER" --db_password="$DB_PASSWORD" \
             --log-level=info
+          upgrade_rc=0   # run_odoo holds/exits on failure; reaching here = success
         else
-          handle_odoo_failure "$upgrade_rc" \
-            "-d $DB_NAME -u tvbo (no recoverable stale _rel table in log)"
+          # Salvage + serve-in-degraded-mode, or hold loudly if unrecoverable.
+          recover_or_serve_or_hold "$upgrade_rc"
         fi
       fi
-      log "✓ TVBO module upgraded"
+      if [ "$upgrade_rc" -eq 0 ]; then
+        log "✓ TVBO module upgraded"
+      else
+        log "⚠ TVBO module upgrade DEGRADED — continuing to serve (see banner above)"
+      fi
 
       reconcile_schema post  # re-link stashed enum text now that FK columns exist
     else
@@ -281,6 +348,10 @@ else
 fi
 
 log "✓ TVBO initialization complete"
+emit_kg_summary "startup" || true
+if [ "${UPGRADE_DEGRADED:-0}" = "1" ]; then
+  log "NOTE: starting in DEGRADED mode after a failed upgrade — fix the cause above and redeploy."
+fi
 log "Starting Odoo server on port 8069..."
 exec odoo -d "$DB_NAME" \
   --db_host="$DB_HOST" --db_user="$DB_USER" --db_password="$DB_PASSWORD" \

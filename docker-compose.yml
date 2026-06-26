@@ -61,6 +61,7 @@ services:
     volumes:
       # Mount code for immediate updates (no rebuild!)
       - ./odoo-addons/tvbo:/mnt/extra-addons/tvbo:ro
+      - ./odoo-addons/tvbo_platform_docs:/mnt/extra-addons/tvbo_platform_docs:ro
       - /Users/leonmartin_bih/tools/tvbo:/tmp/tvbo:ro
       - ./init-odoo.sh:/init-odoo.sh:ro
       - ./scripts/reconcile_schema.py:/opt/tvbo/reconcile_schema.py:ro

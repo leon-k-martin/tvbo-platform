@@ -8,7 +8,7 @@
     'author': 'Charité Universitätsmedizin Berlin',
     'website': 'https://github.com/virtual-twin/tvbo',
     'license': 'LGPL-3',
-    'depends': ['base', 'website', 'survey', 'mass_mailing'],
+    'depends': ['base', 'website', 'survey', 'mass_mailing', 'tvbo_platform_docs'],
     # Building-block records and enum lookups are seeded from the tvbo
     # ground-truth database by post_init_hook (see models/ingest.py) — one flow
     # from tvbo/database/*.yaml through pydantic_loader into the Odoo DB. Only

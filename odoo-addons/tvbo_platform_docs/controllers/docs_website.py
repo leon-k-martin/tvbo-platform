@@ -1,0 +1,147 @@
+# -*- coding: utf-8 -*-
+"""Website controllers for the platform documentation.
+
+The routes are ``auth="public"`` — anonymous visitors reach them. The platform
+docs are public by default; :meth:`_visible_domain` keeps an ``access_level``
+tier so a page can later be gated to staff/admin without a code change
+(anonymous sees ``public`` only; internal users add ``internal``; system admins
+see everything).
+"""
+
+import json
+import logging
+
+from odoo import http
+from odoo.http import request
+
+_logger = logging.getLogger(__name__)
+
+
+class TvboDocsController(http.Controller):
+
+    # ------------------------------------------------------------------
+    # Visibility
+    # ------------------------------------------------------------------
+    def _visible_domain(self):
+        user = request.env.user
+        if user.has_group("base.group_system"):
+            return []
+        if user.has_group("base.group_user"):
+            return [("access_level", "in", ("internal", "public"))]
+        return [("access_level", "=", "public")]
+
+    def _page_or_none(self, slug):
+        domain = [("slug", "=", slug)] + self._visible_domain()
+        return request.env["tvbo.doc.page"].sudo().search(domain, limit=1)
+
+    def _readable_pages(self):
+        return request.env["tvbo.doc.page"].sudo().search(self._visible_domain())
+
+    # ------------------------------------------------------------------
+    # Navigation
+    # ------------------------------------------------------------------
+    _UNORDERED = 10 ** 6
+
+    def _section_meta(self):
+        """{category: (nav_label, nav_order)} sourced from each folder's index.md.
+
+        The root ``docs/index.md`` (no category) controls the category-less
+        "general" bucket, so its nav_label/nav_order place the Getting Started
+        page first rather than in a trailing "General" section.
+        """
+        meta = {}
+        for idx in request.env["tvbo.doc.page"].sudo().search([("is_index", "=", True)]):
+            meta[idx.category or "general"] = (idx.nav_label or "", idx.nav_order)
+        return meta
+
+    def _segment_label(self, cat, meta):
+        label = (meta.get(cat) or ("", 0))[0]
+        return label or cat.split("/")[-1].replace("-", " ").title()
+
+    def _category_sort_key(self, cat, meta):
+        parts = cat.split("/")
+        return tuple(
+            ((meta.get("/".join(parts[: i + 1])) or ("", self._UNORDERED))[1], parts[i])
+            for i in range(len(parts))
+        )
+
+    def _category_label(self, cat, meta):
+        if not cat:
+            return ""
+        parts = cat.split("/")
+        return " / ".join(
+            self._segment_label("/".join(parts[: i + 1]), meta) for i in range(len(parts))
+        )
+
+    def _nav(self, pages, meta=None):
+        """Sidebar sections -> [(label, [pages], is_sub)], ordered from index front-matter."""
+        if meta is None:
+            meta = self._section_meta()
+        sections = {}
+        for page in pages:
+            sections.setdefault(page.category or "general", []).append(page)
+        nav = []
+        for cat in sorted(sections, key=lambda c: self._category_sort_key(c, meta)):
+            plist = sorted(sections[cat], key=lambda p: (p.sequence, p.name))
+            nav.append((self._segment_label(cat, meta), plist, "/" in cat))
+        return nav
+
+    # ------------------------------------------------------------------
+    # Routes
+    # ------------------------------------------------------------------
+    @http.route("/docs", type="http", auth="public", website=True, sitemap=True)
+    def docs_index(self, **kwargs):
+        pages = self._readable_pages()
+        return request.render(
+            "tvbo_platform_docs.docs_index",
+            {"nav": self._nav(pages), "active_slug": None},
+        )
+
+    @http.route("/docs/<string:slug>", type="http", auth="public", website=True, sitemap=True)
+    def docs_page(self, slug, **kwargs):
+        page = self._page_or_none(slug)
+        if not page:
+            if not request.env["tvbo.doc.page"].sudo().search_count([("slug", "=", slug)]):
+                return request.redirect("/docs")
+            if request.env.user._is_public():
+                from urllib.parse import quote
+                return request.redirect("/web/login?redirect=" + quote("/docs/%s" % slug, safe=""))
+            return request.redirect("/docs")
+        pages = self._readable_pages()
+        meta = self._section_meta()
+        ordered = sorted(
+            pages,
+            key=lambda p: (self._category_sort_key(p.category or "general", meta), p.sequence, p.name),
+        )
+        idx = next((i for i, p in enumerate(ordered) if p.id == page.id), None)
+        prev_page = ordered[idx - 1] if idx not in (None, 0) else None
+        next_page = ordered[idx + 1] if idx is not None and idx + 1 < len(ordered) else None
+        return request.render(
+            "tvbo_platform_docs.docs_page",
+            {
+                "page": page,
+                "nav": self._nav(pages, meta),
+                "active_slug": page.slug,
+                "prev_page": prev_page,
+                "next_page": next_page,
+                "category_label": self._category_label(page.category, meta),
+            },
+        )
+
+    @http.route("/docs/search", type="http", auth="public", website=False, sitemap=False, methods=["GET"])
+    def docs_search(self, q=None, **kwargs):
+        query = (q or "").strip()
+        results = []
+        if len(query) >= 2:
+            meta = self._section_meta()
+            domain = ["|", ("name", "ilike", query), ("content", "ilike", query)] + self._visible_domain()
+            for page in request.env["tvbo.doc.page"].sudo().search(domain, limit=15):
+                results.append({
+                    "name": page.name,
+                    "slug": page.slug,
+                    "category": self._category_label(page.category, meta),
+                })
+        return request.make_response(
+            json.dumps(results),
+            headers=[("Content-Type", "application/json; charset=utf-8")],
+        )

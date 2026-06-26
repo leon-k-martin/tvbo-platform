@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_tvbo_doc_page_list" model="ir.ui.view">
+        <field name="name">tvbo.doc.page.list</field>
+        <field name="model">tvbo.doc.page</field>
+        <field name="arch" type="xml">
+            <list string="Documentation">
+                <field name="sequence" widget="handle"/>
+                <field name="category"/>
+                <field name="name"/>
+                <field name="slug"/>
+                <field name="access_level"/>
+                <field name="source_path" optional="hide"/>
+                <field name="last_import" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_tvbo_doc_page_form" model="ir.ui.view">
+        <field name="name">tvbo.doc.page.form</field>
+        <field name="model">tvbo.doc.page</field>
+        <field name="arch" type="xml">
+            <form string="Documentation Page">
+                <header>
+                    <button name="action_import_docs" type="object" string="Import from git"
+                            class="btn-secondary"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button class="oe_stat_button" icon="fa-globe" type="object"
+                                name="action_open_website" invisible="not slug">
+                            <div class="o_stat_text">Open on site</div>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <h1><field name="name" placeholder="Title"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="slug"/>
+                            <field name="category"/>
+                            <field name="access_level"/>
+                            <field name="sequence"/>
+                        </group>
+                        <group>
+                            <field name="source_path" readonly="1"/>
+                            <field name="last_import" readonly="1"/>
+                            <field name="active"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Markdown" name="markdown">
+                            <field name="content" widget="text"
+                                   placeholder="# Heading&#10;&#10;Markdown source…"/>
+                        </page>
+                        <page string="Preview" name="preview">
+                            <field name="content_html" readonly="1"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_tvbo_doc_page" model="ir.actions.act_window">
+        <field name="name">Documentation</field>
+        <field name="res_model">tvbo.doc.page</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No documentation pages yet</p>
+            <p>Pages are imported from the Markdown files under
+               <code>tvbo_platform_docs/docs/</code>. Use <b>Import from git</b> to sync them.</p>
+        </field>
+    </record>
+
+    <!-- One-click re-import of the git Markdown files (also on the list view). -->
+    <record id="action_tvbo_docs_import" model="ir.actions.server">
+        <field name="name">Import from git</field>
+        <field name="model_id" ref="model_tvbo_doc_page"/>
+        <field name="binding_model_id" ref="model_tvbo_doc_page"/>
+        <field name="binding_view_types">list</field>
+        <field name="state">code</field>
+        <field name="code">action = env["tvbo.doc.page"].action_import_docs()</field>
+    </record>
+
+    <menuitem id="menu_tvbo_docs_root" name="Platform Docs" sequence="95"/>
+    <menuitem id="menu_tvbo_docs_pages" name="Documentation"
+              parent="menu_tvbo_docs_root" action="action_tvbo_doc_page" sequence="10"/>
+
+</odoo>

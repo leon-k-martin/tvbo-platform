@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Shared 3-column docs shell: sidebar nav · content · on-this-page TOC.
+         Callers (docs_index / docs_page) supply the centre column as the
+         t-call body (rendered at <t t-out="0"/>) and share their context. -->
+    <template id="docs_shell" name="Docs Shell">
+        <t t-call="website.layout">
+            <div id="wrap">
+                <div class="container o_tvbo_docs py-4">
+                    <div class="row">
+                        <!-- Left: search + category nav -->
+                        <aside class="col-12 col-lg-3 o_docs_sidebar">
+                            <div class="o_docs_search">
+                                <input type="search" id="o_docs_search_input"
+                                       class="form-control form-control-sm"
+                                       placeholder="Search documentation…" autocomplete="off"
+                                       aria-label="Search documentation"/>
+                                <div id="o_docs_search_results" class="o_docs_search_results"/>
+                            </div>
+                            <button type="button" class="o_docs_nav_toggle d-lg-none"
+                                    aria-expanded="false" aria-controls="o_docs_nav">
+                                <i class="fa fa-bars me-2" aria-hidden="true"/>Browse topics
+                            </button>
+                            <nav id="o_docs_nav" class="o_docs_nav" aria-label="Documentation">
+                                <t t-foreach="nav" t-as="bucket">
+                                    <div t-attf-class="o_docs_nav_cat#{' o_docs_nav_cat_sub' if bucket[2] else ''}"
+                                         t-out="bucket[0]"/>
+                                    <ul t-attf-class="o_docs_nav_list list-unstyled#{' o_docs_nav_list_sub' if bucket[2] else ''}">
+                                        <li t-foreach="bucket[1]" t-as="p">
+                                            <a t-attf-href="/docs/#{p.slug}"
+                                               t-attf-class="o_docs_nav_link#{' active' if p.slug == active_slug else ''}"
+                                               t-out="p.name"/>
+                                        </li>
+                                    </ul>
+                                </t>
+                            </nav>
+                        </aside>
+
+                        <!-- Centre: page content (supplied by the caller) -->
+                        <main class="col-12 col-lg-7 o_docs_main">
+                            <t t-out="0"/>
+                        </main>
+
+                        <!-- Right: on-this-page TOC (filled client-side from headings) -->
+                        <nav class="col-lg-2 d-none d-lg-block o_docs_toc" aria-label="On this page">
+                            <div class="o_docs_toc_title">On this page</div>
+                            <div id="o_docs_toc"/>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <!-- /docs : landing / index -->
+    <template id="docs_index" name="Platform Documentation">
+        <t t-call="tvbo_platform_docs.docs_shell">
+            <h1 class="o_docs_title">Platform Guide</h1>
+            <p class="text-muted">
+                How to use The Virtual Brain Ontology platform — the Knowledge Graph,
+                the Experiment Builder, and your user account. Screencasts included.
+            </p>
+            <t t-if="not nav">
+                <p class="text-muted">No documentation pages are available yet.</p>
+            </t>
+            <t t-foreach="nav" t-as="bucket">
+                <h2 class="h4 mt-4" t-out="bucket[0]"/>
+                <ul>
+                    <li t-foreach="bucket[1]" t-as="p" class="py-1">
+                        <a t-attf-href="/docs/#{p.slug}" t-out="p.name"/>
+                    </li>
+                </ul>
+            </t>
+        </t>
+    </template>
+
+    <!-- /docs/<slug> : a single rendered page -->
+    <template id="docs_page" name="Documentation Page">
+        <t t-call="tvbo_platform_docs.docs_shell">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/docs">Platform Guide</a></li>
+                    <li t-if="category_label" class="breadcrumb-item" t-out="category_label"/>
+                    <li class="breadcrumb-item active" aria-current="page" t-out="page.name"/>
+                </ol>
+            </nav>
+            <article class="o_tvbo_docs_body" t-out="page.content_html"/>
+            <div class="o_docs_prevnext d-flex justify-content-between mt-5 pt-3">
+                <a t-if="prev_page" t-attf-href="/docs/#{prev_page.slug}" class="o_docs_prev">
+                    <span class="o_docs_prevnext_label">← Previous</span>
+                    <span class="o_docs_prevnext_name" t-out="prev_page.name"/>
+                </a>
+                <span t-else=""/>
+                <a t-if="next_page" t-attf-href="/docs/#{next_page.slug}" class="o_docs_next text-end">
+                    <span class="o_docs_prevnext_label">Next →</span>
+                    <span class="o_docs_prevnext_name" t-out="next_page.name"/>
+                </a>
+            </div>
+        </t>
+    </template>
+
+</odoo>

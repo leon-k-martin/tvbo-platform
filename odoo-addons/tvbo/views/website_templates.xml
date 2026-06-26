@@ -113,8 +113,10 @@
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle" href="#" id="tvboAboutDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">About</a>
                                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="tvboAboutDropdown">
+                                        <li><a class="dropdown-item" href="/docs">Platform Guide</a></li>
                                         <li><a class="dropdown-item" href="/tvbo/agents">AI Agents</a></li>
-                                        <li><a class="dropdown-item" href="https://virtual-twin.github.io/tvbo/" target="_blank">Docs</a></li>
+                                        <li><hr class="dropdown-divider"/></li>
+                                        <li><a class="dropdown-item" href="https://virtual-twin.github.io/tvbo/" target="_blank">Python Package Docs ↗</a></li>
                                     </ul>
                                 </li>
                                 <t t-if="request.env.user._is_public()">
