@@ -24,9 +24,8 @@
                             </button>
                             <nav id="o_docs_nav" class="o_docs_nav" aria-label="Documentation">
                                 <t t-foreach="nav" t-as="bucket">
-                                    <div t-attf-class="o_docs_nav_cat#{' o_docs_nav_cat_sub' if bucket[2] else ''}"
-                                         t-out="bucket[0]"/>
-                                    <ul t-attf-class="o_docs_nav_list list-unstyled#{' o_docs_nav_list_sub' if bucket[2] else ''}">
+                                    <div class="o_docs_nav_cat" t-out="bucket[0]"/>
+                                    <ul class="o_docs_nav_list list-unstyled">
                                         <li t-foreach="bucket[1]" t-as="p">
                                             <a t-attf-href="/docs/#{p.slug}"
                                                t-attf-class="o_docs_nav_link#{' active' if p.slug == active_slug else ''}"

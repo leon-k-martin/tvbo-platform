@@ -38,12 +38,10 @@ class TvboDocsController(http.Controller):
         return request.env["tvbo.doc.page"].sudo().search(self._visible_domain())
 
     # ------------------------------------------------------------------
-    # Navigation
+    # Navigation (sections are a single folder deep)
     # ------------------------------------------------------------------
-    _UNORDERED = 10 ** 6
-
     def _section_meta(self):
-        """{category: (nav_label, nav_order)} sourced from each folder's index.md.
+        """{category: (nav_label, nav_order)} from each folder's index.md.
 
         The root ``docs/index.md`` (no category) controls the category-less
         "general" bucket, so its nav_label/nav_order place the Getting Started
@@ -54,37 +52,25 @@ class TvboDocsController(http.Controller):
             meta[idx.category or "general"] = (idx.nav_label or "", idx.nav_order)
         return meta
 
-    def _segment_label(self, cat, meta):
-        label = (meta.get(cat) or ("", 0))[0]
-        return label or cat.split("/")[-1].replace("-", " ").title()
+    def _section_label(self, cat, meta):
+        return (meta.get(cat) or ("", 0))[0] or (cat or "").replace("-", " ").title()
 
-    def _category_sort_key(self, cat, meta):
-        parts = cat.split("/")
-        return tuple(
-            ((meta.get("/".join(parts[: i + 1])) or ("", self._UNORDERED))[1], parts[i])
-            for i in range(len(parts))
-        )
-
-    def _category_label(self, cat, meta):
-        if not cat:
-            return ""
-        parts = cat.split("/")
-        return " / ".join(
-            self._segment_label("/".join(parts[: i + 1]), meta) for i in range(len(parts))
-        )
+    def _section_order(self, cat, meta):
+        """Sort key: the section's nav_order, then its name for stability."""
+        return (meta.get(cat) or ("", 10 ** 6))[1], cat
 
     def _nav(self, pages, meta=None):
-        """Sidebar sections -> [(label, [pages], is_sub)], ordered from index front-matter."""
+        """Sidebar sections -> [(label, [pages])], ordered from index front-matter."""
         if meta is None:
             meta = self._section_meta()
         sections = {}
         for page in pages:
             sections.setdefault(page.category or "general", []).append(page)
-        nav = []
-        for cat in sorted(sections, key=lambda c: self._category_sort_key(c, meta)):
-            plist = sorted(sections[cat], key=lambda p: (p.sequence, p.name))
-            nav.append((self._segment_label(cat, meta), plist, "/" in cat))
-        return nav
+        return [
+            (self._section_label(cat, meta),
+             sorted(sections[cat], key=lambda p: (p.sequence, p.name)))
+            for cat in sorted(sections, key=lambda c: self._section_order(c, meta))
+        ]
 
     # ------------------------------------------------------------------
     # Routes
@@ -111,7 +97,7 @@ class TvboDocsController(http.Controller):
         meta = self._section_meta()
         ordered = sorted(
             pages,
-            key=lambda p: (self._category_sort_key(p.category or "general", meta), p.sequence, p.name),
+            key=lambda p: (self._section_order(p.category or "general", meta), p.sequence, p.name),
         )
         idx = next((i for i, p in enumerate(ordered) if p.id == page.id), None)
         prev_page = ordered[idx - 1] if idx not in (None, 0) else None
@@ -124,7 +110,7 @@ class TvboDocsController(http.Controller):
                 "active_slug": page.slug,
                 "prev_page": prev_page,
                 "next_page": next_page,
-                "category_label": self._category_label(page.category, meta),
+                "category_label": self._section_label(page.category, meta) if page.category else "",
             },
         )
 

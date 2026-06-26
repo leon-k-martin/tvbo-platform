@@ -139,7 +139,7 @@ reconcile_schema() {
 # ontology. Callers that run under `set -e` MUST use it in a condition or with
 # `|| true`.
 emit_kg_summary() {
-  local phase="${1:-summary}" t dyn net intg coup obs exp std verdict
+  local phase="${1:-summary}" dyn net intg coup obs exp std verdict
   count_tbl() { psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" -tAc \
     "SELECT count(*) FROM $1" 2>/dev/null | tr -cd '0-9'; }
   dyn=$(count_tbl tvbo_dynamics);   net=$(count_tbl tvbo_network)

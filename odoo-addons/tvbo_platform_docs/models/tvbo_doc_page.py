@@ -302,15 +302,25 @@ class TvboDocPage(models.Model):
         return "".join(html)
 
     def _inline(self, s):
-        """Inline Markdown: escape, then images, links, bold, italic, code."""
+        """Inline Markdown: code spans (protected) then images, links, emphasis.
+
+        Code spans are stashed out first so emphasis markers (``**`` ``__`` ``*``)
+        inside backticks stay literal, e.g. ``__init__`` renders verbatim.
+        """
         s = _escape(s)
+        spans = []
+
+        def _stash(match):
+            spans.append(match.group(1))  # already escaped
+            return "\x00%d\x00" % (len(spans) - 1)
+
+        s = re.sub(r"`([^`]+)`", _stash, s)
         s = re.sub(r"!\[([^\]]*)\]\(([^)\s]+)\)", r'<img alt="\1" src="\2"/>', s)
         s = re.sub(r"\[([^\]]+)\]\(([^)\s]+)\)", r'<a href="\2">\1</a>', s)
         s = re.sub(r"\*\*([^*]+)\*\*", r"<strong>\1</strong>", s)
         s = re.sub(r"__([^_]+)__", r"<strong>\1</strong>", s)
         s = re.sub(r"(?<![\*\w])\*(?!\*)([^*]+?)\*(?!\*)", r"<em>\1</em>", s)
-        s = re.sub(r"`([^`]+)`", r"<code>\1</code>", s)
-        return s
+        return re.sub(r"\x00(\d+)\x00", lambda m: "<code>%s</code>" % spans[int(m.group(1))], s)
 
     # ---- post-render fixups ------------------------------------------
     def _rewrite_asset_urls(self, html):
