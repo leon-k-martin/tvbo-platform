@@ -60,27 +60,42 @@ class TvboDocsController(http.Controller):
         return (meta.get(cat) or ("", 10 ** 6))[1], cat
 
     def _nav(self, pages, meta=None):
-        """Sidebar sections -> [(label, [pages])], ordered from index front-matter."""
+        """Sidebar sections -> [(label, index_slug, [sub_pages])], ordered.
+
+        The section header is itself a link to that section's index page
+        (``index_slug``), so the index is reached by clicking the heading rather
+        than a redundant "Overview" entry. ``sub_pages`` therefore excludes the
+        index page. A section with no index page yields ``index_slug = None``.
+        """
         if meta is None:
             meta = self._section_meta()
         sections = {}
         for page in pages:
             sections.setdefault(page.category or "general", []).append(page)
-        return [
-            (self._section_label(cat, meta),
-             sorted(sections[cat], key=lambda p: (p.sequence, p.name)))
-            for cat in sorted(sections, key=lambda c: self._section_order(c, meta))
-        ]
+        nav = []
+        for cat in sorted(sections, key=lambda c: self._section_order(c, meta)):
+            plist = sorted(sections[cat], key=lambda p: (p.sequence, p.name))
+            index = next((p for p in plist if p.is_index), None)
+            subs = [p for p in plist if not p.is_index]
+            nav.append((self._section_label(cat, meta), index.slug if index else None, subs))
+        return nav
 
     # ------------------------------------------------------------------
     # Routes
     # ------------------------------------------------------------------
     @http.route("/docs", type="http", auth="public", website=True, sitemap=True)
     def docs_index(self, **kwargs):
-        pages = self._readable_pages()
+        """/docs is the Getting Started overview (the root index page) itself,
+        so there is no separate, redundant section-listing landing."""
+        root = request.env["tvbo.doc.page"].sudo().search(
+            [("is_index", "=", True), ("category", "in", (False, ""))] + self._visible_domain(),
+            limit=1,
+        )
+        if root:
+            return self._render_page(root)
         return request.render(
             "tvbo_platform_docs.docs_index",
-            {"nav": self._nav(pages), "active_slug": None},
+            {"nav": self._nav(self._readable_pages()), "active_slug": None},
         )
 
     @http.route("/docs/<string:slug>", type="http", auth="public", website=True, sitemap=True)
@@ -93,6 +108,10 @@ class TvboDocsController(http.Controller):
                 from urllib.parse import quote
                 return request.redirect("/web/login?redirect=" + quote("/docs/%s" % slug, safe=""))
             return request.redirect("/docs")
+        return self._render_page(page)
+
+    def _render_page(self, page):
+        """Render one page in the docs shell, with prev/next and breadcrumbs."""
         pages = self._readable_pages()
         meta = self._section_meta()
         ordered = sorted(
@@ -102,6 +121,11 @@ class TvboDocsController(http.Controller):
         idx = next((i for i, p in enumerate(ordered) if p.id == page.id), None)
         prev_page = ordered[idx - 1] if idx not in (None, 0) else None
         next_page = ordered[idx + 1] if idx is not None and idx + 1 < len(ordered) else None
+        # Breadcrumb: section, then the page name for a non-index (sub) page. An
+        # index page is the section itself, so it shows just the section.
+        crumbs = [self._section_label(page.category or "general", meta)]
+        if not page.is_index:
+            crumbs.append(page.name)
         return request.render(
             "tvbo_platform_docs.docs_page",
             {
@@ -110,7 +134,7 @@ class TvboDocsController(http.Controller):
                 "active_slug": page.slug,
                 "prev_page": prev_page,
                 "next_page": next_page,
-                "category_label": self._section_label(page.category, meta) if page.category else "",
+                "crumbs": crumbs,
             },
         )
 
@@ -125,7 +149,7 @@ class TvboDocsController(http.Controller):
                 results.append({
                     "name": page.name,
                     "slug": page.slug,
-                    "category": self._category_label(page.category, meta),
+                    "category": self._section_label(page.category or "general", meta),
                 })
         return request.make_response(
             json.dumps(results),

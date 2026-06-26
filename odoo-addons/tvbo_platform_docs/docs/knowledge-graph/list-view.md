@@ -4,28 +4,28 @@ access_level: public
 sequence: 20
 ---
 
-# Knowledge Graph — list view
+# Knowledge Graph: list view
 
-The default view: one card per entity, with a result counter above the grid.
+The default view shows one card per entity, with a result counter above the grid.
+The numbered markers below match the controls in the screenshot.
 
-![Card list view with the Class filter](img/kg-list-view.png)
+![The list view: search, Class filter, view toggle, and a result card marked](img/kg-list-view.png)
 
-- **Search** — type in the search box; results filter live across names and
-  descriptions (`Kuramoto`, `Desikan`, `epilepsy`…).
-- **Filter by class** — tick boxes in the **Class** panel (Dynamics, Network,
-  Coupling, Study, Atlas…); each shows a count. **Clear All Filters** resets.
-- **Sort** — by **Relevance** (default) or alphabetically.
+1. **Search** filters live across names and descriptions as you type. Try
+   `Kuramoto`, `Desikan`, or `epilepsy`.
+2. The **Class** filter narrows results to Dynamics, Network, Coupling, Study,
+   Atlas, and the rest; each row shows a count. **Clear All Filters** resets it, and
+   **Sort** orders by relevance or alphabetically.
+3. The **view toggle** switches between this list and the
+   [graph view](graph-view.md).
+4. Each **card** is one entity. Click it to open the detail.
 
 ## Open a detail card
 
-Click a card for the full entity: description, properties, governing **equations**,
-and related entities.
+The detail shows the full entity: description, parameters, state variables,
+governing equations, and related entities.
 
 ![Entity detail](img/kg-detail.png)
 
-From here you can follow links to related entities or **send it to the
-[Experiment Builder](../experiment-builder/index.md)**.
-
-## Next
-
-[Graph view](graph-view.md) — the same results as an interactive network.
+Follow the links to related entities, or send the entity to the
+[Experiment Builder](../experiment-builder/index.md).

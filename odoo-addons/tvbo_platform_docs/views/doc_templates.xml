@@ -24,9 +24,12 @@
                             </button>
                             <nav id="o_docs_nav" class="o_docs_nav" aria-label="Documentation">
                                 <t t-foreach="nav" t-as="bucket">
-                                    <div class="o_docs_nav_cat" t-out="bucket[0]"/>
-                                    <ul class="o_docs_nav_list list-unstyled">
-                                        <li t-foreach="bucket[1]" t-as="p">
+                                    <a t-if="bucket[1]" t-attf-href="/docs/#{bucket[1]}"
+                                       t-attf-class="o_docs_nav_cat o_docs_nav_cat_link#{' active' if bucket[1] == active_slug else ''}"
+                                       t-out="bucket[0]"/>
+                                    <div t-else="" class="o_docs_nav_cat" t-out="bucket[0]"/>
+                                    <ul t-if="bucket[2]" class="o_docs_nav_list list-unstyled">
+                                        <li t-foreach="bucket[2]" t-as="p">
                                             <a t-attf-href="/docs/#{p.slug}"
                                                t-attf-class="o_docs_nav_link#{' active' if p.slug == active_slug else ''}"
                                                t-out="p.name"/>
@@ -80,8 +83,8 @@
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="/docs">Platform Guide</a></li>
-                    <li t-if="category_label" class="breadcrumb-item" t-out="category_label"/>
-                    <li class="breadcrumb-item active" aria-current="page" t-out="page.name"/>
+                    <li t-foreach="crumbs" t-as="c"
+                        t-attf-class="breadcrumb-item#{' active' if c_last else ''}" t-out="c"/>
                 </ol>
             </nav>
             <article class="o_tvbo_docs_body" t-out="page.content_html"/>

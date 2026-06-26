@@ -6,6 +6,10 @@ const BASE_URL = process.env.TVBO_BASE_URL || 'http://localhost:8169';
 
 export default defineConfig({
   testDir: './specs',
+  // Seed the docs fixture user + a sample saved model so the account-page
+  // screenshots/screencasts run for real instead of skipping. No-ops gracefully
+  // when the docker dev stack is not reachable.
+  globalSetup: './global-setup.ts',
   // Experiment serialization and the docker-backed builder can be slow on a
   // cold stack; give each test generous headroom.
   timeout: 90_000,

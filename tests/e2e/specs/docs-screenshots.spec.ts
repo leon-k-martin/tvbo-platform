@@ -30,6 +30,39 @@ fs.mkdirSync(OUT, { recursive: true });
 const shot = (page: Page, name: string) => page.screenshot({ path: path.join(OUT, name) });
 const settle = (ms = 1500) => new Promise((r) => setTimeout(r, ms));
 
+/**
+ * Draw numbered callouts on the page before a screenshot. `marks` pairs a CSS
+ * selector with the number shown in the doc text, so annotated screenshots stay
+ * in sync with the steps that reference them. Missing/zero-size targets are
+ * skipped, so a renamed selector degrades to a plain (un-annotated) box.
+ */
+async function annotate(page: Page, marks: { selector: string; n: number }[]) {
+  await page.evaluate((items) => {
+    const layer = document.createElement('div');
+    layer.style.cssText = 'position:fixed;inset:0;z-index:2147483647;pointer-events:none;';
+    document.body.appendChild(layer);
+    for (const m of items) {
+      const el = document.querySelector(m.selector) as HTMLElement | null;
+      if (!el) continue;
+      const r = el.getBoundingClientRect();
+      if (r.width === 0 && r.height === 0) continue;
+      const box = document.createElement('div');
+      box.style.cssText =
+        `position:absolute;left:${Math.max(2, r.left - 5)}px;top:${Math.max(2, r.top - 5)}px;` +
+        `width:${r.width + 8}px;height:${r.height + 8}px;border:3px solid #e11d48;border-radius:8px;`;
+      layer.appendChild(box);
+      const badge = document.createElement('div');
+      badge.textContent = String(m.n);
+      badge.style.cssText =
+        `position:absolute;left:${Math.max(6, r.left - 13)}px;top:${Math.max(6, r.top - 13)}px;` +
+        'width:26px;height:26px;background:#e11d48;color:#fff;border-radius:50%;display:flex;' +
+        'align-items:center;justify-content:center;font:700 15px -apple-system,sans-serif;' +
+        'box-shadow:0 1px 4px rgba(0,0,0,.5);';
+      layer.appendChild(badge);
+    }
+  }, marks);
+}
+
 async function signIn(page: Page): Promise<boolean> {
   const res = await page.request.post(`${BASE}/web/session/authenticate`, {
     data: { jsonrpc: '2.0', method: 'call', params: { db: DB, login: USER, password: PASS } },
@@ -54,15 +87,19 @@ test('kg-list-view', async ({ page }) => {
   await page.goto(`${BASE}/tvbo/kg`, { waitUntil: 'networkidle' });
   await page.waitForSelector('.result-card', { timeout: 30000 });
   await settle(2000);
+  // Callouts keyed to the numbered list in knowledge-graph/list-view.md.
+  await annotate(page, [
+    { selector: '#kgHeroSearchInput', n: 1 }, // search
+    { selector: '.facet-title', n: 2 },       // Class filter
+    { selector: '#graphViewBtn', n: 3 },      // view toggle
+    { selector: '.result-card', n: 4 },       // a result card
+  ]);
   await shot(page, 'kg-list-view.png');
 });
 
 test('kg-detail', async ({ page }) => {
-  // Search a well-documented model so the detail card is rich (full parameters).
   await page.goto(`${BASE}/tvbo/kg`, { waitUntil: 'networkidle' });
   await page.waitForSelector('.result-card', { timeout: 30000 });
-  const search = page.locator('#kgSearchInput, #o_kg_search, input[type="search"]').first();
-  await search.fill('Generic2dOscillator').catch(() => {});
   await settle(1800);
   await page.locator('.result-card').first().click();
   await page.waitForSelector('.kg-modal-backdrop, .kg-modal', { timeout: 15000 });
@@ -92,6 +129,7 @@ const TABS: [string, string][] = [
   ['#dynamics-panel', 'builder-dynamics.png'],
   ['#network-panel', 'builder-network.png'],
   ['#observations-panel', 'builder-observations.png'],
+  ['#run-panel', 'builder-run.png'],
 ];
 for (const [target, file] of TABS) {
   test(`builder ${file}`, async ({ page }) => {
@@ -100,6 +138,20 @@ for (const [target, file] of TABS) {
     if (target !== '#general-panel') {
       await page.locator(`[data-bs-target="${target}"]`).click();
       await settle(1500);
+      if (target === '#run-panel') {
+        // Callouts keyed to experiment-builder/export.md (Run on the platform).
+        await annotate(page, [
+          { selector: '#runDuration', n: 1 },      // settings
+          { selector: '#runSimulationBtn', n: 2 }, // Run Simulation
+        ]);
+      }
+    } else {
+      // Callouts keyed to experiment-builder/building.md.
+      await annotate(page, [
+        { selector: '.nav-tabs', n: 1 },           // tab row
+        { selector: '#builderDownloadYaml', n: 2 }, // Download
+        { selector: '#builderCopyPython', n: 3 },   // Copy Python
+      ]);
     }
     await shot(page, file);
   });
@@ -111,6 +163,11 @@ test.describe('account', () => {
     test.skip(!(await signIn(page)), 'fixture sign-in unavailable');
     await page.goto(`${BASE}/my/models`, { waitUntil: 'networkidle' });
     await settle(1500);
+    // Callouts keyed to account/save-to-account.md.
+    await annotate(page, [
+      { selector: '.tvbo-model-card', n: 1 },          // a saved model
+      { selector: '[data-action="visibility"]', n: 2 }, // Share / make public
+    ]);
     await shot(page, 'my-models.png');
   });
 
@@ -118,6 +175,10 @@ test.describe('account', () => {
     test.skip(!(await signIn(page)), 'fixture sign-in unavailable');
     await page.goto(`${BASE}/my/api-keys`, { waitUntil: 'networkidle' });
     await settle(1500);
+    await annotate(page, [
+      { selector: '#apiKeyName', n: 1 },   // name the key
+      { selector: '#apiKeyCreate', n: 2 }, // Create key
+    ]);
     await shot(page, 'api-keys.png');
   });
 });

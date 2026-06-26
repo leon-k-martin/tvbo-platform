@@ -4,22 +4,23 @@ access_level: public
 sequence: 20
 ---
 
-# Create a user account
+# Sign in & create an account
 
-Free, under a minute. Browsing and exporting need no account — one only adds a
-place to keep your work.
+Login and registration are handled by the platform itself, with your email and a
+password. There is no separate identity provider to set up. Browsing and exporting
+need no account; one only adds a place to keep your work.
+
+## Sign in
+
+Go to [`/web/login`]({{base_url}}/web/login) and enter your **email** and
+**password**. Forgot your password? Use **Reset password** on the same screen.
 
 ![The sign-in screen](img/login.png)
 
-1. Go to [`/web/login`]({{base_url}}/web/login).
-2. If self-registration is enabled, use the **Sign up** link. (If it's absent, your
-   instance creates accounts on request — ask your administrator.)
-3. Enter your **name**, **email** (your login), and a **password**; submit. You may
-   need to confirm your email.
-4. You land at [`/my`]({{base_url}}/my). The **user menu** (top-right) has **My
-   Models**, **API Keys**, and **Account**.
+## Register
 
-Forgot your password? Use **Reset password** on the sign-in screen.
+New here? Use **Create Account** on the home page and fill in your name, email, and
+a password. After signing up you land at [`/my`]({{base_url}}/my), where the user
+menu (top-right) has **My Models**, **API Keys**, and **Account**.
 
-!!! tip "Next"
-    [Save a model or experiment to your account](save-to-account.md).
+Next, [save a model or experiment to your account](save-to-account.md).

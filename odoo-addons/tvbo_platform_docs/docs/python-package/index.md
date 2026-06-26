@@ -8,14 +8,13 @@ sequence: 10
 
 # The `tvbo` Python package
 
-The platform is the front end; **`tvbo`** is the engine. Use it directly to run
-experiments, script parameter sweeps, and integrate with the scientific-Python
-ecosystem.
+Every experiment you build on the platform runs on the open-source `tvbo` package.
+Use it to run experiments and script parameter sweeps in Python.
 
 !!! note "Full API documentation"
-    The complete, versioned reference and tutorials live at
-    **[virtual-twin.github.io/tvbo](https://virtual-twin.github.io/tvbo/)**. This is
-    just a quick start.
+    The complete reference and tutorials are at
+    [virtual-twin.github.io/tvbo](https://virtual-twin.github.io/tvbo/). This page is
+    a quick start.
 
 ```bash
 pip install tvbo
@@ -36,8 +35,8 @@ result.plot()
 
 ## Watch: from model to a Python run
 
-<video class="o_docs_video" controls preload="metadata">
+<video class="o_docs_video" controls preload="metadata" poster="/tvbo_platform_docs/static/img/poster-tvbo-run-in-python.jpg">
   <source src="/tvbo_platform_docs/static/video/tvbo-run-in-python.mp4" type="video/mp4"/>
-  Your browser cannot play this video —
-  <a href="/tvbo_platform_docs/static/video/tvbo-run-in-python.mp4">download it</a>.
+  Your browser cannot play this video.
+  <a href="/tvbo_platform_docs/static/video/tvbo-run-in-python.mp4">Download it</a>.
 </video>

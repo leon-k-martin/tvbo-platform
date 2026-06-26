@@ -8,23 +8,23 @@ sequence: 10
 
 # The Experiment Builder
 
-Assemble a **runnable** experiment — network, local dynamics, integrator, coupling,
-and observation models — and export it as a validated YAML bundle for the `tvbo`
-Python package. Open at [`/tvbo/configurator`]({{base_url}}/tvbo/configurator). No
-account needed to build and export.
+Assemble a runnable experiment from a network, local dynamics, an integrator, a
+coupling, and observation models, then export it as validated YAML for the `tvbo`
+Python package. Open it at [`/tvbo/configurator`]({{base_url}}/tvbo/configurator).
+Building and exporting need no account.
 
 ## Watch: the full workflow
 
-<video class="o_docs_video" controls preload="metadata">
+<video class="o_docs_video" controls preload="metadata" poster="/tvbo_platform_docs/static/img/poster-tvbo-experiment-builder-workflow.jpg">
   <source src="/tvbo_platform_docs/static/video/tvbo-experiment-builder-workflow.mp4" type="video/mp4"/>
-  Your browser cannot play this video —
-  <a href="/tvbo_platform_docs/static/video/tvbo-experiment-builder-workflow.mp4">download it</a>.
+  Your browser cannot play this video.
+  <a href="/tvbo_platform_docs/static/video/tvbo-experiment-builder-workflow.mp4">Download it</a>.
 </video>
 
-Three ways to start (mix freely):
+Three ways to start, and you can mix them:
 
-1. **From an example** — prefills every tab; export as-is or tweak.
-2. **Yourself** — tab by tab.
-3. **From the Knowledge Graph** — send a component into the builder and refine it.
+1. **From an example.** Prefills every tab; export as is, or tweak first.
+2. **Build it yourself**, tab by tab.
+3. **From the Knowledge Graph.** Send a component into the builder and refine it.
 
-See [Build an experiment](building.md), then [Export & run](export.md).
+Continue with [Build an experiment](building.md), then [Export & run](export.md).

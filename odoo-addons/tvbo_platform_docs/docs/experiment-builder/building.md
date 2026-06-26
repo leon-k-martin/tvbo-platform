@@ -6,44 +6,54 @@ sequence: 20
 
 # Build an experiment
 
-The builder is a row of **tabs**, one per part of the experiment. Fill them in any
-order — the builder keeps one working spec and validates it live (the **YAML
-Specification** panel on the right). Three ways to start, and you can mix them:
+The builder is a row of tabs, one per part of the experiment. Fill them in any
+order. It keeps a single working spec and validates it live in the **YAML
+Specification** panel on the right. There are three ways to start, and you can mix
+them.
 
-## 1 — Start from an example
+## Watch: build an experiment
 
-Open the load control, pick an example, and every tab is prefilled. Export
-straight away, or tweak first. An untouched example exports **identical** to the
-curated original.
+<video class="o_docs_video" controls preload="metadata" poster="/tvbo_platform_docs/static/img/poster-tvbo-build-an-experiment.jpg">
+  <source src="/tvbo_platform_docs/static/video/tvbo-build-an-experiment.mp4" type="video/mp4"/>
+  Your browser cannot play this video.
+  <a href="/tvbo_platform_docs/static/video/tvbo-build-an-experiment.mp4">Download it</a>.
+</video>
 
-## 2 — Build it yourself, tab by tab
+## Start from an example
 
-![General tab](img/builder-general.png)
+Open the load control and pick an example. Every tab is prefilled. Export as is, or
+adjust first. An untouched example exports identical to the curated original.
 
-- **General** — name, label, description.
-- **Dynamics** — *Add Dynamics Model*, then pick the local model; open the editor to
-  adjust state variables, parameters, and observables. Edited models are tagged so
-  your changes survive export.
+## Build it yourself, tab by tab
 
-  ![Dynamics tab](img/builder-dynamics.png)
+The tabs (**1**) run across the parts of the experiment; fill them in any order.
+**Download** (**2**) and **Copy Python** (**3**) are covered in
+[Export & run](export.md).
 
-- **Network** — choose a connectome or graph generator. Node count comes from the
-  network (set it by hand only for a purely artificial one).
+![The builder General tab, with the tab row, Download, and Copy Python marked](img/builder-general.png)
 
-  ![Network tab](img/builder-network.png)
+**General** holds the name, label, and description.
 
-- **Integration** — scheme and step size.
-- **Observations** — add one or more observation models, each with source, period,
-  and class reference.
+**Dynamics**: click *Add Dynamics Model* and pick the local model. Open the editor
+to adjust state variables, parameters, and observables. Edited models are tagged so
+your changes survive export.
 
-  ![Observations tab](img/builder-observations.png)
+![Dynamics tab](img/builder-dynamics.png)
 
-## 3 — Bring a component from the Knowledge Graph
+**Network**: choose a connectome or a graph generator. The node count comes from the
+network; set it by hand only for a purely artificial one.
 
-From a [KG](../knowledge-graph/index.md) detail card, **send it to the builder**;
-it lands in your workspace to refine. Add more the same way, or fill the remaining
-tabs by hand — after customizing one selection you can add **another**.
+![Network tab](img/builder-network.png)
 
-## Next
+**Integration** sets the scheme and step size. **Observations** takes one or more
+observation models, each with a source, period, and class reference.
 
-[Export & run](export.md) — produce the YAML bundle and run it.
+![Observations tab](img/builder-observations.png)
+
+## Bring a component from the Knowledge Graph
+
+From a [KG](../knowledge-graph/index.md) detail card, send the entity to the
+builder. It lands in your workspace to refine. Add more the same way, or fill the
+remaining tabs by hand. After customizing one selection you can add another.
+
+Continue with [Export & run](export.md).
