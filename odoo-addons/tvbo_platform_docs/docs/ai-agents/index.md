@@ -20,10 +20,11 @@ iterate in code.
 
 ![Agentic Coding with TVBO](img/agents.png)
 
-Install the skills once, and every session benefits. The guide covers it from
-beginner to expert: run a curated model, describe an experiment in plain language
-and let the assistant write and run it, then scale up to parameter sweeps and push
-results back to your account with the [API](../python-package/api.md).
+Install the skills once with the **Quick install** on the full guide, and your
+assistant carries that context into every session. The guide goes from beginner to
+expert: run a curated model, describe an experiment in plain language and let the
+assistant write and run it, then scale up to parameter sweeps and push results back
+to your account with the [API](../python-package/api.md).
 
 Everything an agent needs is the [`tvbo` package](../python-package/index.md) and its
 [reference docs](https://virtual-twin.github.io/tvbo/).

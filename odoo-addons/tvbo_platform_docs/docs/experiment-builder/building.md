@@ -39,13 +39,15 @@ your changes survive export.
 
 ![Dynamics tab](img/builder-dynamics.png)
 
-**Network**: choose a connectome or a graph generator. The node count comes from the
-network; set it by hand only for a purely artificial one.
+**Network**: choose a connectome or a graph generator, then set the **Global
+Coupling** function. The node count comes from the network; set it by hand only for
+a purely artificial one.
 
 ![Network tab](img/builder-network.png)
 
 **Integration** sets the scheme and step size. **Observations** takes one or more
-observation models, each with a source, period, and class reference.
+observation models, each with a source, period, and class reference. The **Run** tab
+runs the finished experiment on the platform ([Export & run](export.md)).
 
 ![Observations tab](img/builder-observations.png)
 

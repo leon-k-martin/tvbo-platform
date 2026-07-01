@@ -110,9 +110,13 @@ test('cast: knowledge-graph tour', async ({ browser }) => {
 });
 
 test('cast: build an experiment', async ({ browser }) => {
+  test.slow(); // heaviest cast: loads a full experiment + walks the tab row, so it
+  // needs headroom when the dev stack is under memory pressure.
   await record(browser, 'tvbo-build-an-experiment', async (c) => {
-    await c.page.goto(`${BASE}/tvbo/configurator?experiment=${EXP}`, { waitUntil: 'load', timeout: 30000 });
-    await sleep(3200); // prefill
+    await c.page.goto(`${BASE}/tvbo/configurator?experiment=${EXP}`, { waitUntil: 'load', timeout: 60000 });
+    // Wait for the tab row instead of a fixed sleep, so a slow prefill does not race.
+    await c.page.waitForSelector('[data-bs-target="#dynamics-panel"]', { timeout: 25000 }).catch(() => {});
+    await sleep(2500);
     await c.click('[data-bs-target="#dynamics-panel"]');
     await sleep(1500);
     await c.click('[data-bs-target="#network-panel"]');

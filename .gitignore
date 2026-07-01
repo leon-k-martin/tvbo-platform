@@ -2,6 +2,9 @@ builds
 _archive
 _dev
 
+# Claude Code agent worktrees (transient, per-session)
+.claude/worktrees/
+
 # Generated from the tvbo LinkML ground truth at build time (Dockerfile.odoo)
 # and locally via `make generate`. Not a source of truth — do not commit.
 odoo-addons/tvbo/models/schema_models.py

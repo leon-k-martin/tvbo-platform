@@ -19,9 +19,10 @@ example exports byte-for-byte the curated original.
 ## Run on the platform
 
 You can run the experiment without leaving the browser. Open the **Run** tab, set
-the duration, step size, and backend such as JAX (**1**), then click **Run
-Simulation** (**2**). The platform runs it through the `tvbo` backend and returns
-the result. This is the quickest way to check an experiment before you export it.
+the duration, step size, and compute backend such as JAX (**1**), then click **Run
+Simulation** (**2**). The platform runs it with the `tvbo` package on that backend
+and returns the result. This is the quickest way to check an experiment before you
+export it.
 
 ![The Run tab: settings and the Run Simulation button](img/builder-run.png)
 
