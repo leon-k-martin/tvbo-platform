@@ -34,9 +34,9 @@ pip install tvbo
 ```
 
 ```python
-import tvbo
+from tvbo import SimulationExperiment
 
-experiment = tvbo.load("demo_experiment.yaml")
+experiment = SimulationExperiment.from_file("demo_experiment.yaml")
 result = experiment.run()
 result.plot()
 ```

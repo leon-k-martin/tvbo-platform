@@ -19,8 +19,13 @@ Go to [`/web/login`]({{base_url}}/web/login) and enter your **email** and
 
 ## Register
 
-New here? Use **Create Account** on the home page and fill in your name, email, and
-a password. After signing up you land at [`/my`]({{base_url}}/my), where the user
-menu (top-right) has **My Models**, **API Keys**, and **Account**.
+New here? Choose **Create Account** on the home page (or go to
+[`/web/signup`]({{base_url}}/web/signup)) and fill in your name, email, and a
+password.
+
+![The registration form](img/register.png)
+
+After signing up you land at [`/my`]({{base_url}}/my), where the user menu
+(top-right) has **My Models**, **API Keys**, and **Account**.
 
 Next, [save a model or experiment to your account](save-to-account.md).

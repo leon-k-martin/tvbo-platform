@@ -4,6 +4,8 @@ nav_label: Getting Started
 nav_order: 10
 access_level: public
 sequence: 10
+summary: Browse, build, run, and save your work. Start here.
+thumbnail: img/home.png
 ---
 
 # TVBO Platform Guide

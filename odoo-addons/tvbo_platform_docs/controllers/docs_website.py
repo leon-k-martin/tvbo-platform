@@ -85,17 +85,22 @@ class TvboDocsController(http.Controller):
     # ------------------------------------------------------------------
     @http.route("/docs", type="http", auth="public", website=True, sitemap=True)
     def docs_index(self, **kwargs):
-        """/docs is the Getting Started overview (the root index page) itself,
-        so there is no separate, redundant section-listing landing."""
-        root = request.env["tvbo.doc.page"].sudo().search(
-            [("is_index", "=", True), ("category", "in", (False, ""))] + self._visible_domain(),
-            limit=1,
+        """/docs is an overview landing: one card per chapter (each section's
+        index page), with a thumbnail and summary. The chapters themselves —
+        Getting Started included — are reached from the cards, so the landing is
+        a map of the guide rather than dropping straight into one page."""
+        pages = self._readable_pages()
+        chapters = sorted(
+            (p for p in pages if p.is_index),
+            key=lambda p: (p.nav_order, p.name),
         )
-        if root:
-            return self._render_page(root)
         return request.render(
             "tvbo_platform_docs.docs_index",
-            {"nav": self._nav(self._readable_pages()), "active_slug": None},
+            {
+                "nav": self._nav(pages),
+                "active_slug": None,
+                "chapters": chapters,
+            },
         )
 
     @http.route("/docs/<string:slug>", type="http", auth="public", website=True, sitemap=True)

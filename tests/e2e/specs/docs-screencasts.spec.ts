@@ -54,10 +54,12 @@ const CURSOR_INIT = () => {
 
 class Cast {
   constructor(public page: Page) {}
+  // Every locator action gets a short timeout so a missing/blocked target fails
+  // fast and the cast continues, instead of auto-waiting to the 90s test timeout.
   async to(sel: string) {
     const el = this.page.locator(sel).first();
-    await el.scrollIntoViewIfNeeded().catch(() => {});
-    const box = await el.boundingBox().catch(() => null);
+    await el.scrollIntoViewIfNeeded({ timeout: 4000 }).catch(() => {});
+    const box = await el.boundingBox({ timeout: 3000 }).catch(() => null);
     if (!box) return;
     await this.page.evaluate(
       ([x, y]) => (window as unknown as { __moveCur?: (x: number, y: number) => void }).__moveCur?.(x, y),
@@ -67,13 +69,13 @@ class Cast {
   }
   async click(sel: string) {
     await this.to(sel);
-    await this.page.locator(sel).first().click().catch(() => {});
+    await this.page.locator(sel).first().click({ timeout: 6000 }).catch(() => {});
     await sleep(800);
   }
   async type(sel: string, text: string) {
     await this.to(sel);
-    await this.page.locator(sel).first().click().catch(() => {});
-    await this.page.locator(sel).first().pressSequentially(text, { delay: 95 }).catch(() => {});
+    await this.page.locator(sel).first().click({ timeout: 6000 }).catch(() => {});
+    await this.page.locator(sel).first().pressSequentially(text, { delay: 95, timeout: 8000 }).catch(() => {});
     await sleep(900);
   }
 }
@@ -93,7 +95,7 @@ async function record(browser, name: string, steps: (c: Cast) => Promise<void>) 
 
 test('cast: knowledge-graph tour', async ({ browser }) => {
   await record(browser, 'tvbo-knowledge-graph-tour', async (c) => {
-    await c.page.goto(`${BASE}/tvbo/kg`, { waitUntil: 'load' });
+    await c.page.goto(`${BASE}/tvbo/kg`, { waitUntil: 'load', timeout: 30000 });
     await c.page.waitForSelector('.result-card', { timeout: 30000 });
     await sleep(1600);
     await c.type('#kgHeroSearchInput', 'Kuramoto');
@@ -109,7 +111,7 @@ test('cast: knowledge-graph tour', async ({ browser }) => {
 
 test('cast: build an experiment', async ({ browser }) => {
   await record(browser, 'tvbo-build-an-experiment', async (c) => {
-    await c.page.goto(`${BASE}/tvbo/configurator?experiment=${EXP}`, { waitUntil: 'load' });
+    await c.page.goto(`${BASE}/tvbo/configurator?experiment=${EXP}`, { waitUntil: 'load', timeout: 30000 });
     await sleep(3200); // prefill
     await c.click('[data-bs-target="#dynamics-panel"]');
     await sleep(1500);
@@ -139,18 +141,18 @@ test('cast: your account', async ({ browser }) => {
   test.skip(!ok, 'fixture sign-in unavailable');
 
   await record(browser, 'tvbo-account-tour', async (c) => {
-    await c.page.goto(`${BASE}/web/login`, { waitUntil: 'load' });
+    await c.page.goto(`${BASE}/web/login`, { waitUntil: 'load', timeout: 30000 });
     await sleep(1200);
     await c.type('input[name="login"]', USER);
     await c.type('input[name="password"]', PASS);
     await c.click('button[type="submit"]');
-    await c.page.waitForLoadState('networkidle').catch(() => {});
+    await c.page.waitForLoadState('networkidle', { timeout: 8000 }).catch(() => {});
     await sleep(1600);
-    await c.page.goto(`${BASE}/my/models`, { waitUntil: 'load' });
+    await c.page.goto(`${BASE}/my/models`, { waitUntil: 'load', timeout: 30000 });
     await sleep(2600);
     await c.to('.tvbo-model-card');
     await sleep(1500);
-    await c.page.goto(`${BASE}/my/api-keys`, { waitUntil: 'load' });
+    await c.page.goto(`${BASE}/my/api-keys`, { waitUntil: 'load', timeout: 30000 });
     await sleep(2400);
   });
 });

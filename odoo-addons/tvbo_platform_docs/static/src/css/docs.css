@@ -8,6 +8,8 @@
 .o_docs_nav { position: sticky; top: 1rem; max-height: calc(100vh - 2rem); overflow-y: auto; padding-right: .5rem; }
 .o_docs_nav_cat { font-size: .72rem; font-weight: 700; text-transform: uppercase;
     letter-spacing: .04em; color: #1ABC9C; margin: 1.1rem 0 .35rem; }
+.o_docs_nav_cat_link { display: block; text-decoration: none; }
+.o_docs_nav_cat_link:hover, .o_docs_nav_cat_link.active { color: #16a085; }
 .o_docs_nav_cat_sub { padding-left: .75rem; color: #7f8c8d; }
 .o_docs_nav_list { margin: 0 0 .25rem; }
 .o_docs_nav_list_sub { padding-left: .75rem; border-left: 2px solid #ecf0f1; }
@@ -92,3 +94,25 @@
 .o_docs_prev:hover, .o_docs_next:hover { border-color: #1ABC9C; background: #f8fafb; }
 .o_docs_prevnext_label { font-size: .76rem; color: #95a5a6; }
 .o_docs_prevnext_name { color: #2C3E50; font-weight: 600; }
+
+/* ---- Overview cards (/docs landing) ---- */
+.o_docs_lead { font-size: 1.05rem; margin-bottom: 1.4rem; }
+.o_docs_cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(258px, 1fr));
+    gap: 1.1rem; margin-top: .25rem; }
+.o_docs_card { display: flex; flex-direction: column; text-decoration: none; background: #fff;
+    border: 1px solid #ecf0f1; border-radius: 12px; overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0,0,0,.05);
+    transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease; }
+.o_docs_card:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(0,0,0,.12);
+    border-color: #1ABC9C; }
+.o_docs_card_thumb { aspect-ratio: 16 / 9; background: #f4f7f8; overflow: hidden;
+    border-bottom: 1px solid #ecf0f1; }
+.o_docs_card_thumb img { width: 100%; height: 100%; object-fit: cover; object-position: top center;
+    display: block; }
+.o_docs_card_thumb_ph { width: 100%; height: 100%; background: linear-gradient(135deg, #e8f8f5, #f4f7f8); }
+.o_docs_card_body { padding: .85rem 1rem 1rem; display: flex; flex-direction: column; gap: .3rem; }
+.o_docs_card_title { color: #2C3E50; font-weight: 700; font-size: 1.05rem; }
+.o_docs_card_summary { color: #7f8c8d; font-size: .88rem; line-height: 1.45; }
+.o_docs_card_more { color: #16a085; font-weight: 600; font-size: .85rem; margin-top: .35rem; }
+.o_docs_card_more .fa { font-size: .72rem; transition: transform .15s ease; }
+.o_docs_card:hover .o_docs_card_more .fa { transform: translateX(3px); }

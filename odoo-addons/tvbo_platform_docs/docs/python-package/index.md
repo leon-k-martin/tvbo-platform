@@ -4,6 +4,8 @@ nav_label: Python Package
 nav_order: 50
 access_level: public
 sequence: 10
+summary: Run experiments in Python with the tvbo package.
+thumbnail: img/demo_model_phase.png
 ---
 
 # The `tvbo` Python package
@@ -24,14 +26,18 @@ Run an experiment you exported from the
 [Experiment Builder](../experiment-builder/index.md):
 
 ```python
-import tvbo
+from tvbo import SimulationExperiment
 
-experiment = tvbo.load("demo_experiment.yaml")
+experiment = SimulationExperiment.from_file("demo_experiment.yaml")
 result = experiment.run()
 result.plot()
 ```
 
 ![Phase portrait of the local model](img/demo_model_phase.png)
+
+Want to pull experiments and models straight from the platform (public ones, or
+**your own** private and shared work with an API key) and push new ones back? See
+[Retrieve & store via the API](api.md).
 
 ## Watch: from model to a Python run
 

@@ -83,6 +83,18 @@ test('login', async ({ page }) => {
   await shot(page, 'login.png');
 });
 
+test('register', async ({ page }) => {
+  await page.goto(`${BASE}/web/signup`, { waitUntil: 'networkidle' });
+  await settle(800);
+  await shot(page, 'register.png');
+});
+
+test('agents', async ({ page }) => {
+  await page.goto(`${BASE}/tvbo/agents`, { waitUntil: 'networkidle' });
+  await settle(1200);
+  await shot(page, 'agents.png');
+});
+
 test('kg-list-view', async ({ page }) => {
   await page.goto(`${BASE}/tvbo/kg`, { waitUntil: 'networkidle' });
   await page.waitForSelector('.result-card', { timeout: 30000 });

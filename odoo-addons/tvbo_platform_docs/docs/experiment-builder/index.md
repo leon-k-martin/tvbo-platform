@@ -4,6 +4,8 @@ nav_label: Experiment Builder
 nav_order: 30
 access_level: public
 sequence: 10
+summary: Assemble a runnable experiment and export it as YAML.
+thumbnail: img/builder-general.png
 ---
 
 # The Experiment Builder

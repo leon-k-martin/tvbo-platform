@@ -20,5 +20,14 @@
             <value>True</value>
         </function>
 
+        <!-- Enable Odoo-native self-service registration (public signup), so the
+             "Create Account" button and /web/signup work. The invitation_scope
+             param can go stale in a running worker's cache when set outside the
+             ORM; setting it via set_param on every deploy keeps signup live. -->
+        <function model="ir.config_parameter" name="set_param">
+            <value>auth_signup.invitation_scope</value>
+            <value>b2c</value>
+        </function>
+
     </data>
 </odoo>

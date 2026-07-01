@@ -82,6 +82,14 @@ class TvboDocPage(models.Model):
         help="Ordering of this section in the sidebar (lower = earlier), from the "
         "index page's `nav_order` front-matter.",
     )
+    summary = fields.Char(
+        help="One-line description shown on the /docs overview cards "
+        "(from the page's `summary` front-matter).",
+    )
+    thumbnail = fields.Char(
+        help="Overview-card image path under this module's static/ folder, e.g. "
+        "`img/kg-list-view.png` (from the page's `thumbnail` front-matter).",
+    )
 
     content = fields.Text(
         string="Markdown",
@@ -450,6 +458,8 @@ class TvboDocPage(models.Model):
                     "is_index": base == "index",
                     "last_import": now,
                     "nav_label": meta.get("nav_label") or False,
+                    "summary": meta.get("summary") or False,
+                    "thumbnail": meta.get("thumbnail") or False,
                 }
                 for key in ("sequence", "nav_order"):
                     if meta.get(key):

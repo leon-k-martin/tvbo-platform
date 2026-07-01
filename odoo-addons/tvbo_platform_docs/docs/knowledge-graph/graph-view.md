@@ -18,3 +18,11 @@ Click the graph icon in the view toggle (top-right) to switch; your search and
 a node to reposition it. Click a node to open the same detail view as the list,
 including the action to send it to the
 [Experiment Builder](../experiment-builder/index.md).
+
+## Watch: a Knowledge Graph tour
+
+<video class="o_docs_video" controls preload="metadata" poster="/tvbo_platform_docs/static/img/poster-tvbo-knowledge-graph-tour.jpg">
+  <source src="/tvbo_platform_docs/static/video/tvbo-knowledge-graph-tour.mp4" type="video/mp4"/>
+  Your browser cannot play this video.
+  <a href="/tvbo_platform_docs/static/video/tvbo-knowledge-graph-tour.mp4">Download it</a>.
+</video>

@@ -4,6 +4,8 @@ nav_label: Knowledge Graph
 nav_order: 20
 access_level: public
 sequence: 10
+summary: Search models, networks, couplings, atlases, and studies.
+thumbnail: img/kg-list-view.png
 ---
 
 # The Knowledge Graph

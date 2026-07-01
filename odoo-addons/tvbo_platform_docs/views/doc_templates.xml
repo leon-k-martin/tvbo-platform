@@ -55,25 +55,30 @@
         </t>
     </template>
 
-    <!-- /docs : landing / index -->
+    <!-- /docs : overview landing — one card per chapter -->
     <template id="docs_index" name="Platform Documentation">
         <t t-call="tvbo_platform_docs.docs_shell">
             <h1 class="o_docs_title">Platform Guide</h1>
-            <p class="text-muted">
-                How to use The Virtual Brain Ontology platform — the Knowledge Graph,
-                the Experiment Builder, and your user account. Screencasts included.
+            <p class="text-muted o_docs_lead">
+                How to use The Virtual Brain Ontology platform. Pick a chapter to start.
             </p>
-            <t t-if="not nav">
+            <t t-if="not chapters">
                 <p class="text-muted">No documentation pages are available yet.</p>
             </t>
-            <t t-foreach="nav" t-as="bucket">
-                <h2 class="h4 mt-4" t-out="bucket[0]"/>
-                <ul>
-                    <li t-foreach="bucket[1]" t-as="p" class="py-1">
-                        <a t-attf-href="/docs/#{p.slug}" t-out="p.name"/>
-                    </li>
-                </ul>
-            </t>
+            <div class="o_docs_cards">
+                <a t-foreach="chapters" t-as="ch" t-attf-href="/docs/#{ch.slug}" class="o_docs_card">
+                    <div class="o_docs_card_thumb">
+                        <img t-if="ch.thumbnail" t-attf-src="/tvbo_platform_docs/static/#{ch.thumbnail}"
+                             loading="lazy" t-attf-alt="#{ch.nav_label or ch.name}"/>
+                        <div t-else="" class="o_docs_card_thumb_ph"/>
+                    </div>
+                    <div class="o_docs_card_body">
+                        <span class="o_docs_card_title" t-out="ch.nav_label or ch.name"/>
+                        <span t-if="ch.summary" class="o_docs_card_summary" t-out="ch.summary"/>
+                        <span class="o_docs_card_more">Read <i class="fa fa-arrow-right" aria-hidden="true"/></span>
+                    </div>
+                </a>
+            </div>
         </t>
     </template>
 
