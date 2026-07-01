@@ -6,9 +6,9 @@ sequence: 20
 
 # Sign in & create an account
 
-Login and registration are handled by the platform itself, with your email and a
-password. There is no separate identity provider to set up. Browsing and exporting
-need no account; one only adds a place to keep your work.
+The platform handles login and registration with your email and a password. There
+is no separate identity provider to set up. You can browse and export without an
+account; an account just gives you a place to keep your work.
 
 ## Sign in
 

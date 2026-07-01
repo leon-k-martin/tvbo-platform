@@ -26,9 +26,8 @@ adjust first. An untouched example exports identical to the curated original.
 
 ## Build it yourself, tab by tab
 
-The tabs (**1**) run across the parts of the experiment; fill them in any order.
-**Download** (**2**) and **Copy Python** (**3**) are covered in
-[Export & run](export.md).
+The tabs (**1**) run across the parts of the experiment. **Download** (**2**) and
+**Copy Python** (**3**) are covered in [Export & run](export.md).
 
 ![The builder General tab, with the tab row, Download, and Copy Python marked](img/builder-general.png)
 
@@ -54,6 +53,6 @@ observation models, each with a source, period, and class reference.
 
 From a [KG](../knowledge-graph/index.md) detail card, send the entity to the
 builder. It lands in your workspace to refine. Add more the same way, or fill the
-remaining tabs by hand. After customizing one selection you can add another.
+remaining tabs by hand.
 
 Continue with [Export & run](export.md).

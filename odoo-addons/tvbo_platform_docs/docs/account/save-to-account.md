@@ -6,7 +6,7 @@ sequence: 30
 
 # Save models & experiments to your account
 
-Signed in, your customized models and assembled experiments live under **My
+Once you sign in, your customized models and assembled experiments live under **My
 Models**, and you can issue API keys for scripts.
 
 ## Save and find your models
