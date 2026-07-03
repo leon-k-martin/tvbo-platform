@@ -71,8 +71,17 @@ ENV UV_SYSTEM_PYTHON=1 \
     UV_BREAK_SYSTEM_PACKAGES=1
 
 # Install the tvbo package (for model loading and the REST API; not heavy compute).
-# No linkml here — the runtime never generates. Pin with --build-arg TVBO_VERSION.
+# No linkml here — the runtime never generates. Unpinned = follow the latest PyPI
+# release (same "follow latest" intent as the schema fetch above); optionally pin
+# with --build-arg TVBO_VERSION=X.Y.Z to freeze a release.
+#
+# CACHE_BUST (=${github.sha} in CI) is declared *before* this RUN on purpose: it
+# invalidates the install layer on every build so a newly published tvbo is
+# actually picked up. Without it, buildx would reuse the cached layer and the
+# --reinstall would never re-execute, silently pinning whatever version was first
+# built. Keep this ARG above the RUN.
 ARG TVBO_VERSION
+ARG CACHE_BUST
 RUN uv pip install --reinstall typing-extensions "tvbo${TVBO_VERSION:+==$TVBO_VERSION}"
 
 # Copy the hand-written addon sources (schema_models.py / ir.model.access.csv are
