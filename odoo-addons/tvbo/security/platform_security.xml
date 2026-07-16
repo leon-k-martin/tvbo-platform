@@ -1,5 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <!-- ================================================================ -->
+    <!-- Publication reviewer group. Internal staff who peer-review        -->
+    <!-- user-submitted models/experiments/studies before they go public.  -->
+    <!-- ================================================================ -->
+    <record id="module_category_tvbo" model="ir.module.category">
+        <field name="name">TVBO Platform</field>
+        <field name="sequence">20</field>
+    </record>
+    <!-- Odoo 19 groups are grouped under a res.groups.privilege (category_id
+         points that privilege at a module category for the Settings section). -->
+    <record id="privilege_tvbo_platform" model="res.groups.privilege">
+        <field name="name">Publication</field>
+        <field name="category_id" ref="module_category_tvbo"/>
+        <field name="sequence">20</field>
+    </record>
+    <record id="group_tvbo_reviewer" model="res.groups">
+        <field name="name">Publication Reviewer</field>
+        <field name="privilege_id" ref="privilege_tvbo_platform"/>
+        <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+        <field name="comment">Members can review, approve and reject user submissions
+            to the community (models, experiments and studies).</field>
+    </record>
+    <!-- Administrators are reviewers by default: the Settings (Administration)
+         group implies the reviewer group, so every admin — current and future —
+         inherits it automatically, without being added by hand. -->
+    <record id="base.group_system" model="res.groups">
+        <field name="implied_ids" eval="[(4, ref('group_tvbo_reviewer'))]"/>
+    </record>
+
     <!-- Access for the platform-only sharing model. Kept in XML (not the
          generated ir.model.access.csv) so regenerating the schema models does
          not wipe it. App flows reach this model through sudo controllers (which
@@ -49,6 +78,82 @@
         <field name="perm_create" eval="1"/>
         <field name="perm_unlink" eval="1"/>
         <field name="groups" eval="[(4, ref('base.group_user')), (4, ref('base.group_portal'))]"/>
+    </record>
+
+    <!-- Reviewers additionally see EVERY submission and may decide on the ones
+         in the review pipeline. Combined (OR) with the owner rules above, so a
+         reviewer sees their own drafts plus all others' review requests. -->
+    <record id="rule_model_share_reviewer_read" model="ir.rule">
+        <field name="name">model_share: reviewers read all</field>
+        <field name="model_id" ref="model_tvbo_model_share"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="perm_read" eval="1"/>
+        <field name="perm_write" eval="0"/>
+        <field name="perm_create" eval="0"/>
+        <field name="perm_unlink" eval="0"/>
+        <field name="groups" eval="[(4, ref('group_tvbo_reviewer'))]"/>
+    </record>
+    <record id="rule_model_share_reviewer_decide" model="ir.rule">
+        <field name="name">model_share: reviewers decide on submissions</field>
+        <field name="model_id" ref="model_tvbo_model_share"/>
+        <field name="domain_force">[('publication_state', '!=', 'draft')]</field>
+        <field name="perm_read" eval="0"/>
+        <field name="perm_write" eval="1"/>
+        <field name="perm_create" eval="0"/>
+        <field name="perm_unlink" eval="0"/>
+        <field name="groups" eval="[(4, ref('group_tvbo_reviewer'))]"/>
+    </record>
+
+    <!-- ================================================================ -->
+    <!-- Publication workflow audit trail (tvbo.publication_review).       -->
+    <!-- ================================================================ -->
+    <record id="access_tvbo_publication_review_user" model="ir.model.access">
+        <field name="name">tvbo.publication_review user (read)</field>
+        <field name="model_id" ref="model_tvbo_publication_review"/>
+        <field name="group_id" ref="base.group_user"/>
+        <field name="perm_read" eval="1"/>
+        <field name="perm_write" eval="0"/>
+        <field name="perm_create" eval="0"/>
+        <field name="perm_unlink" eval="0"/>
+    </record>
+    <record id="access_tvbo_publication_review_portal" model="ir.model.access">
+        <field name="name">tvbo.publication_review portal (read)</field>
+        <field name="model_id" ref="model_tvbo_publication_review"/>
+        <field name="group_id" ref="base.group_portal"/>
+        <field name="perm_read" eval="1"/>
+        <field name="perm_write" eval="0"/>
+        <field name="perm_create" eval="0"/>
+        <field name="perm_unlink" eval="0"/>
+    </record>
+    <record id="access_tvbo_publication_review_reviewer" model="ir.model.access">
+        <field name="name">tvbo.publication_review reviewer</field>
+        <field name="model_id" ref="model_tvbo_publication_review"/>
+        <field name="group_id" ref="group_tvbo_reviewer"/>
+        <field name="perm_read" eval="1"/>
+        <field name="perm_write" eval="1"/>
+        <field name="perm_create" eval="1"/>
+        <field name="perm_unlink" eval="0"/>
+    </record>
+    <!-- Owners see the history of their own submissions; reviewers see all. -->
+    <record id="rule_publication_review_own" model="ir.rule">
+        <field name="name">publication_review: own submissions</field>
+        <field name="model_id" ref="model_tvbo_publication_review"/>
+        <field name="domain_force">[('share_id.owner_user_id', '=', user.id)]</field>
+        <field name="perm_read" eval="1"/>
+        <field name="perm_write" eval="0"/>
+        <field name="perm_create" eval="0"/>
+        <field name="perm_unlink" eval="0"/>
+        <field name="groups" eval="[(4, ref('base.group_user')), (4, ref('base.group_portal'))]"/>
+    </record>
+    <record id="rule_publication_review_reviewer" model="ir.rule">
+        <field name="name">publication_review: reviewers read all</field>
+        <field name="model_id" ref="model_tvbo_publication_review"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="perm_read" eval="1"/>
+        <field name="perm_write" eval="1"/>
+        <field name="perm_create" eval="1"/>
+        <field name="perm_unlink" eval="0"/>
+        <field name="groups" eval="[(4, ref('group_tvbo_reviewer'))]"/>
     </record>
 
     <!-- Personal API keys: users manage their own; the raw key_hash field is

@@ -57,8 +57,13 @@ test('KG demo: find and inspect a model', async ({ browser }) => {
   await ci.scrollBy(page, 380);
   await page.waitForTimeout(1800);
 
-  await ci.caption(page, 'Load it straight into Python, or open it in the Experiment Builder');
-  await page.waitForTimeout(2400);
+  // Make the next step unmistakable — point at the two action buttons in turn.
+  await ci.caption(page, 'Two ways to use it — download for Python, or open in the Experiment Builder');
+  await page.waitForTimeout(1300);
+  await ci.highlight(page, page.locator('.kg-modal-action-btn[data-action="download"]'), 2000);
+  await page.waitForTimeout(1100);
+  await ci.highlight(page, page.locator('.kg-modal-builder-btn'), 2000);
+  await page.waitForTimeout(1500);
 
   const out = await ci.finish(context, page, DEST);
   // eslint-disable-next-line no-console

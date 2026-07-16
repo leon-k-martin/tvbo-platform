@@ -47,3 +47,98 @@
   min-height: 35vh;
   max-height: calc(100% - 180px);
 }
+
+/* ===========================================================================
+   Builder page layout — base (desktop) rules.
+   These live here rather than as inline `style=` attributes on the template so
+   the mobile overrides below win by source order and need no !important.
+   =========================================================================== */
+.container-fluid > .header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #e5e7eb;
+}
+.container-fluid > .header h1 {
+  margin: 0;
+  color: #1f2937;
+  font-size: 2rem;
+}
+
+/* Two-column builder: form (col 1) + network/YAML preview panel (col 2). */
+#configTabContent {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  grid-template-rows: auto 1fr;
+  gap: 20px;
+}
+#configTabContent > .network-viewer-panel { grid-column: 2; grid-row: 1 / 3; }
+#configTabContent > .tab-pane { grid-column: 1; grid-row: 1 / 3; }
+
+/* Preview panel sticks alongside the (taller) form while scrolling. */
+.network-viewer-sticky {
+  position: sticky;
+  top: 80px;
+  max-height: calc(100vh - 100px);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ===========================================================================
+   Mobile / tablet layout — collapse the two-column builder into one stacked
+   column: the active form pane on top, the live network/YAML preview beneath.
+   =========================================================================== */
+@media (max-width: 991.98px) {
+  /* Page header: title + action buttons stack/wrap instead of colliding. */
+  .container-fluid > .header {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .container-fluid > .header h1 {
+    font-size: 1.5rem;
+  }
+  .container-fluid > .header > div {
+    flex-wrap: wrap;
+  }
+
+  #configTabContent {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  #configTabContent > .tab-pane {
+    order: 1;
+    width: 100%;
+    min-width: 0;
+  }
+  #configTabContent > .network-viewer-panel {
+    order: 2;
+    width: 100%;
+    min-width: 0;
+  }
+  /* Stacked: let the preview flow naturally instead of sticking. */
+  .network-viewer-sticky {
+    position: static;
+    max-height: none;
+  }
+
+  /* Two-up form field grids stack on narrow screens. */
+  .builder-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Keep the horizontal tab strip usable: allow it to scroll rather than
+     consume a tall multi-row block, and stop labels from wrapping mid-word. */
+  #configTabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+  #configTabs .nav-item { flex: 0 0 auto; }
+  #configTabs .nav-link { white-space: nowrap; }
+}

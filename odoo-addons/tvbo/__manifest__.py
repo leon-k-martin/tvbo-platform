@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'TVBO - The Virtual Brain Ontology',
-    'version': '19.0.1.0.1',
+    'version': '19.0.1.0.2',
     'category': 'Research/Neuroscience',
     'summary': 'Data models for brain simulation, DBS, and neuroanatomical atlases',
     'description': '\n            Complete TVBO data models including:\n            - Brain simulation dynamics and experiments\n            - Deep Brain Stimulation (DBS) protocols\n            - Neuroanatomical atlases and parcellations\n        ',
@@ -25,6 +25,7 @@
         'views/configurator_templates.xml',
         'views/database_views.xml',
         'views/menus.xml',
+        'views/publication_review_views.xml',
         'views/literature_views.xml',
         'views/document_parser_templates.xml'
     ],

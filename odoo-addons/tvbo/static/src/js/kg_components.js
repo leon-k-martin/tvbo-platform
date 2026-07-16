@@ -167,7 +167,8 @@ KGComponents.DetailPanel = class {
 
     formatTypeLabel(data) {
         if (data.ontology_type) return data.ontology_type;
-        if (data.type === 'ontology') return 'Ontology Class';
+        // Ontology nodes are classes OR individuals; don't mislabel individuals.
+        if (data.type === 'ontology') return 'Ontology';
         if (data.type) return data.type.charAt(0).toUpperCase() + data.type.slice(1);
         return 'Item';
     }
@@ -235,10 +236,17 @@ KGComponents.Modal = class {
                     <div class="kg-modal-thumb-wrap"></div>
                     <h3 class="kg-modal-title"></h3>
                     <div class="kg-modal-actions">
-                        <button class="kg-modal-action-btn" data-action="download" title="Download as YAML">
+                        <a class="kg-modal-builder-btn" href="#" title="Open in Experiment Builder" style="display:none;">
+                            <svg viewBox="0 0 24 24" width="16" height="16">
+                                <path fill="currentColor" d="M14,3v2h3.59l-9.83,9.83l1.41,1.41L19,6.41V10h2V3M19,19H5V5h7V3H5C3.89,3,3,3.9,3,5v14a2,2 0 0,0 2,2h14a2,2 0 0,0 2-2v-7h-2V19Z"/>
+                            </svg>
+                            <span>Open in Builder</span>
+                        </a>
+                        <button class="kg-modal-action-btn labeled" data-action="download" title="Download as YAML — load it in Python with tvbo">
                             <svg viewBox="0 0 24 24" width="18" height="18">
                                 <path fill="currentColor" d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z"/>
                             </svg>
+                            <span>Download for Python</span>
                         </button>
                         <button class="kg-modal-close" aria-label="Close">
                             <svg viewBox="0 0 24 24" width="20" height="20">
@@ -290,6 +298,17 @@ KGComponents.Modal = class {
 
         this.currentData = data;
         this.element.querySelector('.kg-modal-title').textContent = title;
+
+        // Builder deep-link: shown only when the caller supplies a builderUrl
+        // (i.e. an entity type the Experiment Builder can load). Set here because
+        // the modal DOM is created once and reused across entity types.
+        const builderBtn = this.element.querySelector('.kg-modal-builder-btn');
+        if (builderBtn) {
+            const builderUrl = data && data.builderUrl;
+            builderBtn.href = builderUrl || '#';
+            builderBtn.style.display = builderUrl ? '' : 'none';
+        }
+
         const thumbWrap = this.element.querySelector('.kg-modal-thumb-wrap');
         if (thumbnailUrl) {
             thumbWrap.innerHTML = `<img class="kg-modal-thumb" src="${thumbnailUrl}" alt="" onerror="this.parentElement.style.display='none'" />`;
@@ -416,7 +435,7 @@ KGComponents.Tooltip = class {
     }
 
     formatType(type) {
-        if (type === 'ontology' || type === 'Class') return 'Ontology Class';
+        if (type === 'ontology' || type === 'Class') return 'Ontology';
         return type.charAt(0).toUpperCase() + type.slice(1);
     }
 

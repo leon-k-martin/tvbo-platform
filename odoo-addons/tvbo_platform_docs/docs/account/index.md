@@ -15,12 +15,15 @@ your saved models and experiments, and API keys.
 
 - [Create an account](create-account.md): sign up in under a minute.
 - [Save to your account](save-to-account.md): use My Models and API keys.
+- [Share &amp; publish](publishing.md): share with a colleague, or publish to the community through review.
 
 | You want to… | Go to |
 |---|---|
 | Sign in or register | [`/web/login`]({{base_url}}/web/login) |
 | Account and profile | [`/my`]({{base_url}}/my) |
 | Saved models and experiments | [`/my/models`]({{base_url}}/my/models) |
+| Shared with me | [`/my/shared`]({{base_url}}/my/shared) |
+| Community gallery | [`/tvbo/models/shared`]({{base_url}}/tvbo/models/shared) |
 | API keys | [`/my/api-keys`]({{base_url}}/my/api-keys) |
 
 ## Watch: sign in and find your work

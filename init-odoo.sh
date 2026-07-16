@@ -364,6 +364,64 @@ emit_kg_summary "startup" || true
 if [ "${UPGRADE_DEGRADED:-0}" = "1" ]; then
   log "NOTE: starting in DEGRADED mode after a failed upgrade — fix the cause above and redeploy."
 fi
+
+# --- First-visit warmup (fire-and-forget) ------------------------------------
+# Odoo compiles the website asset bundles, builds the per-worker routing map, and
+# does the first `import tvbo` + KG DB reads LAZILY — on the first HTTP request.
+# Without this, the first real visitor to the Knowledge Graph Browser (/tvbo/kg)
+# or the docs pays that whole cold start ("takes ages to load"). We fork a warmup
+# that waits for readiness, then hits exactly what a first-time KG visitor does,
+# so the expensive work — the asset-bundle compile (persisted in ir.attachment,
+# so it benefits every later request and worker) plus the tvbo import and
+# schema/data caches — is already done. Backgrounded BEFORE `exec` so it runs
+# alongside Odoo and can never touch the deploy/KG gate. Uses python3 (always
+# present; curl/wget are not). Disable with TVBO_WARMUP=0.
+warmup_first_visit() (
+  set +e
+  base="http://127.0.0.1:8069"
+  # Wait up to ~120s for Odoo to accept requests (readiness = /web/health 200).
+  ready=0
+  for _ in $(seq 1 60); do
+    if python3 - "$base" >/dev/null 2>&1 <<'PY'
+import sys, urllib.request
+urllib.request.urlopen(sys.argv[1] + "/web/health", timeout=3).read()
+PY
+    then ready=1; break; fi
+    sleep 2
+  done
+  if [ "$ready" != "1" ]; then
+    log "⚠ warmup: Odoo not ready after ~120s; skipping (non-critical)"
+    return 0
+  fi
+  # Exactly what the KG Browser (kg_browser.js / kg_graph.js) and the docs page
+  # fetch on first load — plus the specific video asset flagged as slow.
+  python3 - "$base" <<'PY'
+import sys, time, urllib.request
+base = sys.argv[1]
+paths = [
+    "/tvbo/kg",                        # compiles the website frontend asset bundle
+    "/tvbo/api/kg/schema",             # kg_browser.js fetch #1
+    "/tvbo/api/kg/schema/classes",     # kg_browser.js fetch #2
+    "/tvbo/api/kg/data",               # kg_browser.js fetch #3 (import tvbo + DB)
+    "/tvbo/api/kg/graph?limit=200",    # kg_graph.js (graph view)
+    "/docs/knowledge-graph",           # docs page asset bundle + first-visit HTML
+    "/tvbo_platform_docs/static/img/poster-tvbo-find-and-inspect-a-model.jpg",
+    "/tvbo_platform_docs/static/video/tvbo-find-and-inspect-a-model.mp4",
+]
+for p in paths:
+    t = time.time()
+    try:
+        r = urllib.request.urlopen(base + p, timeout=90); r.read()
+        print(f"[warmup] {p} -> {r.status} in {time.time()-t:.1f}s", flush=True)
+    except Exception as e:
+        print(f"[warmup] {p} -> ERR {e}", flush=True)
+PY
+  log "✓ first-visit warmup complete (KG Browser + docs pre-compiled)"
+)
+if [ "${TVBO_WARMUP:-1}" = "1" ]; then
+  warmup_first_visit &
+fi
+
 log "Starting Odoo server on port 8069..."
 exec odoo -d "$DB_NAME" \
   --db_host="$DB_HOST" --db_user="$DB_USER" --db_password="$DB_PASSWORD" \

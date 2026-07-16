@@ -659,10 +659,13 @@ class KnowledgeGraphAPI(http.Controller):
         return [self._serialize_entity_row(entity_type, row, detail=False) for row in rows]
 
     def _visibility_domain(self, model_name):
-        """Domain that hides elements private to *other* users.
+        """Domain that hides elements the caller may not see.
 
-        Sharing only targets models (Dynamics) and SimulationExperiments; every
-        other KG entity type is curated/public and returns an empty domain.
+        The unified KG shows curated ground-truth plus *published* community
+        elements, plus anything the caller owns or that was peer-to-peer shared
+        with them. Sharing only targets models (Dynamics) and
+        SimulationExperiments; every other KG entity type is curated/public and
+        returns an empty domain.
         """
         share_field = {
             'tvbo.dynamics': 'dynamics_id',
@@ -670,13 +673,9 @@ class KnowledgeGraphAPI(http.Controller):
         }.get(model_name)
         if not share_field or _get_model_or_none('tvbo.model_share') is None:
             return []
-        share_dom = [('visibility', '=', 'private')]
-        user = request.env.user
-        if not user._is_public():
-            share_dom.append(('owner_user_id', '!=', user.id))  # keep my own private models
-        private = request.env['tvbo.model_share'].sudo().search(share_dom)
-        private_ids = [s[share_field].id for s in private if s[share_field]]
-        return [('id', 'not in', private_ids)] if private_ids else []
+        hidden = request.env['tvbo.model_share'].sudo().hidden_target_ids(
+            share_field, request.env.user)
+        return [('id', 'not in', hidden)] if hidden else []
 
     def _expand_relations(self, model_name, row):
         """Expand x2many fields into nested related records for detail endpoints."""
@@ -1042,11 +1041,27 @@ class KnowledgeGraphAPI(http.Controller):
                 nodes = all_nodes
                 links = all_links
 
-        # Map database items to nodes and create links to ontology
+        # Map database items to nodes. A DB building block that materializes an
+        # ontology *individual* (e.g. the PyRhO Software individual) is the SAME
+        # real-world entity as that individual — same IRI. Drawing both is the
+        # duplication users see ("PyRhO" as a Software node AND an ontology node).
+        # Dedupe by collapsing the two into the DB node: keep the DB node (it
+        # carries db_type styling + click-through), drop the ontology individual
+        # node, and re-point that individual's is_a links at the DB node so the
+        # class hierarchy stays connected. A DB item that only matches an ontology
+        # *class* keeps the normal instance -> class "instance of" edge — that is a
+        # real membership, not a duplicate.
         onto_storid_map = {n['storid']: n for n in nodes if n.get('storid') is not None}
+        merged_storids = {}  # ontology individual storid -> DB node id it merged into
 
         for item in db_items:
             node_id = f"db_{item['type']}_{item['id']}"
+            onto_class = item.get('ontology_class')
+            onto_instance = item.get('ontology_instance')
+
+            inst_storid = onto_instance.get('storid') if onto_instance else None
+            onto_node = onto_storid_map.get(inst_storid) if inst_storid is not None else None
+
             node = {
                 'id': node_id,
                 'storid': node_id,
@@ -1054,27 +1069,36 @@ class KnowledgeGraphAPI(http.Controller):
                 'type': 'instance',
                 'db_type': item['type'],
                 'title': item.get('title', ''),
-                'iri': item.get('iri', ''),
+                'iri': item.get('iri') or (onto_node.get('iri') if onto_node else ''),
             }
+
+            if onto_node is not None:
+                # Same entity as an ontology individual -> collapse into this node.
+                node['ontology_type'] = onto_node.get('ontology_type')
+                merged_storids[inst_storid] = node_id
+                nodes.append(node)
+                continue
+
             nodes.append(node)
 
-            # Link to specific ontology instance if available, else to class.
-            onto_class = item.get('ontology_class')
-            onto_instance = item.get('ontology_instance')
-
-            target_storid = None
-            if onto_instance and onto_instance.get('storid') is not None:
-                target_storid = onto_instance['storid']
-            elif onto_class and onto_class.get('storid') is not None:
-                target_storid = onto_class['storid']
-
-            if target_storid is not None and target_storid in onto_storid_map:
+            # Only a class match (or nothing): keep the instance -> class edge.
+            if onto_class and onto_class.get('storid') in onto_storid_map:
                 links.append({
                     'source': node_id,
-                    'target': target_storid,
+                    'target': onto_class['storid'],
                     'type': 'instance_of',
                     'label': 'instance of',
                 })
+
+        if merged_storids:
+            # Drop the now-duplicate ontology individual nodes and re-point any
+            # link that referenced their storid at the DB node they merged into.
+            nodes = [n for n in nodes if n.get('storid') not in merged_storids]
+            for link in links:
+                if link.get('source') in merged_storids:
+                    link['source'] = merged_storids[link['source']]
+                if link.get('target') in merged_storids:
+                    link['target'] = merged_storids[link['target']]
 
         return json_response({
             "nodes": nodes,

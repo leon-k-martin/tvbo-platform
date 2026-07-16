@@ -20,6 +20,8 @@ const BASE = process.env.BASE_URL || 'http://localhost:8169';
 const DB = process.env.DOCS_DB || 'tvbo_dev';
 const USER = process.env.DOCS_USER || 'docs-demo';
 const PASS = process.env.DOCS_PASS || 'DocsDemo-2026';
+const ADMIN = process.env.TVBO_ADMIN_LOGIN || 'admin';
+const ADMIN_PASS = process.env.TVBO_ADMIN_PASSWORD || 'admin';
 const EXP = process.env.DOCS_EXPERIMENT_ID || '2'; // a populated example experiment
 const OUT = path.resolve(__dirname, '..', '..', '..', 'odoo-addons', 'tvbo_platform_docs', 'static', 'img');
 
@@ -29,6 +31,19 @@ test.describe.configure({ retries: 2 });
 fs.mkdirSync(OUT, { recursive: true });
 const shot = (page: Page, name: string) => page.screenshot({ path: path.join(OUT, name) });
 const settle = (ms = 1500) => new Promise((r) => setTimeout(r, ms));
+
+// Warm the Odoo server (QWeb template + asset-bundle compilation is the dominant
+// cold-load cost and is shared server-side) so the first screenshot is not taken
+// against a still-compiling page.
+test.beforeAll(async ({ browser }) => {
+  const ctx = await browser.newContext();
+  const page = await ctx.newPage();
+  for (const url of ['/', '/tvbo/agents', '/tvbo/kg', `/tvbo/configurator?experiment=${EXP}`, '/web/login', '/my/models', '/my/api-keys']) {
+    await page.goto(`${BASE}${url}`, { waitUntil: 'load', timeout: 60000 }).catch(() => {});
+    await settle(300);
+  }
+  await ctx.close();
+});
 
 /**
  * Draw numbered callouts on the page before a screenshot. `marks` pairs a CSS
@@ -63,9 +78,9 @@ async function annotate(page: Page, marks: { selector: string; n: number }[]) {
   }, marks);
 }
 
-async function signIn(page: Page): Promise<boolean> {
+async function signIn(page: Page, user = USER, pass = PASS): Promise<boolean> {
   const res = await page.request.post(`${BASE}/web/session/authenticate`, {
-    data: { jsonrpc: '2.0', method: 'call', params: { db: DB, login: USER, password: PASS } },
+    data: { jsonrpc: '2.0', method: 'call', params: { db: DB, login: user, password: pass } },
   });
   const body = await res.json().catch(() => ({}));
   return !!body?.result?.uid;
@@ -175,12 +190,20 @@ test.describe('account', () => {
     test.skip(!(await signIn(page)), 'fixture sign-in unavailable');
     await page.goto(`${BASE}/my/models`, { waitUntil: 'networkidle' });
     await settle(1500);
-    // Callouts keyed to account/save-to-account.md.
+    // Callouts keyed to account/save-to-account.md and account/publishing.md.
     await annotate(page, [
-      { selector: '.tvbo-model-card', n: 1 },          // a saved model
-      { selector: '[data-action="visibility"]', n: 2 }, // Share / make public
+      { selector: '.tvbo-model-card', n: 1 },        // a saved model
+      { selector: '[data-action="share"]', n: 2 },   // Share with a colleague (p2p)
+      { selector: '[data-action="submit"]', n: 3 },  // Submit for review (publish)
     ]);
     await shot(page, 'my-models.png');
+  });
+
+  test('shared-with-me', async ({ page }) => {
+    test.skip(!(await signIn(page)), 'fixture sign-in unavailable');
+    await page.goto(`${BASE}/my/shared`, { waitUntil: 'networkidle' });
+    await settle(1200);
+    await shot(page, 'shared-with-me.png');
   });
 
   test('api-keys', async ({ page }) => {
@@ -192,5 +215,22 @@ test.describe('account', () => {
       { selector: '#apiKeyCreate', n: 2 }, // Create key
     ]);
     await shot(page, 'api-keys.png');
+  });
+});
+
+// Reviewer backend — the peer-review queue (account/reviewing.md, staff only).
+// Needs an internal/admin user; skips cleanly if that sign-in is unavailable.
+test.describe('reviewer', () => {
+  test('publications-queue', async ({ page }) => {
+    test.skip(!(await signIn(page, ADMIN, ADMIN_PASS)), 'admin sign-in unavailable');
+    // Odoo 19 web-client URL for an action by its XML id. The web client keeps a
+    // persistent bus/longpoll connection open, so 'networkidle' never fires —
+    // wait for the DOM, then for the list/content to actually render.
+    await page.goto(`${BASE}/odoo/action-tvbo.action_publication_review`, {
+      waitUntil: 'domcontentloaded',
+    });
+    await page.waitForSelector('.o_list_view, .o_content', { timeout: 30000 }).catch(() => {});
+    await settle(2000);
+    await shot(page, 'publications-queue.png');
   });
 });

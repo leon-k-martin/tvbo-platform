@@ -40,11 +40,11 @@ class ModelConfiguratorController(http.Controller):
         (no share row), shared, and the caller's own. Other users' private
         experiments are excluded so their labels/ids don't leak via this list."""
         try:
-            private_others = request.env['tvbo.model_share'].sudo().search([
-                ('experiment_id', '!=', False), ('visibility', '=', 'private'),
-                ('owner_user_id', '!=', request.env.user.id),
-            ]).mapped('experiment_id').ids
-            domain = [('id', 'not in', private_others)] if private_others else []
+            # Hide experiments that are neither published, owned by the caller,
+            # nor peer-to-peer shared with them (see tvbo.model_share).
+            hidden = request.env['tvbo.model_share'].sudo().hidden_target_ids(
+                'experiment_id', request.env.user)
+            domain = [('id', 'not in', hidden)] if hidden else []
             records = request.env['tvbo.simulation_experiment'].sudo().search(domain)
             data = records.read()
             return self._json_response({'success': True, 'data': data})
@@ -143,8 +143,8 @@ class ModelConfiguratorController(http.Controller):
             return self._json_response({'success': False, 'error': str(e)})
 
     def _experiment_readable(self, experiment_id):
-        """True if the experiment is public (no share row), shared, or owned by
-        the current user. Private experiments belonging to someone else are not
+        """True if the experiment is public (no share row), published, owned by
+        the caller, or peer-to-peer shared with them. Otherwise it is not
         readable through these public endpoints — mirrors the access control in
         controllers/api.py so a user-saved private experiment can't be fetched by
         enumerating ids."""
@@ -152,10 +152,10 @@ class ModelConfiguratorController(http.Controller):
             [('experiment_id', '=', experiment_id)], limit=1)
         if not share:
             return True  # ground-truth / public experiment
-        if share.visibility == 'shared':
-            return True
         user = request.env.user
-        return bool(user) and not user._is_public() and share.owner_user_id.id == user.id
+        if user._is_public():
+            return share.publication_state == 'published'
+        return share.is_accessible_to(user)
 
     @http.route('/tvbo/api/configurator/experiment/<int:experiment_id>', type='http', auth='public', methods=['GET'], csrf=False)
     def api_experiment_detail(self, experiment_id, **kwargs):
@@ -309,14 +309,13 @@ class ModelConfiguratorController(http.Controller):
             if not exp_rec.exists():
                 return _err(404, {'success': False, 'error': 'Experiment not found'})
 
-            # Respect model-sharing visibility: a private experiment is downloadable
-            # only by its owner. Curated experiments have no share row -> public.
+            # Respect sharing: a non-public experiment is downloadable only by its
+            # owner or a collaborator it was shared with. Curated experiments have
+            # no share row -> public.
             share = request.env['tvbo.model_share'].sudo().search(
                 [('experiment_id', '=', experiment_id)], limit=1)
-            if share and share.visibility == 'private':
-                user = request.env.user
-                if user._is_public() or share.owner_user_id.id != user.id:
-                    return _err(403, {'success': False, 'error': 'forbidden'})
+            if share and not share.is_accessible_to(request.env.user):
+                return _err(403, {'success': False, 'error': 'forbidden'})
 
             obj, errors = validate_experiment(experiment_id)
             if errors:
@@ -542,11 +541,13 @@ class ModelConfiguratorController(http.Controller):
                 dynamics = Dynamics.create(model_vals)
                 dynamics.write(relations)
                 # Platform-only ownership/sharing record (kept off tvbo.dynamics
-                # so it never leaks into the schema-validated serialization).
+                # so it never leaks into the schema-validated serialization). It
+                # starts as a private draft; the owner shares or publishes it
+                # later from My Models.
                 Share.create({
                     'dynamics_id': dynamics.id,
                     'owner_user_id': owner_id,
-                    'visibility': 'private',
+                    'publication_state': 'draft',
                 })
                 action = 'saved'
 

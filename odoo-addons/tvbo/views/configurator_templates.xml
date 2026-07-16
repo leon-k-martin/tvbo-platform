@@ -10,8 +10,8 @@
                     <script src="/tvbo/static/src/js/schema_driven_editor.js"></script>
 
                     <div class="container-fluid" style="max-width: 1400px; margin: 0 auto; padding: 20px;">
-                        <div class="header" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #e5e7eb;">
-                            <h1 style="margin: 0; color: #1f2937; font-size: 2rem;">Experiment Builder</h1>
+                        <div class="header">
+                            <h1>Experiment Builder</h1>
                             <div style="display: flex; gap: 10px;">
                                 <button id="builderCopyPython" class="btn btn-secondary">Copy Python</button>
                                 <button id="builderDownloadYaml" class="btn btn-secondary">Download</button>
@@ -98,10 +98,10 @@
                             </ul>
 
                         <!-- Tab Content with Grid layout for Network Viewer -->
-                        <div class="tab-content" id="configTabContent" style="display: grid; grid-template-columns: 1fr 340px; grid-template-rows: auto 1fr; gap: 20px;">
+                        <div class="tab-content" id="configTabContent">
                             <!-- Right column: Network Viewer + Live YAML -->
-                            <div class="network-viewer-panel" style="grid-column: 2; grid-row: 1 / 3;">
-                                <div style="position: sticky; top: 80px; max-height: calc(100vh - 100px); display: flex; flex-direction: column; gap: 12px;">
+                            <div class="network-viewer-panel">
+                                <div class="network-viewer-sticky">
                                     <!-- 3D Network Card -->
                                     <div class="card" style="border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); flex-shrink: 0;">
                                         <div class="card-header py-2" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: white; border-radius: 8px 8px 0 0;">
@@ -110,10 +110,10 @@
                                                     <i class="fa fa-project-diagram me-1"></i>3D Network
                                                 </span>
                                                 <div class="btn-group btn-group-sm">
-                                                    <button class="btn btn-outline-light btn-sm py-0 px-1" id="persistentToggleBrainMesh" title="Toggle brain mesh" style="font-size: 0.75rem;">
+                                                    <button class="btn btn-outline-light btn-sm py-0 px-1" id="persistentToggleBrainMesh" title="Toggle brain mesh" aria-label="Toggle brain mesh" style="font-size: 0.75rem;">
                                                         🧠
                                                     </button>
-                                                    <button class="btn btn-outline-light btn-sm py-0 px-1" id="persistentResetCamera" title="Reset camera" style="font-size: 0.75rem;">
+                                                    <button class="btn btn-outline-light btn-sm py-0 px-1" id="persistentResetCamera" title="Reset camera" aria-label="Reset camera" style="font-size: 0.75rem;">
                                                         ⟲
                                                     </button>
                                                 </div>
@@ -137,7 +137,7 @@
                                                 <span style="font-size: 0.85rem; font-weight: 500;">
                                                     <i class="fa fa-code me-1"></i>YAML Specification
                                                 </span>
-                                                <button class="btn btn-outline-light btn-sm py-0 px-1" id="copyLiveYaml" title="Copy YAML" style="font-size: 0.75rem;">
+                                                <button class="btn btn-outline-light btn-sm py-0 px-1" id="copyLiveYaml" title="Copy YAML" aria-label="Copy YAML" style="font-size: 0.75rem;">
                                                     📋
                                                 </button>
                                             </div>
@@ -151,7 +151,7 @@
                             </div>
 
                             <!-- General Tab -->
-                            <div class="tab-pane fade show active" id="general-panel" role="tabpanel" style="grid-column: 1; grid-row: 1 / 3;">
+                            <div class="tab-pane fade show active" id="general-panel" role="tabpanel">
                                 <div style="background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                                     <h5 class="mb-3" style="color: #1f2937;">General Configuration</h5>
 
@@ -203,7 +203,7 @@
                             </div>
 
                             <!-- Dynamics Tab -->
-                            <div class="tab-pane fade" id="dynamics-panel" role="tabpanel" style="grid-column: 1; grid-row: 1 / 3;">
+                            <div class="tab-pane fade" id="dynamics-panel" role="tabpanel">
                                 <div style="background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                                     <div id="configuratorContainer"></div>
                                     <div id="builderContent"></div>
@@ -211,7 +211,7 @@
                             </div>
 
                             <!-- Network Tab -->
-                            <div class="tab-pane fade" id="network-panel" role="tabpanel" style="grid-column: 1; grid-row: 1 / 3;">
+                            <div class="tab-pane fade" id="network-panel" role="tabpanel">
                                 <div style="background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                                     <h5 class="mb-3" style="color: #1f2937;">Network Configuration</h5>
 
@@ -374,7 +374,7 @@
                             </div>
 
                             <!-- Integration Tab -->
-                            <div class="tab-pane fade" id="integration-panel" role="tabpanel" style="grid-column: 1; grid-row: 1 / 3;">
+                            <div class="tab-pane fade" id="integration-panel" role="tabpanel">
                                 <div style="background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                                     <h5 class="mb-3" style="color: #1f2937;">Integration Configuration</h5>
                                     <div id="integratorContent"></div>
@@ -382,7 +382,7 @@
                             </div>
 
                             <!-- Observation Models Tab -->
-                            <div class="tab-pane fade" id="observation-panel" role="tabpanel" style="grid-column: 1; grid-row: 1 / 3;">
+                            <div class="tab-pane fade" id="observation-panel" role="tabpanel">
                                 <div style="background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                                     <h5 class="mb-3" style="color: #1f2937;">Observation Models</h5>
                                     <div id="observationModelsContainer" style="margin-bottom: 20px;">
@@ -400,7 +400,7 @@
                             </div>
 
                             <!-- Events / Stimulus Tab -->
-                            <div class="tab-pane fade" id="stimulus-panel" role="tabpanel" style="grid-column: 1; grid-row: 1 / 3;">
+                            <div class="tab-pane fade" id="stimulus-panel" role="tabpanel">
                                 <div style="background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                                     <h5 class="mb-3" style="color: #1f2937;">Events &amp; Stimulus</h5>
                                     <div id="stimulusContent"
@@ -416,7 +416,7 @@
                             </div>
 
                             <!-- Functions Tab -->
-                            <div class="tab-pane fade" id="functions-panel" role="tabpanel" style="grid-column: 1; grid-row: 1 / 3;">
+                            <div class="tab-pane fade" id="functions-panel" role="tabpanel">
                                 <div style="background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                                     <h5 class="mb-3" style="color: #1f2937;">Functions</h5>
                                     <div id="functionsContent"
@@ -427,7 +427,7 @@
                             </div>
 
                             <!-- Observations Tab -->
-                            <div class="tab-pane fade" id="observations-panel" role="tabpanel" style="grid-column: 1; grid-row: 1 / 3;">
+                            <div class="tab-pane fade" id="observations-panel" role="tabpanel">
                                 <div style="background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                                     <h5 class="mb-3" style="color: #1f2937;">Observations</h5>
                                     <div id="observationsContent"
@@ -438,7 +438,7 @@
                             </div>
 
                             <!-- Derived Observations Tab -->
-                            <div class="tab-pane fade" id="derived-observations-panel" role="tabpanel" style="grid-column: 1; grid-row: 1 / 3;">
+                            <div class="tab-pane fade" id="derived-observations-panel" role="tabpanel">
                                 <div style="background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                                     <h5 class="mb-3" style="color: #1f2937;">Derived Observations</h5>
                                     <div id="derivedObservationsContent"
@@ -449,7 +449,7 @@
                             </div>
 
                             <!-- Algorithms Tab -->
-                            <div class="tab-pane fade" id="algorithms-panel" role="tabpanel" style="grid-column: 1; grid-row: 1 / 3;">
+                            <div class="tab-pane fade" id="algorithms-panel" role="tabpanel">
                                 <div style="background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                                     <h5 class="mb-3" style="color: #1f2937;">Algorithms</h5>
                                     <div id="algorithmsContent"
@@ -460,7 +460,7 @@
                             </div>
 
                             <!-- Optimization Tab -->
-                            <div class="tab-pane fade" id="optimization-panel" role="tabpanel" style="grid-column: 1; grid-row: 1 / 3;">
+                            <div class="tab-pane fade" id="optimization-panel" role="tabpanel">
                                 <div style="background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                                     <h5 class="mb-3" style="color: #1f2937;">Optimizations</h5>
                                     <div id="optimizationContent"
@@ -471,7 +471,7 @@
                             </div>
 
                             <!-- Explorations Tab -->
-                            <div class="tab-pane fade" id="explorations-panel" role="tabpanel" style="grid-column: 1; grid-row: 1 / 3;">
+                            <div class="tab-pane fade" id="explorations-panel" role="tabpanel">
                                 <div style="background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                                     <h5 class="mb-3" style="color: #1f2937;">Explorations</h5>
                                     <div id="explorationsContent"
@@ -500,7 +500,7 @@
                             </div>
 
                             <!-- Execution Tab -->
-                            <div class="tab-pane fade" id="execution-panel" role="tabpanel" style="grid-column: 1; grid-row: 1 / 3;">
+                            <div class="tab-pane fade" id="execution-panel" role="tabpanel">
                                 <div style="background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                                     <h5 class="mb-3" style="color: #1f2937;">Execution</h5>
                                     <div id="executionContent"
@@ -529,7 +529,7 @@
                             </div>
 
                             <!-- Preview Tab (renamed to Metadata Specification) -->
-                            <div class="tab-pane fade" id="preview-panel" role="tabpanel" style="grid-column: 1; grid-row: 1 / 3;">
+                            <div class="tab-pane fade" id="preview-panel" role="tabpanel">
                                 <div style="background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                                     <h5 class="mb-3" style="color: #1f2937;">Metadata Specification</h5>
                                     <div id="previewContent">
@@ -539,7 +539,7 @@
                             </div>
 
                             <!-- Run Tab -->
-                            <div class="tab-pane fade" id="run-panel" role="tabpanel" style="grid-column: 1; grid-row: 1 / 3;">
+                            <div class="tab-pane fade" id="run-panel" role="tabpanel">
                                 <div style="background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                                     <h5 class="mb-3" style="color: #1f2937;">Run Simulation</h5>
 
@@ -670,7 +670,7 @@
                 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
 
                 <!-- Load builder CSS and JS -->
-                <link rel="stylesheet" href="/tvbo/static/src/css/builder.css?v=4"/>
+                <link rel="stylesheet" href="/tvbo/static/src/css/builder.css?v=6"/>
 <script type="text/javascript">
                     console.log('[DEBUG] About to load network_graph_3d.js');
                 </script>

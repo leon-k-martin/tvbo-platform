@@ -80,6 +80,28 @@ class Cast {
   }
 }
 
+// Pages the casts record. Warming them once compiles the QWeb templates and
+// frontend asset bundles server-side (the dominant cold-load cost in Odoo, and
+// shared across browser contexts), so the in-recording navigation is fast and
+// the video does not open on a long white cold-load.
+const WARM_URLS = [
+  `${BASE}/tvbo/kg`,
+  `${BASE}/tvbo/configurator?experiment=${EXP}`,
+  `${BASE}/web/login`,
+  `${BASE}/my/models`,
+  `${BASE}/my/api-keys`,
+];
+
+test.beforeAll(async ({ browser }) => {
+  const ctx = await browser.newContext({ viewport: SIZE });
+  const page = await ctx.newPage();
+  for (const url of WARM_URLS) {
+    await page.goto(url, { waitUntil: 'load', timeout: 60000 }).catch(() => {});
+    await sleep(400); // let deferred assets / JS finish compiling server-side
+  }
+  await ctx.close();
+});
+
 async function record(browser, name: string, steps: (c: Cast) => Promise<void>) {
   const ctx: BrowserContext = await browser.newContext({
     viewport: SIZE,
@@ -95,17 +117,20 @@ async function record(browser, name: string, steps: (c: Cast) => Promise<void>) 
 
 test('cast: knowledge-graph tour', async ({ browser }) => {
   await record(browser, 'tvbo-knowledge-graph-tour', async (c) => {
-    await c.page.goto(`${BASE}/tvbo/kg`, { waitUntil: 'load', timeout: 30000 });
-    await c.page.waitForSelector('.result-card', { timeout: 30000 });
-    await sleep(1600);
+    // The graph view IS the tour — deep-link straight to it (#graph is handled by
+    // initViewFromHash). Previously this ended on the card list because the toggle
+    // click was best-effort and barely dwelt.
+    await c.page.goto(`${BASE}/tvbo/kg#graph`, { waitUntil: 'load', timeout: 30000 });
+    // Fallback: if the hash did not activate the graph, use the toggle.
+    const graphOn = await c.page.locator('#graphContainer:not(.hidden)')
+      .first().waitFor({ state: 'visible', timeout: 8000 }).then(() => true).catch(() => false);
+    if (!graphOn) await c.click('#graphViewBtn');
+    // Wait for the force-directed layout to actually draw nodes before dwelling.
+    await c.page.waitForSelector('#graphSvg circle', { timeout: 30000 }).catch(() => {});
+    await sleep(4200);                        // let the layout settle — the payoff shot
+    // Search narrows the graph live — show it responding.
     await c.type('#kgHeroSearchInput', 'Kuramoto');
-    await sleep(1400);
-    await c.click('.result-card');           // open a detail card
-    await sleep(2600);
-    await c.click('.kg-modal-close, .kg-modal-backdrop'); // close it
-    await sleep(900);
-    await c.click('#graphViewBtn');          // switch to the graph
-    await sleep(4200);
+    await sleep(3400);
   });
 });
 

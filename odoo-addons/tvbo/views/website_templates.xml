@@ -10,7 +10,7 @@
     <!-- TVBO Main Stylesheet - Injected into all pages -->
     <template id="tvbo_main_css" inherit_id="website.layout" name="TVBO Main CSS">
         <xpath expr="//head" position="inside">
-            <link rel="stylesheet" href="/tvbo/static/src/css/main.css" />
+            <link rel="stylesheet" href="/tvbo/static/src/css/main.css?v=2" />
         </xpath>
     </template>
 
@@ -113,6 +113,7 @@
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle" href="#" id="tvboAboutDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">About</a>
                                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="tvboAboutDropdown">
+                                        <li><a class="dropdown-item" href="/tvbo/about">About TVB-O</a></li>
                                         <li><a class="dropdown-item" href="/docs">Platform Guide</a></li>
                                         <li><a class="dropdown-item" href="/tvbo/agents">AI Agents</a></li>
                                         <li><hr class="dropdown-divider"/></li>
@@ -213,234 +214,366 @@
             <t t-name="tvbo_homepage_view">
                 <t t-call="website.layout">
                     <div id="wrap" class="oe_structure oe_empty">
-                        <!-- Hero Section -->
-                        <section class="s_cover pt-5 pb-5" style="background: linear-gradient(135deg, #3498DB 0%, #2C3E50 100%);">
-                            <div class="container">
-                                <div class="row align-items-center">
-                                    <div class="col-lg-12 text-center">
-                                        <img src="/tvbo/static/src/img/logo.png" alt="TVBO Logo" style="max-width: 200px; margin-bottom: 2rem; filter: brightness(0) invert(1);" />
-                                        <h1 class="display-3 text-white font-weight-bold mb-4"> The Virtual Brain Ontology </h1>
-                                        <p class="lead text-white mb-5" style="font-size: 1.25rem; opacity: 0.95; max-width: 700px; margin-left: auto; margin-right: auto;"> A structured knowledge base and toolset for reproducible brain network simulations </p>
-                                        <div class="mt-5 d-flex justify-content-center flex-wrap gap-3">
-                                            <a href="/tvbo/kg" class="btn btn-light btn-lg" style="color: #2C3E50; font-weight: 600; padding: 0.75rem 2rem;"> Knowledge Graph</a>
-                                            <a href="/tvbo/configurator" class="btn btn-light btn-lg" style="color: #2C3E50; font-weight: 600; padding: 0.75rem 2rem;"> Simulation Builder</a>
-                                            <a href="https://virtual-twin.github.io/tvbo/" class="btn btn-outline-light btn-lg" style="font-weight: 600; padding: 0.75rem 2rem;"> Documentation</a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </section>
-
-                        <!-- Data Model Section -->
-                        <section class="pt-5 pb-5">
-                            <div class="container">
-                                <h2 class="text-center mb-3" style="font-size: 2.5rem; color: #2C3E50;">One Specification, Reproducible Simulations</h2>
-                                <p class="text-center text-muted mb-5" style="max-width: 700px; margin: 0 auto;"> The TVBO data model captures everything needed for reproducible brain simulations in a single, standardized format. </p>
-
-                                <div class="row justify-content-center">
-                                    <div class="col-lg-10">
-                                        <div style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-radius: 16px; padding: 40px;">
-
-                                            <!-- Central Element -->
-                                            <div class="text-center mb-5">
-                                                <div style="display: inline-block; background: linear-gradient(135deg, #3498DB 0%, #2C3E50 100%); color: white; padding: 20px 40px; border-radius: 12px; box-shadow: 0 4px 20px rgba(52,152,219,0.3);">
-                                                    <div style="font-size: 1.5rem; font-weight: 700;"> SimulationExperiment</div>
-                                                    <div style="font-size: 0.9rem; opacity: 0.9;">Your complete simulation specification</div>
-                                                </div>
-                                            </div>
-
-                                            <!-- Components -->
-                                            <div class="row g-3 mb-4">
-                                                <div class="col-md-3 col-6">
-                                                    <div style="background: white; border-radius: 10px; padding: 20px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.06); border-top: 3px solid #3498DB; height: 100%;">
-                                                        <div style="font-weight: 600; color: #2C3E50; font-size: 1.05rem; margin-bottom: 8px;"> Dynamics</div>
-                                                        <div style="font-size: 0.8rem; color: #6c757d; line-height: 1.6;">Neural mass models<br />State variables<br /> Parameters</div>
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-3 col-6">
-                                                    <div style="background: white; border-radius: 10px; padding: 20px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.06); border-top: 3px solid #2C3E50; height: 100%;">
-                                                        <div style="font-weight: 600; color: #2C3E50; font-size: 1.05rem; margin-bottom: 8px;"> Network</div>
-                                                        <div style="font-size: 0.8rem; color: #6c757d; line-height: 1.6;">Connectome<br /> Coupling functions<br /> Delays</div>
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-3 col-6">
-                                                    <div style="background: white; border-radius: 10px; padding: 20px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.06); border-top: 3px solid #3498DB; height: 100%;">
-                                                        <div style="font-weight: 600; color: #2C3E50; font-size: 1.05rem; margin-bottom: 8px;"> Integration</div>
-                                                        <div style="font-size: 0.8rem; color: #6c757d; line-height: 1.6;">Numerical method<br />Step size<br />Duration</div>
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-3 col-6">
-                                                    <div style="background: white; border-radius: 10px; padding: 20px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.06); border-top: 3px solid #2C3E50; height: 100%;">
-                                                        <div style="font-weight: 600; color: #2C3E50; font-size: 1.05rem; margin-bottom: 8px;"> Observation</div>
-                                                        <div style="font-size: 0.8rem; color: #6c757d; line-height: 1.6;">BOLD, EEG, MEG<br />Sampling rate<br />Forward models</div>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <!-- Highlights -->
-                                            <div class="row mt-4 pt-3" style="border-top: 1px solid rgba(0,0,0,0.08);">
-                                                <div class="col-md-4 text-center">
-                                                    <div style="color: #3498DB; font-weight: 600; margin-bottom: 5px;"> YAML / JSON</div>
-                                                    <div style="font-size: 0.85rem; color: #6c757d;">Human-readable configuration files</div>
-                                                </div>
-                                                <div class="col-md-4 text-center">
-                                                    <div style="color: #2C3E50; font-weight: 600; margin-bottom: 5px;"> Reproducible</div>
-                                                    <div style="font-size: 0.85rem; color: #6c757d;">Share and replicate experiments exactly</div>
-                                                </div>
-                                                <div class="col-md-4 text-center">
-                                                    <div style="color: #3498DB; font-weight: 600; margin-bottom: 5px;"> Multi-Backend</div>
-                                                    <div style="font-size: 0.85rem; color: #6c757d;">Generate code for JAX, TVB, and more</div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </section>
-
-                        <!-- Features Section -->
-                        <section class="pt-5 pb-5" style="background-color: #f8f9fa;">
-                            <div class="container">
-                                <h2 class="text-center mb-2" style="font-size: 2rem; color: #2C3E50;"> Platform Features </h2>
-                                <p class="text-center text-muted mb-5" style="max-width: 600px; margin: 0 auto;"> Browse, build, and export brain simulation experiments with standardized, interoperable tools. </p>
-                                <div class="row g-4">
-                                    <div class="col-lg-4">
-                                        <div class="card h-100 border-0 shadow-sm">
-                                            <div class="card-body p-4">
-                                                <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #3498DB 0%, #2980B9 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 1.25rem;">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                        <circle cx="11" cy="11" r="8" />
-                                                        <path d="m21 21-4.3-4.3" />
-                                                    </svg>
-                                                </div>
-                                                <h5 style="color: #2C3E50; font-weight: 600;">Knowledge Graph</h5>
-                                                <p class="text-muted mb-3" style="font-size: 0.9rem;"> Search and explore neural mass models, brain networks, integrators, and published simulation studies through an interactive browser. </p>
-                                                <a href="/tvbo/kg" style="font-weight: 500; font-size: 0.9rem;"> Browse resources &#8594;</a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-lg-4">
-                                        <div class="card h-100 border-0 shadow-sm">
-                                            <div class="card-body p-4">
-                                                <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #2C3E50 0%, #1a252f 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 1.25rem;">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                        <rect x="2" y="3" width="20" height="14" rx="2" />
-                                                        <path d="M8 21h8" />
-                                                        <path d="M12 17v4" />
-                                                    </svg>
-                                                </div>
-                                                <h5 style="color: #2C3E50; font-weight: 600;">Simulation Builder</h5>
-                                                <p class="text-muted mb-3" style="font-size: 0.9rem;"> Configure complete simulation experiments step by step — from dynamics and network to observation models and optimization. </p>
-                                                <a href="/tvbo/configurator" style="font-weight: 500; font-size: 0.9rem;"> Build experiment &#8594;</a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-lg-4">
-                                        <div class="card h-100 border-0 shadow-sm">
-                                            <div class="card-body p-4">
-                                                <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #3498DB 0%, #2C3E50 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 1.25rem;">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                                                        <polyline points="14 2 14 8 20 8" />
-                                                        <line x1="16" y1="13" x2="8" y2="13" />
-                                                        <line x1="16" y1="17" x2="8" y2="17" />
-                                                        <polyline points="10 9 9 9 8 9" />
-                                                    </svg>
-                                                </div>
-                                                <h5 style="color: #2C3E50; font-weight: 600;">Documentation</h5>
-                                                <p class="text-muted mb-3" style="font-size: 0.9rem;"> Tutorials, API reference, and guides for using the TVBO Python library and data model in your own research workflows. </p>
-                                                <a href="https://virtual-twin.github.io/tvbo/" target="_blank" style="font-weight: 500; font-size: 0.9rem;"> Read the docs &#8594;</a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </section>
-
-                        <!-- About / Open Science Section -->
-                        <section class="pt-5 pb-5">
-                            <div class="container">
-                                <div class="row align-items-center">
-                                    <div class="col-lg-6 mb-4 mb-lg-0">
-                                        <h2 style="font-size: 2rem; color: #2C3E50; margin-bottom: 1.5rem;"> Standardized Resources for Computational Neuroscience </h2>
-                                        <p class="text-muted mb-4"> TVBO provides a comprehensive ontology and database of brain simulation models, connectivity networks, and research data — structured according to international standards and FAIR principles. </p>
-                                        <ul style="list-style: none; padding: 0; color: #4a5568; line-height: 2.2;">
-                                            <li style="display: flex; align-items: center; gap: 10px;">
-                                                <span style="color: #3498DB; font-weight: 700;">&#10003;</span> Validated neural mass models with standardized parameters</li>
-                                            <li style="display: flex; align-items: center; gap: 10px;">
-                                                <span style="color: #3498DB; font-weight: 700;">&#10003;</span> Curated brain network data from multiple parcellations</li>
-                                            <li style="display: flex; align-items: center; gap: 10px;">
-                                                <span style="color: #3498DB; font-weight: 700;">&#10003;</span> Reproducible simulation studies from published research</li>
-                                            <li style="display: flex; align-items: center; gap: 10px;">
-                                                <span style="color: #3498DB; font-weight: 700;">&#10003;</span> Schema-driven data model linked to neuroscience ontologies</li>
-                                        </ul>
-                                    </div>
-                                    <div class="col-lg-5 offset-lg-1">
-                                        <div style="background: linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 100%); border-radius: 16px; padding: 2.5rem; text-align: center;">
-                                            <h4 style="color: #2C3E50; margin-bottom: 1rem;">Open Science</h4>
-                                            <p class="text-muted mb-3" style="font-size: 0.95rem; line-height: 1.7;"> All resources are openly available under the EUPL-1.2 license. The TVBO data model is built on LinkML and aligned with openMINDS, BIDS, and established neuroscience metadata
-                                                standards. </p>
-                                            <a href="https://github.com/virtual-twin/tvbo" target="_blank" class="btn btn-sm" style="background: #2C3E50; color: white; font-weight: 500; padding: 0.5rem 1.5rem;"> View on GitHub</a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </section>
-
-                        <!-- Platform Benefits Section -->
-                        <section class="pt-5 pb-5" style="background: linear-gradient(135deg, #3498DB 0%, #2C3E50 100%);">
+                        <!-- Brand hero — blue gradient, centered logo + name. Kept OUTSIDE
+                             .tvbo-landing so the landing's scoped h1 rule (max-width:16ch, no
+                             auto margin) can't push the title left; it uses only Bootstrap +
+                             inline styles, with explicit centering as belt-and-suspenders. -->
+                        <section class="s_cover pt-5 pb-5" style="background: linear-gradient(135deg, #3498DB 0%, #2C3E50 100%); text-align: center;">
                             <div class="container">
                                 <div class="row">
-                                    <div class="col-lg-10 mx-auto text-center text-white">
-                                        <h2 class="mb-3" style="font-size: 2rem;">Why Use the Platform?</h2>
-                                        <p class="lead mb-5" style="opacity: 0.9; max-width: 700px; margin: 0 auto;"> Go beyond browsing. Register to manage your own models and access them programmatically from your research workflows. </p>
-                                    </div>
-                                </div>
-                                <div class="row g-4 justify-content-center">
-                                    <div class="col-md-4">
-                                        <div style="text-align: center; padding: 1.5rem;">
-                                            <div style="width: 56px; height: 56px; background: rgba(255,255,255,0.15); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                                                    <circle cx="12" cy="7" r="4" />
-                                                </svg>
-                                            </div>
-                                            <h5 class="text-white" style="font-weight: 600; margin-bottom: 0.75rem;">Register &amp; Contribute</h5>
-                                            <p style="opacity: 0.85; font-size: 0.9rem; line-height: 1.6;"> Create an account to store your own models, experiments, and simulation results alongside the curated database. </p>
+                                    <div class="col-lg-12 text-center">
+                                        <img src="/tvbo/static/src/img/logo.png" alt="TVBO Logo" style="max-width: 200px; margin-bottom: 2rem; filter: brightness(0) invert(1);"/>
+                                        <h1 class="display-3 text-white font-weight-bold mb-4" style="max-width: none; text-align: center;">The Virtual Brain Ontology</h1>
+                                        <p class="lead text-white mb-5" style="font-size: 1.25rem; opacity: 0.95; max-width: 720px; margin-left: auto; margin-right: auto;">A structured knowledge base and toolset for reproducible brain network simulations</p>
+                                        <div class="mt-5 d-flex justify-content-center flex-wrap gap-3">
+                                            <a href="/tvbo/kg" class="btn btn-light btn-lg" style="color: #2C3E50; font-weight: 600; padding: 0.75rem 2rem;">Knowledge Graph</a>
+                                            <a href="/tvbo/configurator" class="btn btn-light btn-lg" style="color: #2C3E50; font-weight: 600; padding: 0.75rem 2rem;">Simulation Builder</a>
+                                            <a href="/tvbo/about" class="btn btn-outline-light btn-lg" style="color: #fff; border-color: rgba(255,255,255,0.85); font-weight: 600; padding: 0.75rem 2rem;">Learn more</a>
                                         </div>
                                     </div>
-                                    <div class="col-md-4">
-                                        <div style="text-align: center; padding: 1.5rem;">
-                                            <div style="width: 56px; height: 56px; background: rgba(255,255,255,0.15); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                    <polyline points="16 18 22 12 16 6" />
-                                                    <polyline points="8 6 2 12 8 18" />
-                                                </svg>
-                                            </div>
-                                            <h5 class="text-white" style="font-weight: 600; margin-bottom: 0.75rem;">REST API Access</h5>
-                                            <p style="opacity: 0.85; font-size: 0.9rem; line-height: 1.6;"> Retrieve models, networks, and experiments as schema-valid YAML directly from Python or any HTTP client. </p>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <div style="text-align: center; padding: 1.5rem;">
-                                            <div style="width: 56px; height: 56px; background: rgba(255,255,255,0.15); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                                                    <circle cx="9" cy="7" r="4" />
-                                                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-                                                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                                                </svg>
-                                            </div>
-                                            <h5 class="text-white" style="font-weight: 600; margin-bottom: 0.75rem;">Community &amp; Reproducibility</h5>
-                                            <p style="opacity: 0.85; font-size: 0.9rem; line-height: 1.6;"> Share configurations with collaborators, cite standardized model definitions, and reproduce published simulation studies. </p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="text-center mt-4">
-                                    <a href="/web/signup" class="btn btn-light btn-lg" style="color: #2C3E50; font-weight: 600; padding: 0.75rem 2rem;"> Create Account</a>
                                 </div>
                             </div>
                         </section>
+
+                        <div class="tvbo-landing">
+                            <link rel="stylesheet" href="/tvbo/static/src/css/landing.css?v=7"/>
+
+                            <!-- The platform — hosted workspace + register CTA (the platform
+                                 aspect, right after the hero, before the spec deep-dive) -->
+                            <section class="platform-cta reveal">
+                                <div class="wrap feature">
+                                    <div class="feature-copy">
+                                        <p class="eyebrow">the platform</p>
+                                        <h2>Save and share your own models</h2>
+                                        <p class="lede">A free account saves everything you build in the browser and keeps it under your name.</p>
+                                        <ul class="perks">
+                                            <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Private by default, until you choose to share</li>
+                                            <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Share with a colleague or publish for peer review</li>
+                                            <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Load any saved experiment into Python with an API key</li>
+                                        </ul>
+                                        <div class="cta-row">
+                                            <a class="btn primary" href="/web/signup">Register now <span class="arr">→</span></a>
+                                            <a class="btn ghost" href="/web/login">Sign in</a>
+                                        </div>
+                                    </div>
+                                    <div class="feature-media reveal">
+                                        <video class="clip" autoplay="autoplay" muted="muted" loop="loop" playsinline="playsinline" preload="metadata" poster="/tvbo_platform_docs/static/img/poster-tvbo-build-an-experiment.jpg" aria-label="Screencast: building an experiment in the browser">
+                                            <source src="/tvbo_platform_docs/static/video/tvbo-build-an-experiment.mp4" type="video/mp4"/>
+                                        </video>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <!-- One spec → two payoffs (the thesis diagram) -->
+                            <section class="hero">
+                                <div class="wrap">
+                                    <div class="sec-head reveal">
+                                        <p class="eyebrow">the idea</p>
+                                        <h2>One specification, two payoffs.</h2>
+                                        <p class="lede">TVB-O encodes a whole brain-network simulation — <b>dynamics, network, integration, observation and provenance</b> — as one typed, ontology-grounded specification. From that single source it compiles runnable code and a methods section, and grounds every entity in a knowledge graph. Reachable by people and by AI agents.</p>
+                                    </div>
+
+                                    <div class="figframe reveal">
+                                        <svg class="thesis" viewBox="0 0 1000 452" role="img" aria-label="One typed SimulationExperiment compiles to code and a methods section (reproducible) and grounds into a knowledge graph (comparable); the platform delivers both to people and AI agents.">
+                                            <defs>
+                                                <marker id="arRep" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+                                                    <path d="M0,0 L10,5 L0,10 z" fill="var(--rep)"/>
+                                                </marker>
+                                                <marker id="arCmp" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+                                                    <path d="M0,0 L10,5 L0,10 z" fill="var(--cmp)"/>
+                                                </marker>
+                                            </defs>
+                                            <path d="M286,196 C 410,196 430,120 556,120" fill="none" stroke="var(--rep)" stroke-width="2.2" marker-end="url(#arRep)"/>
+                                            <path d="M286,232 C 410,232 430,300 556,300" fill="none" stroke="var(--cmp)" stroke-width="2.2" marker-end="url(#arCmp)"/>
+                                            <text class="t-clab" x="418" y="150" fill="var(--rep)">compile</text>
+                                            <text class="t-clab" x="418" y="268" fill="var(--cmp)">ground</text>
+
+                                            <rect class="t-card" x="46" y="128" width="240" height="176" rx="14"/>
+                                            <rect class="t-tint" x="46" y="128" width="240" height="176" rx="14" opacity="0.5"/>
+                                            <text class="t-eb" x="68" y="162" fill="var(--accent)">THE SOURCE</text>
+                                            <text class="t-tt" x="68" y="188" fill="var(--ink)">SimulationExperiment</text>
+                                            <text class="t-sub" x="68" y="212" fill="var(--muted)">dynamics · network · coupling</text>
+                                            <text class="t-sub" x="68" y="231" fill="var(--muted)">integration · observation · analysis</text>
+                                            <rect x="68" y="246" width="196" height="24" rx="12" fill="var(--cmp-soft)" stroke="var(--cmp)" stroke-width="1"/>
+                                            <text class="t-badge" x="80" y="262" fill="var(--cmp)">parameter → biology</text>
+                                            <text class="t-sub" x="68" y="290" fill="var(--faint)" font-family="ui-monospace, Menlo, monospace">one file · typed · grounded</text>
+
+                                            <rect class="t-card" x="560" y="56" width="404" height="132" rx="15"/>
+                                            <text class="t-eb" x="584" y="90" fill="var(--rep)">REPRODUCIBLE</text>
+                                            <text class="t-tt" x="584" y="115" fill="var(--ink)">Compile to code + methods</text>
+                                            <text class="t-sub" x="584" y="138" fill="var(--muted)">one spec → 7 backends, runnable</text>
+                                            <polyline points="826,164 846,148 862,166 880,136 898,160 918,132 940,152" fill="none" stroke="var(--rep)" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+                                            <text class="t-out" x="584" y="170" fill="var(--rep)">re-runs a published study, no drift</text>
+
+                                            <rect class="t-card" x="560" y="236" width="404" height="132" rx="15"/>
+                                            <text class="t-eb" x="584" y="270" fill="var(--cmp)">COMPARABLE</text>
+                                            <text class="t-tt" x="584" y="295" fill="var(--ink)">Ground into a knowledge graph</text>
+                                            <text class="t-sub" x="584" y="318" fill="var(--muted)">physics · biology · anatomy · clinical</text>
+                                            <g stroke="var(--cmp)" stroke-width="1.5">
+                                                <line x1="864" y1="300" x2="906" y2="290"/>
+                                                <line x1="906" y1="290" x2="938" y2="318"/>
+                                                <line x1="864" y1="300" x2="890" y2="330"/>
+                                                <line x1="890" y1="330" x2="926" y2="356"/>
+                                                <line x1="890" y1="330" x2="862" y2="352"/>
+                                                <line x1="938" y1="318" x2="926" y2="356"/>
+                                            </g>
+                                            <g fill="var(--cmp-soft)" stroke="var(--cmp)" stroke-width="1.5">
+                                                <circle cx="864" cy="300" r="6.5"/>
+                                                <circle cx="906" cy="290" r="6.5"/>
+                                                <circle cx="938" cy="318" r="6.5"/>
+                                                <circle cx="890" cy="330" r="6.5"/>
+                                                <circle cx="926" cy="356" r="6.5"/>
+                                                <circle cx="862" cy="352" r="6.5"/>
+                                            </g>
+                                            <text class="t-out" x="584" y="348" fill="var(--cmp)">compare models that share no notation</text>
+
+                                            <rect x="46" y="392" width="918" height="46" rx="12" fill="var(--accent-soft)" stroke="var(--accent-edge)" stroke-width="1"/>
+                                            <text class="t-eb" x="68" y="420" fill="var(--accent)">ACCESS</text>
+                                            <text class="t-sub" x="132" y="420" fill="var(--muted)">Knowledge Graph browser · Experiment Builder · REST API — for people and AI agents</text>
+                                        </svg>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <!-- The source / anatomy -->
+                            <section>
+                                <div class="wrap">
+                                    <div class="sec-head reveal">
+                                        <p class="eyebrow">The source</p>
+                                        <h2>One typed object holds the whole experiment</h2>
+                                        <p class="lede">Not just the model — the network it runs on, how it is integrated, what is observed, how it is explored and analysed, and who ran it. Every field is validated against the schema and linked to the ontology.</p>
+                                    </div>
+                                    <div class="anat reveal">
+                                        <div class="anat-hd">
+                                            <span class="t">SimulationExperiment</span>
+                                            <span class="k">schema-validated · ontology-grounded</span>
+                                        </div>
+                                        <div class="anat-grid">
+                                            <div class="grp span2">
+                                                <div class="grp-l"><span class="dot"></span>Network</div>
+                                                <div class="chips">
+                                                    <span class="chip">Parcellation</span><span class="chip arrow">→</span>
+                                                    <span class="chip">Node</span><span class="chip arrow">→</span><span class="chip">Edge</span>
+                                                </div>
+                                                <div class="nest">
+                                                    <div class="grp-l"><span class="dot"></span>Dynamics</div>
+                                                    <div class="chips">
+                                                        <span class="chip">StateVariable</span><span class="chip">Parameter</span><span class="chip">Equation</span>
+                                                        <span class="chip">DerivedVariable</span><span class="chip">Function</span>
+                                                    </div>
+                                                </div>
+                                                <div class="nest">
+                                                    <div class="grp-l"><span class="dot"></span>Coupling</div>
+                                                    <div class="chips">
+                                                        <span class="chip">Parameter</span><span class="chip">Equation</span>
+                                                        <span class="chip">IncomingState</span><span class="chip">LocalState</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="grp">
+                                                <div class="grp-l"><span class="dot"></span>Integration</div>
+                                                <div class="chips">
+                                                    <span class="chip">Method</span><span class="chip">Noise</span>
+                                                    <span class="chip">InitialCondition</span><span class="chip">TimeSeries</span>
+                                                </div>
+                                            </div>
+                                            <div class="grp">
+                                                <div class="grp-l"><span class="dot"></span>Event</div>
+                                                <div class="chips"><span class="chip">Equation</span><span class="chip">Target</span></div>
+                                                <div class="nest">
+                                                    <div class="grp-l"><span class="dot"></span>Stimulus</div>
+                                                    <div class="chips"><span class="chip">Waveform</span></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="anat-row2">
+                                            <div class="grp">
+                                                <div class="grp-l"><span class="dot"></span>Observation</div>
+                                                <div class="chips">
+                                                    <span class="chip">Source</span><span class="chip">Pipeline</span>
+                                                    <span class="chip">DataSource</span><span class="chip">DerivedObs.</span>
+                                                </div>
+                                            </div>
+                                            <div class="grp">
+                                                <div class="grp-l"><span class="dot"></span>Exploration</div>
+                                                <div class="chips"><span class="chip">Exploration</span><span class="chip">Algorithm</span></div>
+                                            </div>
+                                            <div class="grp">
+                                                <div class="grp-l"><span class="dot"></span>Analysis</div>
+                                                <div class="chips"><span class="chip">Optimization</span><span class="chip">Continuation</span></div>
+                                            </div>
+                                            <div class="grp">
+                                                <div class="grp-l"><span class="dot"></span>Environment</div>
+                                                <div class="chips">
+                                                    <span class="chip">SoftwareEnv.</span><span class="chip">Execution</span>
+                                                    <span class="chip">Reference</span><span class="chip">Author</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <!-- Two payoffs -->
+                            <section>
+                                <div class="wrap feature">
+                                    <div class="feature-copy">
+                                        <div class="sec-head reveal">
+                                            <p class="eyebrow">Two payoffs</p>
+                                            <h2>The same specification is executable and comparable</h2>
+                                            <p class="lede">The same typed file compiles to runnable code across backends and grounds into a searchable knowledge graph.</p>
+                                        </div>
+                                    </div>
+                                    <div class="feature-media reveal">
+                                        <video class="clip" autoplay="autoplay" muted="muted" loop="loop" playsinline="playsinline" preload="none" poster="/tvbo_platform_docs/static/img/poster-tvbo-run-in-python.jpg" aria-label="Screencast: loading a spec into Python and running it">
+                                            <source src="/tvbo_platform_docs/static/video/tvbo-run-in-python.mp4" type="video/mp4"/>
+                                        </video>
+                                    </div>
+                                </div>
+                                <div class="wrap">
+                                    <div class="payoffs">
+                                        <div class="payoff rep reveal">
+                                            <div class="kicker"><span class="n">1</span>Reproducible</div>
+                                            <h3>Compile to code and methods</h3>
+                                            <p>One compiler emits equivalent code across independent backends and a publication-ready methods section — so a released study <b>re-runs without drift</b> between the paper and its implementation.</p>
+                                            <div class="subgrid">
+                                                <div>
+                                                    <div class="lab">Execution backends</div>
+                                                    <div class="backends">
+                                                        <span class="bck"><span class="c">JAX</span></span>
+                                                        <span class="bck">tvboptim</span>
+                                                        <span class="bck">TVB</span>
+                                                        <span class="bck">PyRates</span>
+                                                        <span class="bck">NetworkDynamics.jl</span>
+                                                        <span class="bck">BifurcationKit.jl</span>
+                                                        <span class="bck">NumPy</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="payoff cmp reveal">
+                                            <div class="kicker"><span class="n">2</span>Comparable</div>
+                                            <h3>Ground into a knowledge graph</h3>
+                                            <p>Every entity is grounded in four domains at once, so models that <b>share no notation</b> can still be compared, searched, and cited by a stable identifier.</p>
+                                            <div class="subgrid">
+                                                <div>
+                                                    <div class="lab">Grounding domains</div>
+                                                    <div class="domains">
+                                                        <div class="dom"><span class="b">P</span><span class="dt">Physics<small>QUDT · UO units</small></span></div>
+                                                        <div class="dom"><span class="b">B</span><span class="dt">Biology<small>GO · ChEBI · CL</small></span></div>
+                                                        <div class="dom"><span class="b">A</span><span class="dt">Anatomy<small>UBERON · SANDS</small></span></div>
+                                                        <div class="dom"><span class="b">C</span><span class="dt">Clinical<small>MeSH · ICD</small></span></div>
+                                                    </div>
+                                                    <div class="grounding"><b>293</b> grounding links · <b>239</b> classes · <b>37</b> GO terms</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <!-- Curated knowledge / stats -->
+                            <section>
+                                <div class="wrap">
+                                    <div class="sec-head reveal">
+                                        <p class="eyebrow">Curated knowledge</p>
+                                        <h2>A library you can query, not just read</h2>
+                                        <p class="lede">Every model, network and study is a first-class, versioned entity with provenance — extracted from the literature and validated against the schema.</p>
+                                    </div>
+                                    <div class="stats reveal">
+                                        <div class="stat"><div class="num">106</div><div class="lab">Dynamical models</div><div class="sub">39 canonical neural-mass</div></div>
+                                        <div class="stat"><div class="num">120</div><div class="lab">Studies</div><div class="sub">literature-derived</div></div>
+                                        <div class="stat"><div class="num">63</div><div class="lab">Connectomes</div><div class="sub">structural networks</div></div>
+                                        <div class="stat"><div class="num">9</div><div class="lab">Coupling functions</div></div>
+                                        <div class="stat"><div class="num">5</div><div class="lab">Parcellations</div><div class="sub">brain atlases</div></div>
+                                        <div class="stat"><div class="num">7</div><div class="lab">Backends</div><div class="sub">one spec, many targets</div></div>
+                                    </div>
+                                    <p class="stats-note">Counts from the current TVB-O database. Browse and filter them in the <a href="/tvbo/kg">knowledge graph</a>.</p>
+                                </div>
+                            </section>
+
+                            <!-- Three doors -->
+                            <section>
+                                <div class="wrap">
+                                    <div class="sec-head reveal">
+                                        <p class="eyebrow">Access</p>
+                                        <h2>Three doors into the same knowledge</h2>
+                                    </div>
+                                    <div class="ways">
+                                        <div class="way reveal">
+                                            <div class="way-clip"><video class="clip" autoplay="autoplay" muted="muted" loop="loop" playsinline="playsinline" preload="none" poster="/tvbo_platform_docs/static/img/poster-tvbo-knowledge-graph-tour.jpg" aria-label="Screencast: the knowledge graph in action"><source src="/tvbo_platform_docs/static/video/tvbo-knowledge-graph-tour.mp4" type="video/mp4"/></video></div>
+                                            <h3>Knowledge Graph</h3>
+                                            <p>Browse models, networks, integrators and studies as a linked graph. Open any entity to its ontology grounding, parameters and source.</p>
+                                            <a class="go" href="/tvbo/kg">Browse resources <span class="arr">→</span></a>
+                                        </div>
+                                        <div class="way reveal">
+                                            <div class="way-clip"><video class="clip" autoplay="autoplay" muted="muted" loop="loop" playsinline="playsinline" preload="none" poster="/tvbo_platform_docs/static/img/poster-tvbo-build-an-experiment.jpg" aria-label="Screencast: the experiment builder in action"><source src="/tvbo_platform_docs/static/video/tvbo-build-an-experiment.mp4" type="video/mp4"/></video></div>
+                                            <h3>Experiment Builder</h3>
+                                            <p>Assemble a runnable experiment — network, dynamics, integrator, coupling, observation — and export it as validated YAML for the <code>tvbo</code> package.</p>
+                                            <a class="go" href="/tvbo/configurator">Build an experiment <span class="arr">→</span></a>
+                                        </div>
+                                        <div class="way reveal">
+                                            <div class="way-clip"><video class="clip" autoplay="autoplay" muted="muted" loop="loop" playsinline="playsinline" preload="none" poster="/tvbo_platform_docs/static/img/poster-tvbo-run-in-python.jpg" aria-label="Screencast: loading an experiment into Python"><source src="/tvbo_platform_docs/static/video/tvbo-run-in-python.mp4" type="video/mp4"/></video></div>
+                                            <h3>REST API</h3>
+                                            <p>Retrieve any model, network or experiment as schema-valid YAML from Python or any HTTP client — then load it back with <code>from_string(...).run()</code>. Built for humans and agents.</p>
+                                            <a class="go" href="https://virtual-twin.github.io/tvbo/">API reference <span class="arr">→</span></a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <!-- Closer -->
+                            <section>
+                                <div class="wrap">
+                                    <div class="closer">
+                                        <div class="cta-card reveal">
+                                            <h2>Store, share and reproduce your own experiments</h2>
+                                            <p>Create an account to keep your models and experiments alongside the curated database — public by default, private with an API key, and loadable straight back into Python.</p>
+                                            <a class="btn primary" href="/web/signup">Create an account <span class="arr">→</span></a>
+                                        </div>
+                                        <div class="cite reveal">
+                                            <span class="lab">Cite the preprint</span>
+                                            <span class="title">The Virtual Brain Ontology: A Digital Knowledge Framework for Reproducible Brain Network Modeling</span>
+                                            <span class="meta">Martin, L. et al. — bioRxiv, 2025</span>
+                                            <span class="doi">doi:10.1101/2025.11.19.689211</span>
+                                            <div class="row">
+                                                <a href="https://doi.org/10.1101/2025.11.19.689211">Read preprint ↗</a>
+                                                <a href="https://github.com/virtual-twin/tvbo">GitHub ↗</a>
+                                                <a href="/tvbo/about">About TVB-O ↗</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <script>
+                                (function(){
+                                    var root = document.querySelector('.tvbo-landing');
+                                    if(!root) return;
+                                    if(!('IntersectionObserver' in window)) return;
+                                    root.classList.add('reveal-on');
+                                    var io = new IntersectionObserver(function(entries){
+                                        entries.forEach(function(en){ if(en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); } });
+                                    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
+                                    root.querySelectorAll('.reveal').forEach(function(e){ io.observe(e); });
+
+                                    // In-action clips: nudge the speed up, and only play the clip
+                                    // that's on screen so several don't decode at once.
+                                    var clips = root.querySelectorAll('video.clip');
+                                    clips.forEach(function(v){
+                                        var speed = function(){ try { v.playbackRate = 1.5; } catch(e){} };
+                                        v.addEventListener('loadedmetadata', speed); speed();
+                                    });
+                                    var vio = new IntersectionObserver(function(entries){
+                                        entries.forEach(function(en){
+                                            if(en.isIntersecting){ if(en.target.play){ en.target.play().catch(function(){}); } }
+                                            else { if(en.target.pause){ en.target.pause(); } }
+                                        });
+                                    }, { threshold: 0.25 });
+                                    clips.forEach(function(v){ vio.observe(v); });
+                                })();
+                            </script>
+                        </div>
                     </div>
                 </t>
             </t>
@@ -456,9 +589,8 @@
                 <t t-call="website.layout">
                     <div id="wrap">
                         <!-- Include custom styles -->
-                        <link rel="stylesheet" href="/tvbo/static/src/css/kg_browser.css" />
-                        <link rel="stylesheet" href="/tvbo/static/src/css/kg_components.css" />
-                        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+                        <link rel="stylesheet" href="/tvbo/static/src/css/kg_browser.css?v=3" />
+                        <link rel="stylesheet" href="/tvbo/static/src/css/kg_components.css?v=2" />
                         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
                         <!-- Browser Container -->
@@ -469,7 +601,7 @@
                                     <h1 class="kg-hero-title">Knowledge Graph</h1>
                                     <p class="kg-hero-subtitle">Search the TVB Ontology: dynamics, networks, integrators, couplings, observation models, atlases, studies and more.</p>
                                     <form class="kg-hero-search" id="kgHeroSearchForm" onsubmit="return false;">
-                                        <span class="material-icons kg-hero-search-icon">search</span>
+                                        <svg class="kg-hero-search-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
                                         <input type="text" id="kgHeroSearchInput" class="kg-hero-search-input" placeholder="Search models, networks, studies..." aria-label="Search knowledge graph" />
                                         <button type="button" id="kgHeroSearchClear" class="kg-hero-search-clear" aria-label="Clear search">×</button>
                                     </form>
@@ -483,14 +615,14 @@
                                     <div class="results-area">
                                         <div class="results-header">
                                             <div class="results-count" id="resultsCount">Loading...</div>
-                                            <div style="display:flex; align-items:center; gap:12px;">
+                                            <div class="results-tools" style="display:flex; align-items:center; gap:12px;">
                                                 <span class="performance-info" id="performanceInfo"></span>
                                                 <div class="view-toggle">
-                                                    <button class="view-btn active" id="listViewBtn" title="List View">
-                                                        <span class="material-icons">view_list</span>
+                                                    <button class="view-btn active" id="listViewBtn" title="List View" aria-label="List view">
+                                                        <svg class="mi-svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
                                                     </button>
-                                                    <button class="view-btn" id="graphViewBtn" title="Graph View">
-                                                        <span class="material-icons">hub</span>
+                                                    <button class="view-btn" id="graphViewBtn" title="Graph View" aria-label="Graph view">
+                                                        <svg class="mi-svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
                                                     </button>
                                                 </div>
                                                 <label for="sortSelect" style="color:#4a5568; font-size:0.95rem;">Sort</label>
@@ -506,14 +638,14 @@
                                         <div class="graph-container hidden" id="graphContainer">
                                             <svg id="graphSvg"></svg>
                                             <div class="graph-controls">
-                                                <button class="graph-control-btn" id="graphZoomIn" title="Zoom In">
-                                                    <span class="material-icons">add</span>
+                                                <button class="graph-control-btn" id="graphZoomIn" title="Zoom In" aria-label="Zoom in">
+                                                    <svg class="mi-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                                                 </button>
-                                                <button class="graph-control-btn" id="graphZoomOut" title="Zoom Out">
-                                                    <span class="material-icons">remove</span>
+                                                <button class="graph-control-btn" id="graphZoomOut" title="Zoom Out" aria-label="Zoom out">
+                                                    <svg class="mi-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/></svg>
                                                 </button>
-                                                <button class="graph-control-btn" id="graphReset" title="Reset View">
-                                                    <span class="material-icons">center_focus_strong</span>
+                                                <button class="graph-control-btn" id="graphReset" title="Reset View" aria-label="Reset view">
+                                                    <svg class="mi-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/></svg>
                                                 </button>
                                             </div>
                                             <div class="graph-legend" id="graphLegend"></div>
@@ -653,6 +785,16 @@
                                 color: white !important;
                             }
                             .tvbo-cta-outline:hover { background: white; color: #2C3E50 !important; }
+                            /* Inline code snippets must wrap, not force horizontal page scroll on mobile. */
+                            .tvbo-agents-section code { overflow-wrap: anywhere; }
+                            @media (max-width: 767.98px) {
+                                .tvbo-agents-hero { padding: 2.5rem 0 2rem; }
+                                .tvbo-agents-hero h1 { font-size: 2rem; }
+                                .tvbo-agents-section { padding: 2rem 0; }
+                                /* Stack the bundle rows: skill name above its description. */
+                                .tvbo-skill-row { flex-direction: column; gap: 0.35rem; }
+                                .tvbo-skill-name { min-width: 0; }
+                            }
                         </style>
 
                         <!-- Hero -->
@@ -819,6 +961,273 @@ tvbo skills uninstall</code></pre>
                             </div>
                         </section>
 
+                    </div>
+                </t>
+            </t>
+        </field>
+    </record>
+
+    <!-- TVBO About page -->
+    <record id="tvbo_about_view" model="ir.ui.view">
+        <field name="name">TVBO About</field>
+        <field name="type">qweb</field>
+        <field name="arch" type="xml">
+            <t t-name="tvbo_about_view">
+                <t t-call="website.layout">
+                    <div id="wrap" class="oe_structure oe_empty">
+                        <div class="tvbo-landing">
+                            <link rel="stylesheet" href="/tvbo/static/src/css/landing.css?v=7"/>
+
+                            <!-- Hero -->
+                            <section class="hero">
+                                <div class="wrap">
+                                    <p class="eyebrow">About · The Virtual Brain Ontology</p>
+                                    <h1>An executable knowledge framework for brain-network modeling</h1>
+                                    <p class="lede">TVB-O represents a whole-brain model and the experiment that runs it as <b>one typed, ontology-grounded object</b>. From that single source, one compiler generates runnable code and a methods report, and a four-domain ontology makes models comparable across the literature. It aligns to and extends the EBRAINS ecosystem rather than replacing it.</p>
+                                    <div class="cta-row">
+                                        <a class="btn primary" href="/">Back to the platform <span class="arr">→</span></a>
+                                        <a class="btn ghost" href="https://doi.org/10.1101/2025.11.19.689211">Read the preprint</a>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <!-- The gap -->
+                            <section>
+                                <div class="wrap">
+                                    <div class="sec-head reveal">
+                                        <p class="eyebrow">The gap</p>
+                                        <h2>No shared representation of what a model is</h2>
+                                    </div>
+                                    <div class="prose reveal">
+                                        <p>A published brain model is usually bespoke code. It can <b>drift from the equations in the paper</b>, is often shared with missing parameters, and stays hard to run because results depend on software versions and execution environments — so results are difficult to reproduce and compare.</p>
+                                        <p>Underneath lies a single absence: no shared, machine-readable representation of what a model is, or of the whole simulation experiment around it — its network, inputs, execution and analyses. TVB-O supplies that representation, following the example set by SBML and BioModels in systems biology.</p>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <!-- Pillars -->
+                            <section>
+                                <div class="wrap">
+                                    <div class="sec-head reveal">
+                                        <p class="eyebrow">Anatomy of the framework</p>
+                                        <h2>Three pillars and a platform</h2>
+                                    </div>
+                                    <div class="pillars">
+                                        <div class="pillar reveal">
+                                            <div class="pn">Pillar 01 · Metadata standard</div>
+                                            <h3>LinkML data model</h3>
+                                            <p>A minimal, human- and machine-readable schema for everything needed to reproduce an experiment. The typed Python classes are generated from it, so the specification and the code never diverge.</p>
+                                            <div class="tags">
+                                                <span class="tag">SimulationExperiment</span><span class="tag">SimulationStudy</span>
+                                                <span class="tag">Dynamics</span><span class="tag">Network</span>
+                                            </div>
+                                        </div>
+                                        <div class="pillar reveal">
+                                            <div class="pn">Pillar 02 · Vocabulary</div>
+                                            <h3>Ontology</h3>
+                                            <p>The formal, machine-readable backbone: shared terms and logical axioms with stable identifiers under w3id.org/tvbo, aligned to external ontologies for physics, biology, anatomy and clinical domains.</p>
+                                            <div class="tags">
+                                                <span class="tag">OWL</span><span class="tag">SHACL shapes</span><span class="tag">w3id.org/tvbo</span>
+                                            </div>
+                                        </div>
+                                        <div class="pillar reveal">
+                                            <div class="pn">Pillar 03 · Toolbox</div>
+                                            <h3>Python package · tvbo</h3>
+                                            <p>Specify a model once as YAML or Python objects, load curated entries from the database, generate code across backends, then run, fit and analyse — with a CLI for HPC workflows.</p>
+                                            <div class="tags">
+                                                <span class="tag">pip install tvbo</span><span class="tag">render_code()</span>
+                                                <span class="tag">run()</span><span class="tag">CLI</span>
+                                            </div>
+                                        </div>
+                                        <div class="pillar reveal">
+                                            <div class="pn">Delivery · tvbo.charite.de</div>
+                                            <h3>The platform</h3>
+                                            <p>A web layer over the ontology and curated database: browse the knowledge graph, assemble experiments in the builder, and retrieve everything through a REST API — for people and AI agents.</p>
+                                            <div class="tags">
+                                                <span class="tag">Knowledge Graph</span><span class="tag">Experiment Builder</span><span class="tag">REST API</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <!-- Prior-work coverage matrix -->
+                            <section>
+                                <div class="wrap">
+                                    <div class="sec-head reveal">
+                                        <p class="eyebrow">Prior work</p>
+                                        <h2>Where TVB-O fits</h2>
+                                        <p class="lede">Capabilities read down the left; tools across the top. No existing standard fills every row — the closest come from two directions, and only TVB-O's column is complete.</p>
+                                    </div>
+                                    <div class="matrix reveal" role="img" aria-label="Coverage matrix of six modelling tools across seven capabilities; only TVB-O covers every capability.">
+                                        <div class="mgrid">
+                                            <div class="mcorner"></div>
+                                            <div class="tn">SBML<span class="s">systems biology</span></div>
+                                            <div class="tn">openMINDS<span class="s">EBRAINS metadata</span></div>
+                                            <div class="tn">NeuroML<span class="s">cellular models</span></div>
+                                            <div class="tn">SONATA<span class="s">network format</span></div>
+                                            <div class="tn">PyRates<span class="s">code generation</span></div>
+                                            <div class="tn tvbo">TVB-O<span class="s">this work</span></div>
+
+                                            <div class="mcap"><span class="cn">1</span>Declarative single-source specification</div>
+                                            <div class="mcell"><span class="cov full"></span></div>
+                                            <div class="mcell"><span class="cov partial"></span></div>
+                                            <div class="mcell"><span class="cov full"></span></div>
+                                            <div class="mcell"><span class="cov partial"></span></div>
+                                            <div class="mcell"><span class="cov full"></span></div>
+                                            <div class="mcell tvbo"><span class="cov full"></span></div>
+
+                                            <div class="mcap"><span class="cn">2</span>Compiles and runs on many backends</div>
+                                            <div class="mcell"><span class="cov full"></span></div>
+                                            <div class="mcell"><span class="cov none"></span></div>
+                                            <div class="mcell"><span class="cov full"></span></div>
+                                            <div class="mcell"><span class="cov partial"></span></div>
+                                            <div class="mcell"><span class="cov full"></span></div>
+                                            <div class="mcell tvbo"><span class="cov full"></span></div>
+
+                                            <div class="mcap"><span class="cn">3</span>Whole-brain network scope (connectome, delays)</div>
+                                            <div class="mcell"><span class="cov none"></span></div>
+                                            <div class="mcell"><span class="cov partial"></span></div>
+                                            <div class="mcell"><span class="cov none"></span></div>
+                                            <div class="mcell"><span class="cov partial"></span></div>
+                                            <div class="mcell"><span class="cov full"></span></div>
+                                            <div class="mcell tvbo"><span class="cov full"></span></div>
+
+                                            <div class="mcap"><span class="cn">4</span>Grounds entities in physics · biology · anatomy · clinical</div>
+                                            <div class="mcell"><span class="cov partial"></span></div>
+                                            <div class="mcell"><span class="cov partial"></span></div>
+                                            <div class="mcell"><span class="cov partial"></span></div>
+                                            <div class="mcell"><span class="cov none"></span></div>
+                                            <div class="mcell"><span class="cov none"></span></div>
+                                            <div class="mcell tvbo"><span class="cov full"></span></div>
+
+                                            <div class="mcap"><span class="cn">5</span>Curated, queryable knowledge base</div>
+                                            <div class="mcell"><span class="cov full"></span></div>
+                                            <div class="mcell"><span class="cov full"></span></div>
+                                            <div class="mcell"><span class="cov partial"></span></div>
+                                            <div class="mcell"><span class="cov none"></span></div>
+                                            <div class="mcell"><span class="cov none"></span></div>
+                                            <div class="mcell tvbo"><span class="cov full"></span></div>
+
+                                            <div class="mcap"><span class="cn">6</span>Reads in and writes out other formats</div>
+                                            <div class="mcell"><span class="cov partial"></span></div>
+                                            <div class="mcell"><span class="cov partial"></span></div>
+                                            <div class="mcell"><span class="cov partial"></span></div>
+                                            <div class="mcell"><span class="cov partial"></span></div>
+                                            <div class="mcell"><span class="cov partial"></span></div>
+                                            <div class="mcell tvbo"><span class="cov full"></span></div>
+
+                                            <div class="mcap"><span class="cn">7</span>Fitting and inference declared in the spec</div>
+                                            <div class="mcell"><span class="cov none"></span></div>
+                                            <div class="mcell"><span class="cov none"></span></div>
+                                            <div class="mcell"><span class="cov none"></span></div>
+                                            <div class="mcell"><span class="cov none"></span></div>
+                                            <div class="mcell"><span class="cov partial"></span></div>
+                                            <div class="mcell tvbo"><span class="cov full"></span></div>
+                                        </div>
+                                    </div>
+                                    <div class="mlegend">
+                                        <span class="g"><span class="cov full"></span> full</span>
+                                        <span class="g"><span class="cov partial"></span> partial</span>
+                                        <span class="g"><span class="cov none"></span> none</span>
+                                    </div>
+                                    <p class="matrix-note">Row 4 is the crux: only TVB-O grounds a model's entities in <b>all four domains at once</b> — physical units, biological process, brain anatomy, and clinical disorder — and it is the only tool that is executable, whole-brain, four-domain-grounded, curated <b>and</b> interoperable together.</p>
+                                </div>
+                            </section>
+
+                            <!-- Relationship to TVB -->
+                            <section>
+                                <div class="wrap">
+                                    <div class="sec-head reveal">
+                                        <p class="eyebrow">Relationship to TVB</p>
+                                        <h2>Built with The Virtual Brain, not instead of it</h2>
+                                    </div>
+                                    <div class="prose reveal">
+                                        <p>TVB-O is not a fork of The Virtual Brain. It is a specification and knowledge layer that treats TVB as <b>one of several execution backends</b>. The same types describe any dynamical system on any network — a single Lorenz attractor, a lattice of oscillators, or a power grid — so the framework reaches beyond whole-brain simulation while remaining native to it.</p>
+                                        <p>It aligns to and extends EBRAINS resources such as openMINDS and the Model Catalog, and interoperates with NeuroML/LEMS, BIDS and SBML rather than competing with them.</p>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <!-- Team + funding -->
+                            <section>
+                                <div class="wrap">
+                                    <div class="sec-head reveal">
+                                        <p class="eyebrow">Who builds it</p>
+                                        <h2>Developed at Charité and the BIH</h2>
+                                        <p class="lede">TVB-O is developed in the Brain Simulation Section at Charité — Universitätsmedizin Berlin and the Berlin Institute of Health (BIH), the group behind The Virtual Brain.</p>
+                                    </div>
+                                    <div class="team reveal">
+                                        <span class="person">Leon Martin</span>
+                                        <span class="person">Konstantin Bülau</span>
+                                        <span class="person">Marius Pille</span>
+                                        <span class="person">Rico Andre Schmitt</span>
+                                        <span class="person">Christoph Hüttl</span>
+                                        <span class="person">Jil M. Meier</span>
+                                        <span class="person">Halgurd Taher</span>
+                                        <span class="person">Dionysios Perdikis</span>
+                                        <span class="person">Michael Schirner</span>
+                                        <span class="person">Petra Ritter</span>
+                                    </div>
+                                    <div class="fund reveal" style="margin-top:26px">
+                                        <div class="lab">Funding</div>
+                                        P.R. acknowledges support by EU Horizon Europe program Horizon EBRAINS2.0 (101147319), VirtualBrainTwin (101137289), EBRAINS-PREP 101079717, AISN 101057655, EBRAIN-Health 101058516, EIC grant PHRASE 101058240, by the Digital Europe Programme TEF-Health (101100700), Shaiped (101195135), CoordinaTEF (101168074), German Research Foundation SFB 1436 (project ID 425899996), SFB 1315 (project ID 327654276), SFB 936 (project ID 178316478), SPP Computational Connectomics RI 2073/6-1, RI 2073/10-2, RI 2073/9-1, DFG Clinical Research Group BECAUSE-Y 504745852, Berlin University Alliance OpenMake, the Virtual Research Environment at the Charité Berlin, EBRAINS Health Data Cloud, and the Berlin Institute of Health and Foundation Charité. P.R. and J.M. acknowledge additional support by the Deutsche Forschungsgemeinschaft (DFG) — Project-ID 424778381 — TRR 295.
+                                    </div>
+                                </div>
+                            </section>
+
+                            <!-- Closer -->
+                            <section>
+                                <div class="wrap">
+                                    <div class="closer">
+                                        <div class="cta-card reveal">
+                                            <h2>Start with the Python package</h2>
+                                            <p>Install with <code style="background:rgba(255,255,255,.16);color:#fff">pip install tvbo</code>, load a model from the database, and generate runnable code in a few lines.</p>
+                                            <a class="btn primary" href="https://virtual-twin.github.io/tvbo/">Read the documentation <span class="arr">→</span></a>
+                                        </div>
+                                        <div class="cite reveal">
+                                            <span class="lab">Cite the preprint</span>
+                                            <span class="title">The Virtual Brain Ontology: A Digital Knowledge Framework for Reproducible Brain Network Modeling</span>
+                                            <span class="meta">Martin, L. et al. — bioRxiv, 2025</span>
+                                            <span class="doi">doi:10.1101/2025.11.19.689211</span>
+                                            <div class="row">
+                                                <a href="https://doi.org/10.1101/2025.11.19.689211">Read preprint ↗</a>
+                                                <a href="https://github.com/virtual-twin/tvbo">GitHub ↗</a>
+                                                <a href="https://virtual-twin.github.io/tvbo/">Documentation ↗</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <script>
+                                (function(){
+                                    var root = document.querySelector('.tvbo-landing');
+                                    if(!root) return;
+                                    if(!('IntersectionObserver' in window)) return;
+                                    root.classList.add('reveal-on');
+                                    var io = new IntersectionObserver(function(entries){
+                                        entries.forEach(function(en){ if(en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); } });
+                                    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
+                                    root.querySelectorAll('.reveal').forEach(function(e){ io.observe(e); });
+
+                                    // In-action clips: nudge the speed up, and only play the clip
+                                    // that's on screen so several don't decode at once.
+                                    var clips = root.querySelectorAll('video.clip');
+                                    clips.forEach(function(v){
+                                        var speed = function(){ try { v.playbackRate = 1.5; } catch(e){} };
+                                        v.addEventListener('loadedmetadata', speed); speed();
+                                    });
+                                    var vio = new IntersectionObserver(function(entries){
+                                        entries.forEach(function(en){
+                                            if(en.isIntersecting){ if(en.target.play){ en.target.play().catch(function(){}); } }
+                                            else { if(en.target.pause){ en.target.pause(); } }
+                                        });
+                                    }, { threshold: 0.25 });
+                                    clips.forEach(function(v){ vio.observe(v); });
+                                })();
+                            </script>
+                        </div>
                     </div>
                 </t>
             </t>
