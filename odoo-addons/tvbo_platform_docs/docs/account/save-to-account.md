@@ -23,12 +23,20 @@ can reproduce your run by id rather than by emailing a YAML file. See
 
 ![My Models, with a saved model and its Share button marked](img/my-models.png)
 
-## Share with the community
+## Share or publish
 
-Saved items stay **private** to you. Click **Share** (**2**) to publish a model.
-Shared models appear in the community gallery at
-[`/tvbo/models/shared`]({{base_url}}/tvbo/models/shared), where anyone signed in can
-browse and load them. The same button switches it back to private.
+Saved items stay **private** to you. There are two separate ways to let others in:
+
+- **Share with a colleague** (**2**) — grant a specific person access instantly.
+  It does not become public.
+- **Submit for review** — request **publication** to the whole community. It goes
+  through automated validation and a human reviewer before it appears in the
+  community gallery at [`/tvbo/models/shared`]({{base_url}}/tvbo/models/shared) and
+  the Knowledge Graph.
+
+The two are independent and both are managed from **My Models**. See
+[Share &amp; publish](publishing.md) for the full workflow, the validation checks,
+and how to do the same from Python.
 
 ## API keys
 

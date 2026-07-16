@@ -11,16 +11,22 @@ class TVBOWebsite(http.Controller):
         """TVBO Database homepage."""
         return request.render('tvbo.tvbo_homepage_view', {})
 
+    @http.route('/tvbo/about', type='http', auth='public', website=True)
+    def about(self, **kw):
+        """About TVB-O — the framework, prior-work landscape, team and funding."""
+        return request.render('tvbo.tvbo_about_view', {})
+
     @http.route('/tvbo/models', type='http', auth='public', website=True)
     def models(self, **kw):
-        """List neural models: the public ground-truth DB plus shared user models.
+        """List neural models: the public ground-truth DB plus published user
+        models, plus anything the caller owns or that was shared with them.
 
-        Private user-saved models are excluded so they never leak into the
+        Non-public user-saved models are excluded so they never leak into the
         public gallery — their owner finds them under /my/models instead.
         """
-        private_ids = request.env['tvbo.model_share'].sudo().search(
-            [('visibility', '=', 'private')]).mapped('dynamics_id').ids
-        domain = [('id', 'not in', private_ids)] if private_ids else []
+        hidden = request.env['tvbo.model_share'].sudo().hidden_target_ids(
+            'dynamics_id', request.env.user)
+        domain = [('id', 'not in', hidden)] if hidden else []
         models = request.env['tvbo.dynamics'].sudo().search(domain)
         return request.render('tvbo.tvbo_models_list', {
             'models': models,
@@ -38,8 +44,7 @@ class TVBOWebsite(http.Controller):
             return request.not_found()
         share = request.env['tvbo.model_share'].sudo().search(
             [('dynamics_id', '=', model_id)], limit=1)
-        if (share and share.visibility != 'shared'
-                and share.owner_user_id.id != request.env.user.id):
+        if share and not share.is_accessible_to(request.env.user):
             return request.not_found()
         return request.render('tvbo.tvbo_model_detail', {
             'model': model,

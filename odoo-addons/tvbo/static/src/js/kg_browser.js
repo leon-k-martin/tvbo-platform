@@ -647,7 +647,7 @@ class KnowledgeGraphBrowser {
                 const sectionHeader = document.createElement('div');
                 sectionHeader.className = 'property-section-header';
                 const classLabel = this.getClassFacetDisplayName(typeKey, classSchema);
-                sectionHeader.innerHTML = `<span class="material-icons" style="font-size:16px;">tune</span> ${this.escapeHtml(classLabel)}`;
+                sectionHeader.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px;"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg> ${this.escapeHtml(classLabel)}`;
                 facetsSidebar.appendChild(sectionHeader);
 
                 propsWithValues.forEach(({ fieldName, propSchema }) => {
@@ -924,7 +924,7 @@ class KnowledgeGraphBrowser {
                        <a class="kg-open-builder" href="/tvbo/configurator?${builderParam}=${encodeURIComponent(item.id)}"
                           onclick="event.stopPropagation()" title="Open in Experiment Builder"
                           style="display:inline-flex;align-items:center;gap:6px;font-size:0.85rem;font-weight:600;color:#3b4ce2;text-decoration:none;">
-                          <span class="material-icons" style="font-size:16px;">open_in_new</span>Open in Experiment Builder
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>Open in Experiment Builder
                        </a>
                    </div>`
                 : '';
@@ -984,8 +984,16 @@ class KnowledgeGraphBrowser {
         // Show modal IMMEDIATELY with loading placeholder
         const type = (item.type || '').toLowerCase();
         const typeInfo = KnowledgeGraphBrowser.TYPE_ICONS[type] || KnowledgeGraphBrowser.TYPE_ICONS._default;
+        // Deep-link into the Experiment Builder — same type->param map as the cards.
+        const builderParam = {
+            experiment: 'experiment', dynamics: 'dynamics', network: 'network',
+            coupling: 'coupling', observation: 'observation', integrator: 'integration',
+        }[type];
+        const builderUrl = (builderParam && item.id != null)
+            ? `/tvbo/configurator?${builderParam}=${encodeURIComponent(item.id)}`
+            : null;
         if (this.modal) {
-            this.modal.open(title, `<div class="kg-detail-content"><p style="color:#a0aec0">Loading report...</p></div>`, { item, detailData: null }, item.thumbnail || null, typeInfo);
+            this.modal.open(title, `<div class="kg-detail-content"><p style="color:#a0aec0">Loading report...</p></div>`, { item, detailData: null, builderUrl }, item.thumbnail || null, typeInfo);
         }
 
         // Strategy: try pre-rendered report first, fall back to detail API

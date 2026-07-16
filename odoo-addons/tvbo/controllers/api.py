@@ -59,11 +59,12 @@ class TVBOApi(http.Controller):
         return request.env['tvbo.model_share'].sudo()
 
     def _can_read(self, field, rec_id, user):
-        """True if the record is public (no share), owned by user, or shared."""
+        """True if the record is public (no share), published, owned by the user,
+        or peer-to-peer shared with them."""
         share = self._shares().search([(field, '=', rec_id)], limit=1)
         if not share:
             return True  # ground-truth / public
-        return share.owner_user_id.id == user.id or share.visibility == 'shared'
+        return share.is_accessible_to(user)
 
     # ------------------------------------------------------------------ #
     # Models
@@ -78,13 +79,17 @@ class TVBOApi(http.Controller):
             return self._push('Dynamics', 'tvbo.dynamics', 'dynamics_id', user)
         shares = self._shares().search(
             ['&', ('dynamics_id', '!=', False),
-             '|', ('owner_user_id', '=', user.id), ('visibility', '=', 'shared')])
+             '|', '|', ('owner_user_id', '=', user.id),
+             ('publication_state', '=', 'published'),
+             ('shared_user_ids', 'in', user.id)])
         items = [{
             'id': s.dynamics_id.id,
             'name': s.dynamics_id.name,
             'label': s.dynamics_id.label,
             'description': s.dynamics_id.description,
-            'visibility': s.visibility,
+            'visibility': s.visibility,           # legacy: shared iff published
+            'publication_state': s.publication_state,
+            'access_scope': s.access_scope,
             'owner': s.owner_user_id.name,
             'mine': s.owner_user_id.id == user.id,
         } for s in shares]
@@ -116,13 +121,12 @@ class TVBOApi(http.Controller):
         if request.httprequest.method == 'POST':
             return self._push('SimulationExperiment', 'tvbo.simulation_experiment',
                               'experiment_id', user)
-        # Experiments others marked private are excluded; everything else (public
-        # ground-truth, own, shared) is listed.
-        private_ids = self._shares().search(
-            [('experiment_id', '!=', False), ('visibility', '=', 'private'),
-             ('owner_user_id', '!=', user.id)]).mapped('experiment_id').ids
+        # Experiments the caller may not see (not published, not theirs, not
+        # shared with them) are excluded; everything else (public ground-truth,
+        # own, shared-with-me, published) is listed.
+        hidden = self._shares().hidden_target_ids('experiment_id', user)
         exps = request.env['tvbo.simulation_experiment'].sudo().search(
-            [('id', 'not in', private_ids)] if private_ids else [])
+            [('id', 'not in', hidden)] if hidden else [])
         # Experiments are identified by ``label`` (the model has no ``name`` field).
         items = [{
             'id': e.id, 'label': e.label, 'description': e.description,
@@ -161,15 +165,23 @@ class TVBOApi(http.Controller):
 
         raw = request.httprequest.get_data(as_text=True) or ''
         ctype = request.httprequest.content_type or ''
-        # Visibility from ?visibility= applies to both YAML and JSON pushes; a
-        # JSON body's own "visibility" still overrides it below.
-        qs_vis = request.httprequest.args.get('visibility')
-        visibility = qs_vis if qs_vis in ('private', 'shared') else 'private'
+        # A push always creates a private draft. ``?visibility=shared`` (or
+        # ``public``/``publish``) additionally *requests publication*: it runs
+        # the automated technical validation and, if it passes, queues the
+        # element for peer review — it does NOT make it public directly.
+        # ``share_with`` (comma-separated logins/emails) peer-to-peer shares it.
+        _publish_words = ('shared', 'public', 'publish')
+        qs_vis = (request.httprequest.args.get('visibility') or '').lower()
+        publish_intent = qs_vis in _publish_words
+        share_with = request.httprequest.args.get('share_with') or ''
         try:
             if 'json' in ctype:
                 payload = json.loads(raw) if raw else {}
-                if isinstance(payload, dict) and payload.get('visibility') in ('private', 'shared'):
-                    visibility = payload['visibility']
+                if isinstance(payload, dict) and str(payload.get('visibility', '')).lower() in _publish_words:
+                    publish_intent = True
+                if isinstance(payload, dict) and payload.get('share_with'):
+                    sw = payload['share_with']
+                    share_with = sw if isinstance(sw, str) else ','.join(sw)
                 if isinstance(payload, dict) and 'yaml' in payload:
                     obj = pydantic_loader.loads(payload['yaml'], class_name)
                 else:
@@ -205,10 +217,28 @@ class TVBOApi(http.Controller):
                 if not rec_id:
                     raise ValueError('record could not be created')
                 stale.purge_model()
-                self._shares().create({
-                    share_field: rec_id, 'owner_user_id': user.id, 'visibility': visibility})
+                share = self._shares().create({
+                    share_field: rec_id, 'owner_user_id': user.id,
+                    'publication_state': 'draft'})
+                # Peer-to-peer share with named collaborators (instant, no review).
+                collaborators = self._shares().env['res.users']
+                for term in [t.strip() for t in share_with.split(',') if t.strip()]:
+                    collaborators |= self._shares()._resolve_user(term)
+                if collaborators:
+                    share.share_with_users(collaborators)
         except Exception as exc:  # noqa: BLE001 - savepoint rolled back; old record intact
             return self._resp({'error': 'create_failed', 'detail': str(exc)}, status=422)
-        return self._resp(
-            {'success': True, 'id': rec_id, 'name': name, 'visibility': visibility},
-            status=201)
+
+        result = {'success': True, 'id': rec_id, 'name': name,
+                  'publication_state': share.publication_state,
+                  'access_scope': share.access_scope,
+                  'visibility': share.visibility}
+        # Publication is a request, not an instant flip: validate, then queue.
+        if publish_intent:
+            outcome = share.submit_for_review()
+            result['publication_state'] = share.publication_state
+            result['access_scope'] = share.access_scope
+            result['publication'] = {k: outcome.get(k) for k in ('success', 'state', 'message')}
+            if not outcome.get('success'):
+                result['validation'] = outcome.get('report')
+        return self._resp(result, status=201)

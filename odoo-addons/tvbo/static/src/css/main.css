@@ -113,6 +113,47 @@ header.tvbo-header.o_header_affixed .navbar {
 }
 
 /* ========================================
+   Mobile Header / Navbar
+   ======================================== */
+
+/* Below the navbar's `lg` collapse breakpoint the brand sits next to the
+   hamburger toggler. The default flex-shrink lets the brand box narrow but the
+   long "The Virtual Brain Ontology" text has no overflow guard, so it spilled
+   over (and under) the toggler. Cap the size, keep it on one line, and clip any
+   remainder so it can never collide with the toggle button. */
+@media (max-width: 991.98px) {
+    header .navbar-brand {
+        font-size: 1rem !important;
+        min-width: 0;
+        flex: 1 1 auto;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        margin-right: 0.5rem;
+    }
+
+    header .navbar-brand img {
+        height: 26px !important;
+        flex: 0 0 auto;
+    }
+
+    header .navbar-toggler {
+        flex: 0 0 auto;
+    }
+}
+
+@media (max-width: 400px) {
+    header .navbar-brand {
+        font-size: 0.9rem !important;
+    }
+
+    header .navbar-brand img {
+        height: 22px !important;
+        margin-right: 6px !important;
+    }
+}
+
+/* ========================================
    Survey Overrides
    ======================================== */
 

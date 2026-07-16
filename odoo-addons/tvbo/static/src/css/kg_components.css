@@ -216,6 +216,36 @@
     color: #2d3748;
 }
 
+/* Labeled variant: the "what do I do next?" actions carry text, not just an icon. */
+.kg-modal-action-btn.labeled {
+    width: auto;
+    padding: 0 12px;
+    gap: 6px;
+    font-size: 0.82rem;
+    font-weight: 600;
+}
+
+/* Primary next-step: send the inspected entity into the Experiment Builder. */
+.kg-modal-builder-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 32px;
+    padding: 0 12px;
+    border-radius: 6px;
+    background: #3b4ce2;
+    color: #fff;
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.15s ease;
+}
+
+.kg-modal-builder-btn:hover {
+    background: #2f3fc0;
+    color: #fff;
+}
+
 .kg-modal-close:hover {
     background: #fed7d7;
     color: #c53030;
@@ -225,6 +255,58 @@
     padding: 20px;
     overflow-y: auto;
     flex: 1;
+}
+
+/* ---- Mobile modal layout ----
+   The header packs a thumb, title and two labelled action buttons on one row;
+   on a phone the buttons overflow and print on top of the title. Let the header
+   wrap so the title keeps the first row and the actions drop to a full-width
+   second row. Also give the dialog a little more of the viewport. */
+@media (max-width: 600px) {
+    .kg-modal-dialog {
+        width: 94%;
+        max-height: 90vh;
+    }
+
+    /* Float the close button to the conventional top-right corner so the
+       thumb + title keep the first row and the two action buttons get a clean
+       full-width second row. */
+    .kg-modal-header {
+        flex-wrap: wrap;
+        align-items: center;
+        padding: 14px 16px;
+        padding-right: 48px;
+        position: relative;
+    }
+
+    .kg-modal-close {
+        position: absolute;
+        top: 10px;
+        right: 12px;
+    }
+
+    .kg-modal-title {
+        font-size: 1.05rem;
+        overflow-wrap: anywhere;
+    }
+
+    .kg-modal-actions {
+        width: 100%;
+        order: 3;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    /* Roomier tap targets for the primary next-step actions. */
+    .kg-modal-builder-btn,
+    .kg-modal-action-btn.labeled {
+        height: 38px;
+    }
+
+    .kg-modal-content {
+        padding: 16px;
+    }
 }
 
 /* ======================================

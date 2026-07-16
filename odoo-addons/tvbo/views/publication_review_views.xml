@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ================================================================ -->
+    <!-- Reviewer backend: the peer-review queue for user submissions.     -->
+    <!-- Internal staff in group_tvbo_reviewer approve/reject requests that -->
+    <!-- already passed the automated technical validation.                -->
+    <!-- ================================================================ -->
+
+    <record id="view_model_share_search" model="ir.ui.view">
+        <field name="name">tvbo.model_share.search</field>
+        <field name="model">tvbo.model_share</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="display_name" string="Element"/>
+                <field name="owner_user_id"/>
+                <filter name="in_review" string="Awaiting review"
+                        domain="[('publication_state', '=', 'in_review')]"/>
+                <filter name="changes_requested" string="Changes requested"
+                        domain="[('publication_state', '=', 'changes_requested')]"/>
+                <filter name="published" string="Published"
+                        domain="[('publication_state', '=', 'published')]"/>
+                <separator/>
+                <filter name="validation_failed" string="Validation failed"
+                        domain="[('validation_state', '=', 'failed')]"/>
+                <filter name="mine" string="Decided by me"
+                        domain="[('reviewer_id', '=', uid)]"/>
+                <separator/>
+                <filter name="group_state" string="Publication state"
+                        context="{'group_by': 'publication_state'}"/>
+                <filter name="group_kind" string="Element kind"
+                        context="{'group_by': 'element_kind'}"/>
+                <filter name="group_owner" string="Owner"
+                        context="{'group_by': 'owner_user_id'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_model_share_list" model="ir.ui.view">
+        <field name="name">tvbo.model_share.list</field>
+        <field name="model">tvbo.model_share</field>
+        <field name="arch" type="xml">
+            <list decoration-warning="publication_state == 'in_review'"
+                  decoration-danger="validation_state == 'failed'"
+                  decoration-success="publication_state == 'published'">
+                <field name="display_name" string="Element"/>
+                <field name="element_kind" string="Kind"/>
+                <field name="owner_user_id"/>
+                <field name="publication_state" widget="badge"
+                       decoration-warning="publication_state == 'in_review'"
+                       decoration-success="publication_state == 'published'"
+                       decoration-danger="publication_state == 'changes_requested'"/>
+                <field name="validation_state" widget="badge"
+                       decoration-success="validation_state == 'passed'"
+                       decoration-danger="validation_state == 'failed'"/>
+                <field name="submitted_date"/>
+                <field name="reviewer_id"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_model_share_form" model="ir.ui.view">
+        <field name="name">tvbo.model_share.form</field>
+        <field name="model">tvbo.model_share</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="button_approve" type="object" string="Approve &amp; Publish"
+                            class="btn-primary" invisible="publication_state != 'in_review'"
+                            confirm="Approve this submission and publish it to the community?"/>
+                    <button name="button_reject" type="object" string="Request changes"
+                            invisible="publication_state != 'in_review'"/>
+                    <button name="button_revalidate" type="object" string="Re-run validation"/>
+                    <field name="publication_state" widget="statusbar"
+                           statusbar_visible="draft,in_review,published"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="display_name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group string="Submission">
+                            <field name="element_kind" readonly="1"/>
+                            <field name="owner_user_id" readonly="1"/>
+                            <field name="dynamics_id" readonly="1" invisible="not dynamics_id"/>
+                            <field name="experiment_id" readonly="1" invisible="not experiment_id"/>
+                            <field name="study_id" readonly="1" invisible="not study_id"/>
+                            <field name="access_scope" readonly="1"/>
+                        </group>
+                        <group string="Status">
+                            <field name="validation_state" readonly="1"/>
+                            <field name="validation_date" readonly="1"/>
+                            <field name="submitted_date" readonly="1"/>
+                            <field name="published_date" readonly="1"/>
+                            <field name="reviewer_id" readonly="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Automated validation">
+                            <field name="validation_html" widget="html" readonly="1"/>
+                        </page>
+                        <page string="Reviewer decision">
+                            <field name="review_decision_note"
+                                   placeholder="Feedback sent to the owner. Required when requesting changes…"/>
+                        </page>
+                        <page string="Shared with (peer-to-peer)">
+                            <field name="shared_user_ids" widget="many2many_tags" readonly="1"/>
+                        </page>
+                        <page string="History">
+                            <field name="review_log_ids" readonly="1">
+                                <list>
+                                    <field name="create_date" string="When"/>
+                                    <field name="action"/>
+                                    <field name="actor_id"/>
+                                    <field name="validation_ok"/>
+                                    <field name="note"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_publication_review" model="ir.actions.act_window">
+        <field name="name">Publication Requests</field>
+        <field name="res_model">tvbo.model_share</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('publication_state', '!=', 'draft')]</field>
+        <field name="context">{'search_default_in_review': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No publication requests right now</p>
+            <p>When a user submits a model, experiment or study for publication and it
+               passes automated validation, it appears here for peer review.</p>
+        </field>
+    </record>
+
+    <!-- Reviewer-only menu -->
+    <menuitem id="menu_tvbo_publications"
+              name="Publications"
+              parent="menu_tvbo_root"
+              sequence="15"
+              groups="group_tvbo_reviewer"/>
+    <menuitem id="menu_publication_requests"
+              name="Review Requests"
+              parent="menu_tvbo_publications"
+              action="action_publication_review"
+              sequence="10"
+              groups="group_tvbo_reviewer"/>
+</odoo>

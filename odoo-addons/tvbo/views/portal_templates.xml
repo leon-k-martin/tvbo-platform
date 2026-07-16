@@ -12,21 +12,42 @@
             .tvbo-model-card { border: 1px solid #e5e7eb; border-radius: 12px; padding: 1.25rem 1.4rem;
                 background: #fff; box-shadow: 0 1px 2px rgba(16,24,40,.04); transition: box-shadow .15s ease; height: 100%; }
             .tvbo-model-card:hover { box-shadow: 0 6px 18px rgba(16,24,40,.10); }
-            .tvbo-model-card h3 { font-size: 1.15rem; margin: 0 0 .35rem; color: #1f2937; }
+            .tvbo-model-card h3 { font-size: 1.15rem; margin: 0 0 .35rem; color: #1f2937;
+                overflow-wrap: anywhere; }
             .tvbo-model-card h3 a { color: inherit; text-decoration: none; }
             .tvbo-model-card h3 a:hover { color: #3498DB; }
             .tvbo-model-desc { color: #6b7280; font-size: .92rem; margin: 0 0 .9rem; min-height: 1.2em;
+                overflow-wrap: anywhere;
                 display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
             .tvbo-badge { display: inline-block; font-size: .72rem; font-weight: 600; padding: .15rem .55rem;
                 border-radius: 999px; letter-spacing: .02em; }
             .tvbo-badge-shared { background: #e7f6ec; color: #1a7f43; }
+            .tvbo-badge-published { background: #e7f6ec; color: #1a7f43; }
             .tvbo-badge-private { background: #f1f3f5; color: #5c6470; }
+            .tvbo-badge-draft { background: #f1f3f5; color: #5c6470; }
+            .tvbo-badge-review { background: #fff4e5; color: #b25e09; }
+            .tvbo-badge-changes { background: #fdecec; color: #c0392b; }
+            .tvbo-badge-collab { background: #eef0fb; color: #4a4fc0; }
             .tvbo-badge-yours { background: #eaf2fb; color: #1f6fc4; }
+            .tvbo-review-note { background: #fdf6ec; border: 1px solid #f0d9a8; color: #7a5b1e;
+                border-radius: 8px; padding: .5rem .75rem; font-size: .85rem; margin: .6rem 0 0; }
+            .tvbo-review-note ul { margin: .35rem 0 0 1rem; padding: 0; }
+            .tvbo-share-row { display: flex; gap: .4rem; margin-top: .6rem; }
+            .tvbo-share-row input { font-size: .85rem; }
+            .tvbo-collab { font-size: .8rem; color: #6b7280; margin-top: .5rem; }
+            .tvbo-collab .chip { display: inline-flex; align-items: center; gap: .3rem;
+                background: #eef0fb; color: #3b3f9e; border-radius: 999px; padding: .1rem .5rem; margin: .15rem .25rem .15rem 0; }
+            .tvbo-collab .chip button { border: none; background: none; color: inherit; cursor: pointer; font-weight: 700; line-height: 1; padding: 0; }
             .tvbo-model-meta { color: #98a2b3; font-size: .8rem; margin-top: .25rem; }
             .tvbo-model-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1rem; }
             .tvbo-empty { text-align: center; padding: 4rem 1rem; color: #6b7280;
                 border: 1px dashed #d0d5dd; border-radius: 14px; background: #fafafa; }
             .tvbo-empty h3 { color: #344054; }
+            .tvbo-catalogue-search { margin: 0 0 1.5rem; }
+            .tvbo-catalogue-search-input { width: 100%; max-width: 420px; padding: .6rem .9rem;
+                border: 1px solid #d0d5dd; border-radius: 8px; font-size: .95rem; color: #1f2937; }
+            .tvbo-catalogue-search-input:focus { outline: none; border-color: #3498DB;
+                box-shadow: 0 0 0 3px rgba(52,152,219,.15); }
         </style>
     </template>
 
@@ -41,9 +62,13 @@
                     <div class="tvbo-models-head">
                         <div>
                             <h1>My Models</h1>
-                            <p class="lead">Models you have saved from the builder. Share one to make it visible to everyone signed in.</p>
+                            <p class="lead">Models you saved from the builder. <strong>Share</strong> one directly
+                                with a colleague, or <strong>submit it for review</strong> to publish it to the community.</p>
                         </div>
-                        <a href="/tvbo/configurator" class="btn btn-primary">+ Build a new model</a>
+                        <div class="d-flex gap-2">
+                            <a href="/my/shared" class="btn btn-outline-secondary">Shared with me</a>
+                            <a href="/tvbo/configurator" class="btn btn-primary">+ Build a new model</a>
+                        </div>
                     </div>
 
                     <t t-if="not shares">
@@ -57,35 +82,61 @@
                         <div class="row g-4">
                             <t t-foreach="shares" t-as="share">
                                 <t t-set="model" t-value="share.dynamics_id"/>
+                                <t t-set="state" t-value="share.publication_state"/>
                                 <div class="col-md-6">
                                     <div class="tvbo-model-card">
                                         <div class="d-flex justify-content-between align-items-start">
                                             <h3>
                                                 <a t-attf-href="/tvbo/model/#{model.id}" t-esc="model.label or model.name"/>
                                             </h3>
-                                            <t t-if="share.visibility == 'shared'">
-                                                <span class="tvbo-badge tvbo-badge-shared">Shared</span>
-                                            </t>
-                                            <t t-else="">
-                                                <span class="tvbo-badge tvbo-badge-private">Private</span>
-                                            </t>
+                                            <span t-if="state == 'published'" class="tvbo-badge tvbo-badge-published">Published</span>
+                                            <span t-elif="state == 'in_review'" class="tvbo-badge tvbo-badge-review">In review</span>
+                                            <span t-elif="state == 'changes_requested'" class="tvbo-badge tvbo-badge-changes">Changes requested</span>
+                                            <span t-elif="share.access_scope == 'collaborators'" class="tvbo-badge tvbo-badge-collab">Shared</span>
+                                            <span t-else="" class="tvbo-badge tvbo-badge-draft">Private</span>
                                         </div>
                                         <p class="tvbo-model-desc" t-esc="model.description or 'No description.'"/>
                                         <div class="tvbo-model-meta">Last updated <span t-field="share.write_date" t-options='{"widget": "datetime"}'/></div>
+
+                                        <!-- Reviewer feedback when sent back -->
+                                        <t t-if="state == 'changes_requested' and share.review_decision_note">
+                                            <div class="tvbo-review-note">
+                                                <strong>Reviewer feedback:</strong>
+                                                <div t-esc="share.review_decision_note"/>
+                                            </div>
+                                        </t>
+
+                                        <!-- Peer-to-peer collaborators -->
+                                        <t t-if="share.shared_user_ids">
+                                            <div class="tvbo-collab">Shared with:
+                                                <t t-foreach="share.shared_user_ids" t-as="cu">
+                                                    <span class="chip"><t t-esc="cu.name"/>
+                                                        <button title="Remove" data-action="unshare"
+                                                                t-att-data-model-id="model.id"
+                                                                t-att-data-user-id="cu.id">&#215;</button>
+                                                    </span>
+                                                </t>
+                                            </div>
+                                        </t>
+
                                         <div class="tvbo-model-actions">
                                             <a t-attf-href="/tvbo/model/#{model.id}" class="btn btn-sm btn-outline-secondary">View</a>
-                                            <t t-if="share.visibility == 'shared'">
-                                                <button class="btn btn-sm btn-outline-secondary"
-                                                        data-action="visibility"
-                                                        t-att-data-model-id="model.id"
-                                                        data-visibility="private">Make private</button>
+                                            <!-- Publish workflow -->
+                                            <t t-if="state == 'draft' or state == 'changes_requested'">
+                                                <button class="btn btn-sm btn-success" data-action="submit"
+                                                        t-att-data-model-id="model.id">Submit for review</button>
                                             </t>
-                                            <t t-else="">
-                                                <button class="btn btn-sm btn-success"
-                                                        data-action="visibility"
-                                                        t-att-data-model-id="model.id"
-                                                        data-visibility="shared">Share</button>
+                                            <t t-elif="state == 'in_review'">
+                                                <button class="btn btn-sm btn-outline-secondary" data-action="withdraw"
+                                                        t-att-data-model-id="model.id">Withdraw</button>
                                             </t>
+                                            <t t-elif="state == 'published'">
+                                                <button class="btn btn-sm btn-outline-secondary" data-action="withdraw"
+                                                        t-att-data-model-id="model.id">Unpublish</button>
+                                            </t>
+                                            <!-- Direct peer-to-peer share -->
+                                            <button class="btn btn-sm btn-outline-primary" data-action="share"
+                                                    t-att-data-model-id="model.id">Share with…</button>
                                             <button class="btn btn-sm btn-outline-danger ms-auto"
                                                     data-action="delete"
                                                     t-att-data-model-id="model.id"
@@ -142,6 +193,52 @@
                                         <div class="tvbo-model-meta">
                                             Shared by <span t-esc="share.owner_user_id.name or 'Unknown'"/>
                                         </div>
+                                        <div class="tvbo-model-actions">
+                                            <a t-attf-href="/tvbo/model/#{model.id}" class="btn btn-sm btn-outline-secondary">View</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </t>
+                        </div>
+                    </t>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <!-- ============================================================= -->
+    <!-- /my/shared — elements peer-to-peer shared directly with me    -->
+    <!-- ============================================================= -->
+    <template id="portal_shared_with_me" name="Shared With Me">
+        <t t-call="website.layout">
+            <div id="wrap">
+                <t t-call="tvbo.tvbo_models_styles"/>
+                <div class="tvbo-models-wrap">
+                    <div class="tvbo-models-head">
+                        <div>
+                            <h1>Shared with me</h1>
+                            <p class="lead">Models colleagues have shared directly with you. These are not public.</p>
+                        </div>
+                        <a href="/my/models" class="btn btn-outline-primary">My Models</a>
+                    </div>
+                    <t t-if="not shares">
+                        <div class="tvbo-empty">
+                            <h3>Nothing shared with you yet</h3>
+                            <p>When someone shares a model with your account, it shows up here.</p>
+                        </div>
+                    </t>
+                    <t t-else="">
+                        <div class="row g-4">
+                            <t t-foreach="shares" t-as="share">
+                                <t t-set="model" t-value="share.dynamics_id"/>
+                                <div class="col-md-6 col-lg-4">
+                                    <div class="tvbo-model-card">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <h3><a t-attf-href="/tvbo/model/#{model.id}" t-esc="model.label or model.name"/></h3>
+                                            <span class="tvbo-badge tvbo-badge-collab">Shared</span>
+                                        </div>
+                                        <p class="tvbo-model-desc" t-esc="model.description or 'No description.'"/>
+                                        <div class="tvbo-model-meta">Shared by <span t-esc="share.owner_user_id.name or 'Unknown'"/></div>
                                         <div class="tvbo-model-actions">
                                             <a t-attf-href="/tvbo/model/#{model.id}" class="btn btn-sm btn-outline-secondary">View</a>
                                         </div>
@@ -240,36 +337,72 @@ tvbo.push_experiment(exp, visibility="shared")</code></pre>
     <!-- ============================================================= -->
     <!-- /tvbo/models — public list (ground truth + shared)            -->
     <!-- ============================================================= -->
-    <template id="tvbo_models_list" name="TVBO Models List">
+    <!-- Shared scaffold for the read-only resource catalogues (models,
+         networks, integrators, studies). Callers t-set `heading`, `lead`,
+         `empty_heading` and the `records` recordset, and pass the card markup
+         (the `.col > .tvbo-model-card` loop) as the call body. -->
+    <template id="tvbo_catalogue_shell" name="TVBO Catalogue Shell">
         <t t-call="website.layout">
             <div id="wrap">
                 <t t-call="tvbo.tvbo_models_styles"/>
                 <div class="tvbo-models-wrap">
                     <div class="tvbo-models-head">
                         <div>
-                            <h1>Models</h1>
-                            <p class="lead">Neural mass and field models in the ontology, plus models shared by the community.</p>
+                            <h1 t-esc="heading"/>
+                            <p class="lead" t-esc="lead"/>
                         </div>
                     </div>
-                    <t t-if="not models">
-                        <div class="tvbo-empty"><h3>No models found</h3></div>
+                    <t t-if="records">
+                        <div class="tvbo-catalogue-search">
+                            <input type="search" class="tvbo-catalogue-search-input" data-catalogue-filter="1"
+                                   placeholder="Filter by name…" aria-label="Filter this list"/>
+                        </div>
+                        <div class="row g-4"><t t-out="0"/></div>
+                        <div class="tvbo-empty tvbo-filter-empty" style="display:none;"><h3>No matches</h3></div>
                     </t>
                     <t t-else="">
-                        <div class="row g-4">
-                            <t t-foreach="models" t-as="model">
-                                <div class="col-md-6 col-lg-4">
-                                    <div class="tvbo-model-card">
-                                        <h3>
-                                            <a t-attf-href="/tvbo/model/#{model.id}" t-esc="model.label or model.name"/>
-                                        </h3>
-                                        <p class="tvbo-model-desc" t-esc="model.description or 'No description.'"/>
-                                    </div>
-                                </div>
-                            </t>
-                        </div>
+                        <div class="tvbo-empty"><h3 t-esc="empty_heading or 'Nothing found'"/></div>
                     </t>
                 </div>
+                <!-- Client-side filter for the card grid (no reload). Scoped to the
+                     one catalogue on the page; matches against each card's text. -->
+                <script>
+                    (function () {
+                        var input = document.querySelector('[data-catalogue-filter]');
+                        if (!input) return;
+                        var wrap = input.closest('.tvbo-models-wrap');
+                        var cols = Array.prototype.slice.call(wrap.querySelectorAll('.row.g-4 > *'));
+                        var emptyMsg = wrap.querySelector('.tvbo-filter-empty');
+                        input.addEventListener('input', function () {
+                            var q = input.value.trim().toLowerCase();
+                            var shown = 0;
+                            cols.forEach(function (col) {
+                                var hit = !q || col.textContent.toLowerCase().indexOf(q) !== -1;
+                                col.style.display = hit ? '' : 'none';
+                                if (hit) shown++;
+                            });
+                            if (emptyMsg) emptyMsg.style.display = (q &amp;&amp; shown === 0) ? '' : 'none';
+                        });
+                    })();
+                </script>
             </div>
+        </t>
+    </template>
+
+    <template id="tvbo_models_list" name="TVBO Models List">
+        <t t-call="tvbo.tvbo_catalogue_shell">
+            <t t-set="heading">Models</t>
+            <t t-set="lead">Neural mass and field models in the ontology, plus models shared by the community.</t>
+            <t t-set="empty_heading">No models found</t>
+            <t t-set="records" t-value="models"/>
+            <t t-foreach="models" t-as="model">
+                <div class="col-md-6 col-lg-4">
+                    <div class="tvbo-model-card">
+                        <h3><a t-attf-href="/tvbo/model/#{model.id}" t-esc="model.label or model.name"/></h3>
+                        <p class="tvbo-model-desc" t-esc="model.description or 'No description.'"/>
+                    </div>
+                </div>
+            </t>
         </t>
     </template>
 
@@ -290,8 +423,8 @@ tvbo.push_experiment(exp, visibility="shared")</code></pre>
                             <p class="lead" t-if="model.name and model.label" t-esc="model.name"/>
                         </div>
                         <div>
-                            <t t-if="share and share.visibility == 'shared'">
-                                <span class="tvbo-badge tvbo-badge-shared">Shared</span>
+                            <t t-if="share and share.publication_state == 'published'">
+                                <span class="tvbo-badge tvbo-badge-published">Published</span>
                             </t>
                             <t t-if="share and share.owner_user_id.id == request.env.user.id">
                                 <a href="/my/models" class="btn btn-sm btn-outline-primary ms-2">Manage</a>
@@ -344,6 +477,71 @@ tvbo.push_experiment(exp, visibility="shared")</code></pre>
                     </t>
                 </div>
             </div>
+        </t>
+    </template>
+
+    <!-- ============================================================= -->
+    <!-- /tvbo/networks — connectivity network catalogue               -->
+    <!-- (tvbo.network has label + description, no name field)         -->
+    <!-- ============================================================= -->
+    <template id="tvbo_networks_list" name="TVBO Networks List">
+        <t t-call="tvbo.tvbo_catalogue_shell">
+            <t t-set="heading">Networks</t>
+            <t t-set="lead">Connectivity networks (connectomes) available in the ontology.</t>
+            <t t-set="empty_heading">No networks found</t>
+            <t t-set="records" t-value="networks"/>
+            <t t-foreach="networks" t-as="network">
+                <div class="col-md-6 col-lg-4">
+                    <div class="tvbo-model-card">
+                        <h3 t-esc="network.label or network.display_name"/>
+                        <p class="tvbo-model-desc" t-esc="network.description or 'No description.'"/>
+                    </div>
+                </div>
+            </t>
+        </t>
+    </template>
+
+    <!-- ============================================================= -->
+    <!-- /tvbo/integrators — numerical integrator catalogue            -->
+    <!-- tvbo.integrator has no name/label; display_name is the useless -->
+    <!-- "tvbo.integrator,N" fallback, so title on `method` (Euler,     -->
+    <!-- Heun, RungeKutta4thOrder, …).                                  -->
+    <!-- ============================================================= -->
+    <template id="tvbo_integrators_list" name="TVBO Integrators List">
+        <t t-call="tvbo.tvbo_catalogue_shell">
+            <t t-set="heading">Integrators</t>
+            <t t-set="lead">Numerical integration schemes for advancing the simulation in time.</t>
+            <t t-set="empty_heading">No integrators found</t>
+            <t t-set="records" t-value="integrators"/>
+            <t t-foreach="integrators" t-as="integrator">
+                <div class="col-md-6 col-lg-4">
+                    <div class="tvbo-model-card">
+                        <h3 t-esc="integrator.method or 'Integrator'"/>
+                        <p class="tvbo-model-desc" t-esc="integrator.description or 'Numerical integration scheme.'"/>
+                    </div>
+                </div>
+            </t>
+        </t>
+    </template>
+
+    <!-- ============================================================= -->
+    <!-- /tvbo/studies — simulation experiment catalogue              -->
+    <!-- (tvbo.simulation_experiment has label + description)          -->
+    <!-- ============================================================= -->
+    <template id="tvbo_studies_list" name="TVBO Studies List">
+        <t t-call="tvbo.tvbo_catalogue_shell">
+            <t t-set="heading">Studies</t>
+            <t t-set="lead">Simulation experiments and studies curated in the ontology.</t>
+            <t t-set="empty_heading">No studies found</t>
+            <t t-set="records" t-value="studies"/>
+            <t t-foreach="studies" t-as="study">
+                <div class="col-md-6 col-lg-4">
+                    <div class="tvbo-model-card">
+                        <h3 t-esc="study.label or study.display_name"/>
+                        <p class="tvbo-model-desc" t-esc="study.description or 'No description.'"/>
+                    </div>
+                </div>
+            </t>
         </t>
     </template>
 

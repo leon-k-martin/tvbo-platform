@@ -52,8 +52,8 @@
 
 .tvbo-kg-container .kg-hero-search-icon {
     color: #3498DB;
-    font-size: 26px !important;
     margin-right: 8px;
+    flex-shrink: 0;
 }
 
 .tvbo-kg-container .kg-hero-search-input {
@@ -616,6 +616,21 @@
     text-decoration: underline;
 }
 
+/* Guard against long unbreakable tokens (IRIs, ids, equations) forcing a card
+   — and the whole page — wider than the mobile viewport. `anywhere` also lets
+   the box shrink below its min-content width, which is what prevents overflow. */
+.tvbo-kg-container .field-display,
+.tvbo-kg-container .field-value,
+.tvbo-kg-container .card-desc {
+    overflow-wrap: anywhere;
+}
+
+/* The results toolbar (view toggle + sort + clear) is a single non-wrapping
+   flex row; on narrow screens it must wrap instead of overflowing the page. */
+.tvbo-kg-container .results-tools {
+    flex-wrap: wrap;
+}
+
 /* Responsive */
 @media (max-width: 900px) {
     .tvbo-kg-container .main-content {
@@ -634,7 +649,22 @@
     .tvbo-kg-container .results-header {
         flex-direction: column;
         gap: 12px;
-        align-items: flex-start;
+        align-items: stretch;
+    }
+
+    /* Let the toolbar breathe across the full width and stay reachable. */
+    .tvbo-kg-container .results-tools {
+        width: 100%;
+        gap: 10px 12px;
+    }
+
+    .tvbo-kg-container .results-tools .sort-select {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .tvbo-kg-container .results-tools .clear-filters {
+        margin-left: auto;
     }
 
     .tvbo-kg-container .results-grid {
@@ -666,6 +696,11 @@
     cursor: pointer;
     color: #718096;
     transition: all 0.2s ease;
+    /* Clip the icon-font ligature label so a slow/blocked Material Icons load
+       degrades to a clipped glyph instead of overflowing onto the neighbouring
+       controls. */
+    overflow: hidden;
+    flex: 0 0 auto;
 }
 
 .view-btn:hover {
@@ -678,8 +713,8 @@
     color: white;
 }
 
-.view-btn .material-icons {
-    font-size: 20px;
+.view-btn .mi-svg {
+    display: block;
 }
 
 .graph-container {
