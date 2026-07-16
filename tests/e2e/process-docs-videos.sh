@@ -37,7 +37,9 @@ yavg() {
 # So sample a few frames across the middle of the clip and keep the busiest one.
 poster_time() {
   local f="$1" dur="$2" tmp t frac sz best_sz="" best_t=""
-  tmp="$(mktemp -t poster).jpg"
+  # Bare mktemp (portable: GNU rejects `-t poster` for lacking XXXXXX); add .jpg
+  # so ffmpeg infers the encoder.
+  tmp="$(mktemp).jpg"
   for frac in 0.35 0.45 0.55 0.65; do
     t="$(awk "BEGIN{printf \"%.1f\", $dur*$frac}")"
     ffmpeg -hide_banner -loglevel error -ss "$t" -i "$f" -frames:v 1 -q:v 3 "$tmp" -y 2>/dev/null || continue
