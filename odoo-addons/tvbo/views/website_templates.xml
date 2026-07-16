@@ -236,7 +236,7 @@
                         </section>
 
                         <div class="tvbo-landing">
-                            <link rel="stylesheet" href="/tvbo/static/src/css/landing.css?v=7"/>
+                            <link rel="stylesheet" href="/tvbo/static/src/css/landing.css?v=8"/>
 
                             <!-- The platform — hosted workspace + register CTA (the platform
                                  aspect, right after the hero, before the spec deep-dive) -->
@@ -257,7 +257,7 @@
                                         </div>
                                     </div>
                                     <div class="feature-media reveal">
-                                        <video class="clip" autoplay="autoplay" muted="muted" loop="loop" playsinline="playsinline" preload="metadata" poster="/tvbo_platform_docs/static/img/poster-tvbo-build-an-experiment.jpg" aria-label="Screencast: building an experiment in the browser">
+                                        <video class="clip" muted="muted" loop="loop" playsinline="playsinline" preload="none" poster="/tvbo_platform_docs/static/img/poster-tvbo-build-an-experiment.jpg" aria-label="Screencast: building an experiment in the browser">
                                             <source src="/tvbo_platform_docs/static/video/tvbo-build-an-experiment.mp4" type="video/mp4"/>
                                         </video>
                                     </div>
@@ -425,7 +425,7 @@
                                         </div>
                                     </div>
                                     <div class="feature-media reveal">
-                                        <video class="clip" autoplay="autoplay" muted="muted" loop="loop" playsinline="playsinline" preload="none" poster="/tvbo_platform_docs/static/img/poster-tvbo-run-in-python.jpg" aria-label="Screencast: loading a spec into Python and running it">
+                                        <video class="clip" muted="muted" loop="loop" playsinline="playsinline" preload="none" poster="/tvbo_platform_docs/static/img/poster-tvbo-run-in-python.jpg" aria-label="Screencast: loading a spec into Python and running it">
                                             <source src="/tvbo_platform_docs/static/video/tvbo-run-in-python.mp4" type="video/mp4"/>
                                         </video>
                                     </div>
@@ -501,19 +501,19 @@
                                     </div>
                                     <div class="ways">
                                         <div class="way reveal">
-                                            <div class="way-clip"><video class="clip" autoplay="autoplay" muted="muted" loop="loop" playsinline="playsinline" preload="none" poster="/tvbo_platform_docs/static/img/poster-tvbo-knowledge-graph-tour.jpg" aria-label="Screencast: the knowledge graph in action"><source src="/tvbo_platform_docs/static/video/tvbo-knowledge-graph-tour.mp4" type="video/mp4"/></video></div>
+                                            <div class="way-clip"><video class="clip" muted="muted" loop="loop" playsinline="playsinline" preload="none" poster="/tvbo_platform_docs/static/img/poster-tvbo-knowledge-graph-tour.jpg" aria-label="Screencast: the knowledge graph in action"><source src="/tvbo_platform_docs/static/video/tvbo-knowledge-graph-tour.mp4" type="video/mp4"/></video></div>
                                             <h3>Knowledge Graph</h3>
                                             <p>Browse models, networks, integrators and studies as a linked graph. Open any entity to its ontology grounding, parameters and source.</p>
                                             <a class="go" href="/tvbo/kg">Browse resources <span class="arr">→</span></a>
                                         </div>
                                         <div class="way reveal">
-                                            <div class="way-clip"><video class="clip" autoplay="autoplay" muted="muted" loop="loop" playsinline="playsinline" preload="none" poster="/tvbo_platform_docs/static/img/poster-tvbo-build-an-experiment.jpg" aria-label="Screencast: the experiment builder in action"><source src="/tvbo_platform_docs/static/video/tvbo-build-an-experiment.mp4" type="video/mp4"/></video></div>
+                                            <div class="way-clip"><video class="clip" muted="muted" loop="loop" playsinline="playsinline" preload="none" poster="/tvbo_platform_docs/static/img/poster-tvbo-build-an-experiment.jpg" aria-label="Screencast: the experiment builder in action"><source src="/tvbo_platform_docs/static/video/tvbo-build-an-experiment.mp4" type="video/mp4"/></video></div>
                                             <h3>Experiment Builder</h3>
                                             <p>Assemble a runnable experiment — network, dynamics, integrator, coupling, observation — and export it as validated YAML for the <code>tvbo</code> package.</p>
                                             <a class="go" href="/tvbo/configurator">Build an experiment <span class="arr">→</span></a>
                                         </div>
                                         <div class="way reveal">
-                                            <div class="way-clip"><video class="clip" autoplay="autoplay" muted="muted" loop="loop" playsinline="playsinline" preload="none" poster="/tvbo_platform_docs/static/img/poster-tvbo-run-in-python.jpg" aria-label="Screencast: loading an experiment into Python"><source src="/tvbo_platform_docs/static/video/tvbo-run-in-python.mp4" type="video/mp4"/></video></div>
+                                            <div class="way-clip"><video class="clip" muted="muted" loop="loop" playsinline="playsinline" preload="none" poster="/tvbo_platform_docs/static/img/poster-tvbo-run-in-python.jpg" aria-label="Screencast: loading an experiment into Python"><source src="/tvbo_platform_docs/static/video/tvbo-run-in-python.mp4" type="video/mp4"/></video></div>
                                             <h3>REST API</h3>
                                             <p>Retrieve any model, network or experiment as schema-valid YAML from Python or any HTTP client — then load it back with <code>from_string(...).run()</code>. Built for humans and agents.</p>
                                             <a class="go" href="https://virtual-twin.github.io/tvbo/">API reference <span class="arr">→</span></a>
@@ -976,7 +976,7 @@ tvbo skills uninstall</code></pre>
                 <t t-call="website.layout">
                     <div id="wrap" class="oe_structure oe_empty">
                         <div class="tvbo-landing">
-                            <link rel="stylesheet" href="/tvbo/static/src/css/landing.css?v=7"/>
+                            <link rel="stylesheet" href="/tvbo/static/src/css/landing.css?v=8"/>
 
                             <!-- Hero -->
                             <section class="hero">
