@@ -88,7 +88,7 @@ class TvboDocPage(models.Model):
     )
     thumbnail = fields.Char(
         help="Overview-card image path under this module's static/ folder, e.g. "
-        "`img/kg-list-view.png` (from the page's `thumbnail` front-matter).",
+        "`img/kg-list-view.webp` (from the page's `thumbnail` front-matter).",
     )
 
     content = fields.Text(

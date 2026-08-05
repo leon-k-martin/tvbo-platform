@@ -148,7 +148,7 @@
                         </div>
                     </t>
                 </div>
-                <script src="/tvbo/static/src/js/portal_models.js"></script>
+                <script src="/tvbo/z/src/js/portal_models.js"></script>
             </div>
         </t>
     </template>
@@ -329,7 +329,7 @@ mine = tvbo.list_models(mine=True)
 tvbo.push_experiment(exp, visibility="shared")</code></pre>
                     </div>
                 </div>
-                <script src="/tvbo/static/src/js/portal_api_keys.js"></script>
+                <script src="/tvbo/z/src/js/portal_api_keys.js"></script>
             </div>
         </t>
     </template>

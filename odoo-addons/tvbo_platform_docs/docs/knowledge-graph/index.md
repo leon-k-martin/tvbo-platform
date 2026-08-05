@@ -5,7 +5,7 @@ nav_order: 20
 access_level: public
 sequence: 10
 summary: Search models, networks, couplings, atlases, and studies.
-thumbnail: img/kg-list-view.png
+thumbnail: img/kg-list-view.webp
 ---
 
 # The Knowledge Graph
@@ -21,7 +21,7 @@ The same results appear in two views. Toggle them top-right, next to **Sort**:
 
 ## Watch: find and inspect a model
 
-<video class="o_docs_video" controls preload="metadata" poster="/tvbo_platform_docs/static/img/poster-tvbo-find-and-inspect-a-model.jpg">
+<video class="o_docs_video" controls preload="metadata" poster="/tvbo_platform_docs/static/img/poster-tvbo-find-and-inspect-a-model.webp">
   <source src="/tvbo_platform_docs/static/video/tvbo-find-and-inspect-a-model.mp4" type="video/mp4"/>
   Your browser cannot play this video.
   <a href="/tvbo_platform_docs/static/video/tvbo-find-and-inspect-a-model.mp4">Download it</a>.

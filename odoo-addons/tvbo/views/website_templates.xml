@@ -10,7 +10,7 @@
     <!-- TVBO Main Stylesheet - Injected into all pages -->
     <template id="tvbo_main_css" inherit_id="website.layout" name="TVBO Main CSS">
         <xpath expr="//head" position="inside">
-            <link rel="stylesheet" href="/tvbo/static/src/css/main.css?v=2" />
+            <link rel="stylesheet" href="/tvbo/z/src/css/main.css?v=3" />
         </xpath>
     </template>
 
@@ -82,7 +82,9 @@
     <template id="tvbo_header" inherit_id="website.layout" name="TVBO Custom Header">
         <xpath expr="//header" position="replace">
             <header class="o_header_standard o_header_no_transition">
-                <nav class="navbar navbar-expand-lg">
+                <!-- expand-xl, not -lg: brand + search + six items need ~1130px, so at
+                     the lg breakpoint the bar overflowed the viewport up to ~1240px -->
+                <nav class="navbar navbar-expand-xl">
                     <div class="container">
                         <a class="navbar-brand d-flex align-items-center" href="/" style="font-weight: 700; font-size: 1.25rem;">
                             <img src="/tvbo/static/src/img/logo.png" alt="TVBO" style="height: 32px; margin-right: 10px;" onerror="this.style.display='none'" />The Virtual Brain Ontology</a>
@@ -109,6 +111,9 @@
                                 </li>
                                 <li class="nav-item">
                                     <a class="nav-link" href="/tvbo/configurator">Experiment Builder</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="/forum">Community</a>
                                 </li>
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle" href="#" id="tvboAboutDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">About</a>
@@ -174,6 +179,9 @@
                                 <li>
                                     <a href="/tvbo/studies" style="color: rgba(255,255,255,0.7); text-decoration: none;"> Studies</a>
                                 </li>
+                                <li>
+                                    <a href="/forum" style="color: rgba(255,255,255,0.7); text-decoration: none;"> Community Forum</a>
+                                </li>
                             </ul>
                         </div>
                         <div class="col-md-2 mb-4">
@@ -218,12 +226,12 @@
                              .tvbo-landing so the landing's scoped h1 rule (max-width:16ch, no
                              auto margin) can't push the title left; it uses only Bootstrap +
                              inline styles, with explicit centering as belt-and-suspenders. -->
-                        <section class="s_cover pt-5 pb-5" style="background: linear-gradient(135deg, #3498DB 0%, #2C3E50 100%); text-align: center;">
+                        <section class="s_cover tvbo-brand-hero pt-5 pb-5" style="background: linear-gradient(135deg, #3498DB 0%, #2C3E50 100%); text-align: center;">
                             <div class="container">
                                 <div class="row">
                                     <div class="col-lg-12 text-center">
                                         <img src="/tvbo/static/src/img/logo.png" alt="TVBO Logo" style="max-width: 200px; margin-bottom: 2rem; filter: brightness(0) invert(1);"/>
-                                        <h1 class="display-3 text-white font-weight-bold mb-4" style="max-width: none; text-align: center;">The Virtual Brain Ontology</h1>
+                                        <h1 class="display-3 text-white mb-4" style="max-width: none; text-align: center;">The Virtual Brain Ontology</h1>
                                         <p class="lead text-white mb-5" style="font-size: 1.25rem; opacity: 0.95; max-width: 720px; margin-left: auto; margin-right: auto;">A structured knowledge base and toolset for reproducible brain network simulations</p>
                                         <div class="mt-5 d-flex justify-content-center flex-wrap gap-3">
                                             <a href="/tvbo/kg" class="btn btn-light btn-lg" style="color: #2C3E50; font-weight: 600; padding: 0.75rem 2rem;">Knowledge Graph</a>
@@ -236,36 +244,181 @@
                         </section>
 
                         <div class="tvbo-landing">
-                            <link rel="stylesheet" href="/tvbo/static/src/css/landing.css?v=8"/>
+                            <link rel="stylesheet" href="/tvbo/z/src/css/landing.css?v=16"/>
 
-                            <!-- The platform — hosted workspace + register CTA (the platform
-                                 aspect, right after the hero, before the spec deep-dive) -->
-                            <section class="platform-cta reveal">
-                                <div class="wrap feature">
-                                    <div class="feature-copy">
-                                        <p class="eyebrow">the platform</p>
-                                        <h2>Save and share your own models</h2>
-                                        <p class="lede">A free account saves everything you build in the browser and keeps it under your name.</p>
-                                        <ul class="perks">
-                                            <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Private by default, until you choose to share</li>
-                                            <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Share with a colleague or publish for peer review</li>
-                                            <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Load any saved experiment into Python with an API key</li>
-                                        </ul>
-                                        <div class="cta-row">
-                                            <a class="btn primary" href="/web/signup">Register now <span class="arr">→</span></a>
-                                            <a class="btn ghost" href="/web/login">Sign in</a>
+                            <!-- What is TVB-O — the scope. One schema-valid experiment
+                                 (scripts/landing_experiment.yaml): its spec, the code every
+                                 backend generates from it, and a real 20-cell tvboptim sweep
+                                 played back. Baked by scripts/bake_landing_scope.py. -->
+                            <section class="intro">
+                                <div class="wrap">
+                                    <div class="sec-head reveal">
+                                        <p class="eyebrow">what is tvb-o</p>
+                                        <h2>One file. Any backend. A whole brain.</h2>
+                                        <p class="lede">Write a brain-network experiment down once; TVB-O compiles it to running code on any backend. Below is one real spec, <b>84 regions</b> on a diffusion connectome, and 20 simulations of it.</p>
+                                    </div>
+
+                                    <div class="scope reveal" data-tvbo-scope="1">
+                                        <div class="scope-pane scope-spec">
+                                            <div class="scope-bar">
+                                                <span class="fn">experiment.yaml</span>
+                                                <span class="tag">the source</span>
+                                            </div>
+                                            <div class="scope-code">
+                                                <div class="cl c"># scripts/landing_experiment.yaml</div>
+                                                <div class="cl"><span class="k">label</span>: SupHopf on the dk_average connectome</div>
+                                                <div class="cl"> </div>
+                                                <div class="cl"><span class="k">dynamics</span>:</div>
+                                                <div class="cl i1"><span class="k">iri</span>: tvbo:SupHopf</div>
+                                                <div class="cl i1"><span class="k">parameters</span>:</div>
+                                                <div class="cl i2 hot"><span class="k">a</span>: {value: <span class="n" data-scope-a="1">0.01</span>}</div>
+                                                <div class="cl i2"><span class="k">omega</span>: {value: [<span class="n">0.05609</span>, … 84]}</div>
+                                                <div class="cl"> </div>
+                                                <div class="cl"><span class="k">coupling</span>:</div>
+                                                <div class="cl i1"><span class="k">iri</span>: tvbo:Linear</div>
+                                                <div class="cl i1"><span class="k">parameters</span>:</div>
+                                                <div class="cl i2 hot"><span class="k">a</span>: {value: <span class="n" data-scope-g="1">0.05</span>}</div>
+                                                <div class="cl"> </div>
+                                                <div class="cl"><span class="k">network</span>:</div>
+                                                <div class="cl i1"><span class="k">bids_dir</span>: ../networks/bids/dk_average</div>
+                                                <div class="cl i1"><span class="k">transforms</span>: [normalized_graph_laplacian]</div>
+                                                <div class="cl"> </div>
+                                                <div class="cl"><span class="k">integration</span>:</div>
+                                                <div class="cl i1"><span class="k">method</span>: Heun</div>
+                                                <div class="cl i1"><span class="k">step_size</span>: <span class="n">0.5</span></div>
+                                            </div>
+                                            <div class="scope-foot">
+                                                <p class="gl">the sweep · 20 real runs</p>
+                                                <div class="scope-ctl">
+                                                    <label class="lb" for="tvbo-sw-a">a</label>
+                                                    <input id="tvbo-sw-a" type="range" min="0" max="1" step="1" value="0" data-scope-slider-a="1" aria-label="Bifurcation parameter a"/>
+                                                    <span class="vl" data-scope-a="1">0.01</span>
+                                                    <label class="lb" for="tvbo-sw-g">coupling</label>
+                                                    <input id="tvbo-sw-g" type="range" min="0" max="1" step="1" value="0" data-scope-slider-g="1" aria-label="Global coupling"/>
+                                                    <span class="vl" data-scope-g="1">0.050</span>
+                                                </div>
+                                                <p class="rd">mean FC <b data-scope-fc="1">+0.000</b><span class="meter"><i data-scope-rbar="1"/></span></p>
+                                            </div>
+                                        </div>
+
+                                        <div class="scope-pane scope-gen">
+                                            <div class="scope-bar">
+                                                <span class="fn" data-scope-file="1">ses-101_desc-SupHopf.py</span>
+                                                <span class="tag">generated</span>
+                                            </div>
+                                            <div class="scope-tabs" data-scope-tabs="1"/>
+                                            <div class="scope-code" id="tvbo-scope-code" data-scope-code="1"/>
+                                        </div>
+
+                                        <div class="scope-pane scope-stage">
+                                            <div class="scope-bar">
+                                                <span class="fn">exp.run("tvboptim")</span>
+                                                <span class="seg" data-scope-view="1" role="group" aria-label="Brain view">
+                                                    <button type="button" data-view="surface" aria-pressed="true">surface</button>
+                                                    <button type="button" data-view="network" aria-pressed="false">network</button>
+                                                </span>
+                                                <span class="tag">a = <b data-scope-a="1">0.01</b> · G = <b data-scope-g="1">0.05</b></span>
+                                            </div>
+                                            <div class="scope-view">
+                                                <canvas class="scope-net" data-scope-net="1" role="img" aria-label="Left lateral view of an fsaverage5 cortical surface, coloured by the simulated activity of the 84 Desikan-Killiany regions; the network view swaps it for the dk_average connectome inside a translucent cortex"/>
+                                                <p class="scope-ramp"><span>quiet</span><i/><span>active</span></p>
+                                            </div>
+                                            <canvas class="scope-trace" data-scope-trace="1" role="img" aria-label="Simulated activity of six regions over time"/>
                                         </div>
                                     </div>
-                                    <div class="feature-media reveal">
-                                        <video class="clip" muted="muted" loop="loop" playsinline="playsinline" preload="none" poster="/tvbo_platform_docs/static/img/poster-tvbo-build-an-experiment.jpg" aria-label="Screencast: building an experiment in the browser">
-                                            <source src="/tvbo_platform_docs/static/video/tvbo-build-an-experiment.mp4" type="video/mp4"/>
-                                        </video>
+
+                                    <div class="scope-legend reveal">
+                                        <p>Every slider position is an actual <code>exp.run("tvboptim")</code> on the spec at left. The same spec compiles to each backend beside it.</p>
+                                        <a class="btn ghost" href="/tvbo/about">About TVB-O <span class="arr">→</span></a>
+                                    </div>
+
+                                    <script src="/tvbo/z/src/lib/three.min.js" defer="defer"/>
+                                    <script src="/tvbo/z/src/lib/OrbitControls.js" defer="defer"/>
+                                    <script src="/tvbo/z/src/js/landing_scope_data.js?v=9" defer="defer"/>
+                                    <script src="/tvbo/z/src/js/landing_intro.js?v=37" defer="defer"/>
+                                    <script src="/tvbo/z/src/js/landing_scope_sweep.js?v=3" defer="defer"/>
+                                </div>
+                            </section>
+
+                            <!-- The platform — two halves: browse what is already curated
+                                 (knowledge graph), then make and share your own. Runs at the
+                                 wider .intro width so it lines up with the scope above. -->
+                            <section class="platform-cta reveal">
+                                <div class="wrap">
+                                    <div class="sec-head reveal">
+                                        <p class="eyebrow">the platform</p>
+                                        <h2>Browse the library, then build on it</h2>
+                                        <p class="lede">Every model, network and study is curated from the literature, versioned with its provenance and validated against the schema — all of it open to explore. A free account adds a workspace on top, so what you build stays yours.</p>
+                                    </div>
+                                    <div class="stats reveal">
+                                        <div class="stat"><div class="num">106</div><div class="lab">Dynamical models</div><div class="sub">39 canonical neural-mass</div></div>
+                                        <div class="stat"><div class="num">120</div><div class="lab">Studies</div><div class="sub">literature-derived</div></div>
+                                        <div class="stat"><div class="num">63</div><div class="lab">Connectomes</div><div class="sub">structural networks</div></div>
+                                        <div class="stat"><div class="num">9</div><div class="lab">Coupling functions</div></div>
+                                        <div class="stat"><div class="num">5</div><div class="lab">Parcellations</div><div class="sub">brain atlases</div></div>
+                                        <div class="stat"><div class="num">7</div><div class="lab">Backends</div><div class="sub">one spec, many targets</div></div>
+                                    </div>
+                                    <p class="stats-note">Counts from the current TVB-O database.</p>
+                                    <div class="ways duo">
+                                        <div class="way reveal">
+                                            <div class="way-clip">
+                                                <video class="clip" muted="muted" loop="loop" playsinline="playsinline" preload="none" poster="/tvbo_platform_docs/static/img/poster-tvbo-browse-the-library.webp?v=3" aria-label="Screencast: browsing and searching the curated library, then opening a model">
+                                                    <source src="/tvbo_platform_docs/static/video/tvbo-browse-the-library.mp4?v=3" type="video/mp4"/>
+                                                </video>
+                                            </div>
+                                            <p class="eyebrow">explore</p>
+                                            <h3>Models, experiments and studies</h3>
+                                            <p>Filter the curated database by class, search it by name, and open any record to its equations, parameters and the paper it came from.</p>
+                                            <ul class="perks">
+                                                <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Follow the links between a study, its model and its network</span></li>
+                                                <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Open any record straight into the builder, or download it as YAML</span></li>
+                                                <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>No account needed — every public record is readable</span></li>
+                                            </ul>
+                                            <div class="way-foot">
+                                                <a class="btn primary" href="/tvbo/kg">Browse the library <span class="arr">→</span></a>
+                                                <a class="go" href="https://virtual-twin.github.io/tvbo/">Query it from Python <span class="arr">→</span></a>
+                                            </div>
+                                        </div>
+                                        <div class="way reveal">
+                                            <div class="way-clip">
+                                                <video class="clip" muted="muted" loop="loop" playsinline="playsinline" preload="none" poster="/tvbo_platform_docs/static/img/poster-tvbo-build-your-own.webp?v=3" aria-label="Screencast: an experiment in the builder — dynamics, network, observations and the run panel">
+                                                    <source src="/tvbo_platform_docs/static/video/tvbo-build-your-own.mp4?v=3" type="video/mp4"/>
+                                                </video>
+                                            </div>
+                                            <p class="eyebrow">save · create · share</p>
+                                            <h3>Your own models, kept under your name</h3>
+                                            <p>Assemble an experiment in the browser — network, dynamics, integrator, coupling — and keep it in a workspace you control.</p>
+                                            <ul class="perks">
+                                                <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Private by default, until you choose to share</span></li>
+                                                <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Share with a colleague or publish for peer review</span></li>
+                                                <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Load any saved experiment into Python with an API key</span></li>
+                                            </ul>
+                                            <div class="way-foot">
+                                                <a class="btn primary" href="/web/signup">Create a free account <span class="arr">→</span></a>
+                                                <a class="go" href="/tvbo/configurator">Try the builder first <span class="arr">→</span></a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <!-- Community CTA. Deliberately not .platform-cta: that class draws its own top+bottom rule, which would double against the register CTA above it. -->
+                            <section class="reveal">
+                                <div class="wrap">
+                                    <div class="sec-head">
+                                        <p class="eyebrow">the community</p>
+                                        <h2>Ask, and talk it through</h2>
+                                        <p class="lede">Stuck on a model, a backend or a connectome? Ask in <b>Help</b> and get one accepted answer. For the open questions — methods, papers, where the field is going — there is <b>Community</b>.</p>
+                                        <div class="cta-row">
+                                            <a class="btn primary" href="/forum">Go to the forum <span class="arr">→</span></a>
+                                            <a class="btn ghost" href="/docs/forum">How it works</a>
+                                        </div>
                                     </div>
                                 </div>
                             </section>
 
                             <!-- One spec → two payoffs (the thesis diagram) -->
-                            <section class="hero">
+                            <section class="hero band">
                                 <div class="wrap">
                                     <div class="sec-head reveal">
                                         <p class="eyebrow">the idea</p>
@@ -415,7 +568,7 @@
                             </section>
 
                             <!-- Two payoffs -->
-                            <section>
+                            <section class="band">
                                 <div class="wrap feature">
                                     <div class="feature-copy">
                                         <div class="sec-head reveal">
@@ -425,7 +578,7 @@
                                         </div>
                                     </div>
                                     <div class="feature-media reveal">
-                                        <video class="clip" muted="muted" loop="loop" playsinline="playsinline" preload="none" poster="/tvbo_platform_docs/static/img/poster-tvbo-run-in-python.jpg" aria-label="Screencast: loading a spec into Python and running it">
+                                        <video class="clip" muted="muted" loop="loop" playsinline="playsinline" preload="none" poster="/tvbo_platform_docs/static/img/poster-tvbo-run-in-python.webp" aria-label="Screencast: loading a spec into Python and running it">
                                             <source src="/tvbo_platform_docs/static/video/tvbo-run-in-python.mp4" type="video/mp4"/>
                                         </video>
                                     </div>
@@ -472,26 +625,6 @@
                                 </div>
                             </section>
 
-                            <!-- Curated knowledge / stats -->
-                            <section>
-                                <div class="wrap">
-                                    <div class="sec-head reveal">
-                                        <p class="eyebrow">Curated knowledge</p>
-                                        <h2>A library you can query, not just read</h2>
-                                        <p class="lede">Every model, network and study is a first-class, versioned entity with provenance — extracted from the literature and validated against the schema.</p>
-                                    </div>
-                                    <div class="stats reveal">
-                                        <div class="stat"><div class="num">106</div><div class="lab">Dynamical models</div><div class="sub">39 canonical neural-mass</div></div>
-                                        <div class="stat"><div class="num">120</div><div class="lab">Studies</div><div class="sub">literature-derived</div></div>
-                                        <div class="stat"><div class="num">63</div><div class="lab">Connectomes</div><div class="sub">structural networks</div></div>
-                                        <div class="stat"><div class="num">9</div><div class="lab">Coupling functions</div></div>
-                                        <div class="stat"><div class="num">5</div><div class="lab">Parcellations</div><div class="sub">brain atlases</div></div>
-                                        <div class="stat"><div class="num">7</div><div class="lab">Backends</div><div class="sub">one spec, many targets</div></div>
-                                    </div>
-                                    <p class="stats-note">Counts from the current TVB-O database. Browse and filter them in the <a href="/tvbo/kg">knowledge graph</a>.</p>
-                                </div>
-                            </section>
-
                             <!-- Three doors -->
                             <section>
                                 <div class="wrap">
@@ -501,19 +634,19 @@
                                     </div>
                                     <div class="ways">
                                         <div class="way reveal">
-                                            <div class="way-clip"><video class="clip" muted="muted" loop="loop" playsinline="playsinline" preload="none" poster="/tvbo_platform_docs/static/img/poster-tvbo-knowledge-graph-tour.jpg" aria-label="Screencast: the knowledge graph in action"><source src="/tvbo_platform_docs/static/video/tvbo-knowledge-graph-tour.mp4" type="video/mp4"/></video></div>
+                                            <div class="way-clip"><video class="clip" muted="muted" loop="loop" playsinline="playsinline" preload="none" poster="/tvbo_platform_docs/static/img/poster-tvbo-knowledge-graph-tour.webp" aria-label="Screencast: the knowledge graph in action"><source src="/tvbo_platform_docs/static/video/tvbo-knowledge-graph-tour.mp4" type="video/mp4"/></video></div>
                                             <h3>Knowledge Graph</h3>
                                             <p>Browse models, networks, integrators and studies as a linked graph. Open any entity to its ontology grounding, parameters and source.</p>
                                             <a class="go" href="/tvbo/kg">Browse resources <span class="arr">→</span></a>
                                         </div>
                                         <div class="way reveal">
-                                            <div class="way-clip"><video class="clip" muted="muted" loop="loop" playsinline="playsinline" preload="none" poster="/tvbo_platform_docs/static/img/poster-tvbo-build-an-experiment.jpg" aria-label="Screencast: the experiment builder in action"><source src="/tvbo_platform_docs/static/video/tvbo-build-an-experiment.mp4" type="video/mp4"/></video></div>
+                                            <div class="way-clip"><video class="clip" muted="muted" loop="loop" playsinline="playsinline" preload="none" poster="/tvbo_platform_docs/static/img/poster-tvbo-build-an-experiment.webp" aria-label="Screencast: the experiment builder in action"><source src="/tvbo_platform_docs/static/video/tvbo-build-an-experiment.mp4" type="video/mp4"/></video></div>
                                             <h3>Experiment Builder</h3>
                                             <p>Assemble a runnable experiment — network, dynamics, integrator, coupling, observation — and export it as validated YAML for the <code>tvbo</code> package.</p>
                                             <a class="go" href="/tvbo/configurator">Build an experiment <span class="arr">→</span></a>
                                         </div>
                                         <div class="way reveal">
-                                            <div class="way-clip"><video class="clip" muted="muted" loop="loop" playsinline="playsinline" preload="none" poster="/tvbo_platform_docs/static/img/poster-tvbo-run-in-python.jpg" aria-label="Screencast: loading an experiment into Python"><source src="/tvbo_platform_docs/static/video/tvbo-run-in-python.mp4" type="video/mp4"/></video></div>
+                                            <div class="way-clip"><video class="clip" muted="muted" loop="loop" playsinline="playsinline" preload="none" poster="/tvbo_platform_docs/static/img/poster-tvbo-run-in-python.webp" aria-label="Screencast: loading an experiment into Python"><source src="/tvbo_platform_docs/static/video/tvbo-run-in-python.mp4" type="video/mp4"/></video></div>
                                             <h3>REST API</h3>
                                             <p>Retrieve any model, network or experiment as schema-valid YAML from Python or any HTTP client — then load it back with <code>from_string(...).run()</code>. Built for humans and agents.</p>
                                             <a class="go" href="https://virtual-twin.github.io/tvbo/">API reference <span class="arr">→</span></a>
@@ -589,8 +722,8 @@
                 <t t-call="website.layout">
                     <div id="wrap">
                         <!-- Include custom styles -->
-                        <link rel="stylesheet" href="/tvbo/static/src/css/kg_browser.css?v=3" />
-                        <link rel="stylesheet" href="/tvbo/static/src/css/kg_components.css?v=2" />
+                        <link rel="stylesheet" href="/tvbo/z/src/css/kg_browser.css?v=3" />
+                        <link rel="stylesheet" href="/tvbo/z/src/css/kg_components.css?v=2" />
                         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
                         <!-- Browser Container -->
@@ -689,9 +822,9 @@
                         <!-- KG Browser JavaScript. Versioned (?v=) so a browser
                              never serves a stale cached build (the cause of the
                              "only Ontology shown" report); bump on KG-JS changes. -->
-                        <script src="/tvbo/static/src/js/kg_components.js?v=2"></script>
-                        <script src="/tvbo/static/src/js/kg_graph.js?v=2"></script>
-                        <script src="/tvbo/static/src/js/kg_browser.js?v=2"></script>
+                        <script src="/tvbo/z/src/js/kg_components.js?v=2"></script>
+                        <script src="/tvbo/z/src/js/kg_graph.js?v=2"></script>
+                        <script src="/tvbo/z/src/js/kg_browser.js?v=2"></script>
                     </div>
                 </t>
             </t>
@@ -976,7 +1109,7 @@ tvbo skills uninstall</code></pre>
                 <t t-call="website.layout">
                     <div id="wrap" class="oe_structure oe_empty">
                         <div class="tvbo-landing">
-                            <link rel="stylesheet" href="/tvbo/static/src/css/landing.css?v=8"/>
+                            <link rel="stylesheet" href="/tvbo/z/src/css/landing.css?v=16"/>
 
                             <!-- Hero -->
                             <section class="hero">

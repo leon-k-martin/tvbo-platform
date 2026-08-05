@@ -8,7 +8,7 @@
     'author': 'Charité Universitätsmedizin Berlin',
     'website': 'https://github.com/virtual-twin/tvbo',
     'license': 'LGPL-3',
-    'depends': ['base', 'website', 'survey', 'mass_mailing', 'tvbo_platform_docs'],
+    'depends': ['base', 'website', 'survey', 'mass_mailing', 'website_forum', 'tvbo_platform_docs'],
     # Building-block records and enum lookups are seeded from the tvbo
     # ground-truth database by post_init_hook (see models/ingest.py) — one flow
     # from tvbo/database/*.yaml through pydantic_loader into the Odoo DB. Only
@@ -19,7 +19,9 @@
         'data/survey_workshop_preworkshop.xml',
         'data/survey_workshop_feedback.xml',
         'data/website_config.xml',
+        'data/forum_data.xml',
         'views/website_templates.xml',
+        'views/forum_templates.xml',
         'views/survey_customizations.xml',
         'views/portal_templates.xml',
         'views/configurator_templates.xml',
@@ -29,6 +31,15 @@
         'views/literature_views.xml',
         'views/document_parser_templates.xml'
     ],
+    # Brands every Odoo-rendered surface — website, backend and PDF reports alike.
+    'assets': {
+        'web._assets_primary_variables': [
+            ('prepend', 'tvbo/static/src/scss/tvbo_primary_variables.scss'),
+        ],
+        'web.assets_frontend': [
+            'tvbo/static/src/css/forum.css',
+        ],
+    },
     'post_init_hook': 'post_init_hook',
     'installable': True,
     'application': True,

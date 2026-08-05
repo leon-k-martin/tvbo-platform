@@ -3,13 +3,14 @@
 Knowledge Graph API - Clean MVP implementation.
 No fallbacks. Fails fast when something unexpected happens.
 """
-import json
 import logging
 import os
 import re
 
 from odoo import http
 from odoo.http import Response, request
+
+from .assets import json_payload
 
 _logger = logging.getLogger(__name__)
 
@@ -185,12 +186,8 @@ def json_response(data, status=200):
     """Standard JSON response with CORS. ``default=str`` so non-JSON-native values
     (date/datetime — e.g. SimulationTool.date_created — Decimal, etc.) serialize as
     strings instead of raising and 500-ing the whole endpoint."""
-    return Response(
-        json.dumps(data, default=str),
-        content_type='application/json',
-        status=status,
-        headers={'Access-Control-Allow-Origin': '*'}
-    )
+    return json_payload(data, status=status,
+                        headers=[('Access-Control-Allow-Origin', '*')])
 
 
 def _safe_search_read(model_name, fields, domain=None, limit=None):

@@ -24,7 +24,7 @@ Simulation** (**2**). The platform runs it with the `tvbo` package on that backe
 and returns the result. This is the quickest way to check an experiment before you
 export it.
 
-![The Run tab: settings and the Run Simulation button](img/builder-run.png)
+![The Run tab: settings and the Run Simulation button](img/builder-run.webp)
 
 For full control over a run, export it and use Python instead.
 
@@ -44,11 +44,11 @@ result.plot()
 
 A run produces regional time series you can plot:
 
-![Simulated regional time series](img/demo_model_ts.png)
+![Simulated regional time series](img/demo_model_ts.webp)
 
 ## Watch: running an exported experiment
 
-<video class="o_docs_video" controls preload="metadata" poster="/tvbo_platform_docs/static/img/poster-tvbo-run-in-python.jpg">
+<video class="o_docs_video" controls preload="metadata" poster="/tvbo_platform_docs/static/img/poster-tvbo-run-in-python.webp">
   <source src="/tvbo_platform_docs/static/video/tvbo-run-in-python.mp4" type="video/mp4"/>
   Your browser cannot play this video.
   <a href="/tvbo_platform_docs/static/video/tvbo-run-in-python.mp4">Download it</a>.

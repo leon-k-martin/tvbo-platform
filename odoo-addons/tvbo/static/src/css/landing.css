@@ -5,6 +5,23 @@
    of the Odoo platform. Light-only to stay consistent with the platform
    header/footer chrome.
    ========================================================================== */
+/* Display face. Space Grotesk is the proportional sibling of Space Mono, so the
+   headings and the monospace the page already labels everything with share one
+   skeleton — the page's own claim (one specification, many renderings) in type.
+   Self-hosted: a 22 KB variable woff2, no CDN at runtime. Headings only; body
+   copy stays on the system stack. Revert by clearing --ls-display below. */
+@font-face{
+  font-family:"Space Grotesk";
+  font-style:normal;
+  font-weight:300 700;
+  font-display:swap;
+  src:url(../fonts/space-grotesk-latin.woff2) format("woff2");
+  unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,
+    U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+/* on :root, not .tvbo-landing — the brand hero sits outside that wrapper */
+:root{--ls-display:"Space Grotesk",ui-sans-serif,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+
 .tvbo-landing{
   --bg:#F7FAFA; --panel:#FFFFFF; --panel-2:#FBFDFD; --ink:#152528; --muted:#5C6E72;
   --faint:#8CA0A4; --hair:#E1E9E9; --hair-strong:#CBD8D8;
@@ -36,18 +53,32 @@
   font-family:var(--ls-mono);font-size:11.5px;letter-spacing:.18em;text-transform:uppercase;
   color:var(--accent);font-weight:600;margin:0 0 14px;display:flex;align-items:center;gap:10px}
 .tvbo-landing .eyebrow::before{content:"";width:22px;height:1.5px;background:var(--accent);display:inline-block}
+/* Space Grotesk is drawn tighter than the system stack, so the negative tracking
+   that suited the old face is eased back rather than carried over. */
+.tvbo-brand-hero h1,
+.tvbo-landing h1,
+.tvbo-landing h2{font-family:var(--ls-display)}
+/* Bootstrap's .display-3 sets weight 300, which leaves the brand title spindly at
+   64px; the markup asked for bold with a Bootstrap 4 class that BS5 dropped. */
+.tvbo-brand-hero h1{font-weight:700;letter-spacing:-.022em}
 .tvbo-landing h1{
   font-size:clamp(30px,5.4vw,52px);line-height:1.04;margin:0 0 20px;font-weight:700;
-  letter-spacing:-.025em;text-wrap:balance;max-width:16ch;color:var(--ink)}
+  letter-spacing:-.014em;text-wrap:balance;max-width:16ch;color:var(--ink)}
 .tvbo-landing h2{
   font-size:clamp(22px,3.2vw,31px);line-height:1.12;margin:0 0 14px;font-weight:680;
-  letter-spacing:-.02em;text-wrap:balance;max-width:22ch;color:var(--ink)}
+  letter-spacing:-.01em;text-wrap:balance;max-width:22ch;color:var(--ink)}
 .tvbo-landing h3{font-size:17px;margin:0 0 7px;font-weight:650;letter-spacing:-.01em;color:var(--ink)}
 .tvbo-landing .lede{color:var(--muted);font-size:clamp(16px,1.9vw,18.5px);max-width:60ch;margin:0}
 .tvbo-landing .lede b{color:var(--ink);font-weight:600}
 
 .tvbo-landing section{padding:76px 0;border-top:1px solid var(--hair);margin:0}
 .tvbo-landing section.hero{border-top:none;padding:60px 0 60px}
+/* Alternate grounds so seven consecutive eyebrow/heading/lede openings read as
+   chapters instead of one uninterrupted scroll. Where the ground already
+   changes, the hairline between sections is redundant. */
+.tvbo-landing section.band{background:var(--panel)}
+.tvbo-landing section.band,
+.tvbo-landing section.band + section{border-top-color:transparent}
 .tvbo-landing .sec-head{max-width:62ch;margin:0 0 40px}
 .tvbo-landing .sec-head .lede{margin-top:14px}
 
@@ -55,18 +86,126 @@
 .tvbo-landing .hero .lede{font-size:clamp(16px,2vw,19px);max-width:62ch;margin-bottom:30px}
 .tvbo-landing .cta-row{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-top:30px}
 
-/* ---- platform / register CTA band ---- */
+/* ---- intro: the scope. Sits directly under the brand hero, so no top rule, and
+   is sized to land inside one viewport on a laptop. ---- */
+.tvbo-landing section.intro{border-top:none;padding:clamp(22px,3vh,40px) 0 clamp(24px,3vh,42px)}
+.tvbo-landing .intro .wrap{max-width:1280px}
+.tvbo-landing .intro .sec-head{max-width:78ch;margin-bottom:0}
+.tvbo-landing .intro .lede{max-width:78ch;font-size:clamp(14.5px,1.5vw,16.5px)}
+
+.tvbo-landing .scope{
+  --sc-line:#1b3245; --sc-dim:#7f9cb0; --sc-key:#63b3e8; --sc-num:#e0a75c; --sc-txt:#cbdceb;
+  display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.08fr) minmax(0,1.24fr);
+  margin-top:clamp(14px,2.2vh,26px);
+  /* bound the instrument to the viewport; the two code panes scroll inside it so
+     the sweep grid and the stage always stay on screen together */
+  height:clamp(420px,60vh,580px);grid-template-rows:100%;
+  background:#0a1720;border:1px solid var(--sc-line);border-radius:14px;overflow:hidden;
+  box-shadow:0 22px 48px -30px rgba(10,40,62,.65)}
+.tvbo-landing .scope-pane{min-width:0;min-height:0;overflow:hidden;display:flex;flex-direction:column}
+.tvbo-landing .scope-pane+.scope-pane{border-left:1px solid var(--sc-line)}
+@media(max-width:1000px){
+  .tvbo-landing .scope{grid-template-columns:1fr;height:auto;grid-template-rows:none}
+  .tvbo-landing .scope-pane{overflow:hidden}
+  /* stacked panes have no row height to shrink into, and a full backend file is
+     hundreds of lines — cap them so the pane scrolls instead of the page */
+  .tvbo-landing .scope-code{max-height:44vh}
+  .tvbo-landing .scope-view{height:230px}
+  .tvbo-landing .scope-trace{min-height:170px}
+  /* stacked, the sweep readout sits right above the stage, so the a/G echo in the
+     bar only squeezes the filename down to "exp.…" */
+  .tvbo-landing .scope-stage .scope-bar .tag{display:none}
+  .tvbo-landing .scope-pane+.scope-pane{border-left:none;border-top:1px solid var(--sc-line)}
+}
+
+.tvbo-landing .scope-bar{display:flex;align-items:baseline;gap:10px;padding:9px 13px;border-bottom:1px solid var(--sc-line);flex:none}
+.tvbo-landing .scope-bar .fn{font-family:var(--ls-mono);font-size:11px;color:var(--sc-txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tvbo-landing .scope-bar .seg{display:flex;gap:2px;margin-left:12px}
+.tvbo-landing .scope-bar .seg button{appearance:none;background:none;border:1px solid var(--sc-line);
+  border-radius:3px;padding:2px 7px;font-family:var(--ls-mono);font-size:9.5px;letter-spacing:.06em;
+  color:#5d798d;cursor:pointer}
+.tvbo-landing .scope-bar .seg button:hover{color:var(--sc-txt)}
+.tvbo-landing .scope-bar .seg button[aria-pressed="true"]{color:#0a1720;background:var(--sc-key);border-color:var(--sc-key)}
+.tvbo-landing .scope-bar .tag{font-family:var(--ls-mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:#5d798d;margin-left:auto;white-space:nowrap}
+.tvbo-landing .scope-bar .tag b{color:var(--sc-num);font-weight:600}
+.tvbo-landing .scope-stage .scope-bar .tag{text-transform:none;letter-spacing:.02em;font-size:10px}
+
+.tvbo-landing .scope-code{padding:11px 13px 13px;font-family:var(--ls-mono);font-size:10.6px;
+  line-height:1.62;color:var(--sc-txt);overflow:auto;flex:1;min-height:0}
+.tvbo-landing .scope-code .cl{white-space:pre-wrap;padding-left:2.4ch;text-indent:-2.4ch}
+.tvbo-landing .scope-code .i1{padding-left:4.1ch}
+.tvbo-landing .scope-code .i2{padding-left:5.8ch}
+.tvbo-landing .scope-code .k{color:var(--sc-key)}
+.tvbo-landing .scope-code .n{color:var(--sc-num)}
+.tvbo-landing .scope-code .c{color:#5d798d}
+/* the two lines the sweep grid writes to */
+.tvbo-landing .scope-code .hot{background:rgba(99,179,232,.13);box-shadow:inset 2px 0 0 var(--sc-key);border-radius:0 3px 3px 0}
+
+.tvbo-landing .scope-tabs{display:flex;gap:0;overflow-x:auto;border-bottom:1px solid var(--sc-line);flex:none;scrollbar-width:none}
+.tvbo-landing .scope-tabs::-webkit-scrollbar{display:none}
+/* .more is set by the viewer only while the strip actually overflows, so the last
+   backend never fades away when all seven fit */
+.tvbo-landing .scope-tabs.more{-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent);
+  mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent)}
+.tvbo-landing .scope-tabs button{appearance:none;background:none;border:none;border-bottom:2px solid transparent;
+  padding:7px 10px;font-family:var(--ls-mono);font-size:10px;letter-spacing:.04em;color:#5d798d;cursor:pointer;white-space:nowrap}
+.tvbo-landing .scope-tabs button:hover{color:var(--sc-txt)}
+.tvbo-landing .scope-tabs button[aria-selected="true"]{color:var(--sc-key);border-bottom-color:var(--sc-key)}
+
+.tvbo-landing .scope-foot{border-top:1px solid var(--sc-line);padding:9px 13px 10px;flex:none}
+.tvbo-landing .scope-foot .gl{margin:0 0 7px;font-family:var(--ls-mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:#5d798d}
+.tvbo-landing .scope-ctl{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px 10px;align-items:center}
+.tvbo-landing .scope-ctl .lb{font-family:var(--ls-mono);font-size:10px;color:#5d798d}
+.tvbo-landing .scope-ctl .vl{font-family:var(--ls-mono);font-size:10.5px;color:var(--sc-num);text-align:right;min-width:5ch}
+.tvbo-landing .scope-ctl input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:3px;border-radius:2px;
+  background:#22405a;outline:none;margin:0}
+.tvbo-landing .scope-ctl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;
+  background:#0a1720;border:2px solid var(--sc-key);cursor:ew-resize}
+.tvbo-landing .scope-ctl input[type=range]::-moz-range-thumb{width:11px;height:11px;border-radius:50%;
+  background:#0a1720;border:2px solid var(--sc-key);cursor:ew-resize}
+.tvbo-landing .scope-foot .meter{display:inline-block;width:66px;height:3px;border-radius:2px;background:#22405a;overflow:hidden;vertical-align:middle;margin-left:9px}
+.tvbo-landing .scope-foot .meter i{display:block;height:100%;width:0;background:var(--sc-key);transition:width .3s ease}
+.tvbo-landing .scope-foot .rd{margin:7px 0 0;font-family:var(--ls-mono);font-size:10px;color:#5d798d}
+.tvbo-landing .scope-foot .rd b{color:var(--sc-txt);font-weight:600}
+
+.tvbo-landing .scope-view{position:relative;height:58%;flex:none}
+.tvbo-landing .scope-net{display:block;width:100%;height:100%}
+.tvbo-landing .scope-trace{display:block;width:100%;border-top:1px solid var(--sc-line);flex:1;min-height:0}
+/* the activity ramp, sampled from the same grey->hot map the viewer paints with */
+.tvbo-landing .scope-ramp{position:absolute;left:13px;bottom:10px;margin:0;display:flex;align-items:center;gap:7px;
+  font-family:var(--ls-mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#7f9cb0;pointer-events:none}
+.tvbo-landing .scope-ramp i{display:block;width:58px;height:4px;border-radius:2px;
+  background:linear-gradient(90deg,#a8a8a8 0%,#a8a8a8 30%,#d4854f 55%,#ffff00 80%,#ffff00 100%)}
+/* a scrollable code pane is a keyboard focus target; make the focus ring visible */
+.tvbo-landing .scope-code:focus-visible{outline:2px solid var(--sc-key);outline-offset:-2px}
+
+.tvbo-landing .scope-legend{display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin-top:clamp(12px,2vh,20px)}
+.tvbo-landing .scope-legend p{margin:0;font-size:12.8px;color:var(--muted);max-width:62ch}
+.tvbo-landing .scope-legend code{font-family:var(--ls-mono);font-size:12.5px;color:var(--accent-ink);background:var(--accent-soft);padding:1px 5px;border-radius:4px}
+.tvbo-landing .scope-legend .btn{margin-left:auto}
+@media(max-width:640px){.tvbo-landing .scope-legend .btn{margin-left:0}}
+
+/* ---- platform band: explore the library / build your own ---- */
 .tvbo-landing .platform-cta{background:var(--accent-soft);border-top:1px solid var(--accent-edge);border-bottom:1px solid var(--accent-edge)}
-/* single column: the only .perks list lives inside a narrow .feature copy column */
+/* same width as the scope instrument above, so the two sections line up */
+.tvbo-landing .platform-cta .wrap{max-width:1280px}
+.tvbo-landing .platform-cta .sec-head{max-width:78ch;margin-bottom:28px}
+/* the counts sit between the claim and the two doors: measure first, then act */
+.tvbo-landing .platform-cta .ways.duo{margin-top:36px}
 .tvbo-landing .perks{list-style:none;padding:0;margin:22px 0 26px;display:grid;grid-template-columns:1fr;gap:11px}
 .tvbo-landing .perks li{display:flex;align-items:flex-start;gap:10px;color:var(--ink);font-size:15px;font-weight:500;line-height:1.4}
 .tvbo-landing .perks li svg{color:var(--accent);flex:none;margin-top:1px}
+.tvbo-landing .perks li b{font-weight:650}
 
 /* feature row: section copy beside a short "in action" video clip. The clip
    keeps its full 16:9 frame (never cropped) and sits large next to the copy.
    --vidw tunes the clip column width. */
 .tvbo-landing .feature{display:grid;grid-template-columns:1fr var(--vidw,54%);gap:40px;align-items:center}
 @media(max-width:800px){.tvbo-landing .feature{grid-template-columns:1fr;gap:26px}}
+/* a feature row heading is centred against the clip, so it must not carry .sec-head's trailing gap */
+.tvbo-landing .feature-copy .sec-head{margin-bottom:0}
+/* breathing room when content follows the clip row inside the same section */
+.tvbo-landing .feature+.wrap{margin-top:56px}
 .tvbo-landing .clip{width:100%;aspect-ratio:16/9;object-fit:contain;border-radius:14px;border:1px solid var(--hair-strong);box-shadow:0 12px 34px rgba(20,45,65,.14);background:#0b1a26;display:block}
 /* clip capping each 'door' card: full-bleed across the card top */
 .tvbo-landing .way-clip{margin:-22px -22px 16px;border-radius:13px 13px 0 0;overflow:hidden;background:#0b1a26;line-height:0}
@@ -121,7 +260,9 @@
 }
 
 /* ---- two payoffs ---- */
-.tvbo-landing .payoffs{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+/* align-items:start — the two cards carry genuinely different content volumes, so let each
+   hug its own height instead of stretching one into a hollow box */
+.tvbo-landing .payoffs{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:start}
 @media(max-width:800px){.tvbo-landing .payoffs{grid-template-columns:1fr}}
 .tvbo-landing .payoff{border:1px solid var(--hair);border-radius:16px;padding:26px 24px 24px;background:var(--panel);position:relative}
 .tvbo-landing .payoff .kicker{font-family:var(--ls-mono);font-size:11px;letter-spacing:.13em;text-transform:uppercase;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:9px}
@@ -150,7 +291,7 @@
 
 /* ---- stat row ---- */
 .tvbo-landing .stats{display:grid;grid-template-columns:repeat(6,1fr);gap:0;border:1px solid var(--hair);border-radius:14px;overflow:hidden;background:var(--panel)}
-@media(max-width:820px){.tvbo-landing .stats{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:1000px){.tvbo-landing .stats{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:480px){.tvbo-landing .stats{grid-template-columns:repeat(2,1fr)}}
 .tvbo-landing .stat{padding:22px 18px;border-right:1px solid var(--hair);border-bottom:1px solid var(--hair)}
 .tvbo-landing .stat .num{font-size:30px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1;color:var(--ink)}
@@ -170,6 +311,31 @@
 .tvbo-landing .way .go .arr{transition:transform .16s ease}
 .tvbo-landing .way:hover .go .arr{transform:translateX(3px)}
 .tvbo-landing code{font-family:var(--ls-mono);font-size:12px;background:var(--accent-soft);color:var(--accent-ink);padding:1px 5px;border-radius:4px}
+
+/* two-up variant of the same card, used by the platform band */
+.tvbo-landing .ways.duo{grid-template-columns:1fr 1fr;gap:22px;align-items:stretch}
+@media(max-width:820px){.tvbo-landing .ways.duo{grid-template-columns:1fr}}
+/* outrank .way p, which would otherwise recolour and resize the card eyebrow */
+.tvbo-landing .ways.duo .way p.eyebrow{color:var(--accent);font-size:10.5px;margin:0 0 9px}
+.tvbo-landing .ways.duo h3{font-size:20px;margin-bottom:9px;letter-spacing:-.015em}
+/* the perks list, not the intro paragraph, absorbs the height difference between the two cards */
+.tvbo-landing .ways.duo .way>p{flex:none;margin-bottom:0}
+.tvbo-landing .ways.duo .perks{margin:16px 0 0;gap:9px;flex:1;align-content:start}
+.tvbo-landing .ways.duo .perks li{font-size:13.8px;font-weight:450}
+.tvbo-landing .ways.duo .way:hover{transform:none}
+/* both platform clips are cut to the app itself (site header dropped), so they
+   share a wider frame than the 16:9 clips elsewhere on the page */
+.tvbo-landing .ways.duo .clip{aspect-ratio:1280/662}
+/* card foot: one solid action, with the lighter way in as a quiet mono link
+   rather than a second boxed button competing with it */
+.tvbo-landing .way-foot{margin-top:20px;padding-top:17px;border-top:1px solid var(--hair);
+  display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px}
+/* space-between, not margin-left:auto — when the row wraps on a narrow card the
+   link starts the new line instead of hanging off its right edge */
+.tvbo-landing .way-foot{justify-content:space-between}
+.tvbo-landing .way-foot .go{color:var(--muted)}
+.tvbo-landing .way-foot .go:hover{color:var(--accent)}
+.tvbo-landing .way-foot .go:hover .arr{transform:translateX(3px)}
 
 /* ---- cite / cta closer ---- */
 .tvbo-landing .closer{display:grid;grid-template-columns:1.3fr 1fr;gap:26px;align-items:stretch}

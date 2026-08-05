@@ -21,7 +21,7 @@ from Python with the REST API (`POST /api/tvbo/v1/experiments`), so a collaborat
 can reproduce your run by id rather than by emailing a YAML file. See
 [Retrieve & store via the API](../python-package/api.md).
 
-![My Models, with a saved model and its Share button marked](img/my-models.png)
+![My Models, with a saved model and its Share button marked](img/my-models.webp)
 
 ## Share or publish
 
@@ -46,7 +46,7 @@ it then. Use it as a bearer token to pull and push your models **and experiments
 from Python: see [Retrieve & store via the API](../python-package/api.md) for the
 endpoints and ready-to-run code.
 
-![Creating an API key](img/api-keys.png)
+![Creating an API key](img/api-keys.webp)
 
 !!! warning "Treat keys like passwords"
     An API key grants access to your account. Copy it when shown, store it safely,

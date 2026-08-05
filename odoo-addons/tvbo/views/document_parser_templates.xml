@@ -4,14 +4,14 @@
         <template id="document_parser_template" name="Document Parser">
             <t t-call="website.layout">
                 <div id="wrap" class="oe_structure">
-                    <link rel="stylesheet" href="/tvbo/static/src/css/document_parser.css"/>
+                    <link rel="stylesheet" href="/tvbo/z/src/css/document_parser.css"/>
                     <!-- marked.js for Markdown rendering -->
                     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
                     <!-- KaTeX for LaTeX rendering -->
                     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
                     <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
                     <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
-                    <script src="/tvbo/static/src/js/document_parser.js"></script>
+                    <script src="/tvbo/z/src/js/document_parser.js"></script>
 
                     <div class="container-fluid" style="max-width: 1200px; margin: 0 auto; padding: 20px;">
                         <div class="parser-header">
