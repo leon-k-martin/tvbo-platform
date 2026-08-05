@@ -5,9 +5,9 @@
             <t t-call="website.layout">
                 <div id="wrap" class="oe_structure">
                     <!-- Load required JavaScript files -->
-                    <script src="/tvbo/static/src/js/network_graph_3d.js"></script>
-                    <script src="/tvbo/static/src/js/experiment_builder.js"></script>
-                    <script src="/tvbo/static/src/js/schema_driven_editor.js"></script>
+                    <script src="/tvbo/z/src/js/network_graph_3d.js?v=12"></script>
+                    <script src="/tvbo/z/src/js/experiment_builder.js?v=3"></script>
+                    <script src="/tvbo/z/src/js/schema_driven_editor.js?v=1"></script>
 
                     <div class="container-fluid" style="max-width: 1400px; margin: 0 auto; padding: 20px;">
                         <div class="header">
@@ -664,17 +664,20 @@
                     window.TVBO_JS_LOADED = true;
                 </script>
 
-                <!-- Load Three.js for 3D visualization (r128 with global OrbitControls) -->
-                <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
-                <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-                <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
+                <!-- Three.js r128 with global OrbitControls, served from the addon rather than
+                     jsdelivr: the builder's 3D view is dead without it, and a CDN reachable
+                     only through the Charite proxy is not a dependency it should have. The
+                     vendored files are byte-identical to three@0.128.0. -->
+                <script src="/tvbo/z/src/lib/three.min.js"></script>
+                <script src="/tvbo/z/src/lib/OrbitControls.js"></script>
+                <script src="/tvbo/z/src/lib/OBJLoader.js"></script>
 
                 <!-- Load builder CSS and JS -->
-                <link rel="stylesheet" href="/tvbo/static/src/css/builder.css?v=6"/>
+                <link rel="stylesheet" href="/tvbo/z/src/css/builder.css?v=6"/>
 <script type="text/javascript">
                     console.log('[DEBUG] About to load network_graph_3d.js');
                 </script>
-                <script type="text/javascript" src="/tvbo/static/src/js/network_graph_3d.js?v=11"></script>
+                <script type="text/javascript" src="/tvbo/z/src/js/network_graph_3d.js?v=12"></script>
                 <script type="text/javascript">
                     console.log('[DEBUG] network_graph_3d.js loaded, NetworkGraph3D:', typeof window.NetworkGraph3D);
                 </script>

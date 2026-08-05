@@ -93,7 +93,16 @@ test.describe('TVBO model/experiment builder', () => {
     const body = await (await request.get('/tvbo/api/configurator/experiments')).json();
     const experiments = body.data || [];
     expect(experiments.length, 'seeded experiments present').toBeGreaterThan(0);
-    const exp = experiments[0];
+    // The readiness signal below is "the loaded spec carries observations", so pick
+    // an experiment that has some. experiments[0] is whichever the seed happens to
+    // order first, and the NeuroML LEMS imports carry none.
+    let found: { id: number; label?: string } | undefined;
+    for (const candidate of experiments) {
+      const spec = await (await request.get(`/tvbo/api/configurator/experiment/${candidate.id}`)).json();
+      if (((spec.data || spec).observations || []).length) { found = candidate; break; }
+    }
+    if (!found) throw new Error('no seeded experiment carries observations');
+    const exp = found;
 
     // Deep link the same way a Knowledge-Graph card's "Open in Experiment Builder" does.
     await page.goto(`${CONFIGURATOR}?experiment=${exp.id}`);

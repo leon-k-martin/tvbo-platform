@@ -7,7 +7,7 @@
 #   2. re-encodes to a web-optimized H.264 MP4 (faststart, yuv420p, <=1280 wide),
 #   3. extracts a poster frame from ~35% in.
 # Outputs land next to the docs they appear in:
-#   static/video/<name>.mp4   and   static/img/poster-<name>.jpg
+#   static/video/<name>.mp4   and   static/img/poster-<name>.webp
 #
 # Usage:  tests/e2e/process-docs-videos.sh [RAW_DIR]
 #         RAW_DIR defaults to tests/e2e/screencast-raw
@@ -77,6 +77,13 @@ content_start() {
 }
 
 shopt -s nullglob
+# WebP at q80, which halves a q:v 3 JPEG of the same frame with no visible loss on
+# UI footage. The poster loads on every page view; the video only loads on play.
+write_poster() {
+  ffmpeg -hide_banner -loglevel error -ss "$2" -i "$1" -frames:v 1 -f image2 -c:v libwebp \
+    -quality 80 -compression_level 6 "$3" -y
+}
+
 found=0
 for f in "$RAW_DIR"/*.webm "$RAW_DIR"/*.mp4; do
   found=1
@@ -87,8 +94,7 @@ for f in "$RAW_DIR"/*.webm "$RAW_DIR"/*.mp4; do
     -vf "scale='min(1280,iw)':-2" -an "$VID_OUT/$name.mp4" -y
   dur="$(ffprobe -v error -show_entries format=duration -of default=nk=1:nw=1 "$VID_OUT/$name.mp4")"
   pt="$(poster_time "$VID_OUT/$name.mp4" "${dur:-2}")"
-  ffmpeg -hide_banner -loglevel error -ss "$pt" -i "$VID_OUT/$name.mp4" \
-    -frames:v 1 -q:v 3 "$IMG_OUT/poster-$name.jpg" -y
+  write_poster "$VID_OUT/$name.mp4" "$pt" "$IMG_OUT/poster-$name.webp"
   echo "✓ $name  (trim ${start}s, poster ${pt}s, $(du -h "$VID_OUT/$name.mp4" | cut -f1))"
 done
 
@@ -102,12 +108,16 @@ done
 for v in "$VID_OUT"/*.mp4; do
   [ -e "$v" ] || continue
   name="$(basename "$v")"; name="${name%.*}"
-  poster="$IMG_OUT/poster-$name.jpg"
+  poster="$IMG_OUT/poster-$name.webp"
   [ -f "$poster" ] && [ "$poster" -nt "$v" ] && continue
   dur="$(ffprobe -v error -show_entries format=duration -of default=nk=1:nw=1 "$v")"
   pt="$(poster_time "$v" "${dur:-2}")"
-  ffmpeg -hide_banner -loglevel error -ss "$pt" -i "$v" -frames:v 1 -q:v 3 "$poster" -y
-  echo "↻ poster-$name.jpg  (from $name.mp4 @ ${pt}s)"
+  write_poster "$v" "$pt" "$poster"
+  echo "↻ poster-$name.webp  (from $name.mp4 @ ${pt}s)"
 done
+
+# Above the raw-input guard: the poster pass above runs with an empty RAW_DIR, and
+# the homepage clips are re-cut from the encoded mp4s, so they must refresh too.
+python3 "$HERE/make-landing-clips.py" || echo "landing clips skipped" >&2
 
 [ "$found" = 1 ] || { echo "no *.webm/*.mp4 in $RAW_DIR" >&2; exit 1; }

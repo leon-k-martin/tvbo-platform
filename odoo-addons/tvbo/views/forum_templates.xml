@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Odoo gates /forum behind a room picker whenever more than one forum is active, and keys
+         the whole accepted-answer flow off forum.mode. TVBO ships a single forum in `discussions`
+         mode, so the picker is gone and these views move that flow onto forum.post.topic_type. -->
+
+    <template id="tvbo_topic_type_badge" name="TVBO: topic type badge">
+        <span t-attf-class="tvbo-tt-badge tvbo-tt-badge--#{_topic_type or 'question'}">
+            <i t-attf-class="fa #{'fa-comments-o' if _topic_type == 'discussion' else 'fa-question-circle-o'}"/>
+            <t t-if="_topic_type == 'discussion'">Discussion</t>
+            <t t-else="">Question</t>
+        </span>
+    </template>
+
+    <template id="tvbo_topic_type_field" name="TVBO: topic type chooser">
+        <t t-set="_topic_types" t-value="[
+            ('question', 'Question', 'It has a definite answer — replies are voted on and you accept the one that solved it.'),
+            ('discussion', 'Discussion', 'It is open-ended — the thread stays open and nothing gets accepted.')]"/>
+        <div class="row mb-3">
+            <label class="form-label col-lg-2">This post is a</label>
+            <div class="col">
+                <div class="tvbo-tt-choice">
+                    <label t-foreach="_topic_types" t-as="_tt" t-attf-class="tvbo-tt-option tvbo-tt-option--#{_tt[0]}">
+                        <input type="radio" name="topic_type" t-att-value="_tt[0]"
+                               t-att-checked="'checked' if (_topic_type or 'question') == _tt[0] else None"/>
+                        <span class="tvbo-tt-option-name" t-out="_tt[1]"/>
+                        <span class="tvbo-tt-option-hint" t-out="_tt[2]"/>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- Ask form: choose the kind up front, and drop Odoo's Canadian-tax example copy. -->
+    <template id="tvbo_forum_new_question" inherit_id="website_forum.new_question" name="TVBO: new post form">
+        <xpath expr="//t[@t-set='_page_name_label']" position="replace">
+            <t t-set="_page_name_label">Write a post</t>
+        </xpath>
+        <xpath expr="//div[hasclass('row','mb-3')]" position="before">
+            <t t-call="tvbo.tvbo_topic_type_field"/>
+        </xpath>
+        <xpath expr="//div[@id='newQuestionExample']" position="replace">
+            <div class="collapse" id="newQuestionExample">
+                <div class="mt-2 text-success">
+                    <i class="fa fa-check"/> Why do my connectome weights go NaN after export?
+                </div>
+                <div class="text-danger">
+                    <i class="fa fa-times"/> Hi everyone! Simulation problem, can anybody help? Thanks!
+                </div>
+            </div>
+        </xpath>
+        <xpath expr="//button[contains(@t-attf-class, 'o_wforum_submit_post')]" position="replace">
+            <button type="submit"
+                t-attf-class="o_wforum_submit_post #{ 'oe_social_share_call' if forum.allow_share else '' } btn btn-primary #{ 'karma_required' if user.karma &lt; forum.karma_ask else ''}"
+                t-att-data-karma="forum.karma_ask"
+                data-hashtags="#tvbo" data-social-target-type="question">Post</button>
+        </xpath>
+    </template>
+
+    <!-- Edit form: the kind is a property of the topic, so it stays editable with the title. -->
+    <template id="tvbo_forum_edit_post" inherit_id="website_forum.edit_post" name="TVBO: edit post form">
+        <xpath expr="//div[@t-if='not is_answer']" position="before">
+            <t t-if="not is_answer">
+                <t t-set="_topic_type" t-value="post.topic_type"/>
+                <t t-call="tvbo.tvbo_topic_type_field"/>
+            </t>
+        </xpath>
+    </template>
+
+    <!-- Index rows: lead with the kind, and show Solved wherever an answer was accepted. -->
+    <template id="tvbo_forum_index_entry" inherit_id="website_forum.display_post_question_block"
+              name="TVBO: topic kind in the index">
+        <xpath expr="//div[hasclass('o_wforum_index_entry_title')]//a" position="before">
+            <t t-call="tvbo.tvbo_topic_type_badge">
+                <t t-set="_topic_type" t-value="question.topic_type"/>
+            </t>
+        </xpath>
+        <xpath expr="//span[hasclass('bg-success')]" position="attributes">
+            <attribute name="t-if">question.has_validated_answer</attribute>
+        </xpath>
+    </template>
+
+    <!-- Thread page: the kind sits next to the title, where it explains the accept button.
+         Both the title and the filter dropdown live in forum_model_nav, not in header. -->
+    <template id="tvbo_forum_nav" inherit_id="website_forum.forum_model_nav" name="TVBO: topic kind and filters">
+        <xpath expr="//h1[@t-out='question.name']" position="before">
+            <t t-call="tvbo.tvbo_topic_type_badge">
+                <t t-set="_topic_type" t-value="question.topic_type"/>
+            </t>
+        </xpath>
+        <!-- Solved/Unsolved are useful on a mixed index; Odoo hides them outside `questions` mode. -->
+        <xpath expr="//t[@t-if=&quot;not forum or (forum and forum.mode == 'questions')&quot;]" position="replace">
+            <a t-attf-href="?#{ keep_query('search', 'sorting', 'my', filters='questions') }"
+                class="dropdown-item">Questions
+            </a>
+            <a t-attf-href="?#{ keep_query('search', 'sorting', 'my', filters='discussions') }"
+                class="dropdown-item">Discussions
+            </a>
+            <div class="dropdown-divider"/>
+            <a t-attf-href="?#{ keep_query('search', 'sorting', 'my', filters='solved') }"
+                class="dropdown-item">Solved
+            </a>
+            <a t-attf-href="?#{ keep_query('search', 'sorting', 'my', filters='unsolved') }"
+                class="dropdown-item">Unsolved
+            </a>
+        </xpath>
+        <xpath expr="//t[@t-if=&quot;filters == 'solved'&quot;]" position="before">
+            <t t-if="filters == 'questions'">Questions</t>
+            <t t-if="filters == 'discussions'">Discussions</t>
+        </xpath>
+    </template>
+
+    <!-- Accepting an answer follows the topic's kind rather than the forum's mode. -->
+    <template id="tvbo_forum_accept_answer" inherit_id="website_forum.post_display" name="TVBO: accept an answer">
+        <xpath expr="//span[contains(@t-attf-class, 'o_wforum_answer_correct_badge')]" position="attributes">
+            <attribute name="t-if">question.topic_type == 'question'</attribute>
+        </xpath>
+        <xpath expr="//a[contains(@t-attf-class, 'o_wforum_validate_toggler')]" position="attributes">
+            <attribute name="t-if">question.can_answer and question.topic_type == 'question'</attribute>
+        </xpath>
+        <!-- Odoo assumes one reply per person, which only holds in `questions` mode: with two
+             the recordset stops being a singleton and the thread 500s on user_answer.id. -->
+        <xpath expr="//t[@t-set='user_answer']" position="attributes">
+            <attribute name="t-value">uid and post_id.child_ids.filtered(lambda a: a.create_uid.id == uid)[-1:]</attribute>
+        </xpath>
+        <xpath expr="//a[@data-bs-target='.answer_collapse']/parent::div" position="attributes">
+            <attribute name="t-if">uid and question.can_answer and question.state == 'active' and question.active != False</attribute>
+        </xpath>
+        <xpath expr="//a[@t-if='user_answer']" position="replace">
+            <a t-if="user_answer" class="btn btn-sm btn-primary" t-attf-href="#answer-#{user_answer.id}">
+                View my latest reply <i class="oi oi-arrow-right ms-1"/>
+            </a>
+        </xpath>
+    </template>
+
+    <template id="tvbo_forum_thread_replies" inherit_id="website_forum.post_description_full"
+              name="TVBO: replying to a thread">
+        <!-- `discussions` mode already renders the reply form after your first reply; without
+             this the button that unfolds it disappears, so the thread silently closes to you. -->
+        <xpath expr="//div[hasclass('d-flex','mt-3')]" position="attributes">
+            <attribute name="t-if">uid and question.can_answer and question.state == 'active' and question.active != False</attribute>
+        </xpath>
+        <xpath expr="//section[hasclass('alert-info')]" position="replace">
+            <section t-elif="uid and question.state == 'active' and not forum.has_pending_post and question.can_answer"
+                     class="alert alert-info mt-3 mb-0">
+                <t t-if="question.topic_type == 'discussion'">
+                    <h5>Nobody has replied yet</h5>
+                    <span>Start the discussion</span>
+                </t>
+                <t t-else="">
+                    <h5>There are no answers yet</h5>
+                    <span>Be the first to answer this question</span>
+                </t>
+            </section>
+        </xpath>
+    </template>
+
+</odoo>

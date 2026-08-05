@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 from odoo import http
 from odoo.http import request
-import json
 import logging
+
+from .assets import json_payload
 
 _logger = logging.getLogger(__name__)
 
@@ -20,10 +21,7 @@ class ModelConfiguratorController(http.Controller):
 
     def _json_response(self, data):
         """Helper to create JSON response"""
-        return request.make_response(
-            json.dumps(data, default=str),
-            headers=[('Content-Type', 'application/json')]
-        )
+        return json_payload(data)
 
     def _serialize_records(self, records, fields=None):
         """Generic serializer using Odoo's read() method"""
@@ -282,13 +280,10 @@ class ModelConfiguratorController(http.Controller):
         bifurcation studies) bundle to just the YAML. ``label``/``description`` query
         params override the corresponding fields (so builder edits carry through).
         """
-        import json as _json
-
         def _err(status, payload):
             # Binary-download route: signal failure with a real HTTP status so the
             # client can distinguish it from a valid ZIP (never a 200 JSON body).
-            return request.make_response(_json.dumps(payload), status=status,
-                                         headers=[('Content-Type', 'application/json')])
+            return json_payload(payload, status=status)
         try:
             import io
             import os

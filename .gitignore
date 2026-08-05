@@ -9,3 +9,6 @@ _dev
 # and locally via `make generate`. Not a source of truth — do not commit.
 odoo-addons/tvbo/models/schema_models.py
 odoo-addons/tvbo/security/ir.model.access.csv
+
+# Playwright run artifacts when invoked from the repo root
+/test-results/

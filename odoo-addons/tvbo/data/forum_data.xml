@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Config-as-code: not noupdate, so every `-u tvbo` re-applies the karma policy and UI edits are reverted. -->
+    <data>
+
+        <!-- The platform's only forum. Odoo's /forum redirects to it directly while it is the
+             single active one, so keep it that way: a second forum brings back the room picker.
+             Mode is `discussions` because a thread must allow more than one reply per person;
+             the accepted-answer flow is driven per post by forum.post.topic_type instead. -->
+        <record id="forum_community" model="forum.forum">
+            <field name="name">Community</field>
+            <field name="mode">discussions</field>
+            <field name="privacy">public</field>
+            <field name="active" eval="True"/>
+            <field name="sequence">10</field>
+            <field name="description">Ask about building brain models with TVBO, or discuss the field — the schema, simulation backends, connectomes, papers and methods. Post a Question when there is an answer to accept, a Discussion when there is not.</field>
+            <field name="welcome_message" type="html">
+                <div class="jumbotron m-0 py-5">
+                    <div class="container">
+                        <h1 class="display-6">Brain modeling, in the open</h1>
+                        <p class="lead">Questions about the schema, simulation backends, connectomes, the Experiment Builder or the Python package — and discussions about methods, papers and where TVBO should go next. Both live here; you pick which one you are posting.</p>
+                        <p>Reading is open to everyone. To post, create an account and confirm your email address.</p>
+                        <a class="btn btn-primary" href="/web/signup">Create an account</a>
+                        <a class="btn btn-outline-light" href="/web/login">Sign in</a>
+                        <button type="button" class="btn btn-link js_close_intro">Dismiss</button>
+                    </div>
+                </div>
+            </field>
+            <field name="faq" type="html">
+                <div>
+                    <h3>Questions and discussions</h3>
+                    <p>Every topic is one of two kinds, chosen when you post and changeable
+                        afterwards. Nothing else differs — same forum, same tags, same search.</p>
+                    <ul>
+                        <li><b>Question</b> — there is a concrete answer. Replies are voted on and
+                            you mark the one that solved it, so the thread stays useful to the next
+                            person who hits the same wall.</li>
+                        <li><b>Discussion</b> — there is no single right answer. The thread stays
+                            open and nothing gets accepted.</li>
+                    </ul>
+
+                    <h3>What to ask</h3>
+                    <ul>
+                        <li>How to express something in the TVBO schema (dynamics, couplings, integrators, observation models).</li>
+                        <li>Choosing and configuring a simulation backend, and what each optional extra provides.</li>
+                        <li>Connectomes, atlases and parcellations — loading, normalizing, exporting.</li>
+                        <li>Using the Knowledge Graph, the Experiment Builder, the REST API or the Python package.</li>
+                        <li>Errors and unexpected results, with enough detail to reproduce them.</li>
+                    </ul>
+
+                    <h3>What to discuss</h3>
+                    <ul>
+                        <li>Modeling approaches and their trade-offs.</li>
+                        <li>Papers, datasets and methods relevant to whole-brain modeling.</li>
+                        <li>Reproducibility, sharing and standards practice.</li>
+                        <li>Feedback on TVBO — what is missing, what should change.</li>
+                        <li>Introductions, and what you are working on.</li>
+                    </ul>
+
+                    <h3>How to ask a good question</h3>
+                    <ul>
+                        <li>Search first — the answer may already be here or in the <a href="/docs">platform guide</a>.</li>
+                        <li>One question per post, with a title that states the actual problem.</li>
+                        <li>Include the model or experiment you are working from, the backend, and the TVBO version.</li>
+                        <li>Paste the exact error, not a paraphrase. Code and tracebacks belong in code blocks.</li>
+                        <li>Say what you expected and what happened instead.</li>
+                    </ul>
+
+                    <h3>Answering and replying</h3>
+                    <ul>
+                        <li>Answer the question that was asked. Use a comment to request clarification.</li>
+                        <li>Prefer a self-contained answer over a bare link — links rot, this archive should not.</li>
+                        <li>If a question is a duplicate, link the original rather than answering twice.</li>
+                        <li>Assume good faith and argue with the claim, not the person.</li>
+                        <li>Cite sources for empirical claims, and disclose a conflict of interest when you have one.</li>
+                        <li>No recruitment spam, no promotion unrelated to brain modeling.</li>
+                    </ul>
+
+                    <h3>Voting, karma and moderation</h3>
+                    <p>Confirming your email address grants the karma needed to post and vote.
+                        Upvote what is useful and correct; on a question, the asker accepts the
+                        reply that solved the problem. Karma accumulates as your posts are upvoted
+                        and accepted, and unlocks editing and moderation abilities.</p>
+                    <p>A brand-new account's first post is reviewed by a moderator before it
+                        appears — a spam gate, not a judgement on the post. Everything after that
+                        is published immediately.</p>
+                </div>
+            </field>
+            <field name="karma_ask">3</field>
+            <field name="karma_answer">3</field>
+            <field name="karma_upvote">3</field>
+            <field name="karma_post">5</field>
+            <field name="karma_flag">10</field>
+            <field name="karma_editor">3</field>
+        </record>
+
+        <!-- Runs AFTER the record above: <function eval> is evaluated inline while the file is
+             parsed, so ref('forum_community') only resolves once that record exists. Odoo's own
+             Help forum carries noupdate="1" and the pre-merge tvbo Help room may still hold posts,
+             so both are folded in here with a plain ORM call rather than a data-file archive. -->
+        <function model="forum.forum" name="_tvbo_retire_split_forums"/>
+
+        <!-- Repoint Odoo's post-install "open the forum" action, which hardcodes its own forum. -->
+        <function model="ir.actions.act_url" name="write"
+                  eval="[[ref('website_forum.action_open_forum')], {'url': '/forum/' + str(ref('forum_community'))}]"/>
+
+    </data>
+
+    <!-- Starter taxonomy, created once: tags get merged and retired as usage settles, so re-applying them would fight the moderators. -->
+    <data noupdate="1">
+        <record id="forum_tag_schema" model="forum.tag">
+            <field name="name">schema</field>
+            <field name="forum_id" ref="forum_community"/>
+        </record>
+        <record id="forum_tag_dynamics" model="forum.tag">
+            <field name="name">dynamics</field>
+            <field name="forum_id" ref="forum_community"/>
+        </record>
+        <record id="forum_tag_connectome" model="forum.tag">
+            <field name="name">connectome</field>
+            <field name="forum_id" ref="forum_community"/>
+        </record>
+        <record id="forum_tag_backends" model="forum.tag">
+            <field name="name">backends</field>
+            <field name="forum_id" ref="forum_community"/>
+        </record>
+        <record id="forum_tag_builder" model="forum.tag">
+            <field name="name">experiment-builder</field>
+            <field name="forum_id" ref="forum_community"/>
+        </record>
+        <record id="forum_tag_kg" model="forum.tag">
+            <field name="name">knowledge-graph</field>
+            <field name="forum_id" ref="forum_community"/>
+        </record>
+        <record id="forum_tag_python" model="forum.tag">
+            <field name="name">python-package</field>
+            <field name="forum_id" ref="forum_community"/>
+        </record>
+        <record id="forum_tag_api" model="forum.tag">
+            <field name="name">api</field>
+            <field name="forum_id" ref="forum_community"/>
+        </record>
+    </data>
+</odoo>

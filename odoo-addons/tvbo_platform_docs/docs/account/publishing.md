@@ -4,7 +4,7 @@ nav_label: Your Account
 access_level: public
 sequence: 40
 summary: Share work directly with a colleague, or publish it to the community through review.
-thumbnail: img/my-models.png
+thumbnail: img/my-models.webp
 ---
 
 # Share &amp; publish your work
@@ -25,7 +25,7 @@ and later submit that same element for publication.
 
 Everything below is managed from **My Models** ([`/my/models`]({{base_url}}/my/models)).
 
-![My Models: each saved element shows its state and its Share / Submit actions](img/my-models.png)
+![My Models: each saved element shows its state and its Share / Submit actions](img/my-models.webp)
 
 ## Share directly with a colleague
 
@@ -38,7 +38,7 @@ public and needs no review.
 Remove a collaborator any time with the **×** next to their name. Anything shared
 with you shows up under [Shared with me]({{base_url}}/my/shared).
 
-![The “Shared with me” page listing models colleagues shared directly with you](img/shared-with-me.png)
+![The “Shared with me” page listing models colleagues shared directly with you](img/shared-with-me.webp)
 
 !!! note "Sharing is a copy grant, not co-editing"
     A collaborator can view and load the element; they do not edit your copy. To

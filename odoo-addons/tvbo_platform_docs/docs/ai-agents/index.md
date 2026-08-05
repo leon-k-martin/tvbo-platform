@@ -5,7 +5,7 @@ nav_order: 60
 access_level: public
 sequence: 10
 summary: Build and run experiments with an AI coding assistant and the tvbo package.
-thumbnail: img/agents.png
+thumbnail: img/agents.webp
 ---
 
 # AI Agents
@@ -18,7 +18,7 @@ iterate in code.
 
 [**Open the full guide →**]({{base_url}}/tvbo/agents)
 
-![Agentic Coding with TVBO](img/agents.png)
+![Agentic Coding with TVBO](img/agents.webp)
 
 Install the skills once with the **Quick install** on the full guide, and your
 assistant carries that context into every session. The guide goes from beginner to

@@ -473,7 +473,8 @@
     }
 
     const loader = new THREE.OBJLoader();
-    const objPath = '/tvbo/static/src/img/mni152_2009.obj';
+    // via /tvbo/z/: plain-text OBJ, 20.5 MB raw against 6.9 MB gzipped
+    const objPath = '/tvbo/z/src/img/mni152_2009.obj';
     console.log('[NetworkGraph3D] Loading OBJ from:', objPath);
 
     loader.load(
