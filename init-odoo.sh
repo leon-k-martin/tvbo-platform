@@ -221,6 +221,31 @@ reconcile_building_blocks() {
   emit_kg_summary "post-seed" || true
 }
 
+# Re-import the /docs Markdown from git on every deploy. tvbo_platform_docs seeds
+# tvbo.doc.page from a post_init_hook, which Odoo runs on install only — and the
+# deploy upgrades tvbo, never its dependencies — so without this a newly added doc
+# page never reaches an existing database. import_docs() is a one-way git -> DB
+# refresh, so running it every deploy is idempotent.
+import_platform_docs() {
+  local pages
+  log "Importing platform documentation from git..."
+  set +e
+  printf '%s\n' \
+    'print("DOC_PAGES", env["tvbo.doc.page"].import_docs())' \
+    'env.cr.commit()' \
+    | odoo shell -d "$DB_NAME" --no-http \
+        --db_host="$DB_HOST" --db_user="$DB_USER" --db_password="$DB_PASSWORD" \
+        --log-level=warn 2>&1 | tee -a "$UPGRADE_LOG"
+  set -e
+  pages=$(psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" -tAc \
+    "SELECT count(*) FROM tvbo_doc_page" 2>/dev/null | tr -cd '0-9')
+  if [ -n "$pages" ] && [ "$pages" -gt 0 ]; then
+    log "✓ documentation imported (${pages} page(s))"
+  else
+    log "⚠ documentation import produced no pages; /docs will be empty"
+  fi
+}
+
 # Rotate upgrade log: keep previous as .prev so it survives container restart
 mkdir -p "$(dirname "$UPGRADE_LOG")"
 if [ -f "$UPGRADE_LOG" ]; then
@@ -348,6 +373,7 @@ fi
 # Upgrade-only deploy: the hook never ran, so this seeds. Either way it back-fills
 # anything a prior ingestion lost — the version-independent alternative to RESET_DB.
 reconcile_building_blocks
+import_platform_docs
 
 # Mark website configurator as done to skip the wizard
 log "Configuring website..."
@@ -405,7 +431,7 @@ paths = [
     "/tvbo/api/kg/data",               # kg_browser.js fetch #3 (import tvbo + DB)
     "/tvbo/api/kg/graph?limit=200",    # kg_graph.js (graph view)
     "/docs/knowledge-graph",           # docs page asset bundle + first-visit HTML
-    "/tvbo_platform_docs/static/img/poster-tvbo-find-and-inspect-a-model.jpg",
+    "/tvbo_platform_docs/static/img/poster-tvbo-find-and-inspect-a-model.webp",
     "/tvbo_platform_docs/static/video/tvbo-find-and-inspect-a-model.mp4",
 ]
 for p in paths:

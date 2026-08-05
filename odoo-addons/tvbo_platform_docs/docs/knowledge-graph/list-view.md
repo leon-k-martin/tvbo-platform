@@ -9,7 +9,7 @@ sequence: 20
 The default view shows one card per entity, with a result counter above the grid.
 The numbered markers below match the controls in the screenshot.
 
-![The list view: search, Class filter, view toggle, and a result card marked](img/kg-list-view.png)
+![The list view: search, Class filter, view toggle, and a result card marked](img/kg-list-view.webp)
 
 1. **Search** filters live across names and descriptions as you type. Try
    `Kuramoto`, `Desikan`, or `epilepsy`.
@@ -25,7 +25,7 @@ The numbered markers below match the controls in the screenshot.
 The detail shows the full entity: description, parameters, state variables,
 governing equations, and related entities.
 
-![Entity detail](img/kg-detail.png)
+![Entity detail](img/kg-detail.webp)
 
 Follow the links to related entities, or send the entity to the
 [Experiment Builder](../experiment-builder/index.md).

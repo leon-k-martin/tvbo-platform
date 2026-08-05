@@ -1,0 +1,9 @@
+// TVBO brand colour, prepended to Odoo's primary-variables bundle. All four are
+// needed: this build resolves branding through $o-enterprise-color (#714B67 is its
+// default), so the $o-community-color -> $o-brand-primary -> $primary chain never
+// fires and setting any one of them alone leaves the stock purple. Verified by
+// grepping the compiled bundle; the e2e suite asserts no #714B67 survives.
+$primary: #3498DB;
+$o-brand-primary: #3498DB;
+$o-community-color: #3498DB;
+$o-enterprise-color: #3498DB;

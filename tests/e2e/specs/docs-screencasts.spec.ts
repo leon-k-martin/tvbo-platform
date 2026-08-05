@@ -31,6 +31,12 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const CURSOR_INIT = () => {
   const add = () => {
     if (document.getElementById('__cur')) return;
+    // These casts are footage of the app, not of the site around it. Switching to a
+    // shorter panel leaves the old scroll behind and flashes the site footer for a
+    // frame or two; taking it out of the layout removes the flash at the source.
+    const hide = document.createElement('style');
+    hide.textContent = 'footer{display:none!important}';
+    (document.head || document.documentElement).appendChild(hide);
     const c = document.createElement('div');
     c.id = '__cur';
     c.style.cssText =
@@ -56,10 +62,13 @@ class Cast {
   constructor(public page: Page) {}
   // Every locator action gets a short timeout so a missing/blocked target fails
   // fast and the cast continues, instead of auto-waiting to the 90s test timeout.
+  // Waits for the target to exist first: click/type/pick drive the DOM directly, and
+  // a querySelector miss is a silent no-op that records a cast where nothing happens.
   async to(sel: string) {
+    await this.page.waitForSelector(sel, { timeout: 15000 }).catch(() => {});
     const el = this.page.locator(sel).first();
-    await el.scrollIntoViewIfNeeded({ timeout: 4000 }).catch(() => {});
-    const box = await el.boundingBox({ timeout: 3000 }).catch(() => null);
+    await el.scrollIntoViewIfNeeded({ timeout: 1500 }).catch(() => {});
+    const box = await el.boundingBox({ timeout: 1500 }).catch(() => null);
     if (!box) return;
     await this.page.evaluate(
       ([x, y]) => (window as unknown as { __moveCur?: (x: number, y: number) => void }).__moveCur?.(x, y),
@@ -67,16 +76,48 @@ class Cast {
     );
     await sleep(700);
   }
-  async click(sel: string) {
+  // The builder's panels keep Playwright's actionability checks from ever passing
+  // (bootstrap btn-check labels, a canvas that never settles), so locator.click()
+  // and .fill() just burn their timeouts and record a cast where nothing happens.
+  // Drive the DOM directly instead — the cursor above still shows where it lands.
+  async click(sel: string, dwell = 800) {
     await this.to(sel);
-    await this.page.locator(sel).first().click({ timeout: 6000 }).catch(() => {});
-    await sleep(800);
+    await this.page.evaluate((s) => (document.querySelector(s) as HTMLElement | null)?.click(), sel);
+    await sleep(dwell);
   }
-  async type(sel: string, text: string) {
+  // Focus via the DOM, then send real key events: keeps the visible typewriter
+  // effect without going through element actionability.
+  async type(sel: string, text: string, dwell = 900) {
     await this.to(sel);
-    await this.page.locator(sel).first().click({ timeout: 6000 }).catch(() => {});
-    await this.page.locator(sel).first().pressSequentially(text, { delay: 95, timeout: 8000 }).catch(() => {});
-    await sleep(900);
+    await this.page.evaluate((s) => {
+      const el = document.querySelector(s) as HTMLInputElement | null;
+      if (!el) return;
+      el.focus();
+      el.value = '';
+    }, sel);
+    await this.page.keyboard.type(text, { delay: 70 });
+    await this.page.evaluate((s) => document.querySelector(s)
+      ?.dispatchEvent(new Event('change', { bubbles: true })), sel);
+    await sleep(dwell);
+  }
+  // Picks the option whose visible text matches, so the cast is not tied to
+  // database ids that shift between refreshes of the knowledge base.
+  async pick(sel: string, label: RegExp, dwell = 1200) {
+    await this.to(sel);
+    const value = await this.page.evaluate(
+      ([s, src, flags]) => [...((document.querySelector(s) as HTMLSelectElement | null)?.options || [])]
+        .find((o) => new RegExp(src, flags).test(o.text.trim()))?.value,
+      [sel, label.source, label.flags] as [string, string, string],
+    );
+    if (value !== undefined) {
+      await this.page.evaluate(([s, v]) => {
+        const el = document.querySelector(s) as HTMLSelectElement | null;
+        if (!el) return;
+        el.value = v;
+        el.dispatchEvent(new Event('change', { bubbles: true }));
+      }, [sel, value] as [string, string]);
+    }
+    await sleep(dwell);
   }
 }
 
@@ -135,23 +176,41 @@ test('cast: knowledge-graph tour', async ({ browser }) => {
 });
 
 test('cast: build an experiment', async ({ browser }) => {
-  test.slow(); // heaviest cast: loads a full experiment + walks the tab row, so it
-  // needs headroom when the dev stack is under memory pressure.
+  // Heaviest cast by far: video capture plus the builder's WebGL scene starves the
+  // page's main thread, so each step lands far slower than it plays back. The dead
+  // time is cut out afterwards by process-docs-videos.sh.
+  test.setTimeout(600_000);
+  //
+  // Starts from an EMPTY builder and actually fills it in. Deep-linking a saved
+  // experiment (?experiment=N) made a cast of four tab clicks over a form that
+  // was already complete — 83s in which nothing visibly happened.
   await record(browser, 'tvbo-build-an-experiment', async (c) => {
-    await c.page.goto(`${BASE}/tvbo/configurator?experiment=${EXP}`, { waitUntil: 'load', timeout: 60000 });
-    // Wait for the tab row instead of a fixed sleep, so a slow prefill does not race.
-    await c.page.waitForSelector('[data-bs-target="#dynamics-panel"]', { timeout: 25000 }).catch(() => {});
-    await sleep(2500);
-    await c.click('[data-bs-target="#dynamics-panel"]');
-    await sleep(1500);
-    await c.click('[data-bs-target="#network-panel"]');
-    await sleep(1500);
-    await c.click('[data-bs-target="#observations-panel"]');
-    await sleep(1500);
-    await c.click('[data-bs-target="#run-panel"]');
-    await sleep(1400);
-    await c.to('#runSimulationBtn');         // show where to run
-    await sleep(1600);
+    // domcontentloaded, not load: the builder pulls the whole model catalogue and a
+    // three.js scene, so waiting for `load` idles the cast for ~30s on a ready page.
+    await c.page.goto(`${BASE}/tvbo/configurator`, { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await c.page.waitForSelector('#experimentName', { timeout: 25000 }).catch(() => {});
+    await sleep(1200);
+
+    await c.type('#experimentName', 'Resting-state alpha', 400);
+    await c.type('#experimentLabel', 'alpha-84', 700);
+
+    await c.click('[data-bs-target="#dynamics-panel"]', 500);
+    await c.click('#addDynamicsModel', 600);
+    await c.page.waitForSelector('#editorBaseModel', { state: 'visible', timeout: 10000 }).catch(() => {});
+    await c.pick('#editorBaseModel', /^JansenRit$/, 1800);
+
+    await c.click('[data-bs-target="#network-panel"]', 500);
+    await c.type('#customNetworkLabel', 'Desikan-Killiany', 300);
+    await c.type('#customGlobalCoupling', '0.05', 300);
+    await c.type('#randomNodeCount', '84', 300);
+    await c.click('#generateRandomNetwork', 2600);   // the 3D panel draws the network
+
+    await c.click('[data-bs-target="#integration-panel"]', 500);
+    await c.pick('#integratorMethod', /^Heun$/, 600);
+    await c.type('#integratorDuration', '2000', 800);
+
+    // The payoff: the whole thing as one schema-valid specification.
+    await c.click('[data-bs-target="#preview-panel"]', 2800);
   });
 });
 

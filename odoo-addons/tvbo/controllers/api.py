@@ -19,6 +19,8 @@ Enforced here in the controller (the schema entities stay field-free).
 import json
 import logging
 
+from .assets import json_payload
+
 from odoo import http
 from odoo.http import request
 
@@ -40,9 +42,7 @@ class TVBOApi(http.Controller):
     # Helpers
     # ------------------------------------------------------------------ #
     def _resp(self, data, status=200):
-        return request.make_response(
-            json.dumps(data, default=str),
-            headers=[('Content-Type', 'application/json')], status=status)
+        return json_payload(data, status=status)
 
     def _yaml(self, text, filename):
         return request.make_response(text, headers=[

@@ -20,7 +20,7 @@ A single reviewer's approval is enough to publish.
 
 ## The queue
 
-![The Publications → Review Requests queue in the backend](img/publications-queue.png)
+![The Publications → Review Requests queue in the backend](img/publications-queue.webp)
 
 Open **TVBO Database → Publications → Review Requests** in the backend. It lists
 every submission that is not a private draft, defaulting to **Awaiting review**.

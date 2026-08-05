@@ -17,12 +17,13 @@ Three responsibilities:
    schema-correct YAML. Single source of truth for the live preview and
    the YAML download button.
 """
-import json
 import logging
 import re
 
 from odoo import http
 from odoo.http import request
+
+from .assets import json_payload
 
 _logger = logging.getLogger(__name__)
 
@@ -32,11 +33,7 @@ _logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 
 def _json(data, status=200):
-    return request.make_response(
-        json.dumps(data, default=str),
-        headers=[('Content-Type', 'application/json')],
-        status=status,
-    )
+    return json_payload(data, status=status)
 
 
 def _camel_to_snake(name):
