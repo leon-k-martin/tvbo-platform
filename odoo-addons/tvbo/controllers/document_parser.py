@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
-import json
 import logging
 import requests
 from odoo import http
 from odoo.http import request
+
+from .assets import json_payload
 
 _logger = logging.getLogger(__name__)
 
@@ -49,7 +50,4 @@ class DocumentParserController(http.Controller):
             return self._json_response({'success': False, 'error': 'MinerU service unavailable'})
 
     def _json_response(self, data):
-        return request.make_response(
-            json.dumps(data, default=str),
-            headers=[('Content-Type', 'application/json')]
-        )
+        return json_payload(data)

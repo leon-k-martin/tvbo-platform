@@ -11,7 +11,7 @@ Nodes are entities; edges are the relationships between them, such as a model
 belonging to a family or a study using a network. Use it to see context and find
 related entities you did not search for.
 
-![The interactive graph view](img/kg-graph-view.png)
+![The interactive graph view](img/kg-graph-view.webp)
 
 Click the graph icon in the view toggle (top-right) to switch; your search and
 **Class** filters carry over. Drag the background to pan, scroll to zoom, and drag
@@ -21,7 +21,7 @@ including the action to send it to the
 
 ## Watch: a Knowledge Graph tour
 
-<video class="o_docs_video" controls preload="metadata" poster="/tvbo_platform_docs/static/img/poster-tvbo-knowledge-graph-tour.jpg">
+<video class="o_docs_video" controls preload="metadata" poster="/tvbo_platform_docs/static/img/poster-tvbo-knowledge-graph-tour.webp">
   <source src="/tvbo_platform_docs/static/video/tvbo-knowledge-graph-tour.mp4" type="video/mp4"/>
   Your browser cannot play this video.
   <a href="/tvbo_platform_docs/static/video/tvbo-knowledge-graph-tour.mp4">Download it</a>.

@@ -5,7 +5,7 @@ nav_order: 10
 access_level: public
 sequence: 10
 summary: Browse, build, run, and save your work. Start here.
-thumbnail: img/home.png
+thumbnail: img/home.webp
 ---
 
 # TVBO Platform Guide
@@ -13,7 +13,7 @@ thumbnail: img/home.png
 Browse the Knowledge Graph, build and export a runnable experiment, and save your
 work. Most of the platform needs no account, and it is free to use.
 
-![The TVBO platform](img/home.png)
+![The TVBO platform](img/home.webp)
 
 ## What you can do
 

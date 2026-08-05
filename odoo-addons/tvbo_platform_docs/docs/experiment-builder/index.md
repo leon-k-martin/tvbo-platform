@@ -5,7 +5,7 @@ nav_order: 30
 access_level: public
 sequence: 10
 summary: Assemble a runnable experiment and export it as YAML.
-thumbnail: img/builder-general.png
+thumbnail: img/builder-general.webp
 ---
 
 # The Experiment Builder
@@ -17,7 +17,7 @@ Building and exporting need no account.
 
 ## Watch: the full workflow
 
-<video class="o_docs_video" controls preload="metadata" poster="/tvbo_platform_docs/static/img/poster-tvbo-experiment-builder-workflow.jpg">
+<video class="o_docs_video" controls preload="metadata" poster="/tvbo_platform_docs/static/img/poster-tvbo-experiment-builder-workflow.webp">
   <source src="/tvbo_platform_docs/static/video/tvbo-experiment-builder-workflow.mp4" type="video/mp4"/>
   Your browser cannot play this video.
   <a href="/tvbo_platform_docs/static/video/tvbo-experiment-builder-workflow.mp4">Download it</a>.

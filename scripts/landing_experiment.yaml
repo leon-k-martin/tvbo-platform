@@ -1,0 +1,35 @@
+id: 101
+label: "SupHopf on the dk_average connectome"
+description: >
+  A supercritical Hopf oscillator per Desikan-Killiany region, diffusively coupled
+  through the dk_average connectome. Everything but the three tuned parameters comes
+  from the curated database by IRI. Source spec for the landing-page scope; the
+  sweep and the per-backend code are baked from this file by
+  scripts/bake_landing_scope.py.
+
+dynamics:
+  iri: tvbo:SupHopf
+  parameters:
+    a: {value: 0.01}
+    omega: {value: [0.05609, 0.04788, 0.05004, 0.06717, 0.05561, 0.06452, 0.06601, 0.06135, 0.06706, 0.06912, 0.04637, 0.06688, 0.05251, 0.05777, 0.06051, 0.04973, 0.04584, 0.0513, 0.04734, 0.06805, 0.05291, 0.05353, 0.05131, 0.06401, 0.05055, 0.04489, 0.0467, 0.06541, 0.05365, 0.05325, 0.05316, 0.04955, 0.05595, 0.05536, 0.0504, 0.05829, 0.05379, 0.05624, 0.056, 0.06191, 0.05454, 0.05775, 0.05823, 0.05424, 0.05682, 0.05549, 0.06123, 0.05493, 0.05561, 0.05517, 0.04767, 0.04943, 0.0668, 0.05578, 0.06406, 0.06618, 0.06131, 0.06703, 0.06912, 0.04624, 0.06694, 0.04644, 0.05742, 0.06051, 0.05119, 0.04582, 0.04627, 0.04541, 0.06781, 0.05268, 0.05412, 0.05129, 0.06457, 0.0491, 0.04398, 0.04694, 0.0655, 0.0542, 0.05259, 0.04839, 0.04934, 0.05609, 0.05587, 0.05013]}
+
+  state_variables:
+    x: {noise: {additive: true, parameters: {sigma: {value: 0.01}}}}
+    y: {noise: {additive: true, parameters: {sigma: {value: 0.01}}}}
+
+coupling:
+  iri: tvbo:Linear
+  parameters:
+    a: {value: 0.025}
+
+network:
+  bids_dir: "../networks/bids/dk_average"
+  structural_measures: [streamlineCount]
+  transforms:
+    - name: weight
+      callable: {module: tvbo.classes.network, name: normalized_graph_laplacian}
+
+integration:
+  method: Heun
+  duration: 4000.0
+  step_size: 0.5

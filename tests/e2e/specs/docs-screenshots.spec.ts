@@ -1,6 +1,7 @@
 import { test, Page } from '@playwright/test';
 import * as path from 'node:path';
 import * as fs from 'node:fs';
+import { writeShot } from '../helpers/shot';
 
 /**
  * Documentation screenshots — the single source of truth for every UI image in
@@ -29,7 +30,7 @@ test.use({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 2 });
 test.describe.configure({ retries: 2 });
 
 fs.mkdirSync(OUT, { recursive: true });
-const shot = (page: Page, name: string) => page.screenshot({ path: path.join(OUT, name) });
+const shot = (page: Page, name: string) => writeShot(page, OUT, name);
 const settle = (ms = 1500) => new Promise((r) => setTimeout(r, ms));
 
 // Warm the Odoo server (QWeb template + asset-bundle compilation is the dominant
@@ -89,25 +90,25 @@ async function signIn(page: Page, user = USER, pass = PASS): Promise<boolean> {
 test('home', async ({ page }) => {
   await page.goto(`${BASE}/`, { waitUntil: 'networkidle' });
   await settle(1200);
-  await shot(page, 'home.png');
+  await shot(page, 'home.webp');
 });
 
 test('login', async ({ page }) => {
   await page.goto(`${BASE}/web/login`, { waitUntil: 'networkidle' });
   await settle(800);
-  await shot(page, 'login.png');
+  await shot(page, 'login.webp');
 });
 
 test('register', async ({ page }) => {
   await page.goto(`${BASE}/web/signup`, { waitUntil: 'networkidle' });
   await settle(800);
-  await shot(page, 'register.png');
+  await shot(page, 'register.webp');
 });
 
 test('agents', async ({ page }) => {
   await page.goto(`${BASE}/tvbo/agents`, { waitUntil: 'networkidle' });
   await settle(1200);
-  await shot(page, 'agents.png');
+  await shot(page, 'agents.webp');
 });
 
 test('kg-list-view', async ({ page }) => {
@@ -121,7 +122,7 @@ test('kg-list-view', async ({ page }) => {
     { selector: '#graphViewBtn', n: 3 },      // view toggle
     { selector: '.result-card', n: 4 },       // a result card
   ]);
-  await shot(page, 'kg-list-view.png');
+  await shot(page, 'kg-list-view.webp');
 });
 
 test('kg-detail', async ({ page }) => {
@@ -131,7 +132,7 @@ test('kg-detail', async ({ page }) => {
   await page.locator('.result-card').first().click();
   await page.waitForSelector('.kg-modal-backdrop, .kg-modal', { timeout: 15000 });
   await settle(2000); // MathJax / equation render
-  await shot(page, 'kg-detail.png');
+  await shot(page, 'kg-detail.webp');
 });
 
 test('kg-graph-view', async ({ page }) => {
@@ -146,17 +147,17 @@ test('kg-graph-view', async ({ page }) => {
     }, { timeout: 30000 })
     .catch(() => {});
   await settle(3500); // force layout settle
-  await shot(page, 'kg-graph-view.png');
+  await shot(page, 'kg-graph-view.webp');
 });
 
 // Experiment Builder — one shot per documented tab, with a populated example
 // loaded so the tabs show real content (a model, a connectome, observations).
 const TABS: [string, string][] = [
-  ['#general-panel', 'builder-general.png'],
-  ['#dynamics-panel', 'builder-dynamics.png'],
-  ['#network-panel', 'builder-network.png'],
-  ['#observations-panel', 'builder-observations.png'],
-  ['#run-panel', 'builder-run.png'],
+  ['#general-panel', 'builder-general.webp'],
+  ['#dynamics-panel', 'builder-dynamics.webp'],
+  ['#network-panel', 'builder-network.webp'],
+  ['#observations-panel', 'builder-observations.webp'],
+  ['#run-panel', 'builder-run.webp'],
 ];
 for (const [target, file] of TABS) {
   test(`builder ${file}`, async ({ page }) => {
@@ -196,14 +197,14 @@ test.describe('account', () => {
       { selector: '[data-action="share"]', n: 2 },   // Share with a colleague (p2p)
       { selector: '[data-action="submit"]', n: 3 },  // Submit for review (publish)
     ]);
-    await shot(page, 'my-models.png');
+    await shot(page, 'my-models.webp');
   });
 
   test('shared-with-me', async ({ page }) => {
     test.skip(!(await signIn(page)), 'fixture sign-in unavailable');
     await page.goto(`${BASE}/my/shared`, { waitUntil: 'networkidle' });
     await settle(1200);
-    await shot(page, 'shared-with-me.png');
+    await shot(page, 'shared-with-me.webp');
   });
 
   test('api-keys', async ({ page }) => {
@@ -214,7 +215,7 @@ test.describe('account', () => {
       { selector: '#apiKeyName', n: 1 },   // name the key
       { selector: '#apiKeyCreate', n: 2 }, // Create key
     ]);
-    await shot(page, 'api-keys.png');
+    await shot(page, 'api-keys.webp');
   });
 });
 
@@ -231,6 +232,6 @@ test.describe('reviewer', () => {
     });
     await page.waitForSelector('.o_list_view, .o_content', { timeout: 30000 }).catch(() => {});
     await settle(2000);
-    await shot(page, 'publications-queue.png');
+    await shot(page, 'publications-queue.webp');
   });
 });

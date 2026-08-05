@@ -15,6 +15,9 @@ import * as ci from '../helpers/cinematic';
  * Inputs (generated alongside this spec):
  *   demo-output/lorenz_model.yaml, demo_model.py, demo_model_phase.png,
  *   demo_model_ts.png
+ *
+ * The docs copies under tvbo_platform_docs/static/img are lossless WebP; convert
+ * with `cwebp -lossless` when refreshing them, or the guide's <img> breaks.
  */
 const OUT = path.resolve(__dirname, '..', 'demo-output');
 const VIDEO_DIR = path.join(OUT, 'video-raw-model');

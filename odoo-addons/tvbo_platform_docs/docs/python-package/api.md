@@ -3,7 +3,7 @@ title: Retrieve & store via the API
 access_level: public
 sequence: 20
 summary: Pull models and experiments into Python (public ones openly, your own with an API key) and push your own back.
-thumbnail: img/api-keys.png
+thumbnail: img/api-keys.webp
 ---
 
 # Retrieve & store via the API

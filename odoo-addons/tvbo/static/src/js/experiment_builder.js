@@ -583,9 +583,8 @@
         root.querySelector('#editorDescription').value = model.description || '';
         root.querySelector('#editorReferences').value = model.references || '';
 
-        // System type is a Many2one in Odoo, returns [id, name]
         if (model.system_type) {
-          const stName = Array.isArray(model.system_type) ? model.system_type[1] : model.system_type;
+          const stName = plainValue(model.system_type);
           root.querySelector('#editorSystemType').value = String(stName).toLowerCase().includes('discrete') ? 'discrete' : 'continuous';
         }
 
@@ -593,9 +592,9 @@
         const transformedModel = {
           parameters: (model.parameters || []).map(p => ({
             name: p.name,
-            symbol: p.symbol,
+            symbol: plainValue(p.symbol),
             value: p.value,
-            unit: p.unit,
+            unit: plainValue(p.unit),
             description: p.description,
             domain: p.domain ? { lo: p.domain.lo, hi: p.domain.hi } : undefined,
           })),
@@ -605,7 +604,7 @@
               ? { rhs: sv.equation.righthandside || '' }
               : { rhs: '' },
             initial_value: sv.initial_value,
-            unit: sv.unit,
+            unit: plainValue(sv.unit),
             variable_of_interest: sv.variable_of_interest,
             coupling_variable: sv.coupling_variable,
             stimulation_variable: sv.stimulation_variable,
@@ -615,7 +614,7 @@
             equation: dp.equation && typeof dp.equation === 'object'
               ? { rhs: dp.equation.righthandside || '' }
               : { rhs: '' },
-            unit: dp.unit,
+            unit: plainValue(dp.unit),
             description: dp.description,
           })),
           derived_variables: (model.derived_variables || []).map(dv => ({
@@ -623,7 +622,7 @@
             equation: dv.equation && typeof dv.equation === 'object'
               ? { rhs: dv.equation.righthandside || '' }
               : { rhs: '' },
-            unit: dv.unit,
+            unit: plainValue(dv.unit),
             description: dv.description,
           })),
           functions: (model.functions || []).map(fn => ({
@@ -1363,6 +1362,19 @@
 
   function escapeAttr(s) {
     return String(s || '').replace(/"/g, '&quot;');
+  }
+
+  /**
+   * Plain display string for an Odoo related value, in whichever shape it arrives:
+   * the nested dict `_resolve_record_deep` produces, the `[id, display_name]` pair a
+   * plain `read()` returns, or `false` for an unset scalar. Arrays must be handled
+   * before the object branch — `typeof [] === 'object'`, and a pair has neither
+   * `.name` nor `.display_name`, so it would otherwise blank the field.
+   */
+  function plainValue(v) {
+    if (Array.isArray(v)) return v.length > 1 ? String(v[1]) : '';
+    if (v && typeof v === 'object') return v.name || v.display_name || '';
+    return v || '';
   }
 
   // Expose functions globally
@@ -2516,7 +2528,10 @@
       window.parcellationsData.forEach(parc => {
         const option = document.createElement('option');
         option.value = parc.id;
-        option.textContent = parc.label;
+        // Most ingested parcellations carry no label, and Odoo serialises that as
+        // `false` — which rendered literally. Fall back to the atlas m2o's name.
+        const atlas = plainValue(parc.atlas);
+        option.textContent = parc.label || atlas || `#${parc.id}`;
         parcellationSelect.appendChild(option);
       });
       // Add custom option at the end

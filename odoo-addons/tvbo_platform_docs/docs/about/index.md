@@ -31,7 +31,7 @@ A specification captures everything needed to reproduce a run: the local dynamic
 
 Find and compare models in the Knowledge Graph:
 
-<video class="o_docs_video" controls preload="metadata" poster="/tvbo_platform_docs/static/img/poster-tvbo-knowledge-graph-tour.jpg">
+<video class="o_docs_video" controls preload="metadata" poster="/tvbo_platform_docs/static/img/poster-tvbo-knowledge-graph-tour.webp">
   <source src="/tvbo_platform_docs/static/video/tvbo-knowledge-graph-tour.mp4" type="video/mp4"/>
   Your browser cannot play this video.
   <a href="/tvbo_platform_docs/static/video/tvbo-knowledge-graph-tour.mp4">Download it</a>.
@@ -39,7 +39,7 @@ Find and compare models in the Knowledge Graph:
 
 Assemble and export a runnable experiment in the browser:
 
-<video class="o_docs_video" controls preload="metadata" poster="/tvbo_platform_docs/static/img/poster-tvbo-experiment-builder-workflow.jpg">
+<video class="o_docs_video" controls preload="metadata" poster="/tvbo_platform_docs/static/img/poster-tvbo-experiment-builder-workflow.webp">
   <source src="/tvbo_platform_docs/static/video/tvbo-experiment-builder-workflow.mp4" type="video/mp4"/>
   Your browser cannot play this video.
   <a href="/tvbo_platform_docs/static/video/tvbo-experiment-builder-workflow.mp4">Download it</a>.
@@ -47,7 +47,7 @@ Assemble and export a runnable experiment in the browser:
 
 Run the same experiment in Python:
 
-<video class="o_docs_video" controls preload="metadata" poster="/tvbo_platform_docs/static/img/poster-tvbo-run-in-python.jpg">
+<video class="o_docs_video" controls preload="metadata" poster="/tvbo_platform_docs/static/img/poster-tvbo-run-in-python.webp">
   <source src="/tvbo_platform_docs/static/video/tvbo-run-in-python.mp4" type="video/mp4"/>
   Your browser cannot play this video.
   <a href="/tvbo_platform_docs/static/video/tvbo-run-in-python.mp4">Download it</a>.

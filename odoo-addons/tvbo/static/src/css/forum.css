@@ -1,0 +1,285 @@
+/* Card language, spacing and typography for Odoo's forum and profile pages; the colours themselves come from tvbo_primary_variables.scss. Scoped so nothing leaks. */
+
+.website_forum,
+.o_wprofile_wrap {
+    --tvbo-accent: #3498DB;
+    --tvbo-accent-ink: #2166A0;
+    --tvbo-ink: #2C3E50;
+    --tvbo-muted: #5C6E72;
+    --tvbo-bg: #F7FAFA;
+    --tvbo-panel: #FFFFFF;
+    --tvbo-hair: #E1E9E9;
+    --tvbo-radius: 10px;
+}
+
+.website_forum {
+    color: var(--tvbo-ink);
+}
+
+/* Topic type — the Question/Discussion split that replaced the two-room /forum index. */
+
+.website_forum {
+    --tvbo-tt-question: var(--tvbo-accent);
+    --tvbo-tt-question-ink: var(--tvbo-accent-ink);
+    --tvbo-tt-discussion: #b5701a;
+    --tvbo-tt-discussion-ink: #8a560f;
+}
+
+.tvbo-tt-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    flex: none;
+    border: 1px solid currentColor;
+    border-radius: 999px;
+    padding: 0.1rem 0.55rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    line-height: 1.5;
+    white-space: nowrap;
+}
+
+.tvbo-tt-badge--question {
+    color: var(--tvbo-tt-question-ink);
+    background: color-mix(in srgb, var(--tvbo-tt-question) 8%, transparent);
+}
+
+.tvbo-tt-badge--discussion {
+    color: var(--tvbo-tt-discussion-ink);
+    background: color-mix(in srgb, var(--tvbo-tt-discussion) 8%, transparent);
+}
+
+.tvbo-tt-badge .fa {
+    font-size: 0.85em;
+    opacity: 0.8;
+}
+
+/* Ask/edit form: two cards rather than a select, because the choice changes how the thread behaves. */
+
+.tvbo-tt-choice {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 0.75rem;
+}
+
+.tvbo-tt-option {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-areas: "radio name" "radio hint";
+    column-gap: 0.6rem;
+    align-items: baseline;
+    margin: 0;
+    padding: 0.75rem 0.9rem;
+    border: 1px solid var(--tvbo-hair);
+    border-radius: var(--tvbo-radius);
+    background: var(--tvbo-panel);
+    cursor: pointer;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.tvbo-tt-option:hover {
+    border-color: var(--accent, var(--tvbo-accent));
+}
+
+.tvbo-tt-option--question { --accent: var(--tvbo-tt-question); }
+.tvbo-tt-option--discussion { --accent: var(--tvbo-tt-discussion); }
+
+.tvbo-tt-option:has(input:checked) {
+    border-color: var(--accent);
+    box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.tvbo-tt-option:has(input:focus-visible) {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+.tvbo-tt-option input {
+    grid-area: radio;
+    accent-color: var(--accent);
+    margin: 0;
+    align-self: center;
+}
+
+.tvbo-tt-option-name {
+    grid-area: name;
+    font-weight: 600;
+    color: var(--tvbo-ink);
+}
+
+.tvbo-tt-option-hint {
+    grid-area: hint;
+    font-size: 0.82rem;
+    line-height: 1.4;
+    color: var(--tvbo-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .tvbo-tt-option {
+        transition: none;
+    }
+}
+
+/* Page shell */
+.website_forum .o_wforum_content_wrapper {
+    max-width: 1160px;
+}
+
+.website_forum h1,
+.website_forum h2,
+.website_forum h3 {
+    color: var(--tvbo-ink);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+}
+
+/* Welcome banner: Odoo's parallax cover is tinted .bg-black-50 over the forum's image_1920, so without an image it is a flat grey slab. */
+.website_forum .forum_intro {
+    background-color: transparent !important;
+    background-image: linear-gradient(135deg, #3498DB 0%, #2C3E50 100%);
+    padding-top: 2.5rem !important;
+    padding-bottom: 2.5rem !important;
+}
+
+.website_forum .forum_intro > .container > .row > [class*="col-lg-"] {
+    margin-left: 0;
+    flex: 0 0 100%;
+    max-width: 100%;
+}
+
+.website_forum .forum_intro .container {
+    padding-left: 0;
+    padding-right: 0;
+}
+
+.website_forum .forum_intro .jumbotron {
+    background: none;
+    border-radius: 0;
+    padding: 0;
+}
+
+.website_forum .forum_intro,
+.website_forum .forum_intro h1,
+.website_forum .forum_intro .lead,
+.website_forum .forum_intro p {
+    color: #fff;
+}
+
+.website_forum .forum_intro h1 {
+    font-size: clamp(1.6rem, 3vw, 2.1rem);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    max-width: 24ch;
+    margin-bottom: 0.75rem;
+}
+
+.website_forum .forum_intro .lead {
+    font-size: 1rem;
+    max-width: 62ch;
+}
+
+.website_forum .forum_intro .btn-primary {
+    background: #fff;
+    border-color: #fff;
+    color: var(--tvbo-accent-ink);
+    font-weight: 600;
+}
+
+.website_forum .forum_intro .btn-outline-light {
+    border-color: rgba(255, 255, 255, 0.6);
+    color: #fff;
+    font-weight: 600;
+}
+
+.website_forum .forum_intro .btn-outline-light:hover {
+    background: rgba(255, 255, 255, 0.14);
+    border-color: #fff;
+    color: #fff;
+}
+
+.website_forum .forum_intro .btn-link {
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.website_forum .card {
+    border: 1px solid var(--tvbo-hair);
+    border-radius: var(--tvbo-radius);
+    box-shadow: 0 1px 2px rgba(21, 37, 40, 0.04);
+}
+
+/* Question list */
+.website_forum .o_wforum_table {
+    border-radius: var(--tvbo-radius);
+    overflow: hidden;
+}
+
+.website_forum .o_wforum_index_entry_title {
+    color: var(--tvbo-ink);
+    font-weight: 600;
+}
+
+.website_forum .o_wforum_index_entry_title:hover {
+    color: var(--tvbo-accent);
+}
+
+.website_forum .o_wforum_reply_count,
+.website_forum .o_wforum_view_count,
+.website_forum .o_wforum_last_activity {
+    color: var(--tvbo-muted);
+}
+
+/* Tag pills — match the Knowledge Graph's chip language */
+.website_forum .o_wforum_index_entry_tags .badge,
+.website_forum a[href*="/tag/"].badge {
+    background: rgba(52, 152, 219, 0.08) !important;
+    color: var(--tvbo-accent-ink) !important;
+    border: 1px solid rgba(52, 152, 219, 0.25);
+    border-radius: 999px;
+    font-weight: 500;
+    padding: 0.3em 0.75em;
+}
+
+.website_forum .o_wforum_index_entry_tags .badge:hover,
+.website_forum a[href*="/tag/"].badge:hover {
+    background: rgba(52, 152, 219, 0.16) !important;
+    border-color: var(--tvbo-accent);
+}
+
+/* Posts */
+.website_forum .o_wforum_post {
+    background: var(--tvbo-panel);
+    border: 1px solid var(--tvbo-hair);
+    border-radius: var(--tvbo-radius);
+}
+
+.website_forum .o_wforum_answer_correct {
+    border-color: #2E9E6B;
+    box-shadow: inset 3px 0 0 #2E9E6B;
+}
+
+.website_forum .o_wforum_readable {
+    line-height: 1.7;
+}
+
+.website_forum .o_wforum_readable pre,
+.website_forum .o_wforum_readable code {
+    background: var(--tvbo-bg);
+    border: 1px solid var(--tvbo-hair);
+    border-radius: 6px;
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+/* Sidebar */
+.website_forum .o_wforum_sidebar {
+    background: var(--tvbo-bg);
+    border: 1px solid var(--tvbo-hair);
+    border-radius: var(--tvbo-radius);
+}
+
+/* Karma / moderation notices read as information, not alarm */
+.website_forum .alert-info {
+    background: rgba(52, 152, 219, 0.07);
+    border-color: rgba(52, 152, 219, 0.25);
+    color: var(--tvbo-ink);
+}
