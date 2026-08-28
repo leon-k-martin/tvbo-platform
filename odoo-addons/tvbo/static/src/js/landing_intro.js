@@ -440,8 +440,8 @@
   /* Docstrings and XML comments open on one line and close on another, so a purely
      per-line pass paints their bodies as code. These three carry across lines. */
   var BLOCK = {
-    py: [['s', '"""', '"""'], ['s', ", "]],
-    jl: [['s', '"""', '"""']],
+    py: [['sd', '"""', '"""'], ['sd', "'''", "'''"]],
+    jl: [['sd', '"""', '"""']],
     xml: [['c', '<!--', '-->']]
   };
 

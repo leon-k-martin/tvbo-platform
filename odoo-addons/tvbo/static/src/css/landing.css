@@ -137,9 +137,13 @@
   min-height:1.75em}   /* 1 line box: a blank line must still occupy its gutter row */
 .tvbo-landing .scope-code .i1{padding-left:4.1ch}
 .tvbo-landing .scope-code .i2{padding-left:5.8ch}
+.tvbo-landing .scope-code .i3{padding-left:7.5ch}
+.tvbo-landing .scope-code .i4{padding-left:9.2ch}
 .tvbo-landing .scope-code .k{color:var(--sc-key);font-weight:500}
 .tvbo-landing .scope-code .b,.tvbo-landing .scope-code .a{color:var(--sc-bi)}
 .tvbo-landing .scope-code .s{color:var(--sc-str)}
+/* a docstring is documentation, not data: mute it like a comment so a long one does not shout */
+.tvbo-landing .scope-code .sd{color:var(--sc-com)}
 .tvbo-landing .scope-code .n,.tvbo-landing .scope-code .at{color:var(--sc-num)}
 .tvbo-landing .scope-code .f{color:var(--sc-fn)}
 .tvbo-landing .scope-code .t{color:var(--sc-key)}

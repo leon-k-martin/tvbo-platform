@@ -244,7 +244,7 @@
                         </section>
 
                         <div class="tvbo-landing">
-                            <link rel="stylesheet" href="/tvbo/z/src/css/landing.css?v=17"/>
+                            <link rel="stylesheet" href="/tvbo/z/src/css/landing.css?v=18"/>
 
                             <!-- What is TVB-O — the scope. One schema-valid experiment
                                  (scripts/landing_experiment.yaml): its spec, the code every
@@ -274,13 +274,13 @@
                                                 <div class="cl i2 hot"><span class="k">a</span>: {value: <span class="n" data-scope-a="1">0.01</span>}</div>
                                                 <div class="cl i2"><span class="k">omega</span>: {value: [<span class="n">0.05609</span>, … 84]}</div>
                                                 <div class="cl"> </div>
-                                                <div class="cl"><span class="k">coupling</span>:</div>
-                                                <div class="cl i1"><span class="k">iri</span>: tvbo:Linear</div>
-                                                <div class="cl i1"><span class="k">parameters</span>:</div>
-                                                <div class="cl i2 hot"><span class="k">a</span>: {value: <span class="n" data-scope-g="1">0.05</span>}</div>
-                                                <div class="cl"> </div>
                                                 <div class="cl"><span class="k">network</span>:</div>
                                                 <div class="cl i1"><span class="k">bids_dir</span>: ../networks/bids/dk_average</div>
+                                                <div class="cl i1"><span class="k">coupling</span>:</div>
+                                                <div class="cl i2"><span class="k">LinCoupling</span>:</div>
+                                                <div class="cl i3"><span class="k">iri</span>: tvbo:Linear</div>
+                                                <div class="cl i3"><span class="k">parameters</span>:</div>
+                                                <div class="cl i4 hot"><span class="k">a</span>: {value: <span class="n" data-scope-g="1">0.05</span>}</div>
                                                 <div class="cl i1"><span class="k">transforms</span>: [normalized_graph_laplacian]</div>
                                                 <div class="cl"> </div>
                                                 <div class="cl"><span class="k">integration</span>:</div>
@@ -334,8 +334,8 @@
 
                                     <script src="/tvbo/z/src/lib/three.min.js" defer="defer"/>
                                     <script src="/tvbo/z/src/lib/OrbitControls.js" defer="defer"/>
-                                    <script src="/tvbo/z/src/js/landing_scope_data.js?v=9" defer="defer"/>
-                                    <script src="/tvbo/z/src/js/landing_intro.js?v=38" defer="defer"/>
+                                    <script src="/tvbo/z/src/js/landing_scope_data.js?v=10" defer="defer"/>
+                                    <script src="/tvbo/z/src/js/landing_intro.js?v=39" defer="defer"/>
                                     <script src="/tvbo/z/src/js/landing_scope_sweep.js?v=3" defer="defer"/>
                                 </div>
                             </section>
@@ -1109,7 +1109,7 @@ tvbo skills uninstall</code></pre>
                 <t t-call="website.layout">
                     <div id="wrap" class="oe_structure oe_empty">
                         <div class="tvbo-landing">
-                            <link rel="stylesheet" href="/tvbo/z/src/css/landing.css?v=17"/>
+                            <link rel="stylesheet" href="/tvbo/z/src/css/landing.css?v=18"/>
 
                             <!-- Hero -->
                             <section class="hero">
