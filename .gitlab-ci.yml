@@ -2,6 +2,9 @@ variables:
   RESET_DB:
     value: "false"
     description: "Set to 'true' to DROP and recreate the Odoo database before upgrading. ⚠️ DESTRUCTIVE."
+  ALLOW_SAME_IMAGE:
+    value: "false"
+    description: "Set to 'true' to allow a rollout that re-pulls the same image digest (e.g. a RESET_DB-only restart). Otherwise a no-op deploy fails the job."
 
 deploy-job:
   stage: deploy
@@ -11,9 +14,14 @@ deploy-job:
     - export KUBECONFIG=/home/gitlab-runner/kubeconfig.yaml
     - kubectl apply -f tvboRunnerActions.yaml
     - |
-        # Inject RESET_DB into the deployment so the next pod sees it.
-        # Always re-set so toggling false/true between runs works deterministically.
+        # Always re-set, so toggling RESET_DB between runs takes effect deterministically.
         kubectl set env deployment/tvbo-odoo -n kube-system "RESET_DB=${RESET_DB:-false}"
+    - |
+        # Digest the live pod runs *before* the restart; re-pulling it means nothing shipped.
+        IMG_BEFORE=$(kubectl get pods -n kube-system -l app=tvbo-odoo \
+          -o jsonpath='{range .items[?(@.status.phase=="Running")]}{.status.containerStatuses[0].imageID}{"\n"}{end}' \
+          | head -1)
+        echo "image before rollout: ${IMG_BEFORE:-<none>}"
     - kubectl rollout restart deployment/tvbo-odoo -n kube-system
     - |
         set +e
@@ -45,7 +53,8 @@ deploy-job:
           echo "No pod found, exiting"
           exit $ROLLOUT_RC
         fi
-        echo "Image: $(kubectl get pod "$POD" -n kube-system -o jsonpath='{.status.containerStatuses[0].imageID}')"
+        IMG_AFTER=$(kubectl get pod "$POD" -n kube-system -o jsonpath='{.status.containerStatuses[0].imageID}')
+        echo "Image: $IMG_AFTER"
 
         echo ""
         echo "===== Waiting 60s for upgrade phase to finish/crash ====="
@@ -90,9 +99,7 @@ deploy-job:
 
         echo ""
         echo "===== KG completeness gate (/tvbo/api/kg/health) ====="
-        # Turn an incomplete KG into a RED pipeline instead of a silent green one.
-        # KG_OK = every ground-truth category fully ingested; KG_DEGRADED/KG_EMPTY
-        # mean records are missing (the failure mode that shipped unnoticed before).
+        # KG_OK = every ground-truth category fully ingested; anything else means records are missing.
         KG_HEALTH=$(kubectl exec -n kube-system "$POD" -- curl -sS http://localhost:8069/tvbo/api/kg/health 2>/dev/null)
         echo "$KG_HEALTH"
         KG_VERDICT=$(printf '%s' "$KG_HEALTH" | sed -nE 's/.*"verdict"[[:space:]]*:[[:space:]]*"([A-Z_]+)".*/\1/p')
@@ -106,8 +113,35 @@ deploy-job:
           KG_RC=1
         fi
 
-        # Fail on a bad rollout OR an incomplete KG.
+        echo ""
+        echo "===== Image digest gate ====="
+        # A restart onto the identical digest ships nothing; that is how a stale image once survived seven weeks.
+        IMG_RC=0
+        if [ -z "$IMG_AFTER" ]; then
+          echo "✗ IMAGE GATE FAILED: could not read the running pod's imageID."
+          IMG_RC=1
+        elif [ -z "$IMG_BEFORE" ]; then
+          echo "✓ IMAGE GATE PASSED: no previous running pod to compare against."
+        elif [ "$IMG_BEFORE" = "$IMG_AFTER" ]; then
+          if [ "${ALLOW_SAME_IMAGE:-false}" = "true" ]; then
+            echo "✓ IMAGE GATE SKIPPED: digest unchanged, allowed by ALLOW_SAME_IMAGE=true."
+          else
+            echo "✗ IMAGE GATE FAILED: the pod restarted onto the SAME digest, so this deploy shipped nothing."
+            echo "  digest: $IMG_AFTER"
+            echo "  The :main tag has not moved. Check that the GitHub Actions build for this commit"
+            echo "  finished and pushed ghcr.io/leon-k-martin/tvbo-platform:main BEFORE running this job."
+            echo "  For an intentional restart (RESET_DB only), re-run with ALLOW_SAME_IMAGE=true."
+            IMG_RC=1
+          fi
+        else
+          echo "✓ IMAGE GATE PASSED: digest moved"
+          echo "  from ${IMG_BEFORE}"
+          echo "  to   ${IMG_AFTER}"
+        fi
+
+        # Fail on a bad rollout, an unchanged image, OR an incomplete KG.
         [ "$ROLLOUT_RC" -ne 0 ] && exit "$ROLLOUT_RC"
+        [ "$IMG_RC" -ne 0 ] && exit "$IMG_RC"
         exit "$KG_RC"
   when: manual
 

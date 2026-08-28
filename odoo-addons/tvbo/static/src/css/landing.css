@@ -95,6 +95,7 @@
 
 .tvbo-landing .scope{
   --sc-line:#1b3245; --sc-dim:#7f9cb0; --sc-key:#63b3e8; --sc-num:#e0a75c; --sc-txt:#cbdceb;
+  --sc-str:#8ecfae; --sc-fn:#c3b4ea; --sc-bi:#86c5de; --sc-op:#6d8ba1; --sc-com:#5d798d; --sc-ln:#35536a;
   display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.08fr) minmax(0,1.24fr);
   margin-top:clamp(14px,2.2vh,26px);
   /* bound the instrument to the viewport; the two code panes scroll inside it so
@@ -130,16 +131,31 @@
 .tvbo-landing .scope-bar .tag b{color:var(--sc-num);font-weight:600}
 .tvbo-landing .scope-stage .scope-bar .tag{text-transform:none;letter-spacing:.02em;font-size:10px}
 
-.tvbo-landing .scope-code{padding:11px 13px 13px;font-family:var(--ls-mono);font-size:10.6px;
-  line-height:1.62;color:var(--sc-txt);overflow:auto;flex:1;min-height:0}
-.tvbo-landing .scope-code .cl{white-space:pre-wrap;padding-left:2.4ch;text-indent:-2.4ch}
+.tvbo-landing .scope-code{padding:11px 13px 13px;font-family:var(--ls-mono);font-size:10.9px;
+  line-height:1.75;color:var(--sc-txt);overflow:auto;flex:1;min-height:0;tab-size:4;font-variant-ligatures:none}
+.tvbo-landing .scope-code .cl{white-space:pre-wrap;padding-left:2.4ch;text-indent:-2.4ch;
+  min-height:1.75em}   /* 1 line box: a blank line must still occupy its gutter row */
 .tvbo-landing .scope-code .i1{padding-left:4.1ch}
 .tvbo-landing .scope-code .i2{padding-left:5.8ch}
-.tvbo-landing .scope-code .k{color:var(--sc-key)}
-.tvbo-landing .scope-code .n{color:var(--sc-num)}
-.tvbo-landing .scope-code .c{color:#5d798d}
+.tvbo-landing .scope-code .k{color:var(--sc-key);font-weight:500}
+.tvbo-landing .scope-code .b,.tvbo-landing .scope-code .a{color:var(--sc-bi)}
+.tvbo-landing .scope-code .s{color:var(--sc-str)}
+.tvbo-landing .scope-code .n,.tvbo-landing .scope-code .at{color:var(--sc-num)}
+.tvbo-landing .scope-code .f{color:var(--sc-fn)}
+.tvbo-landing .scope-code .t{color:var(--sc-key)}
+.tvbo-landing .scope-code .o{color:var(--sc-op)}
+.tvbo-landing .scope-code .c{color:var(--sc-com);font-style:italic}
 /* the two lines the sweep grid writes to */
 .tvbo-landing .scope-code .hot{background:rgba(99,179,232,.13);box-shadow:inset 2px 0 0 var(--sc-key);border-radius:0 3px 3px 0}
+
+/* the generated pane reads as an editor: numbered gutter, wraps hang clear of it */
+.tvbo-landing .scope-gen .scope-code{counter-reset:ln}
+.tvbo-landing .scope-gen .scope-code .cl{position:relative;counter-increment:ln;padding-left:5ch;
+  text-indent:0;border-radius:0 3px 3px 0}
+.tvbo-landing .scope-gen .scope-code .cl::before{content:counter(ln);position:absolute;left:0;top:0;width:3.2ch;
+  text-align:right;color:var(--sc-ln);font-variant-numeric:tabular-nums;-webkit-user-select:none;user-select:none;pointer-events:none}
+.tvbo-landing .scope-gen .scope-code .cl:hover{background:rgba(99,179,232,.07)}
+.tvbo-landing .scope-gen .scope-code .cl:hover::before{color:var(--sc-dim)}
 
 .tvbo-landing .scope-tabs{display:flex;gap:0;overflow-x:auto;border-bottom:1px solid var(--sc-line);flex:none;scrollbar-width:none}
 .tvbo-landing .scope-tabs::-webkit-scrollbar{display:none}
@@ -394,6 +410,18 @@
 .tvbo-landing .person{font-size:13px;padding:6px 12px;border:1px solid var(--hair);border-radius:20px;background:var(--panel);color:var(--ink)}
 .tvbo-landing .fund{border:1px solid var(--hair);border-radius:14px;background:var(--panel-2);padding:20px 22px;font-size:12.5px;color:var(--muted);line-height:1.65}
 .tvbo-landing .fund .lab{font-family:var(--ls-mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);font-weight:600;margin-bottom:10px}
+
+/* ---- first-look affordance: each control pulses once as it first comes into view,
+   so the instrument reads as operable before anything is touched ---- */
+@keyframes tvbo-aff{
+  0%{box-shadow:0 0 0 0 var(--aff-ring),0 0 0 0 var(--aff-glow)}
+  28%{box-shadow:0 0 0 4px var(--aff-ring),0 0 15px 3px var(--aff-glow)}
+  100%{box-shadow:0 0 0 0 rgba(52,152,219,0),0 0 0 0 rgba(52,152,219,0)}
+}
+.tvbo-landing .aff{--aff-ring:rgba(52,152,219,.32);--aff-glow:rgba(52,152,219,.28);
+  animation:tvbo-aff 1.6s cubic-bezier(.33,0,.2,1) both}
+.tvbo-landing .scope .aff{--aff-ring:rgba(99,179,232,.42);--aff-glow:rgba(99,179,232,.34)}
+@media(prefers-reduced-motion:reduce){.tvbo-landing .aff{animation:none}}
 
 /* ---- scroll reveal (progressive enhancement; content visible without JS) ---- */
 .tvbo-landing.reveal-on .reveal{opacity:0;transform:translateY(14px);transition:opacity .6s ease,transform .6s ease}

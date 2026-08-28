@@ -391,45 +391,137 @@
   select(cell);
 
   /* ------------------------------------------------------------------ code tabs */
-  var KW = {
-    py: /\b(def|class|return|import|from|self|if|else|for|in|not|None|True|False|lambda|jnp|np|numpy)\b/g,
-    jl: /\b(function|end|using|return|nothing|const|struct|let|for|in|if|else)\b/g,
-    xml: /<\/?[A-Za-z][\w:.-]*|\/>|>/g
+  /* Ordered token grammar, one pass per line. The first alternative that matches at
+     a position wins, so comments and strings precede the patterns whose characters
+     they contain. Every group is non-capturing: the outer wrapper owns the indices. */
+  var NUM = '\\b\\d+(?:\\.\\d+)?(?:[eE][-+]?\\d+)?\\b';
+  var CALL = '[A-Za-z_]\\w*(?=\\s*\\()';
+  var OPS = '[=+\\-*/%<>!&|^~,:;.()\\[\\]{}]';
+  var GRAMMAR = {
+    py: [
+      ['c', '#.*'],
+      ['s', '"(?:\\\\.|[^"\\\\])*"|\'(?:\\\\.|[^\'\\\\])*\''],
+      ['at', '@[A-Za-z_][\\w.]*'],
+      ['k', '\\b(?:def|class|return|import|from|as|if|elif|else|for|while|in|is|not|and|or|None|True|False|lambda|with|try|except|finally|raise|yield|pass|break|continue|global|nonlocal|assert|del|async|await)\\b'],
+      ['b', '\\b(?:self|np|jnp|numpy|jax|scipy|print|len|range|dict|list|tuple|set|int|float|str|bool)\\b'],
+      ['n', NUM],
+      ['f', CALL],
+      ['o', OPS]
+    ],
+    jl: [
+      ['c', '#.*'],
+      ['s', '"(?:\\\\.|[^"\\\\])*"'],
+      ['at', '@[A-Za-z_][\\w.]*'],
+      ['k', '\\b(?:function|end|using|import|module|export|return|nothing|const|struct|mutable|let|for|while|in|if|elseif|else|begin|do|try|catch|finally|global|local|abstract|where|true|false)\\b'],
+      ['b', '\\b(?:Float64|Int|Vector|Matrix|Array|Tuple|println|length|zeros|ones|similar)\\b'],
+      ['n', NUM],
+      ['f', CALL],
+      ['o', OPS]
+    ],
+    xml: [
+      ['c', '<!--[\\s\\S]*?-->'],
+      ['t', '</?[A-Za-z][\\w:.-]*|/?>'],
+      ['a', '[A-Za-z_][\\w:.-]*(?=\\s*=)'],
+      ['s', '"[^"]*"|\'[^\']*\''],
+      ['n', NUM]
+    ]
   };
 
-  function highlight(line, lang) {
-    var frag = document.createDocumentFragment();
-    var cut = lang === 'xml' ? -1 : line.indexOf('#');
-    var code = cut >= 0 ? line.slice(0, cut) : line;
-    var rest = cut >= 0 ? line.slice(cut) : '';
-    var re = lang === 'jl' ? KW.jl : (lang === 'xml' ? KW.xml : KW.py);
+  var RE_CACHE = {};
+  function grammarRe(lang) {
+    if (!RE_CACHE[lang]) {
+      RE_CACHE[lang] = new RegExp(GRAMMAR[lang].map(function (t) {
+        return '(' + t[1] + ')';
+      }).join('|'), 'g');
+    }
+    return RE_CACHE[lang];
+  }
+
+  /* Docstrings and XML comments open on one line and close on another, so a purely
+     per-line pass paints their bodies as code. These three carry across lines. */
+  var BLOCK = {
+    py: [['s', '"""', '"""'], ['s', ", "]],
+    jl: [['s', '"""', '"""']],
+    xml: [['c', '<!--', '-->']]
+  };
+
+  function mkSpan(cls, text) {
+    var sp = document.createElement('span');
+    sp.className = cls;
+    sp.textContent = text;
+    return sp;
+  }
+
+  /** Leftmost block opener, ignoring one quoted inside a line comment. */
+  function findOpen(text, lang) {
+    var defs = BLOCK[lang] || [], best = null;
+    var hash = lang === 'xml' ? -1 : text.indexOf('#');
+    for (var i = 0; i < defs.length; i++) {
+      var at = text.indexOf(defs[i][1]);
+      if (at < 0 || (hash >= 0 && at > hash)) continue;
+      if (!best || at < best.at) {
+        best = { at: at, cls: defs[i][0], open: defs[i][1], close: defs[i][2] };
+      }
+    }
+    return best;
+  }
+
+  function tokenize(frag, text, lang) {
+    var spec = GRAMMAR[lang], re = grammarRe(lang);
     var last = 0, m;
     re.lastIndex = 0;
-    while ((m = re.exec(code))) {
-      if (m.index > last) frag.appendChild(document.createTextNode(code.slice(last, m.index)));
-      var sp = document.createElement('span');
-      sp.className = 'k';
-      sp.textContent = m[0];
-      frag.appendChild(sp);
+    while ((m = re.exec(text))) {
+      if (m.index > last) frag.appendChild(document.createTextNode(text.slice(last, m.index)));
+      var cls = '';
+      for (var gi = 1; gi <= spec.length; gi++) {
+        if (m[gi] !== undefined) { cls = spec[gi - 1][0]; break; }
+      }
+      frag.appendChild(mkSpan(cls, m[0]));
       last = m.index + m[0].length;
+      if (re.lastIndex === m.index) re.lastIndex++;
     }
-    if (last < code.length) frag.appendChild(document.createTextNode(code.slice(last)));
-    if (rest) {
-      var c = document.createElement('span');
-      c.className = 'c';
-      c.textContent = rest;
-      frag.appendChild(c);
+    if (last < text.length) frag.appendChild(document.createTextNode(text.slice(last)));
+  }
+
+  /** `st` carries an unterminated block in from the previous line; one per file. */
+  function highlight(line, lang, st) {
+    var g = GRAMMAR[lang] ? lang : 'py';
+    var frag = document.createDocumentFragment();
+    var rest = line;
+    if (st.close) {
+      var e = rest.indexOf(st.close);
+      if (e < 0) { frag.appendChild(mkSpan(st.cls, rest)); return frag; }
+      frag.appendChild(mkSpan(st.cls, rest.slice(0, e + st.close.length)));
+      rest = rest.slice(e + st.close.length);
+      st.close = null;
     }
+    for (;;) {
+      var op = findOpen(rest, g);
+      if (!op) break;
+      tokenize(frag, rest.slice(0, op.at), g);
+      var ci = rest.slice(op.at + op.open.length).indexOf(op.close);
+      if (ci < 0) {
+        frag.appendChild(mkSpan(op.cls, rest.slice(op.at)));
+        st.close = op.close;
+        st.cls = op.cls;
+        return frag;
+      }
+      var end = op.at + op.open.length + ci + op.close.length;
+      frag.appendChild(mkSpan(op.cls, rest.slice(op.at, end)));
+      rest = rest.slice(end);
+    }
+    tokenize(frag, rest, g);
     return frag;
   }
 
   function showCode(i, focus) {
     var b = S.code[i];
     codeEl.textContent = '';
+    var st = {};
     for (var n = 0; n < b.lines.length; n++) {
       var d = document.createElement('div');
       d.className = 'cl';
-      d.appendChild(highlight(b.lines[n], b.lang));
+      d.appendChild(highlight(b.lines[n], b.lang, st));
       codeEl.appendChild(d);
     }
     codeEl.scrollTop = 0;
@@ -508,4 +600,45 @@
   document.addEventListener('visibilitychange', function () {
     if (document.hidden) stop(); else if (visible) start();
   });
+})();
+
+/* First-look affordance. Every control pulses once, staggered, as it first scrolls
+ * into view — above the fold that means on load — so the sliders, backend tabs, view
+ * toggle and scrollable code pane announce themselves as operable before anything is
+ * touched. One shot per element: it hints, it does not decorate.
+ */
+(function () {
+  'use strict';
+
+  var root = document.querySelector('.tvbo-landing');
+  if (!root) return;
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+  var SEL = '.btn, .scope-tabs button, .scope-bar .seg button, .scope-ctl input[type=range], [data-scope-code]';
+  var els = [].slice.call(root.querySelectorAll(SEL));
+  if (!els.length) return;
+
+  var LEAD = 320;   // clears the .reveal fade so the pulse lands on a visible control
+  var seen = 0;
+
+  function pulse(el) {
+    var wait = LEAD + (seen++ % 8) * 90;
+    window.setTimeout(function () {
+      el.classList.add('aff');
+      window.setTimeout(function () { el.classList.remove('aff'); }, 1700);
+    }, wait);
+  }
+
+  if (!('IntersectionObserver' in window)) {
+    els.forEach(pulse);
+    return;
+  }
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) {
+      if (!e.isIntersecting) return;
+      io.unobserve(e.target);
+      pulse(e.target);
+    });
+  }, { threshold: 0.4 });
+  els.forEach(function (el) { io.observe(el); });
 })();
