@@ -244,7 +244,7 @@
                         </section>
 
                         <div class="tvbo-landing">
-                            <link rel="stylesheet" href="/tvbo/z/src/css/landing.css?v=16"/>
+                            <link rel="stylesheet" href="/tvbo/z/src/css/landing.css?v=17"/>
 
                             <!-- What is TVB-O — the scope. One schema-valid experiment
                                  (scripts/landing_experiment.yaml): its spec, the code every
@@ -335,7 +335,7 @@
                                     <script src="/tvbo/z/src/lib/three.min.js" defer="defer"/>
                                     <script src="/tvbo/z/src/lib/OrbitControls.js" defer="defer"/>
                                     <script src="/tvbo/z/src/js/landing_scope_data.js?v=9" defer="defer"/>
-                                    <script src="/tvbo/z/src/js/landing_intro.js?v=37" defer="defer"/>
+                                    <script src="/tvbo/z/src/js/landing_intro.js?v=38" defer="defer"/>
                                     <script src="/tvbo/z/src/js/landing_scope_sweep.js?v=3" defer="defer"/>
                                 </div>
                             </section>
@@ -1109,7 +1109,7 @@ tvbo skills uninstall</code></pre>
                 <t t-call="website.layout">
                     <div id="wrap" class="oe_structure oe_empty">
                         <div class="tvbo-landing">
-                            <link rel="stylesheet" href="/tvbo/z/src/css/landing.css?v=16"/>
+                            <link rel="stylesheet" href="/tvbo/z/src/css/landing.css?v=17"/>
 
                             <!-- Hero -->
                             <section class="hero">
