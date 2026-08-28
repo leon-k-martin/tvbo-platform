@@ -230,6 +230,13 @@ def b64(arr):
     return base64.b64encode(arr.tobytes()).decode()
 
 
+def coupling_parameters(exp):
+    """Parameters of the network's single coupling; the landing spec declares exactly one."""
+    couplings = exp.network.coupling
+    one = next(iter(couplings.values())) if isinstance(couplings, dict) else couplings[0]
+    return one.parameters
+
+
 def bake_sweep(exp, labels):
     """One real tvboptim run per grid cell; returns quantised playback frames.
 
@@ -242,12 +249,13 @@ def bake_sweep(exp, labels):
     span = int(WINDOW_MS / step)
     brain, traces, sync, rms = [], [], [], []
     # bake_code renders from this same object afterwards, so restore these at the end
+    cpar = coupling_parameters(exp)
     spec_a = exp.dynamics.parameters["a"].value
-    spec_g = exp.coupling.parameters["a"].value
+    spec_g = cpar["a"].value
     for a in SWEEP_A:
         for g in SWEEP_G:
             exp.dynamics.parameters["a"].value = a
-            exp.coupling.parameters["a"].value = g
+            cpar["a"].value = g
             res = exp.run("tvboptim", duration=DURATION)
             x = np.asarray(res.data)[skip:skip + span, 0, :]
 
@@ -263,7 +271,7 @@ def bake_sweep(exp, labels):
             print(f"  a={a:<7} G={g:<7} meanFC={sync[-1]:+.3f}  rms={rms[-1]:.4f}")
 
     exp.dynamics.parameters["a"].value = spec_a
-    exp.coupling.parameters["a"].value = spec_g
+    cpar["a"].value = spec_g
 
     br = np.concatenate([c.reshape(-1) for c in brain])
     return {

@@ -17,14 +17,14 @@ dynamics:
     x: {noise: {additive: true, parameters: {sigma: {value: 0.01}}}}
     y: {noise: {additive: true, parameters: {sigma: {value: 0.01}}}}
 
-coupling:
-  iri: tvbo:Linear
-  parameters:
-    a: {value: 0.025}
-
 network:
   bids_dir: "../networks/bids/dk_average"
   structural_measures: [streamlineCount]
+  coupling:
+    LinCoupling:
+      iri: tvbo:Linear
+      parameters:
+        a: {value: 0.025}
   transforms:
     - name: weight
       callable: {module: tvbo.classes.network, name: normalized_graph_laplacian}
