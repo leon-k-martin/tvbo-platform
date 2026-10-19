@@ -29,11 +29,16 @@ class TestApiHttp(HttpCase):
     # ------------------------------------------------------------------ #
     # Helpers
     # ------------------------------------------------------------------ #
+    def _share(self, field, target, owner, visibility):
+        """Give ``target`` an owner; ``visibility='shared'`` publishes it, since visibility is derived from the publication state."""
+        self.Share.create({
+            field: target.id, 'owner_user_id': owner.id,
+            'publication_state': 'published' if visibility == 'shared' else 'draft'})
+
     def _model(self, name, owner=None, visibility='private'):
         dyn = self.Dyn.create({'name': name})
         if owner is not None:
-            self.Share.create({
-                'dynamics_id': dyn.id, 'owner_user_id': owner.id, 'visibility': visibility})
+            self._share('dynamics_id', dyn, owner, visibility)
         return dyn
 
     def _exp(self, label, owner=None, visibility='private'):
@@ -42,8 +47,7 @@ class TestApiHttp(HttpCase):
         type(self)._seq += 1
         exp = self.Exp.create({'label': label, 'record_id': 900000 + type(self)._seq})
         if owner is not None:
-            self.Share.create({
-                'experiment_id': exp.id, 'owner_user_id': owner.id, 'visibility': visibility})
+            self._share('experiment_id', exp, owner, visibility)
         return exp
 
     # Detail/push endpoints lazily cold-load the LinkML schema on first use,
@@ -115,11 +119,11 @@ class TestApiHttp(HttpCase):
         self.assertEqual(len(again), 1, 'replace-on-name: still exactly one')
         self.assertEqual(again[0]['label'], 'Two', 'updated in place')
 
-    def test_push_visibility_query_param(self):
+    def test_push_visibility_query_param_requests_review(self):
         r = self._post('/api/tvbo/v1/models?visibility=shared', 'name: ApiSharedViaQuery\nlabel: S\n')
         self.assertEqual(r.status_code, 201)
-        self.assertEqual(r.json()['visibility'], 'shared',
-                         '?visibility= honored for YAML push')
+        self.assertIn('publication', r.json(), '?visibility= requests publication')
+        self.assertEqual(r.json()['visibility'], 'private', 'public only after peer review')
 
     def test_push_invalid_returns_422(self):
         r = self._post('/api/tvbo/v1/models', '- not\n- a mapping\n')

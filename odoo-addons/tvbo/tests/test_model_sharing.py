@@ -23,11 +23,12 @@ class TestModelSharing(TransactionCase):
         cls.bob = new_test_user(cls.env, login='tvbo_bob', groups='base.group_portal')
 
     def _make_model(self, name, owner, visibility='private'):
+        """A user-saved model; ``visibility='shared'`` publishes it, since visibility is derived from the publication state."""
         dyn = self.Dyn.create({'name': name})
         share = self.Share.create({
             'dynamics_id': dyn.id,
             'owner_user_id': owner.id,
-            'visibility': visibility,
+            'publication_state': 'published' if visibility == 'shared' else 'draft',
         })
         return dyn, share
 
