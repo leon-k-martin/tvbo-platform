@@ -18,10 +18,10 @@ Design choices (see platform todo.md / the discussion that produced this):
 * **Enums become lookup models** (``tvbo.<enum>`` with name/technical_name/
   description) referenced via Many2one/Many2many — matching the seeded enum data.
 * **Class ranges** -> Many2one (single) / Many2many (multivalued).
+* **Integers** -> the emitted ``BigInteger`` (int8), since LinkML integers are unbounded.
 * **Multivalued primitives** -> Text (newline-joined; ``pydantic_loader`` splits
   them back to a list on read).
-* **Reserved Odoo names** are renamed: ``id`` -> ``record_id``,
-  ``modified`` -> ``is_modified``.
+* **Reserved Odoo names** (the record API, e.g. ``id``, ``env``, ``copy``, and the log-access columns) get a ``record_`` prefix, except ``modified`` -> ``is_modified``; the emitted ``RENAMED_SLOTS`` maps each renamed slot to its field for the platform's ingest and export.
 
 Run via :mod:`generate_odoo_models` (thin CLI wrapper).
 """
@@ -39,7 +39,7 @@ from linkml_runtime.utils.formatutils import camelcase, underscore
 # LinkML type *base* (or type name) -> Odoo scalar field class.
 _SCALAR_MAP = {
     "str": "Char", "string": "Char",
-    "int": "Integer", "integer": "Integer",
+    "int": "BigInteger", "integer": "BigInteger",
     "float": "Float", "double": "Float", "decimal": "Float", "Decimal": "Float",
     "bool": "Boolean", "boolean": "Boolean",
     "XSDDate": "Date", "date": "Date",
@@ -52,9 +52,15 @@ _SCALAR_MAP = {
 # Slot code-names that should always be a Text (multiline) field.
 _TEXT_SLOTS = {"description"}
 
-# Reserved Odoo ORM field names -> safe rename (mirrors the inverse used by the
-# platform's experiment_to_schema_dict).
-_RESERVED = {"id": "record_id", "modified": "is_modified"}
+# Odoo 19's public record API plus its log-access columns: a field named after one of these shadows the ORM (``env`` breaks every record).
+_ODOO_RESERVED = frozenset("""
+    action_archive action_unarchive browse check_access check_access_rights check_access_rule check_field_access_rights concat copy copy_data
+    copy_translations create default_get display_name ensure_one env exists export_data fetch fields_get filtered filtered_domain flush_model
+    flush_recordset get_base_url get_external_id get_field_translations get_metadata get_property_definition grouped has_access id ids init
+    invalidate_model invalidate_recordset is_transient load lock_for_update mapped modified name_create name_search new onchange read
+    read_group search search_count search_fetch search_read sorted sudo toggle_active try_lock_for_update union unlink update
+    update_field_translations with_company with_context with_env with_prefetch with_user write create_uid create_date write_uid write_date
+""".split())
 
 
 @dataclass
@@ -105,7 +111,9 @@ class OdooGenerator(OOCodeGenerator):
         Applied identically to a slot's current name and its historical aliases,
         so an alias resolves to the exact column a prior generation emitted."""
         name = underscore(raw)
-        return _RESERVED.get(name, name)
+        if name == "modified":
+            return "is_modified"  # column name predating the general rule
+        return f"record_{name}" if name in _ODOO_RESERVED else name
 
     def _field_name(self, slot: SlotDefinition) -> str:
         return self._normalize_name(slot.alias or slot.name)
@@ -192,7 +200,8 @@ class OdooGenerator(OOCodeGenerator):
         index = ", index=True" if name in ("name", "label") else ""
         default = self._default_clause(slot, odoo_type)
         inner = f"{required}{index}{default}{help_clause}".lstrip(", ")
-        return f"{name} = fields.{odoo_type}({inner})"
+        ctor = odoo_type if odoo_type == "BigInteger" else f"fields.{odoo_type}"
+        return f"{name} = {ctor}({inner})"
 
     # ---- model generation ------------------------------------------------
     def _rec_name(self, field_names: list[str]) -> str | None:
@@ -283,6 +292,12 @@ class OdooGenerator(OOCodeGenerator):
             "from odoo import models, fields",
             "",
             "",
+            "class BigInteger(fields.Integer):",
+            '    """LinkML integers are unbounded; int8 keeps values such as file sizes in bytes that overflow Odoo\'s int4."""',
+            "",
+            "    _column_type = ('int8', 'int8')",
+            "",
+            "",
         ]
 
         # Rename lineage from LinkML slot `aliases`, consumed by migrations
@@ -299,6 +314,10 @@ class OdooGenerator(OOCodeGenerator):
             alias_lines.append(f"    ({model!r}, {new!r}): {alias_map[key]!r},")
         alias_lines.append("}")
         parts.append("\n".join(alias_lines))
+        parts.append("")
+        slot_names = sorted({underscore(s.alias or s.name) for s in sv.all_slots().values()})
+        renamed = {n: self._normalize_name(n) for n in slot_names if self._normalize_name(n) != n}
+        parts.append(f"# Schema slots renamed away from Odoo's record API (slot -> field).\nRENAMED_SLOTS = {renamed!r}")
         parts.append("")
         for enum_name in sorted(sv.all_enums()):
             parts.append(self._enum_model(enum_name))

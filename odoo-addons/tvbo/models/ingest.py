@@ -9,21 +9,16 @@ data to the platform database:
         -> tvbo.utils.pydantic_loader (validate against the schema)
         -> recursive Odoo create()
 
-Because the Odoo models are generated from the same LinkML schema (alias-aware),
-the validated pydantic field names line up 1:1 with the Odoo fields — the only
-remapping needed is the reserved-name inverse (id->record_id, modified->is_modified).
-Enums are seeded from the generated pydantic Enum classes so the values stored in
-lookup models are exactly the values the data uses.
+Because the Odoo models are generated from the same LinkML schema (alias-aware), the validated pydantic field names line up 1:1 with the Odoo fields — the only remapping needed is the generator's ``RENAMED_SLOTS`` for slots named after Odoo's record API (e.g. id->record_id, env->record_env). Enums are seeded from the generated pydantic Enum classes so the values stored in lookup models are exactly the values the data uses.
 """
 import enum as _enum
 import logging
 import math
 import re
 
-_logger = logging.getLogger(__name__)
+from .schema_models import RENAMED_SLOTS
 
-# Reserved Odoo ORM names: schema slot -> Odoo field (matches the generator).
-_RESERVED = {"id": "record_id", "modified": "is_modified"}
+_logger = logging.getLogger(__name__)
 
 # Synthetic module namespace for the external IDs that make ingestion idempotent.
 # Each ingested ground-truth record gets an ir.model.data row keyed by its
@@ -184,7 +179,7 @@ def _create_record(env, model_name, data, cache):
     for key, value in (data or {}).items():
         if value is None:
             continue
-        fname = _RESERVED.get(key, key)
+        fname = RENAMED_SLOTS.get(key, key)
         f = fields.get(fname)
         if f is None:
             continue  # field not on this model (e.g. schema extra) -> skip

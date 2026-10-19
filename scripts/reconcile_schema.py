@@ -74,9 +74,8 @@ CHAR_TYPES = frozenset(
     ("character varying", "character", "text", '"char"', "varchar", "bpchar")
 )
 INT_TYPES = frozenset(("integer", "bigint", "smallint"))
-# Field constructors that legitimately keep an integer column (or manage their
-# own FK), so a former-Many2one column must NOT be dropped for them.
-KEEP_INT_FIELDS = frozenset(("Many2one", "Many2many", "One2many", "Integer"))
+# Field constructors that keep an integer column (or manage their own FK), so a former-Many2one column must NOT be dropped for them.
+KEEP_INT_FIELDS = frozenset(("Many2one", "Many2many", "One2many", "Integer", "BigInteger"))
 # Enum lookup fields (in priority order) a stashed legacy text value may equal,
 # and the audit table for values that cannot be matched (relink phase).
 MATCH_FIELDS = ("name", "technical_name")
@@ -96,12 +95,13 @@ COERCE_TARGETS = {
     "Html":     ("text",                        "text",             "%s::text"),
     "Char":     ("character varying",           "varchar",          "%s::varchar"),
     "Integer":  ("integer",                     "integer",          "%s::integer"),
+    "BigInteger": ("bigint",                    "bigint",           "%s::bigint"),
     "Float":    ("double precision",            "double precision", "%s::double precision"),
     "Boolean":  ("boolean",                     "boolean",          "%s::boolean"),
     "Date":     ("date",                        "date",             "%s::date"),
     "Datetime": ("timestamp without time zone", "timestamp",        "%s::timestamp"),
 }
-_IDENT_RE = re.compile(r"^[a-z_][a-z0-9_]*$")
+_IDENT_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 
 
 def _ident(name):
@@ -151,6 +151,8 @@ def _declared_fields(models_dir):
                     func = stmt.value.func
                     if isinstance(func, ast.Attribute):
                         cols.append((target.id, func.attr))
+                    elif isinstance(func, ast.Name):  # a field class defined in the module, e.g. BigInteger
+                        cols.append((target.id, func.id))
             if table:
                 for col, ctor in cols:
                     yield table, col, ctor
