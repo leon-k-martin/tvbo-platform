@@ -246,14 +246,19 @@ import_platform_docs() {
   fi
 }
 
-# Optional addons named in TVBO_EXTRA_MODULES (e.g. tvbo_lab): installed when missing, upgraded on a TVBO_UPGRADE=1 deploy.
+# Optional addons named in TVBO_EXTRA_MODULES (e.g. tvbo_lab): installed when missing, upgraded on a TVBO_UPGRADE=1 deploy, otherwise skipped without booting Odoo; a failure is logged and never stops the platform.
 install_extra_modules() {
   [ -n "${TVBO_EXTRA_MODULES:-}" ] || return 0
   local upgrade=()
-  [ "${TVBO_UPGRADE:-0}" = "1" ] && upgrade=(-u "$TVBO_EXTRA_MODULES")
+  if [ "${TVBO_UPGRADE:-0}" = "1" ]; then
+    upgrade=(-u "$TVBO_EXTRA_MODULES")
+  elif ! psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" -tAc "SELECT 1 FROM unnest(string_to_array('$TVBO_EXTRA_MODULES', ',')) AS wanted(name) WHERE name NOT IN (SELECT name FROM ir_module_module WHERE state = 'installed')" | grep -q 1; then
+    return 0
+  fi
   log "Installing extra modules: $TVBO_EXTRA_MODULES"
-  run_odoo -d "$DB_NAME" -i "$TVBO_EXTRA_MODULES" "${upgrade[@]}" --stop-after-init --without-demo=True \
-    --db_host="$DB_HOST" --db_user="$DB_USER" --db_password="$DB_PASSWORD" --log-level=info
+  run_odoo_soft -d "$DB_NAME" -i "$TVBO_EXTRA_MODULES" "${upgrade[@]}" --stop-after-init --without-demo=True \
+    --db_host="$DB_HOST" --db_user="$DB_USER" --db_password="$DB_PASSWORD" --log-level=info \
+    || log "⚠ extra modules ($TVBO_EXTRA_MODULES) failed to install (non-fatal); the platform still starts, see $UPGRADE_LOG"
 }
 
 # Rotate upgrade log: keep previous as .prev so it survives container restart

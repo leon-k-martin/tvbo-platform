@@ -22,7 +22,7 @@ def _template():
     """Smallest workbook carrying every cell the export writes, as empty styled cells."""
     refs = ['E4', 'M4', 'J7', 'J8', 'J11', 'J14', 'B31', 'H37', 'Z37', 'H38', 'Z38']
     refs += [f'B{row}' for row in eu_timesheet.WP_ROWS]
-    refs += [f'{eu_timesheet.day_column(day)}{row}' for row in range(19, 29) for day in range(1, 32)]
+    refs += [f'{eu_timesheet.day_column(day)}{row}' for row in range(eu_timesheet.WP_ROWS.start, eu_timesheet.SPECIAL_ROW + 1) for day in range(1, 32)]
     files = {
         '[Content_Types].xml': '<Types><Override PartName="/xl/calcChain.xml" ContentType="x"/></Types>',
         'xl/workbook.xml': '<workbook><calcPr calcId="1"/></workbook>',
@@ -130,10 +130,18 @@ class TestLab(TransactionCase):
         with self.assertRaises(UserError):
             self._month(date(2026, 9, 1)).action_export_eu_sheet()
 
-    def test_public_holiday_import_is_idempotent(self):
+    def test_export_refuses_a_file_that_is_not_the_template(self):
+        self.env.company.lab_eu_timesheet_template = base64.b64encode(b'not a workbook')
+        with self.assertRaisesRegex(UserError, 'Time recording for EU projects'):
+            self._month(date(2026, 9, 1)).action_export_eu_sheet()
+
+    def _locate_company_in_berlin(self):
         germany = self.env.ref('base.de')
         self.env.company.write({'country_id': germany.id, 'state_id': self.env['res.country.state'].search([('country_id', '=', germany.id), ('code', '=', 'BE')]).id})
         self.env.company.resource_calendar_id.tz = 'Europe/Berlin'
+
+    def test_public_holiday_import_is_idempotent(self):
+        self._locate_company_in_berlin()
         Leaves = self.env['resource.calendar.leaves']
         Leaves.action_import_public_holidays()
         count = Leaves.search_count([('resource_id', '=', False)])
@@ -141,3 +149,19 @@ class TestLab(TransactionCase):
         self.assertEqual(len(unity_day), 1, 'Tag der Deutschen Einheit, 3 Oct 2026')
         Leaves.action_import_public_holidays()
         self.assertEqual(Leaves.search_count([('resource_id', '=', False)]), count)
+
+    def test_public_holiday_import_skips_days_a_closure_covers(self):
+        self._locate_company_in_berlin()
+        Leaves = self.env['resource.calendar.leaves']
+        Leaves.create({'name': 'Winter closure', 'company_id': self.env.company.id, 'date_from': datetime(2026, 12, 23, 23), 'date_to': datetime(2026, 12, 31, 22, 59, 59)})
+        Leaves.action_import_public_holidays()
+        starts = set(Leaves.search([('resource_id', '=', False)]).mapped('date_from'))
+        self.assertNotIn(datetime(2026, 12, 24, 23), starts, 'Christmas Day lies inside the closure')
+        self.assertIn(datetime(2026, 12, 31, 23), starts, "New Year's Day follows the closure")
+
+    def test_public_holiday_import_explains_an_unknown_state(self):
+        germany = self.env.ref('base.de')
+        nowhere = self.env['res.country.state'].create({'name': 'Nowhere', 'code': 'XX', 'country_id': germany.id})
+        self.env.company.write({'country_id': germany.id, 'state_id': nowhere.id})
+        with self.assertRaises(UserError):
+            self.env['resource.calendar.leaves'].action_import_public_holidays()

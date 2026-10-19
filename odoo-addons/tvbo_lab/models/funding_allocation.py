@@ -29,7 +29,6 @@ class FundingAllocation(models.Model):
         """No day may be funded above 100 %; the total only changes where an allocation starts, so those days are the ones to check."""
         for alloc in self:
             mine = self.search([('employee_id', '=', alloc.employee_id.id)])
-            starts = {alloc.date_from} | {d for d in mine.mapped('date_from') if alloc.date_from < d and (not alloc.date_to or d <= alloc.date_to)}
-            for day in starts:
+            for day in {d for d in mine.mapped('date_from') if alloc._active_on(d)}:
                 if round(sum(mine._active_on(day).mapped('percentage')), 2) > 100:
                     raise ValidationError(self.env._('%(employee)s would be funded above 100%% on %(day)s.', employee=alloc.employee_id.name, day=day))
