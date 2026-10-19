@@ -246,6 +246,16 @@ import_platform_docs() {
   fi
 }
 
+# Optional addons named in TVBO_EXTRA_MODULES (e.g. tvbo_lab): installed when missing, upgraded on a TVBO_UPGRADE=1 deploy.
+install_extra_modules() {
+  [ -n "${TVBO_EXTRA_MODULES:-}" ] || return 0
+  local upgrade=()
+  [ "${TVBO_UPGRADE:-0}" = "1" ] && upgrade=(-u "$TVBO_EXTRA_MODULES")
+  log "Installing extra modules: $TVBO_EXTRA_MODULES"
+  run_odoo -d "$DB_NAME" -i "$TVBO_EXTRA_MODULES" "${upgrade[@]}" --stop-after-init --without-demo=True \
+    --db_host="$DB_HOST" --db_user="$DB_USER" --db_password="$DB_PASSWORD" --log-level=info
+}
+
 # Rotate upgrade log: keep previous as .prev so it survives container restart
 mkdir -p "$(dirname "$UPGRADE_LOG")"
 if [ -f "$UPGRADE_LOG" ]; then
@@ -374,6 +384,7 @@ fi
 # anything a prior ingestion lost — the version-independent alternative to RESET_DB.
 reconcile_building_blocks
 import_platform_docs
+install_extra_modules
 
 # Mark website configurator as done to skip the wizard
 log "Configuring website..."
