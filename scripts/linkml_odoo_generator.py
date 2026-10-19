@@ -36,17 +36,17 @@ from linkml.generators.oocodegen import OOCodeGenerator
 from linkml_runtime.linkml_model.meta import ClassDefinition, SlotDefinition
 from linkml_runtime.utils.formatutils import camelcase, underscore
 
-# LinkML type *base* (or type name) -> Odoo scalar field class.
+# LinkML type *base* (or type name) -> constructor of the Odoo scalar field.
 _SCALAR_MAP = {
-    "str": "Char", "string": "Char",
+    "str": "fields.Char", "string": "fields.Char",
     "int": "BigInteger", "integer": "BigInteger",
-    "float": "Float", "double": "Float", "decimal": "Float", "Decimal": "Float",
-    "bool": "Boolean", "boolean": "Boolean",
-    "XSDDate": "Date", "date": "Date",
-    "XSDDateTime": "Datetime", "datetime": "Datetime",
-    "URIorCURIE": "Char", "URI": "Char", "Uri": "Char", "Uriorcurie": "Char",
-    "Curie": "Char", "NCName": "Char", "Ncname": "Char",
-    "XSDTime": "Char", "time": "Char",
+    "float": "fields.Float", "double": "fields.Float", "decimal": "fields.Float", "Decimal": "fields.Float",
+    "bool": "fields.Boolean", "boolean": "fields.Boolean",
+    "XSDDate": "fields.Date", "date": "fields.Date",
+    "XSDDateTime": "fields.Datetime", "datetime": "fields.Datetime",
+    "URIorCURIE": "fields.Char", "URI": "fields.Char", "Uri": "fields.Char", "Uriorcurie": "fields.Char",
+    "Curie": "fields.Char", "NCName": "fields.Char", "Ncname": "fields.Char",
+    "XSDTime": "fields.Char", "time": "fields.Char",
 }
 
 # Slot code-names that should always be a Text (multiline) field.
@@ -128,7 +128,7 @@ class OdooGenerator(OOCodeGenerator):
 
     # ---- ifabsent / defaults --------------------------------------------
     @staticmethod
-    def _default_clause(slot: SlotDefinition, odoo_type: str) -> str:
+    def _default_clause(slot: SlotDefinition, ctor: str) -> str:
         raw = slot.ifabsent
         if not raw or not isinstance(raw, str):
             return ""
@@ -143,17 +143,17 @@ class OdooGenerator(OOCodeGenerator):
                 return f", default={val.strip().lower() == 'true'}"
             if kind == "string":
                 return f", default={val!r}"
-        if raw in ("true", "false") and odoo_type == "Boolean":
+        if raw in ("true", "false") and ctor == "fields.Boolean":
             return f", default={raw == 'true'}"
         return ""
 
     # ---- field generation ------------------------------------------------
     def _odoo_scalar(self, range_name: str, field_name: str) -> str:
         if field_name in _TEXT_SLOTS:
-            return "Text"
+            return "fields.Text"
         t = self.schemaview.get_type(range_name)
         base = (t.base if t else None) or range_name
-        return _SCALAR_MAP.get(base) or _SCALAR_MAP.get(range_name) or "Char"
+        return _SCALAR_MAP.get(base) or _SCALAR_MAP.get(range_name) or "fields.Char"
 
     def _field_definition(self, slot: SlotDefinition, model_snake: str) -> str:
         sv = self.schemaview
@@ -195,12 +195,11 @@ class OdooGenerator(OOCodeGenerator):
             return f"{name} = fields.Text({inner})"
 
         # Single primitive.
-        odoo_type = self._odoo_scalar(rng, name)
+        ctor = self._odoo_scalar(rng, name)
         required = ", required=True" if slot.required else ""
         index = ", index=True" if name in ("name", "label") else ""
-        default = self._default_clause(slot, odoo_type)
+        default = self._default_clause(slot, ctor)
         inner = f"{required}{index}{default}{help_clause}".lstrip(", ")
-        ctor = odoo_type if odoo_type == "BigInteger" else f"fields.{odoo_type}"
         return f"{name} = {ctor}({inner})"
 
     # ---- model generation ------------------------------------------------
@@ -316,7 +315,7 @@ class OdooGenerator(OOCodeGenerator):
         parts.append("\n".join(alias_lines))
         parts.append("")
         slot_names = sorted({underscore(s.alias or s.name) for s in sv.all_slots().values()})
-        renamed = {n: self._normalize_name(n) for n in slot_names if self._normalize_name(n) != n}
+        renamed = {n: field for n in slot_names if (field := self._normalize_name(n)) != n}
         parts.append(f"# Schema slots renamed away from Odoo's record API (slot -> field).\nRENAMED_SLOTS = {renamed!r}")
         parts.append("")
         for enum_name in sorted(sv.all_enums()):

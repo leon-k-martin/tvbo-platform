@@ -29,25 +29,23 @@ class TestApiHttp(HttpCase):
     # ------------------------------------------------------------------ #
     # Helpers
     # ------------------------------------------------------------------ #
-    def _share(self, field, target, owner, visibility):
-        """Give ``target`` an owner; ``visibility='shared'`` publishes it, since visibility is derived from the publication state."""
-        self.Share.create({
-            field: target.id, 'owner_user_id': owner.id,
-            'publication_state': 'published' if visibility == 'shared' else 'draft'})
+    def _share(self, field, target, owner, state):
+        """Give ``target`` an owner and a publication state, from which its visibility follows."""
+        self.Share.create({field: target.id, 'owner_user_id': owner.id, 'publication_state': state})
 
-    def _model(self, name, owner=None, visibility='private'):
+    def _model(self, name, owner=None, state='draft'):
         dyn = self.Dyn.create({'name': name})
         if owner is not None:
-            self._share('dynamics_id', dyn, owner, visibility)
+            self._share('dynamics_id', dyn, owner, state)
         return dyn
 
-    def _exp(self, label, owner=None, visibility='private'):
+    def _exp(self, label, owner=None, state='draft'):
         # tvbo.simulation_experiment requires an integer record_id; use high,
         # unique values to avoid clashing with seeded experiments.
         type(self)._seq += 1
         exp = self.Exp.create({'label': label, 'record_id': 900000 + type(self)._seq})
         if owner is not None:
-            self._share('experiment_id', exp, owner, visibility)
+            self._share('experiment_id', exp, owner, state)
         return exp
 
     # Detail/push endpoints lazily cold-load the LinkML schema on first use,
@@ -81,10 +79,10 @@ class TestApiHttp(HttpCase):
     # Models
     # ------------------------------------------------------------------ #
     def test_models_list_scoping(self):
-        a_priv = self._model('api_a_priv', self.alice, 'private')
-        a_shared = self._model('api_a_shared', self.alice, 'shared')
-        b_priv = self._model('api_b_priv', self.bob, 'private')
-        b_shared = self._model('api_b_shared', self.bob, 'shared')
+        a_priv = self._model('api_a_priv', self.alice, 'draft')
+        a_shared = self._model('api_a_shared', self.alice, 'published')
+        b_priv = self._model('api_b_priv', self.bob, 'draft')
+        b_shared = self._model('api_b_shared', self.bob, 'published')
         ids = {m['id'] for m in self._get('/api/tvbo/v1/models').json()['data']}
         self.assertIn(a_priv.id, ids, 'own private listed')
         self.assertIn(a_shared.id, ids, 'own shared listed')
@@ -92,9 +90,9 @@ class TestApiHttp(HttpCase):
         self.assertNotIn(b_priv.id, ids, "others' private hidden")
 
     def test_model_detail_access(self):
-        own = self._model('api_detail_own', self.alice, 'private')
-        shared = self._model('api_detail_shared', self.bob, 'shared')
-        hidden = self._model('api_detail_hidden', self.bob, 'private')
+        own = self._model('api_detail_own', self.alice, 'draft')
+        shared = self._model('api_detail_shared', self.bob, 'published')
+        hidden = self._model('api_detail_hidden', self.bob, 'draft')
         public = self._model('api_detail_public')  # no share -> ground-truth/public
         self.assertEqual(self._get('/api/tvbo/v1/models/%d' % own.id).status_code, 200)
         self.assertEqual(self._get('/api/tvbo/v1/models/%d' % shared.id).status_code, 200)
@@ -133,8 +131,8 @@ class TestApiHttp(HttpCase):
     # Experiments
     # ------------------------------------------------------------------ #
     def test_experiments_list_excludes_others_private(self):
-        a_exp = self._exp('api_exp_alice', self.alice, 'private')
-        b_exp = self._exp('api_exp_bob', self.bob, 'private')
+        a_exp = self._exp('api_exp_alice', self.alice, 'draft')
+        b_exp = self._exp('api_exp_bob', self.bob, 'draft')
         pub_exp = self._exp('api_exp_public')  # no share -> public
         ids = {e['id'] for e in self._get('/api/tvbo/v1/experiments').json()['data']}
         self.assertIn(a_exp.id, ids, 'own private experiment listed')

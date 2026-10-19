@@ -22,13 +22,13 @@ class TestModelSharing(TransactionCase):
         cls.alice = new_test_user(cls.env, login='tvbo_alice', groups='base.group_portal')
         cls.bob = new_test_user(cls.env, login='tvbo_bob', groups='base.group_portal')
 
-    def _make_model(self, name, owner, visibility='private'):
-        """A user-saved model; ``visibility='shared'`` publishes it, since visibility is derived from the publication state."""
+    def _make_model(self, name, owner, state='draft'):
+        """A user-saved model in publication ``state``, from which its visibility follows."""
         dyn = self.Dyn.create({'name': name})
         share = self.Share.create({
             'dynamics_id': dyn.id,
             'owner_user_id': owner.id,
-            'publication_state': 'published' if visibility == 'shared' else 'draft',
+            'publication_state': state,
         })
         return dyn, share
 
@@ -63,10 +63,10 @@ class TestModelSharing(TransactionCase):
         self.assertFalse(rng.exists(), 'nested range removed')
 
     def test_record_rule_read_own_and_shared(self):
-        _, a_priv = self._make_model('rr_a_priv', self.alice, 'private')
-        _, a_shared = self._make_model('rr_a_shared', self.alice, 'shared')
-        _, b_priv = self._make_model('rr_b_priv', self.bob, 'private')
-        _, b_shared = self._make_model('rr_b_shared', self.bob, 'shared')
+        _, a_priv = self._make_model('rr_a_priv', self.alice, 'draft')
+        _, a_shared = self._make_model('rr_a_shared', self.alice, 'published')
+        _, b_priv = self._make_model('rr_b_priv', self.bob, 'draft')
+        _, b_shared = self._make_model('rr_b_shared', self.bob, 'published')
 
         visible = self.Share.with_user(self.alice).search([])
         self.assertIn(a_priv, visible, "own private visible")
@@ -75,7 +75,7 @@ class TestModelSharing(TransactionCase):
         self.assertNotIn(b_priv, visible, "others' private hidden")
 
     def test_record_rule_modify_own_only(self):
-        _, b_shared = self._make_model('rr_write_shared', self.bob, 'shared')
+        _, b_shared = self._make_model('rr_write_shared', self.bob, 'published')
         # Alice can read Bob's shared row but must not be able to change it.
         with self.assertRaises(AccessError):
             b_shared.with_user(self.alice).write({'visibility': 'private'})

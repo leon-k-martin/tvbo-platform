@@ -651,28 +651,9 @@ class KnowledgeGraphAPI(http.Controller):
         rows = _safe_search_read(
             cfg['model'],
             _get_model_field_names(cfg['model'], include_relations=False),
-            domain=self._visibility_domain(cfg['model']),
+            domain=request.env['tvbo.model_share'].visibility_domain(cfg['model']),
         )
         return [self._serialize_entity_row(entity_type, row, detail=False) for row in rows]
-
-    def _visibility_domain(self, model_name):
-        """Domain that hides elements the caller may not see.
-
-        The unified KG shows curated ground-truth plus *published* community
-        elements, plus anything the caller owns or that was peer-to-peer shared
-        with them. Sharing only targets models (Dynamics) and
-        SimulationExperiments; every other KG entity type is curated/public and
-        returns an empty domain.
-        """
-        share_field = {
-            'tvbo.dynamics': 'dynamics_id',
-            'tvbo.simulation_experiment': 'experiment_id',
-        }.get(model_name)
-        if not share_field or _get_model_or_none('tvbo.model_share') is None:
-            return []
-        hidden = request.env['tvbo.model_share'].sudo().hidden_target_ids(
-            share_field, request.env.user)
-        return [('id', 'not in', hidden)] if hidden else []
 
     def _expand_relations(self, model_name, row):
         """Expand x2many fields into nested related records for detail endpoints."""
@@ -705,7 +686,7 @@ class KnowledgeGraphAPI(http.Controller):
         return expanded
 
     def _get_entity_detail(self, entity_type, record_id):
-        """Fetch one record with schema-driven detail serialization."""
+        """Fetch one record with schema-driven detail serialization, unless it is a saved element the caller may not see."""
         cfg = _KG_ENTITY_CONFIG[entity_type]
         model_name = cfg['model']
         if _get_model_or_none(model_name) is None:
@@ -713,7 +694,7 @@ class KnowledgeGraphAPI(http.Controller):
         rows = _safe_search_read(
             model_name,
             _get_model_field_names(model_name, include_relations=True),
-            domain=[('id', '=', record_id)],
+            domain=[('id', '=', record_id)] + request.env['tvbo.model_share'].visibility_domain(model_name),
             limit=1,
         )
         if not rows:

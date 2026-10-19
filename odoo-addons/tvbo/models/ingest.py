@@ -158,12 +158,9 @@ def _resolve_many(env, comodel, value, cache):
 
 
 def _natural_key(Model, data):
-    """Return ``(odoo_field, value)`` identifying this record for idempotency, or
-    ``(None, None)``. Prefers the schema id (-> record_id), then name, then label —
-    whichever the model actually has and the data provides. Lets the seed run on
-    every deploy as a gap-filling migration (skip what already exists) instead of
-    a one-shot that needs an empty DB / RESET_DB."""
-    for schema_key, odoo_field in (("id", "record_id"), ("name", "name"), ("label", "label")):
+    """Return ``(odoo_field, value)`` identifying this record for idempotency, or ``(None, None)``. Prefers the schema id (stored under its ``RENAMED_SLOTS`` field), then name, then label — whichever the model actually has and the data provides. Lets the seed run on every deploy as a gap-filling migration (skip what already exists) instead of a one-shot that needs an empty DB / RESET_DB."""
+    for schema_key in ("id", "name", "label"):
+        odoo_field = RENAMED_SLOTS.get(schema_key, schema_key)
         if odoo_field in Model._fields and data.get(schema_key) not in (None, ""):
             return odoo_field, data[schema_key]
     return None, None

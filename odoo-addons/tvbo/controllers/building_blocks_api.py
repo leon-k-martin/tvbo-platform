@@ -55,6 +55,11 @@ def _class_to_odoo_model(class_name):
     return model_name if model_name in SCHEMA_MODELS else None
 
 
+def readable_record(model_name, rec_id):
+    """Record ``rec_id`` of ``model_name`` under sudo; empty when it is missing or a saved element the caller may not see."""
+    return request.env[model_name].sudo().search([('id', '=', rec_id)] + request.env['tvbo.model_share'].visibility_domain(model_name))
+
+
 # ---------------------------------------------------------------------------
 # Schema cache (process-local)
 # ---------------------------------------------------------------------------
@@ -176,11 +181,6 @@ def _get_schema_json(force=False):
 # kept local to avoid a circular controller import).
 # ---------------------------------------------------------------------------
 
-_SKIP_FIELDS = {
-    'id', 'display_name', 'create_uid', 'create_date',
-    'write_uid', 'write_date', '__last_update', 'record_id',
-}
-
 # Pure ORM bookkeeping to strip from resolved data. Crucially this does NOT
 # include the reserved-renamed schema slots (``record_id`` -> ``id``,
 # ``is_modified`` -> ``modified``): those carry real schema values and are
@@ -214,12 +214,8 @@ def _clean(value):
     return value
 
 
-# Odoo field -> schema slot: the generator's reserved-name renames, plus the Equation slots renamed to lhs/rhs upstream.
-_ODOO_RESERVED_INVERSE = {
-    **{field: slot for slot, field in schema_models.RENAMED_SLOTS.items()},
-    'lefthandside': 'lhs',
-    'righthandside': 'rhs',
-}
+# Odoo field -> schema slot, inverting the generator's reserved-name renames.
+_ODOO_RESERVED_INVERSE = {field: slot for slot, field in schema_models.RENAMED_SLOTS.items()}
 
 
 def _rename_reserved(value):
@@ -290,12 +286,12 @@ def _resolve_record_deep(record, depth=8, _seen=None, _memo=None):
     try:
         data = record.read()[0]
         for field_name, field_obj in record._fields.items():
-            if field_obj.relational and field_obj.comodel_name not in SCHEMA_MODELS:
+            if not field_obj.relational:
+                continue
+            if field_obj.comodel_name not in SCHEMA_MODELS:
                 data.pop(field_name, None)
                 continue
-            if field_name in _SKIP_FIELDS:
-                continue
-            value = getattr(record, field_name, None)
+            value = record[field_name]
             if not value:
                 continue
             if field_obj.type == 'many2one':
@@ -450,7 +446,7 @@ class BuildingBlocksController(http.Controller):
                 lim = int(limit)
             except ValueError:
                 lim = 200
-            records = request.env[model_name].sudo().search(domain, limit=lim)
+            records = request.env[model_name].sudo().search(domain + request.env['tvbo.model_share'].visibility_domain(model_name), limit=lim)
             return _json({
                 'success': True,
                 'class': class_name,
@@ -475,8 +471,8 @@ class BuildingBlocksController(http.Controller):
                 d = max(1, min(8, int(depth)))
             except ValueError:
                 d = 4
-            rec = request.env[model_name].sudo().browse(rec_id)
-            if not rec.exists():
+            rec = readable_record(model_name, rec_id)
+            if not rec:
                 return _json({'success': False, 'error': 'Not found'}, status=404)
             return _json({
                 'success': True,
@@ -493,7 +489,7 @@ class BuildingBlocksController(http.Controller):
         type='jsonrpc', auth='user', methods=['POST'], csrf=False,
     )
     def api_instance_create(self, class_name, **kwargs):
-        """Save a customised building block back to the library.
+        """Save a customised building block back to the library, as the caller, so only users who may edit the KG (Publication Reviewers) can.
 
         Expects a JSON body whose top-level keys are the scalar (writable)
         fields of the target Odoo model. Relational fields are intentionally
@@ -508,7 +504,7 @@ class BuildingBlocksController(http.Controller):
             if not isinstance(payload, dict):
                 return {'success': False, 'error': 'data must be an object'}
 
-            Model = request.env[model_name].sudo()
+            Model = request.env[model_name]
             # Only keep scalar fields the model actually has, to avoid create errors.
             create_vals = {}
             for k, v in payload.items():
@@ -611,9 +607,9 @@ class BuildingBlocksController(http.Controller):
     )
     def api_experiment_spec(self, rec_id, **kwargs):
         try:
-            obj, errors = validate_experiment(rec_id)
-            if errors == 'not_found':
+            if not readable_record('tvbo.simulation_experiment', rec_id):
                 return _json({'success': False, 'error': 'Not found'}, status=404)
+            obj, errors = validate_experiment(rec_id)
             if errors:
                 return _json({'success': False, 'error': 'validation_error', 'errors': errors})
             return _json({
@@ -635,9 +631,10 @@ class BuildingBlocksController(http.Controller):
     )
     def api_instance_spec(self, class_name, rec_id, **kwargs):
         try:
-            obj, errors = validate_instance(class_name, rec_id)
-            if errors == 'not_found':
+            model_name = _class_to_odoo_model(class_name)
+            if not model_name or not readable_record(model_name, rec_id):
                 return _json({'success': False, 'error': 'Not found'}, status=404)
+            obj, errors = validate_instance(class_name, rec_id)
             if errors:
                 return _json({'success': False, 'error': 'validation_error', 'errors': errors})
             return _json({
@@ -669,8 +666,8 @@ class BuildingBlocksController(http.Controller):
                 d = max(1, min(8, int(depth)))
             except ValueError:
                 d = 6
-            rec = request.env['tvbo.simulation_experiment'].sudo().browse(rec_id)
-            if not rec.exists():
+            rec = readable_record('tvbo.simulation_experiment', rec_id)
+            if not rec:
                 return _json({'success': False, 'error': 'Not found'}, status=404)
             data = _clean(_resolve_record_deep(rec, depth=d)) or {}
             return request.make_response(
