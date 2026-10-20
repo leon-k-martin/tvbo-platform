@@ -6,16 +6,26 @@ No fallbacks. Fails fast when something unexpected happens.
 import logging
 import os
 import re
+import threading
 
 from odoo import http
 from odoo.http import Response, request
 
+from ..models.model_sharing import _TARGET_FIELDS
+from . import kg_graph
 from .assets import json_payload
 
 _logger = logging.getLogger(__name__)
 
+# model name -> the tvbo.model_share field that targets it
+_SHARE_FIELDS = {model: fname for fname, (model, _cls, _kind) in _TARGET_FIELDS.items()}
+
 # Singleton ontology API
 _ontology_api = None
+
+# database name -> (graph stamp, laid-out public graph) for the front-page cloud
+_cloud_cache = {}
+_cloud_lock = threading.Lock()
 
 # Thumbnail directory (static files in the addon)
 _THUMB_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'static', 'src', 'img', 'thumbnails')
@@ -323,7 +333,7 @@ def _normalize_row(model_name, row, detail=False):
 
 def _get_display_name(data, entity_type):
     """Get a stable display name from common schema fields."""
-    for key in ('name', 'label', 'title', 'method', 'key'):
+    for key in ('name', 'label', 'title', 'citekey', 'method', 'key'):
         value = data.get(key)
         if value:
             return str(value)
@@ -658,16 +668,9 @@ class KnowledgeGraphAPI(http.Controller):
     def _visibility_domain(self, model_name):
         """Domain that hides elements the caller may not see.
 
-        The unified KG shows curated ground-truth plus *published* community
-        elements, plus anything the caller owns or that was peer-to-peer shared
-        with them. Sharing only targets models (Dynamics) and
-        SimulationExperiments; every other KG entity type is curated/public and
-        returns an empty domain.
+        The unified KG shows curated ground-truth plus *published* community elements, plus anything the caller owns or that was peer-to-peer shared with them. Only the share targets in ``model_sharing._TARGET_FIELDS`` (models, experiments, studies) can be hidden; every other KG entity type is curated/public and returns an empty domain.
         """
-        share_field = {
-            'tvbo.dynamics': 'dynamics_id',
-            'tvbo.simulation_experiment': 'experiment_id',
-        }.get(model_name)
+        share_field = _SHARE_FIELDS.get(model_name)
         if not share_field or _get_model_or_none('tvbo.model_share') is None:
             return []
         hidden = request.env['tvbo.model_share'].sudo().hidden_target_ids(
@@ -988,122 +991,96 @@ class KnowledgeGraphAPI(http.Controller):
           - limit: max ontology classes to include (default: all)
           - db_only: if 'true', only include database items, not full ontology
         """
-        api = get_ontology_api()
         db_only = kw.get('db_only', 'false').lower() == 'true'
         limit = int(kw.get('limit', 0)) if kw.get('limit') else 0
+        return json_response(self._knowledge_graph(db_only=db_only, limit=limit))
 
-        nodes = []
-        links = []
+    @http.route('/tvbo/api/kg/graph/cloud', type='http', auth='public', methods=['GET'], csrf=False)
+    def get_knowledge_graph_cloud(self, **kw):
+        """The public knowledge graph laid out for the front page (see ``kg_graph.cloud``), the same for every visitor.
 
-        # Collect database items first so we know which ontology classes
-        # they reference. Those classes must always be included regardless
-        # of the requested ontology limit.
-        db_items = []
-        for entity_type, _, _ in _iter_available_entity_configs():
-            db_items.extend(self._get_entity_items(entity_type))
+        It is built as the public user, so it holds only what anyone may see, and rebuilt only when a knowledge-graph record or a share has changed since.
+        """
+        stamp = self._graph_stamp()
+        with _cloud_lock:
+            cached = _cloud_cache.get(request.db)
+            if not cached or cached[0] != stamp:
+                request.update_env(user=request.env.ref('base.public_user'))
+                cached = _cloud_cache[request.db] = (stamp, kg_graph.cloud(self._knowledge_graph(individuals=False)))
+        response = json_response(cached[1])
+        response.headers['Cache-Control'] = 'public, max-age=300'
+        return response
 
-        referenced_storids = set()
-        for item in db_items:
-            for key in ('ontology_class', 'ontology_instance'):
-                ref = item.get(key)
-                if ref and ref.get('storid') is not None:
-                    referenced_storids.add(ref['storid'])
+    def _graph_stamp(self):
+        """Count and latest write of every knowledge-graph model and of the shares; it changes whenever the drawn graph can."""
+        models = [cfg['model'] for _, cfg, _ in _iter_available_entity_configs()] + ['tvbo.model_share']
+        return tuple(tuple(request.env[name].sudo()._read_group([], aggregates=['__count', 'write_date:max'])[0]) for name in models)
 
-        # Get ontology class hierarchy (unless db_only)
-        if not db_only:
-            hierarchy = api.get_class_hierarchy()
-            all_nodes = hierarchy.get('nodes', [])
-            all_links = hierarchy.get('links', [])
+    def _ontology_graph(self, api, db_items, limit):
+        """Ontology nodes with their ``is_a`` and relation links; with a ``limit``, the classes the records refer to plus the first others up to that many nodes."""
+        hierarchy = api.get_class_hierarchy()
+        nodes = hierarchy.get('nodes', [])
+        if 0 < limit < len(nodes):
+            referenced = {ref['storid'] for item in db_items for key in ('ontology_class', 'ontology_instance') if (ref := item.get(key)) and ref.get('storid') is not None}
+            kept = [node for node in nodes if node.get('storid') in referenced]
+            nodes = kept + [node for node in nodes if node.get('storid') not in referenced][:max(limit - len(kept), 0)]
+        return nodes, hierarchy.get('links', []) + kg_graph.ontology_links(api, nodes)
 
-            if limit > 0 and len(all_nodes) > limit:
-                # Keep referenced classes plus the first `limit` other classes.
-                kept = []
-                kept_ids = set()
-                for n in all_nodes:
-                    sid = n.get('storid')
-                    if sid in referenced_storids and sid not in kept_ids:
-                        kept.append(n)
-                        kept_ids.add(sid)
-                for n in all_nodes:
-                    if len(kept) >= limit:
-                        break
-                    sid = n.get('storid')
-                    if sid not in kept_ids:
-                        kept.append(n)
-                        kept_ids.add(sid)
-                nodes = kept
-                links = [l for l in all_links
-                         if l.get('source') in kept_ids and l.get('target') in kept_ids]
-            else:
-                nodes = all_nodes
-                links = all_links
+    def _knowledge_graph(self, db_only=False, limit=0, individuals=True):
+        """Ontology terms and database records with the links between them, as ``{nodes, links, stats}``.
 
-        # Map database items to nodes. A DB building block that materializes an
-        # ontology *individual* (e.g. the PyRhO Software individual) is the SAME
-        # real-world entity as that individual — same IRI. Drawing both is the
-        # duplication users see ("PyRhO" as a Software node AND an ontology node).
-        # Dedupe by collapsing the two into the DB node: keep the DB node (it
-        # carries db_type styling + click-through), drop the ontology individual
-        # node, and re-point that individual's is_a links at the DB node so the
-        # class hierarchy stays connected. A DB item that only matches an ontology
-        # *class* keeps the normal instance -> class "instance of" edge — that is a
-        # real membership, not a duplicate.
-        onto_storid_map = {n['storid']: n for n in nodes if n.get('storid') is not None}
-        merged_storids = {}  # ontology individual storid -> DB node id it merged into
+        A record that is the same entity as an ontology individual (the PyRhO software, the SupHopf model) is drawn once, as the record, and takes over the individual's links; a record that only matches a class gets an ``instance of`` link to it. Records of one type that share a name are drawn as the first of them, because an experiment carries its own copy of the library model or network it uses. Without ``individuals``, the ontology part is only the classes ``kg_graph.drawn_classes`` picks. Links to nodes that are not drawn are dropped.
+        """
+        api = get_ontology_api()
+        classes = {entity.storid for entity in api.onto.classes()}
+        values = kg_graph.enum_values(api)
+        configs = list(_iter_available_entity_configs())
+        db_items = [item for entity_type, _, _ in configs for item in self._get_entity_items(entity_type)]
+        nodes, links = ([], []) if db_only else self._ontology_graph(api, db_items, limit)
+        onto_nodes = {node['storid']: node for node in nodes}
+        merged, record_node, named = {}, {}, {}
 
         for item in db_items:
-            node_id = f"db_{item['type']}_{item['id']}"
-            onto_class = item.get('ontology_class')
-            onto_instance = item.get('ontology_instance')
-
-            inst_storid = onto_instance.get('storid') if onto_instance else None
-            onto_node = onto_storid_map.get(inst_storid) if inst_storid is not None else None
-
+            label = item.get('name') or item.get('label') or item.get('title', '')
+            twin = named.get((item['type'], label)) if label else None
+            if twin:
+                record_node[(item['type'], item['id'])] = twin
+                continue
+            node_id = named[(item['type'], label)] = record_node[(item['type'], item['id'])] = f"db_{item['type']}_{item['id']}"
             node = {
                 'id': node_id,
                 'storid': node_id,
-                'label': item.get('name') or item.get('label') or item.get('title', ''),
+                'label': label,
                 'type': 'instance',
                 'db_type': item['type'],
                 'title': item.get('title', ''),
-                'iri': item.get('iri') or (onto_node.get('iri') if onto_node else ''),
+                'iri': item.get('iri') or '',
             }
-
-            if onto_node is not None:
-                # Same entity as an ontology individual -> collapse into this node.
-                node['ontology_type'] = onto_node.get('ontology_type')
-                merged_storids[inst_storid] = node_id
-                nodes.append(node)
-                continue
-
+            instance = (item.get('ontology_instance') or {}).get('storid')
+            onto_class = (item.get('ontology_class') or {}).get('storid')
+            if instance in onto_nodes and instance not in merged:
+                merged[instance] = node_id
+                node['iri'] = node['iri'] or onto_nodes[instance].get('iri', '')
+                node['ontology_type'] = onto_nodes[instance].get('ontology_type')
+            elif onto_class in onto_nodes:
+                links.append(kg_graph.link(node_id, onto_class, 'instance_of'))
             nodes.append(node)
 
-            # Only a class match (or nothing): keep the instance -> class edge.
-            if onto_class and onto_class.get('storid') in onto_storid_map:
-                links.append({
-                    'source': node_id,
-                    'target': onto_class['storid'],
-                    'type': 'instance_of',
-                    'label': 'instance of',
-                })
-
-        if merged_storids:
-            # Drop the now-duplicate ontology individual nodes and re-point any
-            # link that referenced their storid at the DB node they merged into.
-            nodes = [n for n in nodes if n.get('storid') not in merged_storids]
-            for link in links:
-                if link.get('source') in merged_storids:
-                    link['source'] = merged_storids[link['source']]
-                if link.get('target') in merged_storids:
-                    link['target'] = merged_storids[link['target']]
-
-        return json_response({
+        kinds = {cfg['model']: entity_type for entity_type, cfg, _ in configs}
+        links += kg_graph.record_links(request.env, kinds, record_node, values)
+        nodes = [node for node in nodes if node['storid'] not in merged]
+        links = kg_graph.clean_links(links, merged, {node['storid'] for node in nodes})
+        if not individuals:
+            drawn = kg_graph.drawn_classes(nodes, links, classes, set(values.values()))
+            nodes = [node for node in nodes if 'db_type' in node or node['storid'] in drawn]
+            links = kg_graph.clean_links(links, {}, {node['storid'] for node in nodes})
+        return {
             "nodes": nodes,
             "links": links,
             "stats": {
-                "ontology_classes": len([n for n in nodes if n.get('type') != 'instance']),
+                "ontology_classes": sum(node['storid'] in classes for node in nodes),
                 "database_items": len(db_items),
                 "total_nodes": len(nodes),
                 "total_links": len(links),
             }
-        })
+        }

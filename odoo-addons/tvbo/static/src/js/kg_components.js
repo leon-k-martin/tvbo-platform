@@ -114,20 +114,24 @@ KGComponents.DetailPanel = class {
             }
         }
 
-        // Ontology relationships
+        // Ontology relationships, one line per relation and direction, each entity at the other end linked to its own detail
         if (data.relationships) {
             const rels = data.relationships;
-            if (rels.links && rels.links.length > 0) {
-                md.push('');
-                md.push('### Relationships');
-                md.push('');
-                for (const link of rels.links) {
-                    const relLabel = (link.relation || link.type || 'related to').replace(/_/g, ' ');
-                    const targetLabel = link.target_label || link.target_name || link.target || '';
-                    if (targetLabel) {
-                        md.push(`- **${relLabel}:** ${targetLabel}`);
-                    }
-                }
+            const centre = rels.center ? rels.center.storid : data.storid;
+            const names = new Map((rels.nodes || []).map(n => [n.storid, n.label || n.name]));
+            const groups = new Map();
+            for (const link of rels.links || []) {
+                const outgoing = link.source === centre;
+                const other = outgoing ? link.target : link.source;
+                if (other === centre || !names.has(other)) continue;
+                const relation = (link.type || 'related to').split(/[/#:]/).pop().replace(/_/g, ' ').replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase();
+                const heading = outgoing ? relation : `linked by ${relation} from`;
+                if (!groups.has(heading)) groups.set(heading, new Set());
+                groups.get(heading).add(`[${names.get(other)}](/tvbo/kg?open=ontology:${other})`);
+            }
+            if (groups.size) {
+                md.push('', '### Relationships', '');
+                groups.forEach((entries, heading) => md.push(`- **${heading}:** ${[...entries].join(', ')}`));
                 md.push('');
             }
         }

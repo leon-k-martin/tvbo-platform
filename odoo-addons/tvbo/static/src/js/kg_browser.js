@@ -149,6 +149,9 @@ class KnowledgeGraphBrowser {
             console.log('🔍 Performing initial search...');
             this.search();
 
+            const openFromUrl = urlParams.get('open');
+            if (openFromUrl) this.openFromUrl(openFromUrl);
+
             // Check URL hash for view state
             this.initViewFromHash();
 
@@ -975,6 +978,20 @@ class KnowledgeGraphBrowser {
 
     getItemDescription(item) {
         return item.description || item.desc || item.summary || item.abstract || '';
+    }
+
+    /**
+     * Open the detail of the ``kind:id`` the URL names: a record's type and id, or ``ontology`` and a storid, fetching an ontology node the list does not hold.
+     */
+    async openFromUrl(ref) {
+        const [kind, id] = ref.split(':');
+        const isOntology = kind === 'ontology';
+        let item = this.originalData.find(it => it.type === kind && String(isOntology ? it.storid : it.id) === id);
+        if (!item && isOntology) {
+            const resp = await fetch(`/tvbo/api/kg/ontology/node/${encodeURIComponent(id)}`);
+            if (resp.ok) item = await resp.json();
+        }
+        if (item) this.openModal(item);
     }
 
     async openModal(item) {
