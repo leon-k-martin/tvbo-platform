@@ -14,8 +14,8 @@
     # from tvbo/database/*.yaml through pydantic_loader into the Odoo DB. Only
     # security, static config, surveys and views are declarative data files.
     'data': [
-        'security/ir.model.access.csv',
         'security/platform_security.xml',
+        'security/ir.model.access.csv',
         'data/survey_workshop_preworkshop.xml',
         'data/survey_workshop_feedback.xml',
         'data/website_config.xml',

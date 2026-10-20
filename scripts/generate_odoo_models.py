@@ -106,14 +106,15 @@ def main(argv: list[str] | None = None) -> int:
 
 
 def _access_csv_content(models_code: str) -> str:
-    """Build the ir.model.access.csv body (one rule per generated model)."""
+    """Build the ir.model.access.csv body: internal users read every generated model, publication reviewers (the curators) also write."""
     import re
     # Match only the model `_name` line (4-space indent), not _rec_name/_description.
     model_names = re.findall(r"^    _name = '([^']+)'", models_code, re.M)
     lines = ["id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink"]
     for m in model_names:
         ident = m.replace(".", "_")
-        lines.append(f"access_{ident},{m},model_{ident},base.group_user,1,1,1,1")
+        lines.append(f"access_{ident},{m},model_{ident},base.group_user,1,0,0,0")
+        lines.append(f"access_{ident}_reviewer,{m} reviewer,model_{ident},group_tvbo_reviewer,1,1,1,1")
     return "\n".join(lines) + "\n"
 
 

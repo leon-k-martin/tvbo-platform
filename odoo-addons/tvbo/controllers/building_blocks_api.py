@@ -20,12 +20,19 @@ Three responsibilities:
 import logging
 import re
 
-from odoo import http
+from odoo import http, models
 from odoo.http import request
 
+from ..models import schema_models
 from .assets import json_payload
 
 _logger = logging.getLogger(__name__)
+
+# The only models these sudo routes may touch: the classes generated from the LinkML schema.
+SCHEMA_MODELS = frozenset(
+    cls._name for cls in vars(schema_models).values()
+    if isinstance(cls, type) and issubclass(cls, models.BaseModel)
+)
 
 
 # ---------------------------------------------------------------------------
@@ -43,11 +50,9 @@ def _camel_to_snake(name):
 
 
 def _class_to_odoo_model(class_name):
-    """`Dynamics` -> `tvbo.dynamics`. Returns None if no such model exists."""
+    """`Dynamics` -> `tvbo.dynamics`. Returns None unless it is a generated schema model."""
     model_name = f'tvbo.{_camel_to_snake(class_name)}'
-    if model_name in request.env:
-        return model_name
-    return None
+    return model_name if model_name in SCHEMA_MODELS else None
 
 
 # ---------------------------------------------------------------------------
@@ -209,15 +214,9 @@ def _clean(value):
     return value
 
 
-# Field-name divergences between the platform's generated Odoo models and the
-# current tvbo Pydantic datamodel. Invert them when turning Odoo records back
-# into schema-shaped data. (See todo.md: the durable fix is to regenerate the
-# Odoo models + seed from the current tvbo schema so these vanish.)
-#   record_id/is_modified : reserved ORM names (generate_odoo_models)
-#   lefthandside/righthandside : Equation slots renamed to lhs/rhs upstream
+# Odoo field -> schema slot: the generator's reserved-name renames, plus the Equation slots renamed to lhs/rhs upstream.
 _ODOO_RESERVED_INVERSE = {
-    'record_id': 'id',
-    'is_modified': 'modified',
+    **{field: slot for slot, field in schema_models.RENAMED_SLOTS.items()},
     'lefthandside': 'lhs',
     'righthandside': 'rhs',
 }
@@ -270,11 +269,9 @@ def _is_enum_model(recordset):
 def _resolve_record_deep(record, depth=8, _seen=None, _memo=None):
     """Deep-resolve an Odoo record to a nested dict.
 
-    Uses a memo (resolve each record once, deep-copy on reuse) so shared records
-    referenced from many places aren't re-resolved combinatorially, plus a
-    path-scoped ``_seen`` set to break reference cycles. This keeps complex
-    experiments (e.g. bifurcation continuations that re-reference a Dynamics)
-    fast instead of exploding.
+    Uses a memo (resolve each record once, deep-copy on reuse) so shared records referenced from many places aren't re-resolved combinatorially, plus a path-scoped ``_seen`` set to break reference cycles. This keeps complex experiments (e.g. bifurcation continuations that re-reference a Dynamics) fast instead of exploding.
+
+    Relations to models outside ``SCHEMA_MODELS`` (users, platform and HR records) are dropped, so a sudo caller can never walk out of the schema.
     """
     import copy as _copy
     if not record or depth <= 0:
@@ -293,6 +290,9 @@ def _resolve_record_deep(record, depth=8, _seen=None, _memo=None):
     try:
         data = record.read()[0]
         for field_name, field_obj in record._fields.items():
+            if field_obj.relational and field_obj.comodel_name not in SCHEMA_MODELS:
+                data.pop(field_name, None)
+                continue
             if field_name in _SKIP_FIELDS:
                 continue
             value = getattr(record, field_name, None)
