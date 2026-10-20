@@ -238,3 +238,10 @@ a:hover {
 .btn-primary:hover {
     background: linear-gradient(135deg, #2980B9 0%, #1a252f 100%);
 }
+
+/* Slim site footer: one row of links and one line on who runs the platform */
+.tvbo-footer { background: #2C3E50; color: rgba(255, 255, 255, 0.72); padding: 1.75rem 0 1.5rem; font-size: 0.875rem; }
+.tvbo-footer a { color: rgba(255, 255, 255, 0.86); text-decoration: none; }
+.tvbo-footer a:hover, .tvbo-footer a:focus-visible { color: #fff; text-decoration: underline; }
+.tvbo-footer-links { display: flex; flex-wrap: wrap; gap: 0.5rem 1.75rem; margin-bottom: 0.875rem; }
+.tvbo-footer-note { margin: 0; }

@@ -602,6 +602,22 @@
   });
 })();
 
+/* Frame switch: Platform, Jupyter or App swaps only the chrome around the scope, then lets the scope refit to its new width. */
+(function () {
+  'use strict';
+
+  var surface = document.querySelector('.tvbo-landing .surface');
+  if (!surface) return;
+  var btns = [].slice.call(surface.querySelectorAll('[data-surface-pick]'));
+  btns.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      surface.setAttribute('data-surface', btn.getAttribute('data-surface-pick'));
+      btns.forEach(function (b) { b.setAttribute('aria-pressed', b === btn ? 'true' : 'false'); });
+      window.dispatchEvent(new Event('resize'));
+    });
+  });
+})();
+
 /* First-look affordance. Every control pulses once, staggered, as it first scrolls
  * into view — above the fold that means on load — so the sliders, backend tabs, view
  * toggle and scrollable code pane announce themselves as operable before anything is
@@ -614,11 +630,11 @@
   if (!root) return;
   if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-  var SEL = '.btn, .scope-tabs button, .scope-bar .seg button, .scope-ctl input[type=range], [data-scope-code]';
+  var SEL = '.btn, .surface-switch button, .scope-tabs button, .scope-bar .seg button, .scope-ctl input[type=range], [data-scope-code]';
   var els = [].slice.call(root.querySelectorAll(SEL));
   if (!els.length) return;
 
-  var LEAD = 320;   // clears the .reveal fade so the pulse lands on a visible control
+  var LEAD = 320;   // lets the section settle into view before the pulse lands
   var seen = 0;
 
   function pulse(el) {
