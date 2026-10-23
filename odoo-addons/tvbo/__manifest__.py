@@ -9,10 +9,7 @@
     'website': 'https://github.com/virtual-twin/tvbo',
     'license': 'LGPL-3',
     'depends': ['base', 'website', 'survey', 'mass_mailing', 'website_forum', 'tvbo_platform_docs'],
-    # Building-block records and enum lookups are seeded from the tvbo
-    # ground-truth database by post_init_hook (see models/ingest.py) — one flow
-    # from tvbo/database/*.yaml through pydantic_loader into the Odoo DB. Only
-    # security, static config, surveys and views are declarative data files.
+    # Building blocks and enum lookups are seeded from tvbo/database/*.yaml by post_init_hook (models/ingest.py); only security, config, surveys and views are data files.
     'data': [
         'security/ir.model.access.csv',
         'security/platform_security.xml',
@@ -29,7 +26,8 @@
         'views/menus.xml',
         'views/publication_review_views.xml',
         'views/literature_views.xml',
-        'views/document_parser_templates.xml'
+        'views/document_parser_templates.xml',
+        'views/ontology_templates.xml'
     ],
     # Brands every Odoo-rendered surface — website, backend and PDF reports alike.
     'assets': {
