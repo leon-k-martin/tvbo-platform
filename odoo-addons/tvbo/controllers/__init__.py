@@ -8,3 +8,4 @@ from . import kg_api
 from . import document_parser
 from . import building_blocks_api
 from . import forum
+from . import ontology
