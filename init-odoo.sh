@@ -383,6 +383,16 @@ else
   log "✓ TVBO module installed"
 fi
 
+# TVBO_PUBLIC_URL becomes web.base.url, frozen so an admin login from another address cannot replace it; set before the docs import, which renders it into the docs links, and printed by the API keys example.
+if [ -n "${TVBO_PUBLIC_URL:-}" ]; then
+  if psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" \
+    -c "INSERT INTO ir_config_parameter (key, value, create_uid, create_date, write_uid, write_date) VALUES ('web.base.url', '${TVBO_PUBLIC_URL}', 1, NOW(), 1, NOW()), ('web.base.url.freeze', 'True', 1, NOW(), 1, NOW()) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, write_date = NOW();" > /dev/null 2>&1; then
+    log "✓ Public address set to ${TVBO_PUBLIC_URL}"
+  else
+    log "⚠ Could not set the public address (non-critical)"
+  fi
+fi
+
 # Reconcile the KG's database side against ground truth on every deploy. Fresh
 # install: post_init_hook already seeded, so this is a near no-op (all skipped).
 # Upgrade-only deploy: the hook never ran, so this seeds. Either way it back-fills
@@ -399,16 +409,6 @@ if psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" \
   log "✓ Website configured"
 else
   log "⚠ Could not configure website (non-critical)"
-fi
-
-# TVBO_PUBLIC_URL becomes web.base.url, frozen so an admin login from another address cannot replace it; the docs links and the API keys example print it.
-if [ -n "${TVBO_PUBLIC_URL:-}" ]; then
-  if psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" \
-    -c "INSERT INTO ir_config_parameter (key, value, create_uid, create_date, write_uid, write_date) VALUES ('web.base.url', '${TVBO_PUBLIC_URL}', 1, NOW(), 1, NOW()), ('web.base.url.freeze', 'True', 1, NOW(), 1, NOW()) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, write_date = NOW();" > /dev/null 2>&1; then
-    log "✓ Public address set to ${TVBO_PUBLIC_URL}"
-  else
-    log "⚠ Could not set the public address (non-critical)"
-  fi
 fi
 
 log "✓ TVBO initialization complete"
