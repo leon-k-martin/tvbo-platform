@@ -115,7 +115,8 @@ LOCAL_ODOO_PORT=9090 LOCAL_API_PORT=9091 make forward-all
 tvbo-platform/
 ├── Makefile                    # All commands (dev + prod)
 ├── docker-compose.dev.yml      # Local dev setup
-├── k8s.yaml                    # Production Kubernetes
+├── k8s.yaml                    # Full Kubernetes stack (make up)
+├── tvboRunnerActions.yaml      # Production manifest (GitLab deploy job)
 ├── Dockerfile.odoo             # Odoo image (used by both)
 ├── odoo-addons/tvbo/          # TVBO Odoo module (MOUNTED in dev)
 │   ├── __manifest__.py

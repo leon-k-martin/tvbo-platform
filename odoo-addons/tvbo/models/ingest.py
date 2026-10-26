@@ -60,12 +60,6 @@ _INGEST = [
     ("SimulationTool", "SimulationTool"),
 ]
 
-# Classes whose ground-truth files intentionally carry fields the schema does
-# not model (Study mirrors BibTeX: journal/volume/pages/… live in references.bib
-# and are dropped on ingest, keeping only the citekey-anchored KG node).
-_DROP_UNKNOWN = {"Study"}
-
-
 # Best-effort audit trail to a file in the data volume, because addon logging
 # during post_init_hook is not reliably surfaced in the install logs.
 _AUDIT_PATH = "/var/lib/odoo/tvbo_ingest.log"
@@ -143,14 +137,18 @@ def _resolve_one(env, comodel, value, cache):
     return None
 
 
-def _resolve_many(env, comodel, value, cache):
-    items = []
+def _items(value):
+    """The members of a schema collection, which the data gives either as a list or as a dict keyed by each member's identifier."""
     if isinstance(value, dict):
-        items = list(value.values())
-    elif isinstance(value, (list, tuple)):
-        items = list(value)
+        return list(value.values())
+    if isinstance(value, (list, tuple)):
+        return list(value)
+    return []
+
+
+def _resolve_many(env, comodel, value, cache):
     ids = []
-    for item in items:
+    for item in _items(value):
         rid = _resolve_one(env, comodel, item, cache)
         if rid:
             ids.append(rid)
@@ -245,6 +243,38 @@ def _seed_enums(env, datamodel):
     _logger.info("tvbo ingest: seeded %d enum values", seeded)
 
 
+def _ground_truth(pydantic_loader, path, pyd_cls_name):
+    """The ground-truth file at *path* as a plain dict. Fields the generated schema does not model yet (schema drift, reported by ``scripts/schema_drift.py``) are dropped, because one unknown field would otherwise fail validation and lose the whole record."""
+    return pydantic_loader.load(path, pyd_cls_name, drop_unknown=True).model_dump(mode="python", by_alias=True, exclude_none=True)
+
+
+def _refill_axis_parameters(env, registry, pydantic_loader):
+    """Refill the empty ``parameter`` of exploration axes on ingested experiments from ground truth, matching each exploration by name and its axes by order; an exploration whose axis count no longer matches is logged and left alone. The seed skips experiments it already has, so this is what repairs an ingested axis whose value was lost."""
+    refilled = 0
+    for name in registry.list_entries("SimulationExperiment"):
+        experiment = env.ref(f"{_INGEST_MODULE}.{_xmlid('SimulationExperiment', name)}", raise_if_not_found=False) or env["tvbo.simulation_experiment"]
+        broken = experiment.sudo().explorations.filtered(lambda exploration: not all(exploration.space.mapped("parameter")))
+        if not broken:
+            continue
+        try:
+            data = _ground_truth(pydantic_loader, str(registry.resolve("SimulationExperiment", name)), "SimulationExperiment")
+        except Exception as exc:  # noqa: BLE001
+            _audit(f"SimulationExperiment/{name}: axis refill FAILED: {type(exc).__name__}: {exc}")
+            continue
+        truth = {exploration.get("name"): _items(exploration.get("space")) for exploration in _items(data.get("explorations"))}
+        for exploration in broken:
+            axes = exploration.space.sorted("id")
+            items = truth.get(exploration.name, [])
+            if len(items) != len(axes):
+                _audit(f"SimulationExperiment/{name}: exploration {exploration.name} has {len(axes)} axes, ground truth {len(items)}; left as is")
+                continue
+            for axis, item in zip(axes, items):
+                if not axis.parameter and item.get("parameter"):
+                    axis.parameter = item["parameter"]
+                    refilled += 1
+    _audit(f"exploration axes: {refilled} empty parameter(s) refilled from ground truth")
+
+
 def seed_database(env):
     """Post-install entry point: seed enums + building blocks from ground truth."""
     try:
@@ -299,17 +329,7 @@ def seed_database(env):
                             skipped += 1
                             continue
                         marker.unlink()
-                    # drop_unknown across the board: the ground-truth YAML carries
-                    # fields the generated schema does not model yet (schema drift,
-                    # e.g. GraphGenerator parameters.*.range/.required), and a single
-                    # extra field otherwise fails pydantic validation and loses the
-                    # ENTIRE record (GraphGenerator was 0/9). Dropping the unknown
-                    # field keeps the record; the proper long-term fix is to bring
-                    # the generated schema back in sync with the data.
-                    obj = pydantic_loader.load(
-                        path, pyd_cls_name, drop_unknown=True,
-                    )
-                    data = obj.model_dump(mode="python", by_alias=True, exclude_none=True)
+                    data = _ground_truth(pydantic_loader, path, pyd_cls_name)
                     # Back-compat: a record from a pre-external-id ingest may already
                     # exist; adopt it (attach the external id) instead of duplicating.
                     # But NEVER adopt a row another ingest marker already owns: the
@@ -338,6 +358,7 @@ def seed_database(env):
                 _audit(f"{category}/{name} FAILED: {type(exc).__name__}: {exc}")
         _audit(f"{model_name} -> {ok} created, {skipped} already present / {len(names)} total")
         total += ok
+    _refill_axis_parameters(env, registry, pydantic_loader)
     _audit(f"DONE: {total} building-block records created this run")
     comp = kg_completeness(env)
     _audit("KG_COMPLETENESS: %s%s" % (
