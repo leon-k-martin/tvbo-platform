@@ -49,8 +49,8 @@
         <field name="target">new</field>
     </record>
 
-    <menuitem id="menu_timesheet_month" name="Monthly Sheet" parent="hr_timesheet.timesheet_menu_root" action="action_timesheet_month" sequence="3" groups="group_lab_member"/>
-    <menuitem id="menu_funding_allocation" name="Funding" parent="hr_timesheet.timesheet_menu_root" action="action_funding_allocation" sequence="4" groups="group_lab_member"/>
+    <menuitem id="menu_timesheet_month" name="Monthly Sheet" parent="hr_timesheet.timesheet_menu_root" action="action_timesheet_month" sequence="20" groups="group_lab_member"/>
+    <menuitem id="menu_funding_allocation" name="Funding" parent="hr_timesheet.timesheet_menu_root" action="action_funding_allocation" sequence="30" groups="group_lab_member"/>
 
     <record id="view_company_form" model="ir.ui.view">
         <field name="name">res.company.form.lab</field>

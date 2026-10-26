@@ -2,3 +2,5 @@ id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_lab_funding_allocation_user,lab.funding_allocation user,model_lab_funding_allocation,base.group_user,1,0,0,0
 access_lab_funding_allocation_manager,lab.funding_allocation manager,model_lab_funding_allocation,group_lab_manager,1,1,1,1
 access_lab_timesheet_month_user,lab.timesheet_month user,model_lab_timesheet_month,group_lab_member,1,1,1,0
+access_lab_student_project_member,lab.student_project member,model_lab_student_project,group_lab_member,1,1,1,0
+access_lab_student_project_manager,lab.student_project manager,model_lab_student_project,group_lab_manager,1,1,1,1

@@ -11,14 +11,14 @@
         <field name="privilege_id" ref="privilege_lab"/>
         <field name="implied_ids" eval="[(4, ref('hr_timesheet.group_hr_timesheet_user'))]"/>
     </record>
-    <!-- The PI: manages funding, approves leave and timesheets, runs projects and the equipment register. -->
+    <!-- The PI: manages the team, funding, leave, timesheets, projects and the equipment register. -->
     <record id="group_lab_manager" model="res.groups">
         <field name="name">Manager</field>
         <field name="sequence">20</field>
         <field name="privilege_id" ref="privilege_lab"/>
         <field name="implied_ids" eval="[
             (4, ref('group_lab_member')),
-            (4, ref('hr.group_hr_user')),
+            (4, ref('hr.group_hr_manager')),
             (4, ref('hr_holidays.group_hr_holidays_user')),
             (4, ref('hr_timesheet.group_hr_timesheet_approver')),
             (4, ref('project.group_project_manager')),
@@ -35,6 +35,34 @@
     <record id="rule_funding_allocation_manager" model="ir.rule">
         <field name="name">Funding allocation: all</field>
         <field name="model_id" ref="model_lab_funding_allocation"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('group_lab_manager'))]"/>
+    </record>
+
+    <!-- Within the branches a user may enter, students read their own project and only supervisors and the PI change it. -->
+    <record id="rule_student_project_company" model="ir.rule">
+        <field name="name">Student project: allowed branches</field>
+        <field name="model_id" ref="model_lab_student_project"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="rule_student_project_own" model="ir.rule">
+        <field name="name">Student project: own</field>
+        <field name="model_id" ref="model_lab_student_project"/>
+        <field name="domain_force">[('student_id.user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_lab_member'))]"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+    <record id="rule_student_project_supervised" model="ir.rule">
+        <field name="name">Student project: supervised</field>
+        <field name="model_id" ref="model_lab_student_project"/>
+        <field name="domain_force">[('supervisor_ids', 'in', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_lab_member'))]"/>
+    </record>
+    <record id="rule_student_project_manager" model="ir.rule">
+        <field name="name">Student project: all</field>
+        <field name="model_id" ref="model_lab_student_project"/>
         <field name="domain_force">[(1, '=', 1)]</field>
         <field name="groups" eval="[(4, ref('group_lab_manager'))]"/>
     </record>
