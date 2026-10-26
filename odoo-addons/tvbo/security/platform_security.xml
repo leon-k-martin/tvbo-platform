@@ -182,4 +182,36 @@
         <field name="domain_force">[('user_id', '=', user.id)]</field>
         <field name="groups" eval="[(4, ref('base.group_user')), (4, ref('base.group_portal'))]"/>
     </record>
+
+    <!-- Literature on studies follows the generated knowledge-graph models: staff read it, reviewers curate it. -->
+    <record id="access_tvbo_mesh_term_user" model="ir.model.access">
+        <field name="name">tvbo.mesh_term user</field>
+        <field name="model_id" ref="model_tvbo_mesh_term"/>
+        <field name="group_id" ref="base.group_user"/>
+        <field name="perm_read" eval="1"/>
+    </record>
+    <record id="access_tvbo_mesh_term_reviewer" model="ir.model.access">
+        <field name="name">tvbo.mesh_term reviewer</field>
+        <field name="model_id" ref="model_tvbo_mesh_term"/>
+        <field name="group_id" ref="group_tvbo_reviewer"/>
+        <field name="perm_read" eval="1"/>
+        <field name="perm_write" eval="1"/>
+        <field name="perm_create" eval="1"/>
+        <field name="perm_unlink" eval="1"/>
+    </record>
+    <record id="access_tvbo_literature_reference_user" model="ir.model.access">
+        <field name="name">tvbo.literature_reference user</field>
+        <field name="model_id" ref="model_tvbo_literature_reference"/>
+        <field name="group_id" ref="base.group_user"/>
+        <field name="perm_read" eval="1"/>
+    </record>
+    <record id="access_tvbo_literature_reference_reviewer" model="ir.model.access">
+        <field name="name">tvbo.literature_reference reviewer</field>
+        <field name="model_id" ref="model_tvbo_literature_reference"/>
+        <field name="group_id" ref="group_tvbo_reviewer"/>
+        <field name="perm_read" eval="1"/>
+        <field name="perm_write" eval="1"/>
+        <field name="perm_create" eval="1"/>
+        <field name="perm_unlink" eval="1"/>
+    </record>
 </odoo>

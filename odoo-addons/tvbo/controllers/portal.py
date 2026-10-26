@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
-"""Portal pages for user-saved models.
+"""Portal pages: the dashboard everyone lands on after login, and the user-saved models.
 
-- ``/my/models``            owner's own saved models (the portal dashboard)
+- ``/my``                   the dashboard, built from widgets each user arranges
+- ``/my/models``            owner's own saved models
 - ``/tvbo/models/shared``   community gallery of models other users have shared
 - visibility / delete       owner-only mutations on a saved model
 
@@ -15,6 +16,33 @@ from datetime import timedelta
 from odoo import fields, http
 from odoo.exceptions import ValidationError
 from odoo.http import request
+
+from odoo.addons.portal.controllers.portal import CustomerPortal
+from odoo.addons.website.controllers.main import Website
+
+
+class TVBOLogin(Website):
+
+    def _login_redirect(self, uid, redirect=None):
+        """Everyone lands on the dashboard after logging in, unless the login link names a page."""
+        if not redirect and request.params.get('login_success'):
+            redirect = '/my'
+        return super()._login_redirect(uid, redirect=redirect)
+
+
+class TVBODashboard(CustomerPortal):
+
+    @http.route()
+    def home(self, **kw):
+        """The dashboard: the user's widgets in their order, and the ones they can still add."""
+        widgets, spare_widgets = request.env.user._dashboard_layout()
+        return request.render('tvbo.portal_dashboard', {**self._prepare_portal_layout_values(), 'widgets': widgets, 'spare_widgets': spare_widgets})
+
+    @http.route('/my/dashboard/widgets', type='jsonrpc', auth='user', csrf=False)
+    def save_widgets(self, keys=None, **kw):
+        """Store the caller's widget arrangement; no keys goes back to the defaults."""
+        request.env.user._set_dashboard_keys(keys)
+        return {'success': True, 'keys': request.env.user._dashboard_keys()}
 
 
 class TVBOPortal(http.Controller):

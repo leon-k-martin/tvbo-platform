@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-inherit="web.NavBar" t-inherit-mode="extension">
+        <xpath expr="//nav[hasclass('o_main_navbar')]" position="before">
+            <div class="o_site_header d-print-none">
+                <a href="/" class="o_site_header_brand" title="Go to the website">
+                    <img t-if="siteHeader.logo" class="o_site_header_logo" t-att-src="siteHeader.logo" alt=""/>
+                    <span t-esc="siteHeader.name"/>
+                </a>
+                <span class="o_site_header_badge">Backend</span>
+                <UserMenu/>
+            </div>
+        </xpath>
+    </t>
+
+    <!-- In the strip the account menu shows the name and a caret beside the avatar on wide screens; on phones Odoo's burger menu, behind the avatar in the navbar, lists the same items. -->
+    <t t-inherit="web.UserMenu" t-inherit-mode="extension">
+        <xpath expr="//small[hasclass('oe_topbar_name')]" position="replace">
+            <span class="oe_topbar_name d-none d-lg-inline text-truncate" t-esc="userName"/>
+            <i class="fa fa-caret-down d-none d-lg-inline" aria-hidden="true"/>
+        </xpath>
+    </t>
+
+    <t t-name="web_nested_sidebar.AccountMenuHeader">
+        <div class="o_account_menu_header">
+            <strong t-esc="user.name"/>
+            <small t-esc="user.login"/>
+        </div>
+        <div role="separator" class="dropdown-divider"/>
+    </t>
+
+</templates>

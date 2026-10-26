@@ -341,7 +341,13 @@ class KnowledgeGraphBrowser {
         }
 
         document.addEventListener('click', (e) => {
-            if (e.target.closest('.facet-item')) {
+            const openLink = e.target.closest('a[href^="/tvbo/kg?open="]');
+            if (openLink) {
+                // A link to another item opens it in place and becomes a history step, so Back returns to the previous one.
+                e.preventDefault();
+                history.pushState(null, '', openLink.getAttribute('href'));
+                this.openFromUrl(new URL(openLink.href).searchParams.get('open'));
+            } else if (e.target.closest('.facet-item')) {
                 this.handleFacetClick(e.target.closest('.facet-item'));
             } else if (e.target.closest('.facet-header')) {
                 this.handleFacetToggle(e.target.closest('.facet-header'));
@@ -387,6 +393,11 @@ class KnowledgeGraphBrowser {
 
         // Listen for hash changes (browser back/forward)
         window.addEventListener('hashchange', () => this.initViewFromHash());
+        window.addEventListener('popstate', () => {
+            const ref = new URLSearchParams(location.search).get('open');
+            if (ref) this.openFromUrl(ref);
+            else if (this.modal) this.modal.close();
+        });
     }
 
     /**

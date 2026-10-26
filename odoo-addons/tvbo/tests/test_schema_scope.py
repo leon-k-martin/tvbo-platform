@@ -36,11 +36,12 @@ class TestSchemaScope(HttpCase):
 
     def test_detail_stays_inside_the_schema(self):
         dyn = self.env['tvbo.dynamics'].create({'name': 'scope_probe'})
-        response = self._get(f'/tvbo/api/configurator/instances/Dynamics/{dyn.id}')
-        self.assertEqual(response.status_code, 200)
-        data = response.json()['data']
-        self.assertEqual(data['name'], 'scope_probe')
-        self.assertFalse({'create_uid', 'write_uid'} & data.keys())
+        for path in (f'/tvbo/api/configurator/instances/Dynamics/{dyn.id}', f'/tvbo/api/configurator/dynamics/{dyn.id}'):
+            response = self._get(path)
+            self.assertEqual(response.status_code, 200, path)
+            data = response.json()['data']
+            self.assertEqual(data['name'], 'scope_probe', path)
+            self.assertFalse({'create_uid', 'write_uid'} & data.keys(), path)
 
     def test_drafts_are_hidden_from_everyone_but_their_owner(self):
         owner = new_test_user(self.env, login='scope_owner', groups='base.group_portal')
@@ -58,6 +59,15 @@ class TestSchemaScope(HttpCase):
         self.authenticate('scope_owner', 'scope_owner')
         for path in paths:
             self.assertIn(b'scope_draft', self._get(path).content, path)
+
+    def test_bundle_of_another_users_draft_is_not_found(self):
+        owner = new_test_user(self.env, login='bundle_owner', groups='base.group_portal')
+        draft = self.env['tvbo.simulation_experiment'].create({'record_id': 1, 'label': 'bundle_draft'})
+        self.env['tvbo.model_share'].create({'experiment_id': draft.id, 'owner_user_id': owner.id})
+        path = f'/tvbo/api/configurator/experiment/{draft.id}/bundle'
+        self.assertEqual(self._get(path).status_code, 404)
+        self.authenticate('bundle_owner', 'bundle_owner')
+        self.assertNotEqual(self._get(path).status_code, 404)
 
     def test_internal_users_read_the_kg_and_reviewers_edit_it(self):
         reader = new_test_user(self.env, login='kg_reader', groups='base.group_user')

@@ -10,7 +10,7 @@
     <!-- TVBO Main Stylesheet - Injected into all pages -->
     <template id="tvbo_main_css" inherit_id="website.layout" name="TVBO Main CSS">
         <xpath expr="//head" position="inside">
-            <link rel="stylesheet" href="/tvbo/z/src/css/main.css?v=4" />
+            <link rel="stylesheet" href="/tvbo/z/src/css/main.css?v=5" />
         </xpath>
     </template>
 
@@ -124,22 +124,23 @@
                                 </li>
                                 <t t-if="request.env.user._is_public()">
                                     <li class="nav-item">
-                                        <a class="nav-link btn btn-light btn-sm ms-2" href="/web/login">Sign In</a>
+                                        <a class="nav-link btn btn-light btn-sm ms-2" href="/web/login">Log in</a>
                                     </li>
                                 </t>
                                 <t t-else="">
-                                    <!-- No separate "Shared Models" nav item: shared/community
-                                         models are browsable in the unified Knowledge Graph. -->
+                                    <!-- The same account menu as the backend's; its entries come from res.users._account_menu. -->
                                     <li class="nav-item dropdown">
-                                        <a class="nav-link dropdown-toggle" href="#" id="tvboUserDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <a class="nav-link dropdown-toggle o_tvbo_account" href="#" id="tvboUserDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <img class="o_tvbo_account_avatar" t-attf-src="/web/image/res.partner/#{request.env.user.partner_id.id}/avatar_128" alt=""/>
                                             <span t-esc="request.env.user.name"/>
                                         </a>
                                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="tvboUserDropdown">
-                                            <li><a class="dropdown-item" href="/my/models">My Models</a></li>
-                                            <li><a class="dropdown-item" href="/my/api-keys">API Keys</a></li>
-                                            <li><a class="dropdown-item" href="/my">Account</a></li>
+                                            <li class="o_tvbo_account_header"><strong t-out="request.env.user.name"/><small t-out="request.env.user.login"/></li>
                                             <li><hr class="dropdown-divider"/></li>
-                                            <li><a class="dropdown-item" href="/web/session/logout">Log out</a></li>
+                                            <t t-foreach="request.env.user._account_menu()" t-as="entry">
+                                                <li t-if="entry['key'] == 'log_out'"><hr class="dropdown-divider"/></li>
+                                                <li><a class="dropdown-item" t-att-href="entry['url']"><i t-attf-class="fa fa-fw #{entry['icon']} me-2" aria-hidden="true"/><t t-out="entry['label']"/></a></li>
+                                            </t>
                                         </ul>
                                     </li>
                                 </t>
@@ -483,8 +484,8 @@
                              never serves a stale cached build (the cause of the
                              "only Ontology shown" report); bump on KG-JS changes. -->
                         <script src="/tvbo/z/src/js/kg_components.js?v=4"></script>
-                        <script src="/tvbo/z/src/js/kg_graph.js?v=2"></script>
-                        <script src="/tvbo/z/src/js/kg_browser.js?v=3"></script>
+                        <script src="/tvbo/z/src/js/kg_graph.js?v=3"></script>
+                        <script src="/tvbo/z/src/js/kg_browser.js?v=4"></script>
                     </div>
                 </t>
             </t>

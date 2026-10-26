@@ -1,0 +1,49 @@
+/* Private forums get a plum palette, a striped "Internal" banner and a plum frame, so they never pass for the public Community forum. */
+
+#wrapwrap[data-forum-privacy="private"] {
+    --tvbo-accent: #8E44AD;
+    --tvbo-accent-ink: #6C3483;
+    --tvbo-bg: #FAF6FC;
+    --tvbo-hair: #E8DDF0;
+    --bs-link-color-rgb: 108, 52, 131;
+    --bs-link-hover-color-rgb: 74, 35, 90;
+    background: var(--tvbo-bg);
+}
+
+#wrapwrap[data-forum-privacy="private"] main {
+    border-top: 4px solid var(--tvbo-accent);
+}
+
+#wrapwrap[data-forum-privacy="private"] .forum_intro {
+    background-image: linear-gradient(135deg, #8E44AD 0%, #2C3E50 100%);
+}
+
+#wrapwrap[data-forum-privacy="private"] .btn-primary {
+    --bs-btn-bg: #8E44AD;
+    --bs-btn-border-color: #8E44AD;
+    --bs-btn-hover-bg: #6C3483;
+    --bs-btn-hover-border-color: #6C3483;
+    --bs-btn-active-bg: #5B2C6F;
+    --bs-btn-active-border-color: #5B2C6F;
+}
+
+.o_lab_forum_banner {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin: 0 0 1rem;
+    padding: 0.7rem 1rem;
+    border-radius: 10px;
+    background: repeating-linear-gradient(135deg, #6C3483 0 14px, #7D3C98 14px 28px);
+    color: #fff;
+}
+
+[data-forum-privacy="private"] > .card {
+    background-color: #6C3483;
+    color: #fff;
+}
+
+.o_lab_forum_badge {
+    background: #fff;
+    color: #6C3483;
+}

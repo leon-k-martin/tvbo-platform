@@ -48,6 +48,11 @@ def _relation_paths(env, model, kinds):
                     yield f'{fname}.{sub}', kinds[subfield.comodel_name]
 
 
+def read_models(env, kg_models):
+    """The models the graph reads records from: ``kg_models`` and every model one relation away from them, which holds the enum values records pick and the in-between records of two-step relations (a network's parcellation)."""
+    return set(kg_models) | {field.comodel_name for name in kg_models for fname, field in env[name]._fields.items() if field.relational and fname not in LOG_ACCESS_COLUMNS}
+
+
 def enum_values(api):
     """Every enum value of the ontology as ``{(enum class name, value name): storid}``; a value goes by its IRI name and by its label, because one with an outside IRI (Wikidata, QUDT) is named only by its label."""
     values = {}

@@ -115,9 +115,7 @@ class TvboDocPage(models.Model):
     )
     last_import = fields.Datetime(string="Last Imported", readonly=True, copy=False)
 
-    _sql_constraints = [
-        ("slug_uniq", "unique(slug)", "The documentation slug must be unique."),
-    ]
+    _slug_uniq = models.Constraint("unique(slug)", "The documentation slug must be unique.")
 
     # ------------------------------------------------------------------
     # Rendering

@@ -21,6 +21,7 @@
         'views/forum_templates.xml',
         'views/survey_customizations.xml',
         'views/portal_templates.xml',
+        'views/portal_dashboard.xml',
         'views/configurator_templates.xml',
         'views/database_views.xml',
         'views/menus.xml',

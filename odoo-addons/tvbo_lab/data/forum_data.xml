@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Odoo's private-forum rules show this forum, its posts and tags to Lab Members only; every member may post straight away, so the karma gates are off. -->
+    <record id="forum_lab" model="forum.forum">
+        <field name="name">Lab</field>
+        <field name="mode">discussions</field>
+        <field name="privacy">private</field>
+        <field name="authorized_group_id" ref="group_lab_member"/>
+        <field name="sequence">20</field>
+        <field name="description">Internal to the lab: questions, notes and announcements that only lab members can read.</field>
+        <field name="karma_ask">0</field>
+        <field name="karma_answer">0</field>
+        <field name="karma_edit_own">0</field>
+        <field name="karma_upvote">0</field>
+        <field name="karma_comment_own">0</field>
+        <field name="karma_comment_all">0</field>
+        <field name="karma_answer_accept_own">0</field>
+        <field name="karma_tag_create">0</field>
+        <field name="karma_close_own">0</field>
+        <field name="karma_unlink_own">0</field>
+        <field name="karma_editor">0</field>
+        <field name="karma_post">0</field>
+        <field name="karma_dofollow">0</field>
+    </record>
+</odoo>

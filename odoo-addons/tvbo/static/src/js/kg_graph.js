@@ -219,7 +219,7 @@ class KnowledgeGraphVisualization {
 
         // Update legend with filtered counts
         this.renderLegend({
-            ontology_classes: this.nodes.filter(n => n.type === 'Class' || !n.db_type).length,
+            ontology_classes: this.nodes.filter(n => n.is_class).length,
             database_items: this.nodes.filter(n => n.db_type).length,
             total_links: this.links.length
         });

@@ -4,7 +4,7 @@ from odoo.http import request
 import logging
 
 from .assets import json_payload
-from .building_blocks_api import readable_record
+from .building_blocks_api import SCHEMA_MODELS, readable_record
 
 _logger = logging.getLogger(__name__)
 
@@ -159,48 +159,26 @@ class ModelConfiguratorController(http.Controller):
             return self._json_response({'success': False, 'error': str(e)})
 
     def _resolve_record_deep(self, record, depth=3):
-        """
-        Schema-driven deep resolution of Odoo record with all relations.
-        
-        Design principle: Trust the schema completely. Iterate over all fields
-        in the record and resolve Many2one/Many2many relations automatically.
-        No manual field-by-field unpacking - if schema changes, this adapts.
-        
-        Args:
-            record: Odoo record to resolve
-            depth: Maximum recursion depth to prevent infinite loops (default 3)
-        
-        Returns:
-            dict with all fields resolved, relations expanded to full data
+        """Resolve ``record`` to a dict whose schema relations are expanded as nested dicts, ``depth`` levels deep.
+
+        Relations to models outside ``SCHEMA_MODELS`` (users, platform and HR records) are dropped, so these public sudo routes never walk out of the schema.
         """
         if not record or depth <= 0:
             return None
-        
         data = record.read()[0]
-        
-        # Iterate over all fields in the model - schema-driven, no manual unpacking
         for field_name, field_obj in record._fields.items():
-            # Skip internal/system fields
-            if field_name in ('id', 'display_name', 'create_uid', 'create_date', 
-                              'write_uid', 'write_date', '__last_update'):
+            if not field_obj.relational:
                 continue
-            
-            field_value = getattr(record, field_name, None)
-            
-            # Skip empty values (Odoo uses False for empty)
-            if not field_value:
+            if field_obj.comodel_name not in SCHEMA_MODELS:
+                data.pop(field_name, None)
                 continue
-            
-            # Resolve Many2one - single related record
+            value = record[field_name]
+            if not value:
+                continue
             if field_obj.type == 'many2one':
-                data[field_name] = self._resolve_record_deep(field_value, depth - 1)
-            
-            # Resolve Many2many/One2many - collection of related records
+                data[field_name] = self._resolve_record_deep(value, depth - 1)
             elif field_obj.type in ('many2many', 'one2many'):
-                data[field_name] = [
-                    self._resolve_record_deep(r, depth - 1) for r in field_value
-                ]
-        
+                data[field_name] = [self._resolve_record_deep(r, depth - 1) for r in value]
         return data
 
     @http.route('/tvbo/api/configurator/experiment/<int:experiment_id>/yaml', type='http', auth='public', methods=['GET'], csrf=False)
@@ -282,17 +260,10 @@ class ModelConfiguratorController(http.Controller):
             from tvbo.classes.network import Network
             from .building_blocks_api import validate_experiment
 
-            exp_rec = request.env['tvbo.simulation_experiment'].sudo().browse(experiment_id)
-            if not exp_rec.exists():
+            visible = request.env['tvbo.model_share'].visibility_domain('tvbo.simulation_experiment')  # another user's draft answers 404 like a missing one
+            exp_rec = request.env['tvbo.simulation_experiment'].sudo().search([('id', '=', experiment_id)] + visible)
+            if not exp_rec:
                 return _err(404, {'success': False, 'error': 'Experiment not found'})
-
-            # Respect sharing: a non-public experiment is downloadable only by its
-            # owner or a collaborator it was shared with. Curated experiments have
-            # no share row -> public.
-            share = request.env['tvbo.model_share'].sudo().search(
-                [('experiment_id', '=', experiment_id)], limit=1)
-            if share and not share.is_accessible_to(request.env.user):
-                return _err(403, {'success': False, 'error': 'forbidden'})
 
             obj, errors = validate_experiment(experiment_id)
             if errors:

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="dashboard_lab" name="Dashboard widget: lab">
+        <t t-set="lab" t-value="user_id._dashboard_lab()"/>
+        <dl class="o_tvbo_widget_counts">
+            <div><dt>Hours logged in <t t-out="lab['month']" t-options="{'widget': 'date', 'format': 'MMMM'}"/></dt><dd t-out="lab['hours']" t-options="{'widget': 'float_time'}"/></div>
+        </dl>
+        <ul class="o_tvbo_widget_links">
+            <li><a href="/odoo/action-hr_timesheet.act_hr_timesheet_line">Log time</a></li>
+            <li><a href="/odoo/action-hr_holidays.hr_leave_action_new_request">Request time off</a></li>
+            <li><a href="/odoo/action-tvbo_lab.action_student_project">Student projects</a></li>
+            <li><a href="/odoo/action-tvbo_lab.action_funding_allocation">Funding</a></li>
+            <li><a t-att-href="lab['forum_url']">Lab forum</a></li>
+        </ul>
+    </template>
+
+    <template id="dashboard_agenda" name="Dashboard widget: agenda">
+        <t t-set="events" t-value="user_id._dashboard_agenda()"/>
+        <ul t-if="events" class="o_tvbo_widget_list">
+            <li t-foreach="events" t-as="event">
+                <span><t t-out="event.name"/><small t-if="event.location" t-out="event.location"/></span>
+                <span class="o_tvbo_widget_date">
+                    <t t-if="event.allday"><span t-field="event.start_date" t-options="{'widget': 'date', 'format': 'EEE d MMM'}"/>, all day</t>
+                    <span t-else="" t-field="event.start" t-options="{'widget': 'datetime', 'format': 'EEE d MMM, HH:mm'}"/>
+                </span>
+            </li>
+        </ul>
+        <p t-else="" class="o_tvbo_widget_empty">No upcoming events.</p>
+        <footer><a href="/odoo/action-calendar.action_calendar_event">Open the calendar</a></footer>
+    </template>
+</odoo>

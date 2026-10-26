@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Charité is the parent company; the Section runs the lab admin, TVB-O holds its project team and the website. -->
+        <record id="company_section" model="res.company">
+            <field name="name">Brain Simulation Section</field>
+            <field name="parent_id" ref="base.main_company"/>
+        </record>
+        <record id="company_tvbo" model="res.company">
+            <field name="name">TVB-O</field>
+            <field name="parent_id" ref="base.main_company"/>
+        </record>
+        <record id="job_section_pi" model="hr.job"><field name="name">PI</field><field name="company_id" ref="company_section"/></record>
+        <record id="job_section_postdoc" model="hr.job"><field name="name">Postdoc</field><field name="company_id" ref="company_section"/></record>
+        <record id="job_section_researcher" model="hr.job"><field name="name">Researcher</field><field name="company_id" ref="company_section"/></record>
+        <record id="job_section_phd_student" model="hr.job"><field name="name">PhD student</field><field name="company_id" ref="company_section"/></record>
+        <record id="job_section_technician" model="hr.job"><field name="name">Technician</field><field name="company_id" ref="company_section"/></record>
+        <record id="job_section_student_assistant" model="hr.job"><field name="name">Student assistant</field><field name="company_id" ref="company_section"/></record>
+        <record id="job_section_intern" model="hr.job"><field name="name">Intern</field><field name="company_id" ref="company_section"/></record>
+        <record id="job_section_bachelor_student" model="hr.job"><field name="name">Bachelor student</field><field name="company_id" ref="company_section"/></record>
+        <record id="job_section_master_student" model="hr.job"><field name="name">Master student</field><field name="company_id" ref="company_section"/></record>
+
+        <record id="job_tvbo_project_lead" model="hr.job"><field name="name">Project lead</field><field name="company_id" ref="company_tvbo"/></record>
+        <record id="job_tvbo_developer" model="hr.job"><field name="name">Developer</field><field name="company_id" ref="company_tvbo"/></record>
+        <record id="job_tvbo_ontology_curator" model="hr.job"><field name="name">Ontology curator</field><field name="company_id" ref="company_tvbo"/></record>
+        <record id="job_tvbo_contributor" model="hr.job"><field name="name">Contributor</field><field name="company_id" ref="company_tvbo"/></record>
+        <record id="job_tvbo_advisor" model="hr.job"><field name="name">Advisor</field><field name="company_id" ref="company_tvbo"/></record>
+    </data>
+
+    <!-- The website module marks its record write-once, so the move to TVB-O is a call that runs on every install and upgrade. -->
+    <function model="website" name="write">
+        <value eval="[ref('website.default_website')]"/>
+        <value eval="{'company_id': ref('company_tvbo')}"/>
+    </function>
+    <!-- Odoo grants a new branch only to the user who created it, here the system user, so the admin is given both. -->
+    <function model="res.users" name="write">
+        <value eval="[ref('base.user_admin')]"/>
+        <value eval="{'company_ids': [(4, ref('company_section')), (4, ref('company_tvbo'))]}"/>
+    </function>
+</odoo>

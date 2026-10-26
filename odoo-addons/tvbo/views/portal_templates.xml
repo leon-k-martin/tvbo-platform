@@ -55,8 +55,9 @@
     <!-- /my/models — owner dashboard (iterates tvbo.model_share rows)  -->
     <!-- ============================================================= -->
     <template id="portal_my_models" name="My Models">
-        <t t-call="website.layout">
-            <div id="wrap">
+        <t t-call="portal.portal_layout">
+            <t t-set="no_breadcrumbs" t-value="True"/>
+            <div>
                 <t t-call="tvbo.tvbo_models_styles"/>
                 <div class="tvbo-models-wrap">
                     <div class="tvbo-models-head">
@@ -210,8 +211,9 @@
     <!-- /my/shared — elements peer-to-peer shared directly with me    -->
     <!-- ============================================================= -->
     <template id="portal_shared_with_me" name="Shared With Me">
-        <t t-call="website.layout">
-            <div id="wrap">
+        <t t-call="portal.portal_layout">
+            <t t-set="no_breadcrumbs" t-value="True"/>
+            <div>
                 <t t-call="tvbo.tvbo_models_styles"/>
                 <div class="tvbo-models-wrap">
                     <div class="tvbo-models-head">
@@ -256,8 +258,9 @@
     <!-- /my/api-keys — personal API keys for the Python client        -->
     <!-- ============================================================= -->
     <template id="portal_api_keys" name="API Keys">
-        <t t-call="website.layout">
-            <div id="wrap">
+        <t t-call="portal.portal_layout">
+            <t t-set="no_breadcrumbs" t-value="True"/>
+            <div>
                 <t t-call="tvbo.tvbo_models_styles"/>
                 <div class="tvbo-models-wrap">
                     <div class="tvbo-models-head">

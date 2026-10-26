@@ -1,0 +1,111 @@
+// A platform recolours the strip by setting these on :root in its own backend styles.
+:root {
+    --o-site-header-bg: #2C3E50;
+    --o-site-header-accent: #3498DB;
+    --o-site-header-height: 2.75rem;
+}
+
+.o_site_header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    height: var(--o-site-header-height);
+    padding: 0 1rem;
+    background: var(--o-site-header-bg);
+    color: #fff;
+    font-size: 0.875rem;
+}
+
+.o_site_header_brand {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+    color: #fff;
+    font-weight: 600;
+    text-decoration: none;
+
+    span {
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
+    &:hover,
+    &:focus-visible {
+        color: #fff;
+        text-decoration: underline;
+    }
+}
+
+.o_site_header_logo {
+    height: 1.5rem;
+    width: auto;
+}
+
+.o_site_header_badge {
+    flex-shrink: 0;
+    padding: 0.125rem 0.5rem;
+    border-radius: 1rem;
+    background: var(--o-site-header-accent);
+    color: #fff;
+    font-size: 0.6875rem;
+    font-weight: 600;
+}
+
+.o_site_header .o_user_menu {
+    flex-shrink: 0;
+    margin-left: auto;
+    background: transparent;
+
+    .dropdown-toggle {
+        display: flex;
+        align-items: center;
+        gap: 0.375rem;
+        padding: 0.25rem 0.5rem;
+        border: 0;
+        border-radius: 0.25rem;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.85);
+
+        &:hover,
+        &.show {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.12);
+        }
+    }
+
+    .o_user_avatar {
+        width: 1.75rem;
+        height: 1.75rem;
+        border-radius: 50% !important;
+    }
+
+    .oe_topbar_name {
+        max-width: 12rem;
+    }
+}
+
+.o_account_menu_header {
+    display: flex;
+    flex-direction: column;
+    max-width: 16rem;
+    padding: 0.25rem 1rem 0.5rem;
+
+    strong,
+    small {
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
+    small {
+        color: var(--bs-secondary-color);
+    }
+}
+
+.o_site_header a:focus-visible,
+.o_site_header button:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+}

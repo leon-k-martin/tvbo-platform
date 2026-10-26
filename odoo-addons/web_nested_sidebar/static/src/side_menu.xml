@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="web_nested_sidebar.SideMenu">
+        <button type="button" class="o_side_menu_toggle" t-ref="toggle" t-att-title="docked ? (state.folded ? 'Unfold the menu' : 'Fold the menu') : 'Menu'" aria-controls="o_side_menu" t-att-aria-expanded="(docked ? !state.folded : state.isOpen) ? 'true' : 'false'" data-hotkey="h" t-on-click="onToggle">
+            <i class="fa fa-bars" aria-hidden="true"/>
+        </button>
+        <t t-portal="'body'">
+            <div t-if="state.isOpen and !docked" class="o_side_menu_backdrop offcanvas-backdrop fade show" t-att-style="`top: ${state.top}px`" t-on-click="close"/>
+            <nav id="o_side_menu" t-att-class="{ 'o_side_menu d-print-none': true, 'is-docked': docked, 'is-folded': docked and state.folded, 'offcanvas offcanvas-start': !docked, show: !docked and state.isOpen }" t-att-style="`top: ${state.top}px`" t-ref="menu" aria-label="Main menu" t-on-keydown="onKeydown">
+                <div t-if="!docked" class="o_side_menu_head">
+                    <span class="o_side_menu_title">Menu</span>
+                    <button type="button" class="btn-close" title="Close the menu" t-on-click="close"/>
+                </div>
+                <ul class="o_side_menu_list o_side_menu_apps">
+                    <li t-foreach="apps" t-as="app" t-key="app.id">
+                        <t t-set="sections" t-value="children(app)"/>
+                        <div class="o_side_menu_row o_side_menu_app">
+                            <a class="o_side_menu_link" t-att-href="href(app)" t-att-title="app.name" t-att-aria-current="app.id === state.activeId and 'page'" t-att-data-menu-xmlid="app.xmlid" t-on-click.prevent="() => this.select(app)">
+                                <img t-if="app.webIconData" class="o_side_menu_icon" t-att-src="app.webIconData" alt=""/>
+                                <span t-esc="app.name"/>
+                            </a>
+                            <t t-if="sections.length" t-call="web_nested_sidebar.SideMenu.Caret">
+                                <t t-set="entry" t-value="app"/>
+                            </t>
+                        </div>
+                        <t t-if="state.open[app.id]" t-call="web_nested_sidebar.SideMenu.Entries">
+                            <t t-set="entries" t-value="sections"/>
+                        </t>
+                    </li>
+                </ul>
+            </nav>
+        </t>
+    </t>
+
+    <t t-name="web_nested_sidebar.SideMenu.Caret">
+        <button type="button" class="o_side_menu_caret" title="Show or hide its menus" t-att-aria-expanded="state.open[entry.id] ? 'true' : 'false'" t-on-click="() => this.toggleGroup(entry)">
+            <i class="fa fa-angle-right" aria-hidden="true"/>
+        </button>
+    </t>
+
+    <t t-name="web_nested_sidebar.SideMenu.Entries">
+        <ul class="o_side_menu_list">
+            <li t-foreach="entries" t-as="entry" t-key="entry.id">
+                <div t-if="entry.childrenTree.length" class="o_side_menu_row">
+                    <button type="button" class="o_side_menu_group" t-att-data-menu-xmlid="entry.xmlid" t-on-click="() => this.toggleGroup(entry)" t-esc="entry.name"/>
+                    <t t-call="web_nested_sidebar.SideMenu.Caret"/>
+                </div>
+                <t t-if="entry.childrenTree.length and state.open[entry.id]" t-call="web_nested_sidebar.SideMenu.Entries">
+                    <t t-set="entries" t-value="entry.childrenTree"/>
+                </t>
+                <a t-if="!entry.childrenTree.length" class="o_side_menu_link" t-att-href="href(entry)" t-att-aria-current="entry.id === state.activeId and 'page'" t-att-data-menu-xmlid="entry.xmlid" t-on-click.prevent="() => this.select(entry)" t-esc="entry.name"/>
+            </li>
+        </ul>
+    </t>
+
+    <t t-inherit="web.NavBar.AppsMenu" t-inherit-mode="extension">
+        <xpath expr="//div[hasclass('o_navbar_apps_menu')]/Dropdown" position="replace">
+            <SideMenu/>
+        </xpath>
+    </t>
+
+</templates>

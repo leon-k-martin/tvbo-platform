@@ -3,7 +3,7 @@
     <!-- Main TVBO Menu -->
     <menuitem id="menu_tvbo_root"
               name="TVBO Database"
-              sequence="10"
+              sequence="20"
               groups="base.group_user"
               web_icon="tvbo,static/description/icon.png"/>
 
@@ -83,4 +83,11 @@
               action="action_observation_list"
               sequence="100"/>
 
+    <!-- Home screen: Lab first (tvbo_lab), then collaboration from 6 (To-do keeps its 10), the platform apps from 20, then Dashboards, Apps and Settings. -->
+    <record id="mail.menu_root_discuss" model="ir.ui.menu"><field name="sequence">6</field></record>
+    <record id="contacts.menu_contacts" model="ir.ui.menu"><field name="sequence">11</field></record>
+    <record id="tvbo_platform_docs.menu_tvbo_docs_root" model="ir.ui.menu"><field name="sequence">21</field></record>
+    <record id="website.menu_website_configuration" model="ir.ui.menu"><field name="sequence">22</field></record>
+    <record id="survey.menu_surveys" model="ir.ui.menu"><field name="sequence">23</field></record>
+    <record id="mass_mailing.mass_mailing_menu_root" model="ir.ui.menu"><field name="sequence">24</field></record>
 </odoo>
