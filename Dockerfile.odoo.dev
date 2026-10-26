@@ -23,7 +23,8 @@ RUN uv pip install --reinstall typing-extensions \
     sympy \
     matplotlib networkx pydot \
     mako \
-    pybtex pypdf autopep8 black
+    pybtex pypdf autopep8 black \
+    holidays
 
 # Copy init script
 COPY init-odoo.sh /init-odoo.sh

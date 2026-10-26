@@ -4,6 +4,7 @@ from odoo.http import request
 import logging
 
 from .assets import json_payload
+from .building_blocks_api import readable_record
 
 _logger = logging.getLogger(__name__)
 
@@ -38,11 +39,7 @@ class ModelConfiguratorController(http.Controller):
         (no share row), shared, and the caller's own. Other users' private
         experiments are excluded so their labels/ids don't leak via this list."""
         try:
-            # Hide experiments that are neither published, owned by the caller,
-            # nor peer-to-peer shared with them (see tvbo.model_share).
-            hidden = request.env['tvbo.model_share'].sudo().hidden_target_ids(
-                'experiment_id', request.env.user)
-            domain = [('id', 'not in', hidden)] if hidden else []
+            domain = request.env['tvbo.model_share'].visibility_domain('tvbo.simulation_experiment')
             records = request.env['tvbo.simulation_experiment'].sudo().search(domain)
             data = records.read()
             return self._json_response({'success': True, 'data': data})
@@ -52,9 +49,9 @@ class ModelConfiguratorController(http.Controller):
 
     @http.route('/tvbo/api/configurator/dynamics', type='http', auth='public', methods=['GET'], csrf=False)
     def api_dynamics(self, **kwargs):
-        """Get all dynamics models"""
+        """Get all dynamics models the caller may see."""
         try:
-            records = request.env['tvbo.dynamics'].sudo().search([])
+            records = request.env['tvbo.dynamics'].sudo().search(request.env['tvbo.model_share'].visibility_domain('tvbo.dynamics'))
             data = records.read()
             return self._json_response({'success': True, 'data': data})
         except Exception as e:
@@ -70,8 +67,8 @@ class ModelConfiguratorController(http.Controller):
         all Many2one/Many2many relations without manual field unpacking.
         """
         try:
-            dyn = request.env['tvbo.dynamics'].sudo().browse(dynamics_id)
-            if not dyn.exists():
+            dyn = readable_record('tvbo.dynamics', dynamics_id)
+            if not dyn:
                 return self._json_response({'success': False, 'error': 'Not found'})
             
             # Schema-driven deep resolution - no manual unpacking
@@ -140,21 +137,6 @@ class ModelConfiguratorController(http.Controller):
             _logger.error(f"Error in api_monitors: {e}", exc_info=True)
             return self._json_response({'success': False, 'error': str(e)})
 
-    def _experiment_readable(self, experiment_id):
-        """True if the experiment is public (no share row), published, owned by
-        the caller, or peer-to-peer shared with them. Otherwise it is not
-        readable through these public endpoints — mirrors the access control in
-        controllers/api.py so a user-saved private experiment can't be fetched by
-        enumerating ids."""
-        share = request.env['tvbo.model_share'].sudo().search(
-            [('experiment_id', '=', experiment_id)], limit=1)
-        if not share:
-            return True  # ground-truth / public experiment
-        user = request.env.user
-        if user._is_public():
-            return share.publication_state == 'published'
-        return share.is_accessible_to(user)
-
     @http.route('/tvbo/api/configurator/experiment/<int:experiment_id>', type='http', auth='public', methods=['GET'], csrf=False)
     def api_experiment_detail(self, experiment_id, **kwargs):
         """
@@ -164,8 +146,8 @@ class ModelConfiguratorController(http.Controller):
         all Many2one/Many2many relations without manual field unpacking.
         """
         try:
-            exp = request.env['tvbo.simulation_experiment'].sudo().browse(experiment_id)
-            if not exp.exists() or not self._experiment_readable(experiment_id):
+            exp = readable_record('tvbo.simulation_experiment', experiment_id)
+            if not exp:
                 return self._json_response({'success': False, 'error': 'Experiment not found'})
 
             # Schema-driven deep resolution - no manual unpacking
@@ -237,8 +219,8 @@ class ModelConfiguratorController(http.Controller):
             from tvbo.utils import pydantic_loader
             from .building_blocks_api import validate_experiment
 
-            exp = request.env['tvbo.simulation_experiment'].sudo().browse(experiment_id)
-            if not exp.exists() or not self._experiment_readable(experiment_id):
+            exp = readable_record('tvbo.simulation_experiment', experiment_id)
+            if not exp:
                 return self._json_response({'success': False, 'error': 'Experiment not found'})
 
             obj, errors = validate_experiment(experiment_id)

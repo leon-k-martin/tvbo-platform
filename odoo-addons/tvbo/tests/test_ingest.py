@@ -137,8 +137,8 @@ class TestJsonResponseDates(HttpCase):
     """SimulationTool.date_created must not 500 the KG endpoints."""
 
     def test_date_serializes(self):
-        self.env['tvbo.simulation_tool'].create({'name': 'KgDateTool', 'date_created': date(2020, 1, 2)})
+        tool = self.env['tvbo.simulation_tool'].create({'name': 'date_probe', 'date_created': date(2020, 1, 2)})
         self.env.flush_all()
-        response = self.url_open('/tvbo/api/kg/data?entity=software', timeout=120)
-        self.assertEqual(response.status_code, 200)
-        self.assertIn('2020-01-02', response.text)
+        resp = self.url_open(f'/tvbo/api/kg/software/{tool.id}', timeout=120)
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn(b'2020-01-02', resp.content)

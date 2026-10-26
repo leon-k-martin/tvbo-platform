@@ -285,6 +285,13 @@ class ModelShare(models.Model):
         shares = self.sudo().search(domain)
         return [s[share_field].id for s in shares if s[share_field]]
 
+    @api.model
+    def visibility_domain(self, model_name):
+        """Domain on ``model_name`` that hides the saved elements the current user may not see; empty for models that are never shared."""
+        share_field = next((fname for fname, (model, _c, _k) in _TARGET_FIELDS.items() if model == model_name), None)
+        hidden = self.hidden_target_ids(share_field, self.env.user) if share_field else []
+        return [('id', 'not in', hidden)] if hidden else []
+
     # ---- p2p sharing mutations (owner-driven, instant, no review) ---------
     def share_with_users(self, users):
         """Grant a recordset of users access to this element."""
