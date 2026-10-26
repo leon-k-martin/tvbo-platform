@@ -383,10 +383,10 @@ else
   log "✓ TVBO module installed"
 fi
 
-# TVBO_PUBLIC_URL becomes web.base.url, frozen so an admin login from another address cannot replace it; set before the docs import, which renders it into the docs links, and printed by the API keys example.
+# TVBO_PUBLIC_URL becomes web.base.url (frozen, so an admin login from another address cannot replace it) and the default website's domain, which og:url uses; set before the docs import, which renders it into the docs links.
 if [ -n "${TVBO_PUBLIC_URL:-}" ]; then
   if psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" \
-    -c "INSERT INTO ir_config_parameter (key, value, create_uid, create_date, write_uid, write_date) VALUES ('web.base.url', '${TVBO_PUBLIC_URL}', 1, NOW(), 1, NOW()), ('web.base.url.freeze', 'True', 1, NOW(), 1, NOW()) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, write_date = NOW();" > /dev/null 2>&1; then
+    -c "INSERT INTO ir_config_parameter (key, value, create_uid, create_date, write_uid, write_date) VALUES ('web.base.url', '${TVBO_PUBLIC_URL}', 1, NOW(), 1, NOW()), ('web.base.url.freeze', 'True', 1, NOW(), 1, NOW()) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, write_date = NOW(); UPDATE website SET domain = '${TVBO_PUBLIC_URL}' WHERE id = (SELECT res_id FROM ir_model_data WHERE module = 'website' AND name = 'default_website');" > /dev/null 2>&1; then
     log "✓ Public address set to ${TVBO_PUBLIC_URL}"
   else
     log "⚠ Could not set the public address (non-critical)"
