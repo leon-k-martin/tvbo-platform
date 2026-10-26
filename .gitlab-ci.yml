@@ -7,7 +7,7 @@ variables:
     description: "Set to 'true' to allow a rollout that re-pulls the same image digest (e.g. a RESET_DB-only restart). Otherwise a no-op deploy fails the job."
   TVBO_PUBLIC_URL:
     value: "https://tvbo.charite.de"
-    description: "The platform's public address. init-odoo.sh freezes web.base.url to it, which the docs links, the canonical links and the API keys example use."
+    description: "The platform's public address. init-odoo.sh freezes web.base.url to it and makes it the website's domain, which the docs links, the canonical and og:url links and the API keys example use."
 
 deploy-job:
   stage: deploy
