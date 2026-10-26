@@ -10,6 +10,7 @@ import threading
 
 from odoo import http
 from odoo.http import Response, request
+from odoo.tools import SQL
 
 from . import kg_graph
 from .assets import json_payload
@@ -996,9 +997,12 @@ class KnowledgeGraphAPI(http.Controller):
         return response
 
     def _graph_stamp(self):
-        """Count and latest write of every knowledge-graph model and of the shares; it changes whenever the drawn graph can."""
-        models = [cfg['model'] for _, cfg, _ in _iter_available_entity_configs()] + ['tvbo.model_share']
-        return tuple(tuple(request.env[name].sudo()._read_group([], aggregates=['__count', 'write_date:max'])[0]) for name in models)
+        """Row count and latest write of every table the graph reads (see ``kg_graph.read_models``) and of the shares, in one query; it changes whenever the drawn graph can."""
+        env = request.env
+        names = kg_graph.read_models(env, [cfg['model'] for _, cfg, _ in _iter_available_entity_configs()]) | {'tvbo.model_share'}
+        tables = sorted(env[name]._table for name in names if env[name]._auto and env[name]._log_access)
+        env.cr.execute(SQL(' UNION ALL ').join(SQL('SELECT %s, count(*), max(write_date) FROM %s', table, SQL.identifier(table)) for table in tables))
+        return tuple(sorted(env.cr.fetchall()))
 
     def _ontology_graph(self, api, db_items, limit):
         """Ontology nodes with their ``is_a`` and relation links; with a ``limit``, the classes the records refer to plus the first others up to that many nodes."""
@@ -1021,6 +1025,8 @@ class KnowledgeGraphAPI(http.Controller):
         configs = list(_iter_available_entity_configs())
         db_items = [item for entity_type, _, _ in configs for item in self._get_entity_items(entity_type)]
         nodes, links = ([], []) if db_only else self._ontology_graph(api, db_items, limit)
+        for node in nodes:
+            node['is_class'] = node['storid'] in classes  # the legend counts these after filtering
         onto_nodes = {node['storid']: node for node in nodes}
         merged, record_node, named = {}, {}, {}
 
@@ -1062,7 +1068,7 @@ class KnowledgeGraphAPI(http.Controller):
             "nodes": nodes,
             "links": links,
             "stats": {
-                "ontology_classes": sum(node['storid'] in classes for node in nodes),
+                "ontology_classes": sum(node.get('is_class', False) for node in nodes),
                 "database_items": len(db_items),
                 "total_nodes": len(nodes),
                 "total_links": len(links),

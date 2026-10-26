@@ -484,8 +484,8 @@
                              never serves a stale cached build (the cause of the
                              "only Ontology shown" report); bump on KG-JS changes. -->
                         <script src="/tvbo/z/src/js/kg_components.js?v=4"></script>
-                        <script src="/tvbo/z/src/js/kg_graph.js?v=2"></script>
-                        <script src="/tvbo/z/src/js/kg_browser.js?v=3"></script>
+                        <script src="/tvbo/z/src/js/kg_graph.js?v=3"></script>
+                        <script src="/tvbo/z/src/js/kg_browser.js?v=4"></script>
                     </div>
                 </t>
             </t>

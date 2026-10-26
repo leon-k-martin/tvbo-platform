@@ -160,13 +160,14 @@ class OdooGenerator(OOCodeGenerator):
         name = self._field_name(slot)
         rng = slot.range or sv.schema.default_range or "string"
 
-        help_clause = ""
+        slot_name = slot.alias or slot.name
+        attrs = f", string={slot_name.replace('_', ' ').capitalize()!r}" if name != underscore(slot_name) else ""  # a renamed field keeps its slot's label
         if slot.description:
-            help_clause = f", help={slot.description.strip()!r}"
+            attrs += f", help={slot.description.strip()!r}"
 
         # 'Any' literal holder (e.g. ScalarValue) -> Json, never a relation.
         if rng in self._any_classes():
-            inner = help_clause[2:] if help_clause else ""
+            inner = attrs[2:] if attrs else ""
             return f"{name} = fields.Json({inner})"
 
         # Class reference -> relational field.
@@ -178,20 +179,20 @@ class OdooGenerator(OOCodeGenerator):
                 cols = (
                     f", column1='{model_snake}_id', column2='{name}_id'" if self_ref else ""
                 )
-                return f"{name} = fields.Many2many(comodel_name='{comodel}', relation='{rel}'{cols}{help_clause})"
-            return f"{name} = fields.Many2one(comodel_name='{comodel}'{help_clause})"
+                return f"{name} = fields.Many2many(comodel_name='{comodel}', relation='{rel}'{cols}{attrs})"
+            return f"{name} = fields.Many2one(comodel_name='{comodel}'{attrs})"
 
         # Enum -> lookup-model reference (Many2one/Many2many).
         if rng in sv.all_enums():
             comodel = self._model_name(rng)
             if slot.multivalued:
                 rel = self._rel_table(model_snake, name)
-                return f"{name} = fields.Many2many(comodel_name='{comodel}', relation='{rel}'{help_clause})"
-            return f"{name} = fields.Many2one(comodel_name='{comodel}'{help_clause})"
+                return f"{name} = fields.Many2many(comodel_name='{comodel}', relation='{rel}'{attrs})"
+            return f"{name} = fields.Many2one(comodel_name='{comodel}'{attrs})"
 
         # Multivalued primitive -> Text blob (pydantic_loader splits to a list).
         if slot.multivalued:
-            inner = help_clause[2:] if help_clause else ""
+            inner = attrs[2:] if attrs else ""
             return f"{name} = fields.Text({inner})"
 
         # Single primitive.
@@ -199,7 +200,7 @@ class OdooGenerator(OOCodeGenerator):
         required = ", required=True" if slot.required else ""
         index = ", index=True" if name in ("name", "label") else ""
         default = self._default_clause(slot, ctor)
-        inner = f"{required}{index}{default}{help_clause}".lstrip(", ")
+        inner = f"{required}{index}{default}{attrs}".lstrip(", ")
         return f"{name} = {ctor}({inner})"
 
     # ---- model generation ------------------------------------------------

@@ -67,3 +67,9 @@ class TestDrawnClasses(TransactionCase):
             (4, 'http://schema.org/ScholarlyArticle'), (5, 'http://schema.org/Book'))]
         links = [kg_graph.link('db_software_1', 3, 'scale'), kg_graph.link(4, 1, 'is_a')]
         self.assertEqual(kg_graph.drawn_classes(nodes, links, {1, 2, 3, 4, 5}, {2, 3}), {1, 3, 4})
+
+    def test_cloud_cache_watches_enum_values_and_in_between_records(self):
+        """Renaming a tool's scale or re-pointing a network's parcellation changes the drawn graph, so the cloud cache watches those models too."""
+        watched = kg_graph.read_models(self.env, ['tvbo.simulation_tool', 'tvbo.network'])
+        self.assertLessEqual({'tvbo.simulation_tool', 'tvbo.network', 'tvbo.simulation_scale', 'tvbo.parcellation'}, watched)
+        self.assertNotIn('res.users', watched, 'who last wrote a record does not change the graph')

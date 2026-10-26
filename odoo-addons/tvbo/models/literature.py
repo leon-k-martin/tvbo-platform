@@ -66,7 +66,7 @@ class SimulationStudy(models.Model):
         relation="tvbo_simulation_study_reference_rel",
         column1="simulation_study_id",
         column2="reference_id",
-        string="References",
+        string="Literature references",
     )
     reference_count = fields.Integer(
         compute="_compute_reference_count", string="Reference count"
