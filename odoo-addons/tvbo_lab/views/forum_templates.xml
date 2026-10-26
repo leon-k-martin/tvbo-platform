@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Private forums carry their privacy on the page, so lab_forum.css gives them their own look. -->
+    <template id="forum_layout_privacy" inherit_id="website_forum.layout" name="Lab: mark private forums">
+        <xpath expr="//div[@id='wrapwrap']" position="attributes">
+            <attribute name="t-att-data-forum-privacy">forum and forum.privacy</attribute>
+        </xpath>
+    </template>
+
+    <!-- Members of a private forum already have a verified internal account, so the email-validation prompt is replaced by the "Internal" banner. -->
+    <template id="forum_header_internal" inherit_id="website_forum.header" name="Lab: internal banner">
+        <xpath expr="//t[@t-call='website_profile.email_validation_banner']" position="attributes">
+            <attribute name="t-if">not forum or forum.privacy != 'private'</attribute>
+        </xpath>
+        <xpath expr="//t[@t-call='website_forum.forum_model_nav']" position="before">
+            <div t-if="forum and forum.privacy == 'private'" class="o_lab_forum_banner" role="note">
+                <i class="fa fa-lock" role="img" aria-label="Internal"/>
+                <span><b>Internal forum.</b> Only <t t-out="forum.authorized_group_id.privilege_id.name or forum.authorized_group_id.name"/> members can see it and its posts.</span>
+            </div>
+        </xpath>
+    </template>
+
+    <template id="forum_all_internal_badge" inherit_id="website_forum.forum_all_all_entries" name="Lab: mark private forums in the list">
+        <xpath expr="//div[@t-attf-class='#{col_class}']" position="attributes">
+            <attribute name="t-att-data-forum-privacy">forum.privacy</attribute>
+        </xpath>
+        <xpath expr="//div[@t-if='forum_badge']" position="before">
+            <div t-if="forum.privacy == 'private'" class="badge position-absolute top-0 end-0 m-3 o_lab_forum_badge"><i class="fa fa-lock me-1"/>Internal</div>
+        </xpath>
+    </template>
+</odoo>

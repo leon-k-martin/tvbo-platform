@@ -33,6 +33,7 @@
                     <field name="month"/>
                     <field name="project_id"/>
                 </group>
+                <div class="text-muted">Fills your working days up to today. Click Prefill again later in the month to add the rest.</div>
                 <footer>
                     <button name="action_prefill" string="Prefill from funding" type="object" class="btn-primary"/>
                     <button name="action_export_eu_sheet" string="Export EU sheet" type="object" invisible="not project_id"/>

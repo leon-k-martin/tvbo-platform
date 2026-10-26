@@ -15,10 +15,10 @@ class ResUsers(models.Model):
         return widgets
 
     def _dashboard_lab(self):
-        """The first of this month and the hours the user logged on projects within it. Read as superuser, because the website runs in the TVB-O branch and the company rule would otherwise hide the user's Section timesheets."""
+        """The first of this month, the hours the user logged on projects within it, and the link to the Lab forum, all read as superuser. The website runs in the TVB-O branch, so the company rule would otherwise hide the user's Section timesheets, and only admins may read URL actions such as the Lab menu's forum link."""
         first, last = date_utils.get_month(fields.Date.context_today(self))
         [[hours]] = self.env['account.analytic.line'].sudo()._read_group([('user_id', '=', self.id), ('project_id', '!=', False), ('date', '>=', first), ('date', '<=', last)], aggregates=['unit_amount:sum'])
-        return {'month': first, 'hours': hours or 0.0}
+        return {'month': first, 'hours': hours or 0.0, 'forum_url': self.env.ref('tvbo_lab.action_lab_forum').sudo().url}
 
     def _dashboard_agenda(self):
         """The user's next five calendar events."""

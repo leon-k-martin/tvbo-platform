@@ -43,9 +43,10 @@ class TimesheetMonth(models.TransientModel):
         return dict(employee._list_work_time_per_day(*span)[employee.id])
 
     def action_prefill(self):
-        """Book every scheduled, non-absent day that has no own entry yet on the funding work packages, split by their percentages."""
+        """Book every scheduled, non-absent day up to today that has no own entry yet on the funding work packages, split by their percentages; later days stay open, so leave taken on them is not counted twice."""
         self._check_employee()
-        this_month = date_utils.start_of(fields.Date.context_today(self), 'month')
+        today = fields.Date.context_today(self)
+        this_month = date_utils.start_of(today, 'month')
         if not date_utils.subtract(this_month, months=1) <= date_utils.start_of(self.month, 'month') <= this_month:
             raise UserError(self.env._('Only the current or the previous month can be prefilled.'))
         Line = self.env['account.analytic.line']
@@ -59,7 +60,7 @@ class TimesheetMonth(models.TransientModel):
             'date': day,
             'unit_amount': round(hours * alloc.percentage / 100, 2),
             'name': alloc.name or '/',
-        } for day, hours in self._work_hours().items() if day not in booked for alloc in allocations._active_on(day)])
+        } for day, hours in self._work_hours().items() if day <= today and day not in booked for alloc in allocations._active_on(day)])
         action = self.env['ir.actions.act_window']._for_xml_id('hr_timesheet.act_hr_timesheet_line')
         action.update(domain=month, context={'is_timesheet': 1})
         return action

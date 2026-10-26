@@ -10,6 +10,7 @@
             <li><a href="/odoo/action-hr_holidays.hr_leave_action_new_request">Request time off</a></li>
             <li><a href="/odoo/action-tvbo_lab.action_student_project">Student projects</a></li>
             <li><a href="/odoo/action-tvbo_lab.action_funding_allocation">Funding</a></li>
+            <li><a t-att-href="lab['forum_url']">Lab forum</a></li>
         </ul>
     </template>
 

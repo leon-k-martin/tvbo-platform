@@ -92,6 +92,10 @@ class TestLab(TransactionCase):
         self.assertEqual(booked[date(2026, 9, 14)], {self.wp2: 8.0}, 'own entry kept, nothing added')
         self.assertEqual(len(booked), 19, '22 weekdays minus holiday and two sick days')
 
+    def test_prefill_of_the_current_month_stops_at_today(self):
+        self._month(date(2026, 10, 1)).action_prefill()
+        self.assertEqual(max(self._booked()), date(2026, 10, 19))
+
     def test_prefill_is_limited_to_recent_months(self):
         with self.assertRaises(UserError):
             self._month(date(2026, 8, 31)).action_prefill()
