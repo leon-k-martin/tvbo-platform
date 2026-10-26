@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Model-level tests for personal API keys (no HTTP stack needed).
+"""Personal API keys: the model, and the API keys page's Python example.
 
     odoo -u tvbo --test-enable --test-tags /tvbo --stop-after-init
 """
@@ -7,6 +7,7 @@ from datetime import timedelta
 
 from odoo import fields
 from odoo.exceptions import ValidationError
+from odoo.tests import HttpCase, tagged
 from odoo.tests.common import TransactionCase, new_test_user
 
 from odoo.addons.tvbo.models.api_key import KEY_PREFIX, MAX_KEYS_PER_USER
@@ -72,3 +73,13 @@ class TestApiKey(TransactionCase):
         # Now under the cap again -> generate succeeds.
         rec, _ = self.Key.generate('replacement', capuser)
         self.assertTrue(rec.id)
+
+
+@tagged('post_install', '-at_install')
+class TestApiKeysPage(HttpCase):
+
+    def test_python_example_uses_the_public_address(self):
+        self.env['ir.config_parameter'].set_param('web.base.url', 'https://tvbo.example.org')
+        new_test_user(self.env, login='apikey_page', password='apikey_page_pw1', groups='base.group_portal')
+        self.authenticate('apikey_page', 'apikey_page_pw1')
+        self.assertIn('base_url="https://tvbo.example.org"', self.url_open('/my/api-keys').text)

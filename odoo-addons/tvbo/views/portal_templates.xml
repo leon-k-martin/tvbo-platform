@@ -326,7 +326,7 @@
                         <h5 class="mb-2">Use it from Python</h5>
                         <pre class="mb-0" style="white-space:pre-wrap;"><code>from tvbo.platform import TVBOPlatform
 
-tvbo = TVBOPlatform(base_url="<t t-esc="request.httprequest.host_url.rstrip('/')"/>", api_key="tvbo_…")
+tvbo = TVBOPlatform(base_url="<t t-esc="base_url"/>", api_key="tvbo_…")
 exp = tvbo.load_experiment(123)        # -&gt; tvbo SimulationExperiment
 mine = tvbo.list_models(mine=True)
 tvbo.push_experiment(exp, visibility="shared")</code></pre>

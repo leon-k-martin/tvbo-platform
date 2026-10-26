@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The one account menu: the same entries on the website and in the backend, with the backend link for staff only; the portal's left menu does not repeat them, and visitors are asked to log in."""
+"""The one account menu: the same entries on the website and in the backend, with the backend link for staff only; the portal's left menu does not repeat them, and visitors are asked to log in or create an account."""
 from odoo.tests import HttpCase, tagged
 from odoo.tests.common import new_test_user
 
@@ -20,3 +20,9 @@ class TestAccountMenu(HttpCase):
             self.assertIn(f'href="{entry["url"]}"', page)
         self.assertEqual(page.count('/web/session/logout'), 1, 'the left menu leaves logging out to the account menu')
         self.assertEqual(page.count('href="/odoo"'), 1, 'the left menu leaves the backend link to the account menu')
+
+    def test_visitors_can_create_an_account(self):
+        self.assertIn('href="/web/signup"', self.url_open('/').text)
+        page = self.url_open('/web/signup')
+        self.assertEqual(page.status_code, 200)
+        self.assertIn('oe_signup_form', page.text)

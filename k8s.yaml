@@ -94,6 +94,7 @@ spec:
             - {name: USER, value: tvbo_odoo}
             - {name: PASSWORD, value: odoo}
             - {name: TVBO_API_URL, value: http://tvbo-api:8000}
+            - {name: TVBO_PUBLIC_URL, value: https://tvbo.charite.de}
           volumeMounts: [{name: data, mountPath: /var/lib/odoo}]
           readinessProbe:
             httpGet: {path: /web/health, port: 8069}
