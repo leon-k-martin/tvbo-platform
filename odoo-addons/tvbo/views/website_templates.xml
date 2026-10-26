@@ -128,18 +128,16 @@
                                     </li>
                                 </t>
                                 <t t-else="">
-                                    <!-- No separate "Shared Models" nav item: shared/community
-                                         models are browsable in the unified Knowledge Graph. -->
+                                    <!-- The same account menu as the backend's; its entries come from res.users._account_menu. -->
                                     <li class="nav-item dropdown">
                                         <a class="nav-link dropdown-toggle" href="#" id="tvboUserDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                             <span t-esc="request.env.user.name"/>
                                         </a>
                                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="tvboUserDropdown">
-                                            <li><a class="dropdown-item" href="/my/models">My Models</a></li>
-                                            <li><a class="dropdown-item" href="/my/api-keys">API Keys</a></li>
-                                            <li><a class="dropdown-item" href="/my">Account</a></li>
-                                            <li><hr class="dropdown-divider"/></li>
-                                            <li><a class="dropdown-item" href="/web/session/logout">Log out</a></li>
+                                            <t t-foreach="request.env.user._account_menu()" t-as="entry">
+                                                <li t-if="entry['key'] == 'logout'"><hr class="dropdown-divider"/></li>
+                                                <li><a class="dropdown-item" t-att-href="entry['url']"><i t-attf-class="fa fa-fw #{entry['icon']} me-2" aria-hidden="true"/><t t-out="entry['label']"/></a></li>
+                                            </t>
                                         </ul>
                                     </li>
                                 </t>

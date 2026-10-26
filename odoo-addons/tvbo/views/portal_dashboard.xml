@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="portal_css" inherit_id="website.layout" name="TVBO Portal CSS">
+        <xpath expr="//head" position="inside">
+            <link t-if="is_portal" rel="stylesheet" href="/tvbo/z/src/css/portal.css?v=1"/>
+        </xpath>
+    </template>
+
+    <!-- Every page built on Odoo's portal layout gets the account menu on its left, except for visitors who open a shared document without logging in. -->
+    <template id="portal_layout_nav" inherit_id="portal.portal_layout" name="TVBO Portal Menu">
+        <xpath expr="//div[@id='wrap']" position="attributes">
+            <attribute name="class" add="o_tvbo_portal" separator=" "/>
+        </xpath>
+        <xpath expr="//div[@id='wrap']/div[hasclass('container')]" position="before">
+            <t t-if="not user_id._is_public()" t-call="tvbo.portal_nav"/>
+        </xpath>
+    </template>
+
+    <template id="portal_nav" name="TVBO Portal Menu Items">
+        <t t-set="current" t-value="request.httprequest.path.rstrip('/').replace('/my/home', '/my')"/>
+        <t t-set="work_links" t-value="[('/my', 'fa-th-large', 'Dashboard'), ('/my/models', 'fa-cubes', 'My models'), ('/my/shared', 'fa-share-alt', 'Shared with me')] + ([('/odoo/action-tvbo.action_publication_review', 'fa-check-square-o', 'Reviews')] if user_id.has_group('tvbo.group_tvbo_reviewer') else []) + [('/my/api-keys', 'fa-key', 'API keys')]"/>
+        <t t-set="account_links" t-value="[('/my/account', 'fa-user-o', 'Your details'), ('/my/security', 'fa-lock', 'Password and security')] + ([('/odoo', 'fa-th', 'Backend')] if user_id._is_internal() else []) + [('/web/session/logout', 'fa-sign-out', 'Sign out')]"/>
+        <aside class="o_tvbo_portal_aside">
+            <button type="button" class="btn btn-light o_tvbo_portal_nav_open d-lg-none" data-bs-toggle="offcanvas" data-bs-target="#o_tvbo_portal_nav" aria-controls="o_tvbo_portal_nav"><i class="fa fa-bars me-2"/>Menu</button>
+            <nav id="o_tvbo_portal_nav" class="o_tvbo_portal_nav offcanvas-lg offcanvas-start" tabindex="-1" aria-label="Your account">
+                <div class="offcanvas-header">
+                    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#o_tvbo_portal_nav" aria-label="Close the menu"/>
+                </div>
+                <div class="o_tvbo_portal_nav_body">
+                    <a class="o_tvbo_portal_me" href="/my/account" title="Your details">
+                        <img t-att-src="image_data_uri(user_id.partner_id.avatar_128)" alt=""/>
+                        <span><strong t-out="user_id.name"/><small t-out="user_id.email"/></span>
+                    </a>
+                    <ul t-foreach="(work_links, account_links)" t-as="links">
+                        <li t-foreach="links" t-as="link">
+                            <a class="o_tvbo_nav_link" t-att-href="link[0]" t-att-title="link[2]" t-att-aria-current="'page' if current == link[0] or (link[0] != '/my' and current.startswith(link[0] + '/')) else None">
+                                <i t-attf-class="fa fa-fw #{link[1]}" aria-hidden="true"/><span t-out="link[2]"/>
+                            </a>
+                        </li>
+                    </ul>
+                    <button type="button" class="o_tvbo_nav_link o_tvbo_portal_fold d-none d-lg-flex" title="Fold the menu"><i class="fa fa-fw fa-angle-double-left" aria-hidden="true"/><span>Fold the menu</span></button>
+                </div>
+            </nav>
+        </aside>
+        <script>
+            (function () {
+                const aside = document.currentScript.previousElementSibling;
+                const key = 'tvbo.portal_nav_folded';
+                const fold = (folded) => aside.classList.toggle('is-folded', folded);
+                try { fold(localStorage.getItem(key) === '1'); } catch (e) { /* storage blocked: start unfolded */ }
+                aside.querySelector('.o_tvbo_portal_fold').addEventListener('click', () => {
+                    fold(!aside.classList.contains('is-folded'));
+                    try { localStorage.setItem(key, aside.classList.contains('is-folded') ? '1' : ''); } catch (e) { /* the fold just isn't remembered */ }
+                });
+            })();
+        </script>
+    </template>
+
+    <template id="portal_dashboard" name="TVBO Dashboard">
+        <t t-call="portal.portal_layout">
+            <t t-set="no_breadcrumbs" t-value="True"/>
+            <div class="o_tvbo_dashboard">
+                <div class="o_tvbo_dashboard_head">
+                    <h1>Welcome back, <t t-out="user_id.name"/></h1>
+                    <button type="button" class="btn btn-outline-primary btn-sm" data-dashboard-customize="">Customize</button>
+                </div>
+                <div class="o_tvbo_widgets">
+                    <section t-foreach="widgets" t-as="widget" class="o_tvbo_widget" t-att-data-key="widget['key']">
+                        <div class="o_tvbo_widget_tools">
+                            <button type="button" data-move="-1" title="Move earlier" aria-label="Move earlier"><i class="fa fa-arrow-left"/></button>
+                            <button type="button" data-move="1" title="Move later" aria-label="Move later"><i class="fa fa-arrow-right"/></button>
+                            <button type="button" data-remove="" title="Remove from the dashboard" aria-label="Remove from the dashboard"><i class="fa fa-times"/></button>
+                        </div>
+                        <h2 t-out="widget['name']"/>
+                        <t t-call="{{ widget['template'] }}"/>
+                    </section>
+                </div>
+                <div class="o_tvbo_widget_spare">
+                    <h2>Add a widget</h2>
+                    <ul t-if="spare_widgets">
+                        <li t-foreach="spare_widgets" t-as="widget">
+                            <span><strong t-out="widget['name']"/><small t-out="widget['description']"/></span>
+                            <button type="button" class="btn btn-sm btn-outline-primary" t-att-data-add="widget['key']">Add</button>
+                        </li>
+                    </ul>
+                    <p t-else="" class="o_tvbo_widget_empty">Every widget is on your dashboard.</p>
+                    <button type="button" class="btn btn-link btn-sm px-0" data-reset="">Go back to the default widgets</button>
+                </div>
+            </div>
+            <script src="/tvbo/z/src/js/portal_dashboard.js?v=1"></script>
+        </t>
+    </template>
+
+    <template id="dashboard_tasks" name="Dashboard widget: my tasks">
+        <t t-set="tasks" t-value="user_id._dashboard_tasks()"/>
+        <p t-if="tasks['overdue']" class="o_tvbo_widget_alert"><t t-out="tasks['overdue']"/> overdue</p>
+        <ul t-if="tasks['activities']" class="o_tvbo_widget_list">
+            <li t-foreach="tasks['activities']" t-as="activity" t-att-class="'is-overdue' if activity.state == 'overdue' else None">
+                <a t-attf-href="/mail/view?model=#{activity.res_model}&amp;res_id=#{activity.res_id}">
+                    <span t-out="activity.summary or activity.activity_type_id.name"/>
+                    <small t-out="activity.res_name"/>
+                </a>
+                <span class="o_tvbo_widget_date" t-field="activity.date_deadline" t-options="{'widget': 'date'}"/>
+            </li>
+        </ul>
+        <p t-else="" class="o_tvbo_widget_empty">Nothing is waiting for you.</p>
+    </template>
+
+    <template id="dashboard_models" name="Dashboard widget: my models">
+        <t t-set="saved" t-value="user_id._dashboard_models()"/>
+        <dl class="o_tvbo_widget_counts">
+            <div><dt>Drafts</dt><dd t-out="saved['counts']['draft']"/></div>
+            <div><dt>In review</dt><dd t-out="saved['counts']['in_review']"/></div>
+            <div><dt>Changes requested</dt><dd t-out="saved['counts']['changes_requested']"/></div>
+            <div><dt>Published</dt><dd t-out="saved['counts']['published']"/></div>
+        </dl>
+        <ul t-if="saved['latest']" class="o_tvbo_widget_list">
+            <li t-foreach="saved['latest']" t-as="share">
+                <a t-attf-href="/tvbo/model/#{share.dynamics_id.id}" t-out="share.dynamics_id.label or share.dynamics_id.name"/>
+                <span class="o_tvbo_widget_date" t-field="share.write_date" t-options="{'widget': 'date'}"/>
+            </li>
+        </ul>
+        <p t-else="" class="o_tvbo_widget_empty">No saved models yet. Build one and save it to keep it here.</p>
+        <footer><a href="/my/models">All my models</a><a href="/tvbo/configurator">Build a model</a></footer>
+    </template>
+
+    <template id="dashboard_reviews" name="Dashboard widget: reviews">
+        <t t-set="waiting" t-value="user_id._dashboard_reviews()"/>
+        <dl class="o_tvbo_widget_counts"><div><dt>Waiting for review</dt><dd t-out="len(waiting)"/></div></dl>
+        <ul t-if="waiting" class="o_tvbo_widget_list">
+            <li t-foreach="waiting[:3]" t-as="share">
+                <span><t t-out="share.dynamics_id.label or share.dynamics_id.name"/><small>by <t t-out="share.owner_user_id.name"/></small></span>
+                <span class="o_tvbo_widget_date" t-field="share.submitted_date" t-options="{'widget': 'date'}"/>
+            </li>
+        </ul>
+        <footer><a href="/odoo/action-tvbo.action_publication_review">Open review requests</a></footer>
+    </template>
+
+    <template id="dashboard_shared" name="Dashboard widget: shared with me">
+        <t t-set="shares" t-value="user_id._dashboard_shared()"/>
+        <ul t-if="shares" class="o_tvbo_widget_list">
+            <li t-foreach="shares[:4]" t-as="share">
+                <span><a t-attf-href="/tvbo/model/#{share.dynamics_id.id}" t-out="share.dynamics_id.label or share.dynamics_id.name"/><small>from <t t-out="share.owner_user_id.name"/></small></span>
+            </li>
+        </ul>
+        <p t-else="" class="o_tvbo_widget_empty">Nobody has shared a model with you yet.</p>
+        <footer t-if="shares"><a href="/my/shared">All <t t-out="len(shares)"/> shared with me</a></footer>
+    </template>
+
+    <template id="dashboard_api_keys" name="Dashboard widget: API keys">
+        <t t-set="keys" t-value="user_id._dashboard_api_keys()"/>
+        <ul t-if="keys" class="o_tvbo_widget_list">
+            <li t-foreach="keys" t-as="key">
+                <span t-out="key.name"/>
+                <span class="o_tvbo_widget_date"><t t-if="key.last_used">used <span t-field="key.last_used" t-options="{'widget': 'date'}"/></t><t t-else="">never used</t></span>
+            </li>
+        </ul>
+        <p t-else="" class="o_tvbo_widget_empty">No keys yet. Make one to load and save models from Python.</p>
+        <footer><a href="/my/api-keys">Manage keys</a></footer>
+    </template>
+</odoo>

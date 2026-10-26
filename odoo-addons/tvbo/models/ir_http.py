@@ -17,3 +17,9 @@ class IrHttp(models.AbstractModel):
         """
         super()._post_dispatch(response)
         compress_response(response)
+
+    def session_info(self):
+        """Add ``account_menu``, so the backend's account menu shows the same entries as the website's."""
+        info = super().session_info()
+        info['account_menu'] = self.env.user._account_menu()
+        return info

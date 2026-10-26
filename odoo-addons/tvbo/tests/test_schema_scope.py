@@ -36,11 +36,12 @@ class TestSchemaScope(HttpCase):
 
     def test_detail_stays_inside_the_schema(self):
         dyn = self.env['tvbo.dynamics'].create({'name': 'scope_probe'})
-        response = self._get(f'/tvbo/api/configurator/instances/Dynamics/{dyn.id}')
-        self.assertEqual(response.status_code, 200)
-        data = response.json()['data']
-        self.assertEqual(data['name'], 'scope_probe')
-        self.assertFalse({'create_uid', 'write_uid'} & data.keys())
+        for path in (f'/tvbo/api/configurator/instances/Dynamics/{dyn.id}', f'/tvbo/api/configurator/dynamics/{dyn.id}'):
+            response = self._get(path)
+            self.assertEqual(response.status_code, 200, path)
+            data = response.json()['data']
+            self.assertEqual(data['name'], 'scope_probe', path)
+            self.assertFalse({'create_uid', 'write_uid'} & data.keys(), path)
 
     def test_drafts_are_hidden_from_everyone_but_their_owner(self):
         owner = new_test_user(self.env, login='scope_owner', groups='base.group_portal')
