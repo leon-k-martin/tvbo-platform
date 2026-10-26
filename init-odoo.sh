@@ -401,6 +401,16 @@ else
   log "⚠ Could not configure website (non-critical)"
 fi
 
+# TVBO_PUBLIC_URL becomes web.base.url, frozen so an admin login from another address cannot replace it; the docs links and the API keys example print it.
+if [ -n "${TVBO_PUBLIC_URL:-}" ]; then
+  if psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" \
+    -c "INSERT INTO ir_config_parameter (key, value, create_uid, create_date, write_uid, write_date) VALUES ('web.base.url', '${TVBO_PUBLIC_URL}', 1, NOW(), 1, NOW()), ('web.base.url.freeze', 'True', 1, NOW(), 1, NOW()) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, write_date = NOW();" > /dev/null 2>&1; then
+    log "✓ Public address set to ${TVBO_PUBLIC_URL}"
+  else
+    log "⚠ Could not set the public address (non-critical)"
+  fi
+fi
+
 log "✓ TVBO initialization complete"
 emit_kg_summary "startup" || true
 if [ "${UPGRADE_DEGRADED:-0}" = "1" ]; then

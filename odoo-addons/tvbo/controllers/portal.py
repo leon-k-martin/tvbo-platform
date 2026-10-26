@@ -186,6 +186,7 @@ class TVBOPortal(http.Controller):
             [('user_id', '=', request.env.user.id)], order='create_date desc')
         return request.render('tvbo.portal_api_keys', {
             'keys': keys,
+            'base_url': request.env['ir.config_parameter'].sudo().get_param('web.base.url', '').rstrip('/'),
             'page_name': 'api_keys',
         })
 
