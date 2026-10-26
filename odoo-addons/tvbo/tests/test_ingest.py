@@ -16,7 +16,8 @@ silently come back:
 import math
 from datetime import date
 
-from odoo.tests.common import TransactionCase
+from odoo.tests import tagged
+from odoo.tests.common import HttpCase, TransactionCase
 
 from odoo.addons.tvbo.models import ingest
 from odoo.addons.tvbo.models.ingest import _json_safe, _xmlid
@@ -131,10 +132,13 @@ class TestSeedIdempotency(TransactionCase):
                         'self-healed marker must point at a real row')
 
 
-class TestJsonResponseDates(TransactionCase):
+@tagged('post_install', '-at_install')
+class TestJsonResponseDates(HttpCase):
     """SimulationTool.date_created must not 500 the KG endpoints."""
 
     def test_date_serializes(self):
-        from odoo.addons.tvbo.controllers.kg_api import json_response
-        resp = json_response({'d': date(2020, 1, 2)})
-        self.assertIn(b'2020-01-02', resp.data)
+        tool = self.env['tvbo.simulation_tool'].create({'name': 'date_probe', 'date_created': date(2020, 1, 2)})
+        self.env.flush_all()
+        resp = self.url_open(f'/tvbo/api/kg/software/{tool.id}', timeout=120)
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn(b'2020-01-02', resp.content)

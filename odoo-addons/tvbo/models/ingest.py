@@ -9,21 +9,16 @@ data to the platform database:
         -> tvbo.utils.pydantic_loader (validate against the schema)
         -> recursive Odoo create()
 
-Because the Odoo models are generated from the same LinkML schema (alias-aware),
-the validated pydantic field names line up 1:1 with the Odoo fields — the only
-remapping needed is the reserved-name inverse (id->record_id, modified->is_modified).
-Enums are seeded from the generated pydantic Enum classes so the values stored in
-lookup models are exactly the values the data uses.
+Because the Odoo models are generated from the same LinkML schema (alias-aware), the validated pydantic field names line up 1:1 with the Odoo fields — the only remapping needed is the generator's ``RENAMED_SLOTS`` for slots named after Odoo's record API (e.g. id->record_id, env->record_env). Enums are seeded from the generated pydantic Enum classes so the values stored in lookup models are exactly the values the data uses.
 """
 import enum as _enum
 import logging
 import math
 import re
 
-_logger = logging.getLogger(__name__)
+from .schema_models import RENAMED_SLOTS
 
-# Reserved Odoo ORM names: schema slot -> Odoo field (matches the generator).
-_RESERVED = {"id": "record_id", "modified": "is_modified"}
+_logger = logging.getLogger(__name__)
 
 # Synthetic module namespace for the external IDs that make ingestion idempotent.
 # Each ingested ground-truth record gets an ir.model.data row keyed by its
@@ -163,12 +158,9 @@ def _resolve_many(env, comodel, value, cache):
 
 
 def _natural_key(Model, data):
-    """Return ``(odoo_field, value)`` identifying this record for idempotency, or
-    ``(None, None)``. Prefers the schema id (-> record_id), then name, then label —
-    whichever the model actually has and the data provides. Lets the seed run on
-    every deploy as a gap-filling migration (skip what already exists) instead of
-    a one-shot that needs an empty DB / RESET_DB."""
-    for schema_key, odoo_field in (("id", "record_id"), ("name", "name"), ("label", "label")):
+    """Return ``(odoo_field, value)`` identifying this record for idempotency, or ``(None, None)``. Prefers the schema id (stored under its ``RENAMED_SLOTS`` field), then name, then label — whichever the model actually has and the data provides. Lets the seed run on every deploy as a gap-filling migration (skip what already exists) instead of a one-shot that needs an empty DB / RESET_DB."""
+    for schema_key in ("id", "name", "label"):
+        odoo_field = RENAMED_SLOTS.get(schema_key, schema_key)
         if odoo_field in Model._fields and data.get(schema_key) not in (None, ""):
             return odoo_field, data[schema_key]
     return None, None
@@ -184,7 +176,7 @@ def _create_record(env, model_name, data, cache):
     for key, value in (data or {}).items():
         if value is None:
             continue
-        fname = _RESERVED.get(key, key)
+        fname = RENAMED_SLOTS.get(key, key)
         f = fields.get(fname)
         if f is None:
             continue  # field not on this model (e.g. schema extra) -> skip
