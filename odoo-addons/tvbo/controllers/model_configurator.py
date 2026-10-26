@@ -260,17 +260,10 @@ class ModelConfiguratorController(http.Controller):
             from tvbo.classes.network import Network
             from .building_blocks_api import validate_experiment
 
-            exp_rec = request.env['tvbo.simulation_experiment'].sudo().browse(experiment_id)
-            if not exp_rec.exists():
+            visible = request.env['tvbo.model_share'].visibility_domain('tvbo.simulation_experiment')  # another user's draft answers 404 like a missing one
+            exp_rec = request.env['tvbo.simulation_experiment'].sudo().search([('id', '=', experiment_id)] + visible)
+            if not exp_rec:
                 return _err(404, {'success': False, 'error': 'Experiment not found'})
-
-            # Respect sharing: a non-public experiment is downloadable only by its
-            # owner or a collaborator it was shared with. Curated experiments have
-            # no share row -> public.
-            share = request.env['tvbo.model_share'].sudo().search(
-                [('experiment_id', '=', experiment_id)], limit=1)
-            if share and not share.is_accessible_to(request.env.user):
-                return _err(403, {'success': False, 'error': 'forbidden'})
 
             obj, errors = validate_experiment(experiment_id)
             if errors:

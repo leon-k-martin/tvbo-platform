@@ -9,21 +9,25 @@
                     <span t-esc="siteHeader.name"/>
                 </a>
                 <span class="o_site_header_badge">Backend</span>
-                <Dropdown>
-                    <button type="button" class="o_site_header_account">
-                        <i class="fa fa-user-circle-o" aria-hidden="true"/>
-                        <span t-att-class="{ 'visually-hidden': ui.isSmall }" t-esc="userName"/>
-                        <i class="fa fa-caret-down" aria-hidden="true"/>
-                    </button>
-                    <t t-set-slot="content">
-                        <t t-foreach="accountMenu" t-as="entry" t-key="entry.key">
-                            <div t-if="entry.key === 'logout'" class="dropdown-divider"/>
-                            <DropdownItem attrs="{ href: entry.url }" onSelected="() => this.onAccountEntry(entry)"><i t-attf-class="fa fa-fw {{ entry.icon }} me-2" aria-hidden="true"/><t t-esc="entry.label"/></DropdownItem>
-                        </t>
-                    </t>
-                </Dropdown>
+                <UserMenu/>
             </div>
         </xpath>
+    </t>
+
+    <!-- In the strip the account menu shows the name and a caret beside the avatar on wide screens; on phones Odoo's burger menu, behind the avatar in the navbar, lists the same items. -->
+    <t t-inherit="web.UserMenu" t-inherit-mode="extension">
+        <xpath expr="//small[hasclass('oe_topbar_name')]" position="replace">
+            <span class="oe_topbar_name d-none d-lg-inline text-truncate" t-esc="userName"/>
+            <i class="fa fa-caret-down d-none d-lg-inline" aria-hidden="true"/>
+        </xpath>
+    </t>
+
+    <t t-name="web_nested_sidebar.AccountMenuHeader">
+        <div class="o_account_menu_header">
+            <strong t-esc="user.name"/>
+            <small t-esc="user.login"/>
+        </div>
+        <div role="separator" class="dropdown-divider"/>
     </t>
 
 </templates>

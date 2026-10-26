@@ -60,6 +60,15 @@ class TestSchemaScope(HttpCase):
         for path in paths:
             self.assertIn(b'scope_draft', self._get(path).content, path)
 
+    def test_bundle_of_another_users_draft_is_not_found(self):
+        owner = new_test_user(self.env, login='bundle_owner', groups='base.group_portal')
+        draft = self.env['tvbo.simulation_experiment'].create({'record_id': 1, 'label': 'bundle_draft'})
+        self.env['tvbo.model_share'].create({'experiment_id': draft.id, 'owner_user_id': owner.id})
+        path = f'/tvbo/api/configurator/experiment/{draft.id}/bundle'
+        self.assertEqual(self._get(path).status_code, 404)
+        self.authenticate('bundle_owner', 'bundle_owner')
+        self.assertNotEqual(self._get(path).status_code, 404)
+
     def test_internal_users_read_the_kg_and_reviewers_edit_it(self):
         reader = new_test_user(self.env, login='kg_reader', groups='base.group_user')
         curator = new_test_user(self.env, login='kg_curator', groups='base.group_user,tvbo.group_tvbo_reviewer')

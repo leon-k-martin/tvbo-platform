@@ -99,6 +99,38 @@ header.tvbo-header.o_header_affixed .navbar {
     height: 16px;
 }
 
+/* The account menu matches the backend's: avatar and name on the toggle, name and login at the top of the menu. */
+.o_tvbo_account {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.o_tvbo_account_avatar {
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.o_tvbo_account_header {
+    display: flex;
+    flex-direction: column;
+    max-width: 16rem;
+    padding: 0.25rem 1rem 0.5rem;
+}
+
+.o_tvbo_account_header strong,
+.o_tvbo_account_header small {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.o_tvbo_account_header small {
+    color: var(--bs-secondary-color);
+}
+
 /* Mobile responsive — tracks the navbar's xl collapse breakpoint */
 @media (max-width: 1199.98px) {
     .tvbo-global-search {

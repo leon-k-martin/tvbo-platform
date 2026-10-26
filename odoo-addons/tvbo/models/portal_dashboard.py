@@ -4,6 +4,8 @@ from collections import Counter
 
 from odoo import _, fields, models
 
+_SAVED_MODELS = [('dynamics_id', '!=', False)]  # shares of a model saved from the configurator
+
 
 def _placeable(keys, catalogue):
     """The keys in ``keys`` that ``catalogue`` offers, each once and in order; anything but a list counts as no keys."""
@@ -37,10 +39,16 @@ class ResUsers(models.Model):
         widgets.append({'key': 'api_keys', 'name': _("API keys"), 'description': _("Keys for the tvbo Python client."), 'template': 'tvbo.dashboard_api_keys', 'default': False})
         return widgets
 
-    def _dashboard_keys(self):
-        """The keys of the widgets on this user's dashboard, in order: their own arrangement, or the defaults while it holds no widget they may still place."""
+    def _dashboard_layout(self):
+        """The widgets on this user's dashboard in order, and the ones they may still add. The dashboard shows their own arrangement, or the defaults while it holds no widget they may still place."""
         catalogue = self._dashboard_catalogue()
-        return _placeable(self.dashboard_widgets, catalogue) or [widget['key'] for widget in catalogue if widget['default']]
+        keys = _placeable(self.dashboard_widgets, catalogue) or [widget['key'] for widget in catalogue if widget['default']]
+        by_key = {widget['key']: widget for widget in catalogue}
+        return [by_key[key] for key in keys], [widget for widget in catalogue if widget['key'] not in keys]
+
+    def _dashboard_keys(self):
+        """The keys of the widgets on this user's dashboard, in order."""
+        return [widget['key'] for widget in self._dashboard_layout()[0]]
 
     def _set_dashboard_keys(self, keys):
         """Store the user's arrangement, keeping each widget they may place once; an empty arrangement, like None, goes back to the defaults."""
@@ -55,20 +63,25 @@ class ResUsers(models.Model):
             'overdue': Activity.search_count(domain + [('date_deadline', '<', fields.Date.context_today(self))]),
         }
 
-    def _model_shares(self, domain, order='write_date desc'):
-        return self.env['tvbo.model_share'].sudo().search([('dynamics_id', '!=', False)] + domain, order=order)
+    def _shares_summary(self, domain, order, limit):
+        """How many shares of saved models match ``domain``, and the first ``limit`` of them in ``order``."""
+        Share = self.env['tvbo.model_share'].sudo()
+        domain = _SAVED_MODELS + domain
+        return {'count': Share.search_count(domain), 'records': Share.search(domain, order=order, limit=limit)}
 
     def _dashboard_models(self):
         """How many of the user's saved models are in each publication state, and the three changed last."""
-        shares = self._model_shares([('owner_user_id', '=', self.id)])
-        return {'counts': Counter(shares.mapped('publication_state')), 'latest': shares[:3]}
+        Share = self.env['tvbo.model_share'].sudo()
+        domain = _SAVED_MODELS + [('owner_user_id', '=', self.id)]
+        return {'counts': Counter(dict(Share._read_group(domain, ['publication_state'], ['__count']))), 'latest': Share.search(domain, order='write_date desc', limit=3)}
 
     def _dashboard_reviews(self):
-        """Models waiting for a reviewer, longest-waiting first."""
-        return self._model_shares([('publication_state', '=', 'in_review')], order='submitted_date, id')
+        """How many models wait for a reviewer, and the three waiting longest."""
+        return self._shares_summary([('publication_state', '=', 'in_review')], 'submitted_date, id', 3)
 
     def _dashboard_shared(self):
-        return self._model_shares([('shared_user_ids', 'in', self.id)])
+        """How many models colleagues shared with the user, and the four changed last."""
+        return self._shares_summary([('shared_user_ids', 'in', self.id)], 'write_date desc', 4)
 
     def _dashboard_api_keys(self):
         return self.env['tvbo.api_key'].sudo().search([('user_id', '=', self.id)], order='create_date desc')

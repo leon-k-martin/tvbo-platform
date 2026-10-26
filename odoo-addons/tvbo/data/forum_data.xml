@@ -21,7 +21,7 @@
                         <p class="lead">Questions about the schema, simulation backends, connectomes, the Experiment Builder or the Python package — and discussions about methods, papers and where TVBO should go next. Both live here; you pick which one you are posting.</p>
                         <p>Reading is open to everyone. To post, create an account and confirm your email address.</p>
                         <a class="btn btn-primary" href="/web/signup">Create an account</a>
-                        <a class="btn btn-outline-light" href="/web/login">Sign in</a>
+                        <a class="btn btn-outline-light" href="/web/login">Log in</a>
                         <button type="button" class="btn btn-link js_close_intro">Dismiss</button>
                     </div>
                 </div>

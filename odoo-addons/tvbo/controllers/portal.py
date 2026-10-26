@@ -35,14 +35,8 @@ class TVBODashboard(CustomerPortal):
     @http.route()
     def home(self, **kw):
         """The dashboard: the user's widgets in their order, and the ones they can still add."""
-        user = request.env.user
-        shown = user._dashboard_keys()
-        catalogue = {widget['key']: widget for widget in user._dashboard_catalogue()}
-        return request.render('tvbo.portal_dashboard', {
-            **self._prepare_portal_layout_values(),
-            'widgets': [catalogue[key] for key in shown],
-            'spare_widgets': [widget for key, widget in catalogue.items() if key not in shown],
-        })
+        widgets, spare_widgets = request.env.user._dashboard_layout()
+        return request.render('tvbo.portal_dashboard', {**self._prepare_portal_layout_values(), 'widgets': widgets, 'spare_widgets': spare_widgets})
 
     @http.route('/my/dashboard/widgets', type='jsonrpc', auth='user', csrf=False)
     def save_widgets(self, keys=None, **kw):

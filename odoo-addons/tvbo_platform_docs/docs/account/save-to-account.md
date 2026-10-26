@@ -6,15 +6,11 @@ sequence: 30
 
 # Save models & experiments to your account
 
-Once you sign in, your customized models and assembled experiments live under **My
-Models**, and you can issue API keys for scripts.
+Once you log in, your customized models and assembled experiments live under **My models**, and you can issue API keys for scripts.
 
 ## Save and find your models
 
-In the [Experiment Builder](../experiment-builder/index.md), use **Save to my
-models** instead of (or alongside) downloading the YAML. Your saved models appear
-under the user menu at **My Models** ([`/my/models`]({{base_url}}/my/models)). Each
-model (**1**) can be re-opened in the builder or downloaded again.
+In the [Experiment Builder](../experiment-builder/index.md), use **Save to my models** instead of (or alongside) downloading the YAML. Your saved models appear in your dashboard's left menu at **My models** ([`/my/models`]({{base_url}}/my/models)). Each model (**1**) can be re-opened in the builder or downloaded again.
 
 Whole **experiments** you assemble can be stored to your account too. Push them
 from Python with the REST API (`POST /api/tvbo/v1/experiments`), so a collaborator
