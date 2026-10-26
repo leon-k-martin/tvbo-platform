@@ -1,3 +1,4 @@
+# The full stack for `make up`; production deploys apply tvboRunnerActions.yaml instead.
 apiVersion: v1
 kind: Secret
 metadata:

@@ -131,6 +131,18 @@ class TestSeedIdempotency(TransactionCase):
         self.assertTrue(self.env['tvbo.dynamics'].browse(healed.res_id).exists(),
                         'self-healed marker must point at a real row')
 
+    def test_reseed_refills_emptied_exploration_axis_parameters(self):
+        experiment = self.env.ref(f"{ingest._INGEST_MODULE}.{_xmlid('SimulationExperiment', 'RWW_BOLD_FC_Optimization')}")
+        axes = experiment.explorations.space.sorted('id')
+        expected = axes.mapped('parameter')
+        self.assertEqual(expected, ['ReducedWongWang.w', 'FastLinearCoupling.G'])
+        # The schema reconcile left the column nullable and empty; the ORM itself would refuse to empty a required field.
+        self.env.cr.execute("ALTER TABLE tvbo_exploration_axis ALTER COLUMN parameter DROP NOT NULL")
+        self.env.cr.execute("UPDATE tvbo_exploration_axis SET parameter = NULL WHERE id IN %s", [tuple(axes.ids)])
+        axes.invalidate_recordset(['parameter'])
+        ingest.seed_database(self.env)
+        self.assertEqual(axes.mapped('parameter'), expected)
+
 
 @tagged('post_install', '-at_install')
 class TestJsonResponseDates(HttpCase):

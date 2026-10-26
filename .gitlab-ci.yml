@@ -5,9 +5,6 @@ variables:
   ALLOW_SAME_IMAGE:
     value: "false"
     description: "Set to 'true' to allow a rollout that re-pulls the same image digest (e.g. a RESET_DB-only restart). Otherwise a no-op deploy fails the job."
-  TVBO_PUBLIC_URL:
-    value: "https://tvbo.charite.de"
-    description: "The platform's public address. init-odoo.sh freezes web.base.url to it and makes it the website's domain, which the docs links, the canonical and og:url links and the API keys example use."
 
 deploy-job:
   stage: deploy
@@ -17,8 +14,8 @@ deploy-job:
     - export KUBECONFIG=/home/gitlab-runner/kubeconfig.yaml
     - kubectl apply -f tvboRunnerActions.yaml
     - |
-        # Always re-set, so toggling RESET_DB or changing TVBO_PUBLIC_URL between runs takes effect deterministically; this job never applies k8s.yaml.
-        kubectl set env deployment/tvbo-odoo -n kube-system "RESET_DB=${RESET_DB:-false}" "TVBO_PUBLIC_URL=${TVBO_PUBLIC_URL}"
+        # Always re-set, so toggling RESET_DB between runs takes effect deterministically.
+        kubectl set env deployment/tvbo-odoo -n kube-system "RESET_DB=${RESET_DB:-false}"
     - |
         # Digest the live pod runs *before* the restart; re-pulling it means nothing shipped.
         IMG_BEFORE=$(kubectl get pods -n kube-system -l app=tvbo-odoo \
