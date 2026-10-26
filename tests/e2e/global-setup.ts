@@ -2,12 +2,7 @@ import { execFileSync } from 'node:child_process';
 import * as path from 'node:path';
 
 /**
- * Seed the documentation fixture so the account-page captures (My Models, API
- * Keys) run for real rather than skipping: a `docs-demo` user with a known
- * password and one private saved model. Idempotent. Runs the seed in the dev
- * stack's odoo container via `docker compose exec`; if that is unavailable
- * (e.g. CI against a remote instance), it logs and continues, and the account
- * tests fall back to skipping.
+ * Seed the documentation fixture so the account-page captures (My Models, API Keys) run for real rather than skipping: a `docs-demo` portal user, the kind of account a sign-up creates, with a known password and one private saved model. Idempotent. Runs the seed in the dev stack's odoo container via `docker compose exec`; if that is unavailable (e.g. CI against a remote instance), it logs and continues, and the account tests fall back to skipping.
  */
 const DB = process.env.DOCS_DB || 'tvbo_dev';
 const USER = process.env.DOCS_USER || 'docs-demo';
@@ -15,16 +10,13 @@ const PASS = process.env.DOCS_PASS || 'DocsDemo-2026';
 
 const SEED = `
 u = env['res.users'].sudo()
-fx = u.search([('login','=','${USER}')], limit=1)
-if not fx:
-    fx = u.create({'name':'Docs Demo','login':'${USER}','email':'${USER}@example.com',
-                   'group_ids':[(6,0,[env.ref('base.group_user').id])]})
-fx.password = '${PASS}'
+fx = u.search([('login','=','${USER}')], limit=1) or u.create({'name':'Docs Demo','login':'${USER}','email':'${USER}@example.com'})
+fx.write({'password':'${PASS}','group_ids':[(6,0,[env.ref('base.group_portal').id])]})
 MS = env['tvbo.model_share'].sudo()
 dyn = (env['tvbo.dynamics'].sudo().search([('name','=','Generic2dOscillator')], limit=1)
        or env['tvbo.dynamics'].sudo().search([], limit=1))
 if dyn and not MS.search([('owner_user_id','=',fx.id),('dynamics_id','=',dyn.id)], limit=1):
-    MS.create({'owner_user_id':fx.id,'dynamics_id':dyn.id,'visibility':'private'})
+    MS.create({'owner_user_id':fx.id,'dynamics_id':dyn.id})
 env.cr.commit()
 print('FIXTURE_OK', fx.id)
 `;

@@ -233,14 +233,19 @@ test('cast: your account', async ({ browser }) => {
     await sleep(1200);
     await c.type('input[name="login"]', USER);
     await c.type('input[name="password"]', PASS);
-    await c.click('button[type="submit"]');
-    await c.page.waitForLoadState('networkidle', { timeout: 8000 }).catch(() => {});
-    await sleep(1600);
-    await c.page.goto(`${BASE}/my/models`, { waitUntil: 'load', timeout: 30000 });
-    await sleep(2600);
+    await c.click('form.oe_login_form button[type="submit"]');
+    await c.page.waitForURL(/\/my$/, { timeout: 15000 }).catch(() => {});
+    await sleep(2000);
+    // Open and close the account menu, then reach the saved work through the dashboard's left menu.
+    await c.click('#tvboUserDropdown', 2600);
+    await c.click('#tvboUserDropdown', 600);
+    await c.click('.o_tvbo_portal_nav a[href="/my/models"]');
+    await c.page.waitForURL(/\/my\/models$/, { timeout: 15000 }).catch(() => {});
+    await sleep(2000);
     await c.to('.tvbo-model-card');
     await sleep(1500);
-    await c.page.goto(`${BASE}/my/api-keys`, { waitUntil: 'load', timeout: 30000 });
+    await c.click('.o_tvbo_portal_nav a[href="/my/api-keys"]');
+    await c.page.waitForURL(/\/my\/api-keys$/, { timeout: 15000 }).catch(() => {});
     await sleep(2400);
   });
 });
