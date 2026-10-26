@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- The page a TVB-O term IRI dereferences to in a browser; its values come from term_resolver.html_view. -->
+    <template id="ontology_term" name="TVB-O term">&lt;!DOCTYPE html&gt;
+        <html lang="en">
+            <head>
+                <meta charset="utf-8"/>
+                <meta name="viewport" content="width=device-width, initial-scale=1"/>
+                <title t-out="blocks[0]['label'] + ' | TVB-O'"/>
+                <link t-foreach="serialisations" t-as="serialisation" rel="alternate" t-att-type="serialisation['media_type']" t-att-href="serialisation['href']"/>
+                <style>
+                    body { font-family: system-ui, sans-serif; line-height: 1.5; max-width: 60rem; margin: 2rem auto; padding: 0 1rem; }
+                    table { border-collapse: collapse; width: 100%; }
+                    td { border-top: 1px solid #ddd; padding: 0.25rem 0.5rem; vertical-align: top; overflow-wrap: anywhere; }
+                    td td { border-top-color: #eee; }
+                </style>
+            </head>
+            <body>
+                <section t-foreach="blocks" t-as="block" t-att-id="block['anchor']">
+                    <h1 t-if="block_first" t-out="block['label']"/>
+                    <h2 t-else="" t-out="block['label']"/>
+                    <p><code t-out="block['iri']"/></p>
+                    <p t-if="block['types']">Type:
+                        <t t-foreach="block['types']" t-as="rdf_type">
+                            <t t-call="tvbo.ontology_term_node" node="rdf_type"/><t t-if="not rdf_type_last">, </t>
+                        </t>
+                    </p>
+                    <p t-foreach="block['descriptions']" t-as="text" t-out="text"/>
+                    <t t-call="tvbo.ontology_term_rows" rows="block['rows']"/>
+                </section>
+                <p>Also as:
+                    <t t-foreach="serialisations" t-as="serialisation">
+                        <a t-att-href="serialisation['href']" t-out="serialisation['title']"/><t t-if="not serialisation_last">, </t>
+                    </t>
+                </p>
+            </body>
+        </html>
+    </template>
+
+    <template id="ontology_term_rows" name="TVB-O term: predicate/object table">
+        <table>
+            <tr t-foreach="rows" t-as="row">
+                <td><t t-call="tvbo.ontology_term_node" node="row['predicate']"/></td>
+                <td><t t-call="tvbo.ontology_term_node" node="row['object']"/></td>
+            </tr>
+        </table>
+    </template>
+
+    <!-- A blank node recurses into its own table, so an owl:Restriction reads in place. -->
+    <template id="ontology_term_node" name="TVB-O term: one RDF node">
+        <a t-if="node['href']" t-att-href="node['href']" t-out="node['text']"/>
+        <t t-elif="node['rows']" t-call="tvbo.ontology_term_rows" rows="node['rows']"/>
+        <t t-else="" t-out="node['text']"/>
+    </template>
+</odoo>
