@@ -9,6 +9,87 @@
 // ============================================================
 window.KGComponents = window.KGComponents || {};
 
+/** *text* safe to place in HTML, quotes included, so it can stand in an attribute too. */
+KGComponents.escapeHtml = text => String(text ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+/** The name a card or detail view gives *item*. */
+KGComponents.title = item => item.title || item.name || item.label || item.id || 'Untitled';
+
+/** *href* when it is a web address or a path on this site, so data can never place a `javascript:` link. */
+KGComponents.safeHref = href => (/^(https?:\/\/|\/)/.test(String(href)) ? href : null);
+
+// ============================================================
+// CARD COMPONENT
+// ============================================================
+/**
+ * A result card, laid out from the item's KGTypes entry: the type, the title, the byline, a thumbnail or equation beside the description, the facts and the links. What a card shows is set in kg_types.js; how it looks, under `.kg-card` in kg_components.css.
+ */
+KGComponents.Card = {
+    render(item, index) {
+        const esc = KGComponents.escapeHtml;
+        const entry = KGTypes.get(item.type);
+        const isOntology = item.type === 'ontology';
+        const title = KGComponents.title(item);
+        const symbol = isOntology && item.symbol && item.symbol !== title ? `<span class="kg-card-symbol">${esc(item.symbol)}</span>` : '';
+        const byline = entry.byline(item);
+        const desc = [item.description, item.definition, item.ontology_instance?.description].find(text => text && text !== title) || '';
+        const equation = entry.equation && item.equation_latex ? `<div class="kg-card-equation">$$${item.equation_latex}$$</div>` : '';
+        const thumb = item.thumbnail ? `<img class="kg-card-thumb" src="${esc(item.thumbnail)}" alt="" loading="lazy" onerror="this.remove()">` : '';
+        const facts = entry.facts.map(fact => fact(item)).filter(Boolean);
+        const links = entry.links.map(link => link(item)).filter(link => link && KGComponents.safeHref(link.href));
+        if (entry.builder && item.id != null) {
+            links.push({ label: 'Open in Experiment Builder', href: `/tvbo/configurator?${entry.builder}=${encodeURIComponent(item.id)}`, local: true });
+        }
+        return `
+            <article class="result-card kg-card" data-idx="${index}" tabindex="0" style="--kg-accent:${entry.color}">
+                <p class="kg-card-type"><i class="${entry.icon}" aria-hidden="true"></i>${esc(isOntology ? item.ontology_type || entry.label : entry.label)}</p>
+                <h3 class="kg-card-title">${esc(title)}${symbol}</h3>
+                ${byline ? `<p class="kg-card-byline">${esc(byline)}</p>` : ''}
+                ${thumb || equation || desc ? `<div class="kg-card-body">${thumb}<div class="kg-card-text">${equation}${desc ? `<p class="kg-card-desc">${esc(desc)}</p>` : ''}</div></div>` : ''}
+                ${facts.length ? `<ul class="kg-card-facts">${facts.map(f => `<li>${f.label ? `<span class="kg-fact-label">${esc(f.label)}</span>` : ''}${esc(f.value)}</li>`).join('')}</ul>` : ''}
+                ${links.length ? `<p class="kg-card-links">${links.map(l => `<a class="${l.local ? 'kg-open-builder' : ''}" href="${esc(l.href)}"${l.local ? '' : ' target="_blank" rel="noopener"'} onclick="event.stopPropagation()">${esc(l.label)}</a>`).join('')}</p>` : ''}
+            </article>`;
+    },
+};
+
+// ============================================================
+// METADATA COMPONENT
+// ============================================================
+/**
+ * Everything the KG holds about an item, for the detail view: each field the view does not already show, then each link to other records and each record that links to this one, a KG record as a `/tvbo/kg?open=` link the browser opens in place. Labels and formats come from kg_types.js.
+ */
+KGComponents.Metadata = {
+    /** Fields the detail view shows elsewhere, or that only the page itself uses. */
+    hidden: new Set(['id', 'record_id', 'type', 'name', 'title', 'label', 'description', 'definition', 'thumbnail', 'report_url', 'equation_latex', 'related', 'used_by', 'copies', 'storid', 'tags', 'symbol', 'iri', 'is_a', 'requires', 'ontology_type']),
+
+    render(item) {
+        const esc = KGComponents.escapeHtml;
+        const show = shown => {
+            if (typeof shown !== 'object') return esc(shown);
+            const href = KGComponents.safeHref(shown.href);
+            return href ? `<a href="${esc(href)}" target="_blank" rel="noopener">${esc(shown.text)}</a>` : esc(shown.text);
+        };
+        const linked = summary => summary.names.map((name, i) => (summary.type ? `<a href="/tvbo/kg?open=${summary.type}:${summary.ids[i]}">${esc(name)}</a>` : esc(name))).join(', ') + (summary.count > summary.names.length ? ` <span class="kg-metadata-more">and ${summary.count - summary.names.length} more</span>` : '');
+        const rows = [];
+        for (const [key, raw] of Object.entries(item)) {
+            if (this.hidden.has(key) || key.startsWith('ontology_') || !KGTypes.filled(raw) || (typeof raw === 'object' && !Array.isArray(raw))) continue;
+            const shown = KGTypes.format(key, raw);
+            if (KGTypes.filled(shown)) rows.push([KGTypes.label(key), show(shown)]);
+        }
+        for (const [field, summary] of Object.entries(item.related || {})) {
+            if (summary.names.length) rows.push([KGTypes.label(field), linked(summary)]);
+        }
+        for (const [type, summary] of Object.entries(item.used_by || {})) {
+            if (summary.names.length) rows.push([`Linked from ${KGTypes.get(type).label.toLowerCase()}`, linked(summary)]);
+        }
+        for (const [label, node] of [['Ontology class', item.ontology_class], ['Ontology term', item.ontology_instance]]) {
+            if (node?.storid) rows.push([label, linked({ names: [node.iri || node.label || node.name], ids: [node.storid], type: 'ontology', count: 1 })]);
+        }
+        if (!rows.length) return '';
+        return `<section class="kg-metadata"><h4>Metadata</h4><dl>${rows.map(([label, html]) => `<dt>${esc(label)}</dt><dd>${html}</dd>`).join('')}</dl></section>`;
+    },
+};
+
 // ============================================================
 // DETAIL PANEL COMPONENT
 // ============================================================
@@ -56,12 +137,6 @@ KGComponents.DetailPanel = class {
             md.push(`**Parent Classes:** ${data.is_a.join(', ')}`);
             md.push('');
         }
-
-        // Basic metadata
-        if (data.source) md.push(`**Source:** ${data.source}`);
-        if (data.year) md.push(`**Year:** ${data.year}`);
-        if (data.doi) md.push(`**DOI:** [${data.doi}](https://doi.org/${data.doi})`);
-        if (data.journal) md.push(`**Journal:** ${data.journal}`);
 
         // Coupling function
         if (data.coupling_function) {
@@ -136,45 +211,12 @@ KGComponents.DetailPanel = class {
             }
         }
 
-        // Experiment components
-        if (data.dynamics && typeof data.dynamics === 'object') {
-            md.push('');
-            md.push(`**Dynamics Model:** ${data.dynamics.name || data.dynamics.label || ''}`);
-        }
-        if (data.integration && typeof data.integration === 'object') {
-            md.push(`**Integration:** ${data.integration.method || ''}`);
-        }
-        if (data.connectivity && typeof data.connectivity === 'object') {
-            md.push(`**Connectivity:** ${data.connectivity.label || ''}`);
-        }
-        if (data.parcellation && typeof data.parcellation === 'object') {
-            md.push(`**Parcellation:** ${data.parcellation.label || ''}`);
-        }
-
-        // References
-        if (data.references) {
-            md.push('');
-            md.push('### References');
-            md.push('');
-            md.push(data.references);
-        }
-
-        // Tags as simple list
-        if (data.tags && data.tags.length > 0) {
-            md.push('');
-            md.push(`**Tags:** ${data.tags.join(', ')}`);
-        }
-
         const markdown = md.join('\n');
         return `<div class="kg-detail-content">${this.renderMarkdown(markdown)}</div>`;
     }
 
     formatTypeLabel(data) {
-        if (data.ontology_type) return data.ontology_type;
-        // Ontology nodes are classes OR individuals; don't mislabel individuals.
-        if (data.type === 'ontology') return 'Ontology';
-        if (data.type) return data.type.charAt(0).toUpperCase() + data.type.slice(1);
-        return 'Item';
+        return data.ontology_type || KGTypes.get(data.type).label;
     }
 
     renderMarkdown(md) {
@@ -406,7 +448,7 @@ KGComponents.Tooltip = class {
 
         this.element.innerHTML = `
             <div class="kg-tooltip-header">
-                <span class="kg-tooltip-title">${this.escapeHtml(title)}</span>
+                <span class="kg-tooltip-title">${KGComponents.escapeHtml(title)}</span>
                 ${symbol && symbol !== title ? `<span class="kg-tooltip-symbol">${symbol}</span>` : ''}
             </div>
             <span class="kg-tooltip-type">${this.formatType(type)}</span>
@@ -439,14 +481,7 @@ KGComponents.Tooltip = class {
     }
 
     formatType(type) {
-        if (type === 'ontology' || type === 'Class') return 'Ontology';
-        return type.charAt(0).toUpperCase() + type.slice(1);
-    }
-
-    escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
+        return KGTypes.get(type === 'Class' ? 'ontology' : type).label;
     }
 };
 

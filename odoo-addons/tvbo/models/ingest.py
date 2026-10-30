@@ -16,6 +16,7 @@ import logging
 import math
 import re
 
+from . import bibliography
 from .schema_models import RENAMED_SLOTS
 
 _logger = logging.getLogger(__name__)
@@ -275,6 +276,17 @@ def _refill_axis_parameters(env, registry, pydantic_loader):
     _audit(f"exploration axes: {refilled} empty parameter(s) refilled from ground truth")
 
 
+def _refill_study_details(env):
+    """Fill each study's empty schema fields (title, authors, year, doi, type) from references.bib by its citekey, which is all a study's file holds."""
+    filled = 0
+    for study in env["tvbo.study"].sudo().search([("citekey", "!=", False)]):
+        vals = {name: value for name, value in bibliography.study(study.citekey).items() if name in study._fields and not study[name]}
+        if vals:
+            study.write(vals)
+            filled += 1
+    _audit(f"studies: {filled} filled from references.bib")
+
+
 def seed_database(env):
     """Post-install entry point: seed enums + building blocks from ground truth."""
     try:
@@ -359,6 +371,7 @@ def seed_database(env):
         _audit(f"{model_name} -> {ok} created, {skipped} already present / {len(names)} total")
         total += ok
     _refill_axis_parameters(env, registry, pydantic_loader)
+    _refill_study_details(env)
     _audit(f"DONE: {total} building-block records created this run")
     comp = kg_completeness(env)
     _audit("KG_COMPLETENESS: %s%s" % (

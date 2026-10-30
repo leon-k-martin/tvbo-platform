@@ -19,19 +19,8 @@ class KnowledgeGraphVisualization {
         this.selectedNode = null;
         this.limit = 500; // Default limit - must be high enough to include core ontology classes
 
-        // Color scheme for node types — matches KnowledgeGraphBrowser.TYPE_ICONS
-        this.colors = {
-            'Class': '#667eea',
-            'instance': '#48bb78',
-            'dynamics': '#667eea',
-            'network': '#43e97b',
-            'integrator': '#4facfe',
-            'experiment': '#fa709a',
-            'study': '#f7971e',
-            'coupling': '#a18cd1',
-            'observation': '#11998e',
-            'ontology': '#c471f5',
-        };
+        // Ontology classes and untyped instances; each KG type's colour comes from KGTypes.
+        this.colors = { Class: '#667eea', instance: '#48bb78' };
     }
 
     /**
@@ -461,9 +450,9 @@ class KnowledgeGraphVisualization {
     }
 
     getNodeColor(node) {
-        if (node.db_type) return this.colors[node.db_type] || this.colors.instance;
+        if (node.db_type) return KGTypes.types[node.db_type]?.color || this.colors.instance;
         if (node.type === 'instance') return this.colors.instance;
-        return this.colors[node.type] || this.colors.Class;
+        return KGTypes.types[node.type]?.color || this.colors.Class;
     }
 
     truncateLabel(text, maxLen = 15) {
@@ -550,14 +539,7 @@ class KnowledgeGraphVisualization {
         const legend = document.getElementById('graphLegend');
         if (!legend) return;
 
-        const instanceTypes = [
-            { label: 'Dynamics', color: this.colors.dynamics },
-            { label: 'Network', color: this.colors.network },
-            { label: 'Integrator', color: this.colors.integrator },
-            { label: 'Experiment', color: this.colors.experiment },
-            { label: 'Study', color: this.colors.study },
-            { label: 'Coupling', color: this.colors.coupling },
-        ];
+        const instanceTypes = Object.entries(KGTypes.types).filter(([key]) => key !== 'ontology').map(([, entry]) => entry);
 
         legend.innerHTML = `
             <div class="legend-title">Legend</div>

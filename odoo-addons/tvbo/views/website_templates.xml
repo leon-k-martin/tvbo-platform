@@ -199,11 +199,11 @@
                                         <img class="front-hero-logo" src="/tvbo/static/src/img/logo.png" alt="TVB-O, The Virtual Brain Ontology" width="600" height="260"/>
                                     </div>
                                     <t t-set="steps" t-value="[
-                                        ('explore', 'Explore', 'Search models, connectomes and studies, and follow their links', '/tvbo/kg'),
-                                        ('specify', 'Specify', 'Build an experiment in the Experiment Builder or as YAML, checked by the schema', '/tvbo/configurator'),
-                                        ('generate', 'Generate', 'Code for JAX, TVB, Julia and more, plus a methods report', '#example'),
-                                        ('run', 'Run', 'In the browser, or in Python on your machine or cluster', 'https://virtual-twin.github.io/tvbo/'),
-                                        ('share', 'Share', 'Save, share with collaborators, publish after peer review', '#community'),
+                                        ('explore', 'Explore', 'One knowledge graph of studies, models and parcellations, linked to GO, MeSH and ICD-11', '/tvbo/kg'),
+                                        ('specify', 'Specify', 'An interoperable metadata standard for full research workflows, from dynamics and model fitting to figures', '/tvbo/configurator'),
+                                        ('generate', 'Generate', 'Code for JAX, TVB, Julia, NeuroML and more, with a methods report, from one specification', '#example'),
+                                        ('run', 'Run', 'In the browser, in Python, on the command line, or as HPC workflows: SLURM, Snakemake, Nextflow', 'https://virtual-twin.github.io/tvbo/'),
+                                        ('share', 'Share', 'Share with named collaborators, or publish to the knowledge graph after validation and peer review', '#community'),
                                     ]"/>
                                     <ol class="steps">
                                         <li t-foreach="steps" t-as="step">
@@ -383,8 +383,8 @@
                 <t t-call="website.layout">
                     <div id="wrap">
                         <!-- Include custom styles -->
-                        <link rel="stylesheet" href="/tvbo/z/src/css/kg_browser.css?v=3" />
-                        <link rel="stylesheet" href="/tvbo/z/src/css/kg_components.css?v=2" />
+                        <link rel="stylesheet" href="/tvbo/z/src/css/kg_browser.css?v=4" />
+                        <link rel="stylesheet" href="/tvbo/z/src/css/kg_components.css?v=3" />
                         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
                         <!-- Browser Container -->
@@ -480,12 +480,11 @@
                         <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
                         <script src="https://d3js.org/d3.v7.min.js"></script>
 
-                        <!-- KG Browser JavaScript. Versioned (?v=) so a browser
-                             never serves a stale cached build (the cause of the
-                             "only Ontology shown" report); bump on KG-JS changes. -->
-                        <script src="/tvbo/z/src/js/kg_components.js?v=4"></script>
-                        <script src="/tvbo/z/src/js/kg_graph.js?v=3"></script>
-                        <script src="/tvbo/z/src/js/kg_browser.js?v=4"></script>
+                        <!-- KG Browser JavaScript, versioned (?v=) so a browser never serves a stale cached build; bump on KG-JS changes. -->
+                        <script src="/tvbo/z/src/js/kg_types.js?v=1"></script>
+                        <script src="/tvbo/z/src/js/kg_components.js?v=5"></script>
+                        <script src="/tvbo/z/src/js/kg_graph.js?v=4"></script>
+                        <script src="/tvbo/z/src/js/kg_browser.js?v=5"></script>
                     </div>
                 </t>
             </t>

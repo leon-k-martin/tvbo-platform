@@ -35,7 +35,7 @@ def ontology_links(api, nodes):
     return links
 
 
-def _relation_paths(env, model, kinds):
+def relation_paths(env, model, kinds):
     """Field paths from ``model`` to knowledge-graph models: its relational fields to one, and its many2one fields to another model followed by that model's many2one fields to one (a network's parcellation to its atlas)."""
     for fname, field in model._fields.items():
         if not field.relational or fname in LOG_ACCESS_COLUMNS:
@@ -62,8 +62,19 @@ def enum_values(api):
     return values
 
 
+def cites(model):
+    """Whether *model*'s records list the study citekeys they cite in a ``references`` text field."""
+    field = model._fields.get('references')
+    return bool(field) and field.type in ('char', 'text')
+
+
+def cited(record):
+    """The study citekeys *record* lists in its ``references``, for a model that ``cites``."""
+    return (record.references or '').split()
+
+
 def record_links(env, kinds, record_node, values):
-    """Links from drawn records: their relations (see ``_relation_paths``), the study citekeys a record lists in ``references``, and each enum value a record picks (a tool's scales, roles and languages), matched through ``values`` from ``enum_values``.
+    """Links from drawn records: their relations (see ``relation_paths``), the study citekeys a record lists in ``references``, and each enum value a record picks (a tool's scales, roles and languages), matched through ``values`` from ``enum_values``.
 
     ``kinds`` maps each knowledge-graph model to its entity type and ``record_node`` maps (entity type, record id) to the node that draws the record; relations to records without a node are skipped.
     """
@@ -77,7 +88,7 @@ def record_links(env, kinds, record_node, values):
     for model_name, kind in kinds.items():
         model = env[model_name].sudo()
         records = model.browse(ids[kind])
-        for path, target_kind in _relation_paths(env, model, kinds):
+        for path, target_kind in relation_paths(env, model, kinds):
             for rec in records:
                 for target in rec.mapped(path):
                     target_node = record_node.get((target_kind, target.id))
@@ -90,9 +101,9 @@ def record_links(env, kinds, record_node, values):
                     for choice in rec[fname]:
                         if (enum, choice.name) in values:
                             links.append(link(record_node[(kind, rec.id)], values[(enum, choice.name)], fname))
-        if model._fields.get('references') and model._fields['references'].type in ('char', 'text'):
+        if cites(model):
             for rec in records:
-                for key in (rec.references or '').split():
+                for key in cited(rec):
                     if key in citekeys:
                         links.append(link(record_node[(kind, rec.id)], citekeys[key], 'references'))
     return links

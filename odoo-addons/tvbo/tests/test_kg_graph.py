@@ -42,6 +42,26 @@ class TestKnowledgeGraph(HttpCase):
         self.assertIn((model, f'db_study_{self.study.id}', 'references'), links)
         self.assertTrue(all(link['source'] in ids and link['target'] in ids for link in graph['links']))
 
+    def test_list_items_carry_their_links_and_back_links(self):
+        """A card reads an item's links and the records linking to it from the list: an experiment names its model, the library model stands for the experiment's copy and names the experiment, a study the models citing it, and a draft only its owner sees is left out."""
+        integrator = self.env['tvbo.integrator'].create({'method': 'KgTestHeun'})
+        self.experiment.integration = integrator
+        items = {(item['type'], item['id']): item for item in self._json('/tvbo/api/kg/data?include_ontology=false')}
+        experiment, model = items['experiment', self.experiment.id], items['dynamics', self.model.id]
+        self.assertEqual(experiment['related']['dynamics'], {'count': 1, 'names': ['KgTestOscillator'], 'ids': [self.inline_copy.id], 'type': 'dynamics'})
+        self.assertEqual(experiment['related']['integration']['names'], ['KgTestHeun'], 'a record without a name field is named by its method')
+        self.assertNotIn(('dynamics', self.inline_copy.id), items)
+        self.assertEqual((model['copies'], model['used_by']['experiment']['names']), ([self.inline_copy.id], ['KgTest experiment']), 'the draft using it is private to its owner')
+        self.assertIn(('integrator', integrator.id), items, 'a copy without a library record stays its own')
+        self.assertEqual(items['study', self.study.id]['used_by']['dynamics']['names'], ['KgTestOscillator'])
+
+    def test_study_is_named_by_citekey_and_described_by_the_bib(self):
+        study = self.env['tvbo.study'].create({'citekey': 'Jansen1995'})
+        item = next(item for item in self._json('/tvbo/api/kg/data?entity=study') if item['id'] == study.id)
+        self.assertEqual(item['name'], 'Jansen1995')
+        self.assertTrue(item['title'].startswith('Electroencephalogram and visual evoked potential'))
+        self.assertEqual((item['venue'], item['kind'], item['type']), ('Biological Cybernetics', 'article', 'study'))
+
     def test_cloud_is_public_and_hides_drafts(self):
         """The front-page cloud is the same for every visitor, so a draft is left out even when its owner asks, its ontology points are classes rather than individuals, and every link row points at a node row."""
         self.authenticate('kg_owner', 'kg_owner')
