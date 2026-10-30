@@ -46,7 +46,7 @@ KGComponents.Card = {
                 <h3 class="kg-card-title">${esc(title)}${symbol}</h3>
                 ${byline ? `<p class="kg-card-byline">${esc(byline)}</p>` : ''}
                 ${thumb || equation || desc ? `<div class="kg-card-body">${thumb}<div class="kg-card-text">${equation}${desc ? `<p class="kg-card-desc">${esc(desc)}</p>` : ''}</div></div>` : ''}
-                ${facts.length ? `<ul class="kg-card-facts">${facts.map(f => `<li>${f.label ? `<span class="kg-fact-label">${esc(f.label)}</span>` : ''}${esc(f.value)}</li>`).join('')}</ul>` : ''}
+                ${facts.length ? `<ul class="kg-card-facts">${facts.map(f => `<li title="${esc(f.value)}">${f.label ? `<span class="kg-fact-label">${esc(f.label)}</span>` : ''}${esc(f.value)}</li>`).join('')}</ul>` : ''}
                 ${links.length ? `<p class="kg-card-links">${links.map(l => `<a class="${l.local ? 'kg-open-builder' : ''}" href="${esc(l.href)}"${l.local ? '' : ' target="_blank" rel="noopener"'} onclick="event.stopPropagation()">${esc(l.label)}</a>`).join('')}</p>` : ''}
             </article>`;
     },
@@ -77,7 +77,7 @@ KGComponents.Metadata = {
             if (KGTypes.filled(shown)) rows.push([KGTypes.label(key), show(shown)]);
         }
         for (const [field, summary] of Object.entries(item.related || {})) {
-            if (summary.names.length) rows.push([KGTypes.label(field), linked(summary)]);
+            if (summary.names.length) rows.push([KGTypes.label(field), linked(summary) + esc(KGTypes.changes(summary))]);
         }
         for (const [type, summary] of Object.entries(item.used_by || {})) {
             if (summary.names.length) rows.push([`Linked from ${KGTypes.get(type).label.toLowerCase()}`, linked(summary)]);

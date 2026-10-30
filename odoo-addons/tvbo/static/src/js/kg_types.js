@@ -1,7 +1,7 @@
 /**
  * The Knowledge Graph's types in one place: each type's label, icon and colours, where it opens in the Experiment Builder, and what its card shows.
  *
- * A card is the title, then the type's byline, the description, its facts and its links, all read from the item the KG API serves. Each fact is one line below, built by a helper: `value` reads a field, `count` and `names` read a link (`item.related`), `usedBy` reads the records that link to this one (`item.used_by`). A helper returns nothing when the item lacks what it reads, so a card shows only what its record has; the detail view lists every field regardless.
+ * A card is the title, then the type's byline, the description, its facts and its links, all read from the item the KG API serves. Each fact is one line below, built by a helper: `value` reads a field, `count`, `names` and `copied` read a link (`item.related`), `usedBy` reads the records that link to this one (`item.used_by`). A helper returns nothing when the item lacks what it reads, so a card shows only what its record has; the detail view lists every field regardless.
  */
 (function () {
     const filled = v => v !== undefined && v !== null && v !== '' && v !== false && !(Array.isArray(v) && !v.length);
@@ -29,6 +29,20 @@
     const names = (field, label, format = n => n) => item => {
         const linked = item.related?.[field];
         return linked?.names?.length ? { label, value: listed(linked.names.map(format), linked.count) } : null;
+    };
+    /** A value an experiment's copy changes, as a card writes it: a number to four significant digits, a per-node array by its length. */
+    const setting = v => {
+        if (typeof v === 'number') return String(+v.toPrecision(4));
+        if (typeof v === 'boolean') return v ? 'yes' : 'no';
+        if (Array.isArray(v)) return `${v.length} values`;
+        return v === null || v === undefined ? 'unset' : String(v);
+    };
+    /** What an experiment's copy of the record a link *summary* names changes from the library record, as ", with a 0.065 (library 0.1), mu 0.15 (library 0.22)", or an empty string. */
+    const changes = summary => (summary?.changes?.length ? `, with ${summary.changes.map(([name, v, library]) => `${name} ${setting(v)} (library ${setting(library)})`).join(', ')}` : '');
+    /** The record the link *field* holds, followed by what the experiment's copy of it changes. */
+    const copied = (field, label) => item => {
+        const fact = names(field, label)(item);
+        return fact && { label, value: fact.value + changes(item.related?.[field]) };
     };
     /** The names of the records of KG type *type* that link to this one. */
     const usedBy = (type, label) => item => {
@@ -102,10 +116,10 @@
         experiment: kgType('Simulation experiment', 'fa-solid fa-flask', ['#fa709a', '#fee140'], {
             builder: 'experiment',
             facts: [
-                names('dynamics', 'Model'),
-                names('network', 'Network'),
-                names('integration', 'Integrator'),
-                names('coupling', 'Coupling'),
+                copied('dynamics', 'Model'),
+                copied('network', 'Network'),
+                copied('integration', 'Integrator'),
+                copied('coupling', 'Coupling'),
                 count('observations', 'observation'),
                 count('explorations', 'exploration'),
                 count('optimizations', 'fit'),
@@ -183,6 +197,8 @@
         get: typeName => types[String(typeName || '').toLowerCase()] || fallback,
         /** Whether *v* holds something worth showing. */
         filled,
+        /** What an experiment's copy changes, as the text that follows the copy's name. */
+        changes,
         /** The detail view's label for the field *key*: "number_of_nodes" reads "Number of nodes". */
         label: key => fieldLabels[key] || key.replace(/_/g, ' ').replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase().replace(/^./, c => c.toUpperCase()),
         /** The detail view's rendering of the field *key* holding *v*: text, `{ href, text }`, or nothing. */

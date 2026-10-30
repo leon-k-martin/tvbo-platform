@@ -146,12 +146,16 @@ class TestSeedIdempotency(TransactionCase):
         self.assertTrue(self.env['tvbo.dynamics'].browse(healed.res_id).exists(),
                         'self-healed marker must point at a real row')
 
-    def test_reseed_fills_studies_from_the_bib(self):
+    def test_reseed_writes_studies_from_the_bib(self):
+        """A curated study takes the bib's values, so a corrected bib reaches it; a study someone saved keeps its own and only fills the empty ones."""
         study = self.env['tvbo.study'].search([('citekey', '=', 'Jansen1995')], limit=1)
-        study.write({'title': False, 'authors': False, 'year': 0, 'type': False})
+        study.write({'title': False, 'authors': False, 'year': 1990, 'type': False})
+        saved = self.env['tvbo.study'].create({'citekey': 'Jansen1993', 'year': 1990})
+        self.env['tvbo.model_share'].create({'study_id': saved.id, 'owner_user_id': self.env.user.id})
         ingest.seed_database(self.env)
         self.assertEqual((study.year, study.authors, study.type), (1995, 'Jansen, Ben H.\nRit, Vincent G.', 'article'))
         self.assertTrue(study.title.startswith('Electroencephalogram and visual evoked potential'))
+        self.assertEqual((saved.year, saved.type), (1990, 'article'))
 
     def test_reseed_refills_emptied_exploration_axis_parameters(self):
         experiment = self.env.ref(f"{ingest._INGEST_MODULE}.{_xmlid('SimulationExperiment', 'RWW_BOLD_FC_Optimization')}")

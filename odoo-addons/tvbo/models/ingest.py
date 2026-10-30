@@ -277,14 +277,14 @@ def _refill_axis_parameters(env, registry, pydantic_loader):
 
 
 def _refill_study_details(env):
-    """Fill each study's empty schema fields (title, authors, year, doi, type) from references.bib by its citekey, which is all a study's file holds."""
-    filled = 0
+    """Write each study's schema fields (title, authors, year, doi, type) from references.bib by its citekey, which is all a study's file holds: a curated study takes every value the bib gives, so a corrected bib reaches it, while a study someone saved keeps its own values and only fills the empty ones."""
+    saved, updated = env["tvbo.model_share"].saved_ids("tvbo.study"), 0
     for study in env["tvbo.study"].sudo().search([("citekey", "!=", False)]):
-        vals = {name: value for name, value in bibliography.study(study.citekey).items() if name in study._fields and not study[name]}
+        vals = {name: value for name, value in bibliography.study(study.citekey).items() if name in study._fields and study[name] != value and (study.id not in saved or not study[name])}
         if vals:
             study.write(vals)
-            filled += 1
-    _audit(f"studies: {filled} filled from references.bib")
+            updated += 1
+    _audit(f"studies: {updated} updated from references.bib")
 
 
 def seed_database(env):

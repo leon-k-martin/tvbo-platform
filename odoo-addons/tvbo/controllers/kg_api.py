@@ -135,6 +135,9 @@ _KG_OWN_TYPE = 'kind'
 # The fields that name a KG record, most specific first: a study's citekey identifies it, while its title describes it.
 _KG_NAME_FIELDS = ('name', 'label', 'citekey', 'title', 'method', 'key')
 
+# The field types an experiment's copy of a library record can set differently and a card can show, see ``_changes``.
+_KG_SETTING_TYPES = ('integer', 'float', 'boolean', 'selection')
+
 
 def _get_model_or_none(model_name):
     """Return sudo model proxy or None if the model is unavailable."""
@@ -395,7 +398,7 @@ def _related(records):
 
 
 def _twins(records):
-    """Each copy among *records*, one model's records, mapped to the library record it copies. A curated experiment carries its own copy of the library model, network or integrator it uses, so a record such an experiment links to folds into the first record of the same name that none links to. Saved elements (with a ``tvbo.model_share`` row) neither fold, take copies in, nor make copies, and a copy without a library record stays its own."""
+    """Each copy among *records*, one model's records, mapped to the library record it copies. A curated experiment carries its own copy of the library model, network or integrator it uses, so a record such an experiment links to folds into the first record of the same name, in any case, that none links to. Saved elements (with a ``tvbo.model_share`` row) neither fold, take copies in, nor make copies, and a copy without a library record stays its own."""
     shares, experiments = request.env['tvbo.model_share'], request.env['tvbo.simulation_experiment'].sudo()
     curated = [('id', 'not in', list(shares.saved_ids(experiments._name)))]
     embedded = set()
@@ -407,8 +410,38 @@ def _twins(records):
     library, aside = {}, embedded | saved
     for record in records.sorted('id'):
         if record.id not in aside and (name := _record_name(record)):
-            library.setdefault(name, record.id)
-    return {record.id: library[name] for record in records if record.id in embedded - saved and (name := _record_name(record)) in library}
+            library.setdefault(name.casefold(), record.id)
+    return {record.id: library[name.casefold()] for record in records if record.id in embedded - saved and (name := _record_name(record)) and name.casefold() in library}
+
+
+def _changes(copy, library):
+    """What an experiment's *copy* of the *library* record sets differently, as ``[label, value, library value]``: each number, flag or choice it sets, by its field's label in lower case, and each parameter value, by the parameter's name as written."""
+    changes = [[field.string.lower(), copy[name], library[name]] for name, field in copy._fields.items() if field.type in _KG_SETTING_TYPES and name not in _KG_INTERNAL_FIELDS and copy[name] != library[name]]
+    if 'parameters' in copy._fields:
+        defaults = _parameter_values(library)
+        changes += [[name, value, defaults.get(name)] for name, value in _parameter_values(copy).items() if value != defaults.get(name)]
+    return changes
+
+
+def _parameter_values(record):
+    """A record's parameter values by parameter name. Odoo stores a JSON zero as null and reads it back as ``False``, so a stored ``False`` is zero."""
+    return {parameter.name: 0 if parameter.value is False else parameter.value for parameter in record.parameters}
+
+
+def _copy_changes(experiments):
+    """For each experiment and each of its fields that links a KG record, the ``_changes`` of the copy it links from the library record that copy folds into, where there are any."""
+    found, twins = {}, {}
+    for name, field in experiments._fields.items():
+        if field.type != 'many2one' or field.comodel_name not in _KG_TYPE_BY_MODEL:
+            continue
+        comodel = request.env[field.comodel_name].sudo()
+        if comodel._name not in twins:
+            twins[comodel._name] = _twins(comodel.search(request.env['tvbo.model_share'].visibility_domain(comodel._name)))
+        for experiment in experiments:
+            copy = experiment[name]
+            if copy.id in twins[comodel._name] and (changes := _changes(copy, comodel.browse(twins[comodel._name][copy.id]))):
+                found[experiment.id, name] = changes
+    return found
 
 
 def _used_by(records, twins):
@@ -753,7 +786,7 @@ class KnowledgeGraphAPI(http.Controller):
         return data
 
     def _get_entity_items(self, entity_type, links=True):
-        """Fetch and serialize all records for one KG entity type, with *links* each with its links to other records (``related``) and the KG records that link to it (``used_by``), which the cards read. An experiment's copy of a library record is served as that record, which lists the copies' ids under ``copies`` (see ``_twins``).
+        """Fetch and serialize all records for one KG entity type, with *links* each with its links to other records (``related``) and the KG records that link to it (``used_by``), which the cards read. An experiment's copy of a library record is served as that record, which lists the copies' ids under ``copies`` (see ``_twins``), and the experiment's link to the copy carries what the copy sets differently under ``changes`` (see ``_changes``).
 
         Respects model-sharing visibility: a record that is PRIVATE to another user (a ``tvbo.model_share`` with ``visibility='private'``) is excluded, so the unified Knowledge Graph shows curated ground-truth + shared community elements but never someone else's private model. Curated records have no share row and are always public; this is why shared models live in the KG rather than a separate gallery.
         """
@@ -773,7 +806,12 @@ class KnowledgeGraphAPI(http.Controller):
             copies.setdefault(twin_id, []).append(copy_id)
         items = [{**self._serialize_entity_row(entity_type, row, detail=False), 'copies': copies.get(row['id'], [])} for row in rows if row['id'] not in twins]
         if links:
-            related, used_by = _related(records - records.browse(list(twins))), _used_by(records, twins)
+            kept = records - records.browse(list(twins))
+            related, used_by = _related(kept), _used_by(records, twins)
+            if entity_type == 'experiment':
+                for (record_id, field), changes in _copy_changes(kept).items():
+                    if field in related[record_id]:
+                        related[record_id][field]['changes'] = changes
             for item in items:
                 item.update(related=related[item['id']], used_by=used_by[item['id']])
         return items

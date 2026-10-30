@@ -128,8 +128,9 @@ test('kg-list-view', async ({ page }) => {
 test('kg-detail', async ({ page }) => {
   await page.goto(`${BASE}/tvbo/kg`, { waitUntil: 'networkidle' });
   await page.waitForSelector('.result-card', { timeout: 30000 });
+  await page.fill('#kgHeroSearchInput', 'JansenRit');
   await settle(1800);
-  await page.locator('.result-card').first().click();
+  await page.locator('.result-card').filter({ has: page.getByRole('heading', { name: 'JansenRit', exact: true }) }).first().click();
   await page.waitForSelector('.kg-modal-backdrop, .kg-modal', { timeout: 15000 });
   await settle(2000); // MathJax / equation render
   await shot(page, 'kg-detail.webp');
