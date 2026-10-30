@@ -19,7 +19,7 @@ from datetime import date
 from odoo.tests import tagged
 from odoo.tests.common import HttpCase, TransactionCase
 
-from odoo.addons.tvbo.models import ingest
+from odoo.addons.tvbo.models import bibliography, ingest
 from odoo.addons.tvbo.models.ingest import _json_safe, _xmlid
 
 
@@ -46,6 +46,21 @@ class TestJsonSafe(TransactionCase):
         self.assertEqual(_xmlid('SimulationTool', 'AUTO-07p'), 'simulationtool_auto_07p')
         # category-prefixed, so same entry name in two categories never collides
         self.assertNotEqual(_xmlid('Study', 'X'), _xmlid('Network', 'X'))
+
+
+class TestBibliography(TransactionCase):
+    """A study's details as the bib that ships with tvbo gives them."""
+
+    def test_details_are_plain_text_without_abstract_or_file(self):
+        jansen = bibliography.study('Jansen1993')
+        self.assertEqual((jansen['venue'], jansen['type']), ('Biological Cybernetics', 'article'))
+        self.assertEqual(bibliography.study('Montbrio2015')['authors'], 'Montbrió, Ernest\nPazó, Diego\nRoxin, Alex')
+        self.assertNotIn('abstract', jansen, 'publishers hold the copyright on abstracts')
+        self.assertNotIn('file', bibliography.study('Cabral2011'), 'a local path from a reference manager')
+
+    def test_unknown_citekey_has_no_details(self):
+        self.assertEqual(bibliography.study('NoSuchStudy2099'), {})
+        self.assertEqual(bibliography.study(None), {})
 
 
 class TestCreateRecordResilience(TransactionCase):
@@ -130,6 +145,17 @@ class TestSeedIdempotency(TransactionCase):
         self.assertTrue(healed, 'dangling marker must be re-established, not left broken')
         self.assertTrue(self.env['tvbo.dynamics'].browse(healed.res_id).exists(),
                         'self-healed marker must point at a real row')
+
+    def test_reseed_writes_studies_from_the_bib(self):
+        """A curated study takes the bib's values, so a corrected bib reaches it; a study someone saved keeps its own and only fills the empty ones."""
+        study = self.env['tvbo.study'].search([('citekey', '=', 'Jansen1995')], limit=1)
+        study.write({'title': False, 'authors': False, 'year': 1990, 'type': False})
+        saved = self.env['tvbo.study'].create({'citekey': 'Jansen1993', 'year': 1990})
+        self.env['tvbo.model_share'].create({'study_id': saved.id, 'owner_user_id': self.env.user.id})
+        ingest.seed_database(self.env)
+        self.assertEqual((study.year, study.authors, study.type), (1995, 'Jansen, Ben H.\nRit, Vincent G.', 'article'))
+        self.assertTrue(study.title.startswith('Electroencephalogram and visual evoked potential'))
+        self.assertEqual((saved.year, saved.type), (1990, 'article'))
 
     def test_reseed_refills_emptied_exploration_axis_parameters(self):
         experiment = self.env.ref(f"{ingest._INGEST_MODULE}.{_xmlid('SimulationExperiment', 'RWW_BOLD_FC_Optimization')}")

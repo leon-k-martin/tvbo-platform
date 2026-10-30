@@ -3,6 +3,8 @@
 Knowledge Graph API - Clean MVP implementation.
 No fallbacks. Fails fast when something unexpected happens.
 """
+import contextlib
+import functools
 import logging
 import os
 import re
@@ -12,6 +14,7 @@ from odoo import http
 from odoo.http import Response, request
 from odoo.tools import SQL
 
+from ..models import bibliography
 from . import kg_graph
 from .assets import json_payload
 
@@ -53,13 +56,12 @@ _KG_ENTITY_CONFIG = {
         'thumbnail': 'experiments',
         'report': 'experiments',
     },
-    # The ingested bibliographic studies live in tvbo.study (rec_name=title);
-    # tvbo.simulation_study is a distinct, currently-empty experiment-container
-    # concept, so pointing the KG 'study' card there showed 0 results.
+    # Bibliographic studies, filled in from references.bib; tvbo.simulation_study is a separate experiment container.
     'study': {
         'model': 'tvbo.study',
         'thumbnail': 'studies',
         'report': 'studies',
+        'details': lambda data: bibliography.study(data.get('citekey')),
     },
     'graph_generator': {
         'model': 'tvbo.graph_generator',
@@ -96,6 +98,8 @@ _KG_ENTITY_CONFIG = {
     },
 }
 
+_KG_TYPE_BY_MODEL = {cfg['model']: entity_type for entity_type, cfg in _KG_ENTITY_CONFIG.items()}
+
 _KG_INTERNAL_FIELDS = {
     'id',
     'display_name',
@@ -122,6 +126,18 @@ _KG_LIST_FIELD_TYPES = {
 
 _KG_DETAIL_FIELD_TYPES = _KG_LIST_FIELD_TYPES | {'one2many', 'many2many'}
 
+# A card names this many of a link's records and counts the rest.
+_KG_LINK_NAMES = 5
+
+# A record's own ``type`` field (a study's publication type) is served as this key, since ``type`` names the KG type.
+_KG_OWN_TYPE = 'kind'
+
+# The fields that name a KG record, most specific first: a study's citekey identifies it, while its title describes it.
+_KG_NAME_FIELDS = ('name', 'label', 'citekey', 'title', 'method', 'key')
+
+# The field types an experiment's copy of a library record can set differently and a card can show, see ``_changes``.
+_KG_SETTING_TYPES = ('integer', 'float', 'boolean', 'selection')
+
 
 def _get_model_or_none(model_name):
     """Return sudo model proxy or None if the model is unavailable."""
@@ -146,6 +162,7 @@ def _safe_asset_name(name: str) -> str:
     return re.sub(r'[<>:"/\\|?*]', '_', name).strip()
 
 
+@functools.cache
 def _thumbnail_url(category: str, name: str) -> str | None:
     """Return the URL for a thumbnail if it exists on disk."""
     safe = _safe_asset_name(name)
@@ -156,6 +173,7 @@ def _thumbnail_url(category: str, name: str) -> str | None:
     return None
 
 
+@functools.cache
 def _report_url(category: str, name: str) -> str | None:
     """Return the URL for a pre-rendered report if it exists on disk."""
     safe = _safe_asset_name(name)
@@ -166,6 +184,7 @@ def _report_url(category: str, name: str) -> str | None:
     return None
 
 
+@functools.cache
 def _extract_equation_latex(category: str, name: str) -> str | None:
     """Extract the first LaTeX equation from a report markdown file."""
     safe = _safe_asset_name(name)
@@ -187,6 +206,13 @@ def get_ontology_api():
         from tvbo.api.direct_ontology_api import get_direct_ontology_api
         _ontology_api = get_direct_ontology_api()
     return _ontology_api
+
+
+@functools.cache
+def _ontology_enrichment(entity_type, name):
+    """The ``ontology_*`` keys the ontology adds to a record of *entity_type* named *name*. The ontology is loaded once per process, so each answer is computed once instead of one SPARQL search per record and request."""
+    enriched = get_ontology_api().enrich_database_item({'name': name}, entity_type)
+    return {key: value for key, value in enriched.items() if key.startswith('ontology_')}
 
 
 def json_response(data, status=200):
@@ -328,9 +354,128 @@ def _normalize_row(model_name, row, detail=False):
     return normalized
 
 
+def _link_summaries(ids, links):
+    """For each id in *ids*, its links as a card shows them. *links* maps ``(id, key)`` to the linked records, and each becomes ``{'count', 'names', 'ids', 'type'}``: how many there are, the names and ids of the first few that have a name (read in one batch per model), and the KG type the linked records belong to, if any, so the page can open them."""
+    shown = {}
+    for linked in links.values():
+        shown[linked._name] = shown.get(linked._name, linked.browse()) | linked[:_KG_LINK_NAMES]
+    names = {(record._name, record.id): _record_name(record) for batch in shown.values() for record in batch}
+    summaries = {record_id: {} for record_id in ids}
+    for (record_id, key), linked in links.items():
+        named = [linked_id for linked_id in linked[:_KG_LINK_NAMES].ids if names[linked._name, linked_id]]
+        summaries[record_id][key] = {'count': len(linked), 'names': [names[linked._name, linked_id] for linked_id in named], 'ids': named, 'type': _KG_TYPE_BY_MODEL.get(linked._name)}
+    return summaries
+
+
+def _record_name(record):
+    """The first of a record's plain ``_KG_NAME_FIELDS`` it fills, else Odoo's own name for it, or ``None`` when it has neither (Odoo would answer ``model,id``)."""
+    for key in _KG_NAME_FIELDS:
+        if key in record._fields and not record._fields[key].relational and record[key]:
+            return str(record[key])
+    return record.display_name if record._rec_name else None
+
+
+@contextlib.contextmanager
+def _unless_unreadable(what):
+    """Run the block, or leave the rest of it out when the database cannot read the relation *what* (a relation table out of step with the schema), so one unreadable link does not fail the whole list."""
+    try:
+        yield
+    except Exception as exc:  # noqa: BLE001
+        request.env.cr.rollback()
+        _logger.warning('KG links %s skipped: %s', what, exc)
+
+
+def _related(records):
+    """Each record's links to the records the current user may see, by field, as ``_link_summaries`` gives them; a field the database cannot read is left out."""
+    links = {}
+    for name, field in records._fields.items():
+        if not field.relational or name in _KG_INTERNAL_FIELDS:
+            continue
+        visible = request.env['tvbo.model_share'].visibility_domain(field.comodel_name)
+        with _unless_unreadable(f'{records._name}.{name}'):
+            links.update({(record.id, name): linked for record in records if (linked := record[name].filtered_domain(visible))})
+    return _link_summaries(records.ids, links)
+
+
+def _twins(records):
+    """Each copy among *records*, one model's records, mapped to the library record it copies. A curated experiment carries its own copy of the library model, network or integrator it uses, so a record such an experiment links to folds into the first record of the same name, in any case, that none links to. Saved elements (with a ``tvbo.model_share`` row) neither fold, take copies in, nor make copies, and a copy without a library record stays its own."""
+    shares, experiments = request.env['tvbo.model_share'], request.env['tvbo.simulation_experiment'].sudo()
+    curated = [('id', 'not in', list(shares.saved_ids(experiments._name)))]
+    embedded = set()
+    for name, field in experiments._fields.items():
+        if field.relational and field.comodel_name == records._name and name not in _KG_INTERNAL_FIELDS:
+            with _unless_unreadable(f'{experiments._name}.{name}'):
+                embedded.update(experiments.search(curated + [(name, 'in', records.ids)])[name].ids)
+    saved = shares.saved_ids(records._name)
+    library, aside = {}, embedded | saved
+    for record in records.sorted('id'):
+        if record.id not in aside and (name := _record_name(record)):
+            library.setdefault(name.casefold(), record.id)
+    return {record.id: library[name.casefold()] for record in records if record.id in embedded - saved and (name := _record_name(record)) and name.casefold() in library}
+
+
+def _changes(copy, library):
+    """What an experiment's *copy* of the *library* record sets differently, as ``[label, value, library value]``: each number, flag or choice it sets, by its field's label in lower case, and each parameter value, by the parameter's name as written."""
+    changes = [[field.string.lower(), copy[name], library[name]] for name, field in copy._fields.items() if field.type in _KG_SETTING_TYPES and name not in _KG_INTERNAL_FIELDS and copy[name] != library[name]]
+    if 'parameters' in copy._fields:
+        defaults = _parameter_values(library)
+        changes += [[name, value, defaults.get(name)] for name, value in _parameter_values(copy).items() if value != defaults.get(name)]
+    return changes
+
+
+def _parameter_values(record):
+    """A record's parameter values by parameter name. Odoo stores a JSON zero as null and reads it back as ``False``, so a stored ``False`` is zero."""
+    return {parameter.name: 0 if parameter.value is False else parameter.value for parameter in record.parameters}
+
+
+def _copy_changes(experiments):
+    """For each experiment and each of its fields that links a KG record, the ``_changes`` of the copy it links from the library record that copy folds into, where there are any."""
+    found, twins = {}, {}
+    for name, field in experiments._fields.items():
+        if field.type != 'many2one' or field.comodel_name not in _KG_TYPE_BY_MODEL:
+            continue
+        comodel = request.env[field.comodel_name].sudo()
+        if comodel._name not in twins:
+            twins[comodel._name] = _twins(comodel.search(request.env['tvbo.model_share'].visibility_domain(comodel._name)))
+        for experiment in experiments:
+            copy = experiment[name]
+            if copy.id in twins[comodel._name] and (changes := _changes(copy, comodel.browse(twins[comodel._name][copy.id]))):
+                found[experiment.id, name] = changes
+    return found
+
+
+def _used_by(records, twins):
+    """For each record, the visible records of the KG types that link to it, by type, as ``_link_summaries`` gives them: the experiment a model belongs to, the network that uses an atlas through its parcellation (the paths the graph draws, see ``kg_graph.relation_paths``), and for a study the records whose ``references`` name its citekey. A link to one of the *twins* copies counts for the record it copies, and a linking copy counts as its library record when that record links too (see ``_twins``)."""
+    links = {}
+
+    def add(target_id, entity_type, record):
+        key = twins.get(target_id, target_id), entity_type
+        links[key] = links.get(key, record.browse()) | record
+
+    citekeys = {record.citekey: record.id for record in records if record._name == 'tvbo.study' and record.citekey}
+    target_type = _KG_TYPE_BY_MODEL[records._name]
+    for entity_type, cfg, model in _iter_available_entity_configs():
+        visible = request.env['tvbo.model_share'].visibility_domain(cfg['model'])
+        for path in [path for path, kind in kg_graph.relation_paths(request.env, model, _KG_TYPE_BY_MODEL) if kind == target_type]:
+            with _unless_unreadable(f'{model._name}.{path}'):
+                for record in model.search(visible + [(path, 'in', records.ids)]):
+                    for target in record.mapped(path) & records:
+                        add(target.id, entity_type, record)
+        if citekeys and kg_graph.cites(model):
+            for record in model.search(visible + [('references', '!=', False)]):
+                for key in kg_graph.cited(record):
+                    if key in citekeys:
+                        add(citekeys[key], entity_type, record)
+    linking = {}
+    for linked in links.values():
+        linking[linked._name] = linking.get(linked._name, linked.browse()) | linked
+    folded = {name: _twins(found) for name, found in linking.items()}
+    return _link_summaries(records.ids, {key: linked.browse(list(dict.fromkeys(folded[linked._name].get(i, i) for i in linked.ids))) for key, linked in links.items()})
+
+
 def _get_display_name(data, entity_type):
-    """Get a stable display name from common schema fields."""
-    for key in ('name', 'label', 'title', 'citekey', 'method', 'key'):
+    """Get a stable name from the record's ``_KG_NAME_FIELDS``."""
+    for key in _KG_NAME_FIELDS:
         value = data.get(key)
         if value:
             return str(value)
@@ -397,7 +542,7 @@ class KnowledgeGraphAPI(http.Controller):
     @http.route('/tvbo/api/kg/schema', type='http', auth='public', methods=['GET'], csrf=False)
     def get_schema(self, **kw):
         """Get browser schema configuration."""
-        searchable_fields = {'name', 'label', 'title', 'description'}
+        searchable_fields = {'name', 'label', 'title', 'description', 'venue', _KG_OWN_TYPE}
 
         for _, cfg, model in _iter_available_entity_configs():
             model_name = cfg['model']
@@ -432,7 +577,7 @@ class KnowledgeGraphAPI(http.Controller):
                     continue
                 prop = _odoo_field_to_property_schema(field_name, field)
                 if prop:
-                    properties[field_name] = prop
+                    properties[_KG_OWN_TYPE if field_name == 'type' else field_name] = prop
 
             result[type_key] = {
                 'class_name': model_name,
@@ -575,6 +720,10 @@ class KnowledgeGraphAPI(http.Controller):
         """Serialize a database row into KG payload using schema metadata."""
         cfg = _KG_ENTITY_CONFIG[entity_type]
         data = _normalize_row(cfg['model'], row, detail=detail)
+        if cfg.get('details'):
+            data.update({key: value for key, value in cfg['details'](data).items() if not data.get(key)})
+        if 'type' in data:
+            data[_KG_OWN_TYPE] = data.pop('type')
 
         data['type'] = entity_type
         if 'id' not in data and row.get('id') is not None:
@@ -630,37 +779,42 @@ class KnowledgeGraphAPI(http.Controller):
                         data['equation_latex'] = eq_latex
                     break
 
-        # Ontology enrichment is best-effort: it cross-links the record to ontology
-        # concepts via a SPARQL label search. A record whose name/title carries
-        # SPARQL-special characters (parentheses, ||, quotes — common in
-        # bibliographic study titles) makes owlready2's lexer raise, which must NOT
-        # take down the whole entity list. Fall back to the un-enriched row.
-        try:
-            return get_ontology_api().enrich_database_item(data, entity_type)
+        try:  # best effort: a name the ontology search cannot parse must not take down the list
+            data.update(_ontology_enrichment(entity_type, data['name']))
         except Exception as exc:  # noqa: BLE001
-            _logger.warning("KG ontology enrichment skipped for %s '%s': %s",
-                            entity_type, data.get('name') or data.get('title'), exc)
-            return data
+            _logger.warning("KG ontology enrichment skipped for %s '%s': %s", entity_type, data['name'], exc)
+        return data
 
-    def _get_entity_items(self, entity_type):
-        """Fetch and serialize all records for one KG entity type.
+    def _get_entity_items(self, entity_type, links=True):
+        """Fetch and serialize all records for one KG entity type, with *links* each with its links to other records (``related``) and the KG records that link to it (``used_by``), which the cards read. An experiment's copy of a library record is served as that record, which lists the copies' ids under ``copies`` (see ``_twins``), and the experiment's link to the copy carries what the copy sets differently under ``changes`` (see ``_changes``).
 
-        Respects model-sharing visibility: a record that is PRIVATE to another
-        user (a ``tvbo.model_share`` with ``visibility='private'``) is excluded,
-        so the unified Knowledge Graph shows curated ground-truth + shared
-        community elements but never someone else's private model. Curated records
-        have no share row and are always public; this is why shared models live in
-        the KG rather than a separate gallery.
+        Respects model-sharing visibility: a record that is PRIVATE to another user (a ``tvbo.model_share`` with ``visibility='private'``) is excluded, so the unified Knowledge Graph shows curated ground-truth + shared community elements but never someone else's private model. Curated records have no share row and are always public; this is why shared models live in the KG rather than a separate gallery.
         """
         cfg = _KG_ENTITY_CONFIG[entity_type]
-        if _get_model_or_none(cfg['model']) is None:
+        model = _get_model_or_none(cfg['model'])
+        if model is None:
             return []
         rows = _safe_search_read(
             cfg['model'],
             _get_model_field_names(cfg['model'], include_relations=False),
             domain=request.env['tvbo.model_share'].visibility_domain(cfg['model']),
         )
-        return [self._serialize_entity_row(entity_type, row, detail=False) for row in rows]
+        records = model.browse([row['id'] for row in rows])
+        twins = _twins(records)
+        copies = {}
+        for copy_id, twin_id in twins.items():
+            copies.setdefault(twin_id, []).append(copy_id)
+        items = [{**self._serialize_entity_row(entity_type, row, detail=False), 'copies': copies.get(row['id'], [])} for row in rows if row['id'] not in twins]
+        if links:
+            kept = records - records.browse(list(twins))
+            related, used_by = _related(kept), _used_by(records, twins)
+            if entity_type == 'experiment':
+                for (record_id, field), changes in _copy_changes(kept).items():
+                    if field in related[record_id]:
+                        related[record_id][field]['changes'] = changes
+            for item in items:
+                item.update(related=related[item['id']], used_by=used_by[item['id']])
+        return items
 
     def _expand_relations(self, model_name, row):
         """Expand x2many fields into nested related records for detail endpoints."""
@@ -1017,30 +1171,26 @@ class KnowledgeGraphAPI(http.Controller):
     def _knowledge_graph(self, db_only=False, limit=0, individuals=True):
         """Ontology terms and database records with the links between them, as ``{nodes, links, stats}``.
 
-        A record that is the same entity as an ontology individual (the PyRhO software, the SupHopf model) is drawn once, as the record, and takes over the individual's links; a record that only matches a class gets an ``instance of`` link to it. Records of one type that share a name are drawn as the first of them, because an experiment carries its own copy of the library model or network it uses. Without ``individuals``, the ontology part is only the classes ``kg_graph.drawn_classes`` picks. Links to nodes that are not drawn are dropped.
+        A record that is the same entity as an ontology individual (the PyRhO software, the SupHopf model) is drawn once, as the record, and takes over the individual's links; a record that only matches a class gets an ``instance of`` link to it. An experiment's copy of a library record is drawn as that record (see ``_twins``). Without ``individuals``, the ontology part is only the classes ``kg_graph.drawn_classes`` picks. Links to nodes that are not drawn are dropped.
         """
         api = get_ontology_api()
         classes = {entity.storid for entity in api.onto.classes()}
         values = kg_graph.enum_values(api)
         configs = list(_iter_available_entity_configs())
-        db_items = [item for entity_type, _, _ in configs for item in self._get_entity_items(entity_type)]
+        db_items = [item for entity_type, _, _ in configs for item in self._get_entity_items(entity_type, links=False)]
         nodes, links = ([], []) if db_only else self._ontology_graph(api, db_items, limit)
         for node in nodes:
             node['is_class'] = node['storid'] in classes  # the legend counts these after filtering
         onto_nodes = {node['storid']: node for node in nodes}
-        merged, record_node, named = {}, {}, {}
+        merged, record_node = {}, {}
 
         for item in db_items:
-            label = item.get('name') or item.get('label') or item.get('title', '')
-            twin = named.get((item['type'], label)) if label else None
-            if twin:
-                record_node[(item['type'], item['id'])] = twin
-                continue
-            node_id = named[(item['type'], label)] = record_node[(item['type'], item['id'])] = f"db_{item['type']}_{item['id']}"
+            node_id = f"db_{item['type']}_{item['id']}"
+            record_node.update({(item['type'], record_id): node_id for record_id in [item['id'], *item['copies']]})
             node = {
                 'id': node_id,
                 'storid': node_id,
-                'label': label,
+                'label': item['name'],
                 'type': 'instance',
                 'db_type': item['type'],
                 'title': item.get('title', ''),

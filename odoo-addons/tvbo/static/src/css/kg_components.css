@@ -353,3 +353,217 @@
     opacity: 0.7;
     margin-top: 2px;
 }
+
+/* ======================================
+   CARD: kg_types.js says what a card shows, this how it looks; tune a card through the variables below.
+   ====================================== */
+.kg-card {
+    --kg-accent: #a0aec0; /* the type's colour, set on each card from kg_types.js */
+    --kg-card-bg: #fff;
+    --kg-card-border: #e2e8f0;
+    --kg-card-ink: #1a202c;
+    --kg-card-muted: #4a5568;
+    --kg-card-faint: #718096;
+    --kg-card-fact-bg: #f7fafc;
+    --kg-card-link: #2b6cb0;
+    --kg-card-radius: 10px;
+    --kg-card-pad: 18px;
+    --kg-card-desc-lines: 3;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+    padding: var(--kg-card-pad);
+    background: var(--kg-card-bg);
+    border: 1px solid var(--kg-card-border);
+    border-top: 3px solid var(--kg-accent);
+    border-radius: var(--kg-card-radius);
+    color: var(--kg-card-ink);
+    overflow-wrap: anywhere;
+    cursor: pointer;
+    transition: box-shadow 0.15s ease;
+}
+
+.kg-card:hover {
+    box-shadow: 0 6px 18px rgba(26, 32, 44, 0.08);
+}
+
+.kg-card:focus-visible {
+    outline: 2px solid var(--kg-card-link);
+    outline-offset: 2px;
+}
+
+.kg-card-type {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--kg-card-muted);
+}
+
+.kg-card-type i {
+    width: 14px;
+    text-align: center;
+    color: var(--kg-accent);
+}
+
+.kg-card-title {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin: 0;
+    font-size: 1.02rem;
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--kg-card-ink);
+}
+
+.kg-card-symbol {
+    margin-left: 8px;
+    font-family: 'Times New Roman', serif;
+    font-style: italic;
+    font-weight: 400;
+    color: #5e35b1;
+}
+
+.kg-card-byline {
+    margin: 0;
+    font-size: 0.88rem;
+    color: var(--kg-card-muted);
+}
+
+.kg-card-body {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+}
+
+.kg-card-thumb {
+    flex: 0 0 72px;
+    width: 72px;
+    height: 72px;
+    object-fit: cover;
+    border: 1px solid var(--kg-card-border);
+    border-radius: 6px;
+}
+
+.kg-card-text {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.kg-card-desc {
+    display: -webkit-box;
+    -webkit-line-clamp: var(--kg-card-desc-lines);
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin: 0;
+    font-size: 0.88rem;
+    line-height: 1.5;
+    color: var(--kg-card-muted);
+}
+
+.kg-card-equation {
+    max-height: 4.5em;
+    margin-bottom: 6px;
+    overflow: hidden;
+    font-size: 0.85rem;
+}
+
+.kg-card-facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 2px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.kg-card-facts li {
+    max-width: 100%;
+    overflow: hidden;
+    padding: 3px 8px;
+    border-radius: 6px;
+    background: var(--kg-card-fact-bg);
+    font-size: 0.78rem;
+    line-height: 1.4;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.kg-fact-label {
+    margin-right: 4px;
+    color: var(--kg-card-faint);
+}
+
+.kg-card-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 16px;
+    margin: auto 0 0;
+    padding-top: 4px;
+    font-size: 0.85rem;
+}
+
+.kg-card-links a {
+    font-weight: 600;
+    color: var(--kg-card-link);
+    text-decoration: none;
+}
+
+.kg-card-links a:hover {
+    text-decoration: underline;
+}
+
+/* ======================================
+   METADATA: every field, link and back-link of an item, under its detail view
+   ====================================== */
+.kg-metadata {
+    margin-top: 20px;
+    padding-top: 14px;
+    border-top: 1px solid #e2e8f0;
+    font-size: 0.9rem;
+}
+
+.kg-metadata h4 {
+    margin: 0 0 10px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #2d3748;
+}
+
+.kg-metadata dl {
+    display: grid;
+    grid-template-columns: minmax(120px, max-content) 1fr;
+    gap: 6px 18px;
+    margin: 0;
+}
+
+.kg-metadata dt {
+    font-weight: 500;
+    color: #718096;
+}
+
+.kg-metadata dd {
+    margin: 0;
+    color: #1a202c;
+    overflow-wrap: anywhere;
+}
+
+.kg-metadata-more {
+    color: #718096;
+}
+
+@media (max-width: 600px) {
+    .kg-metadata dl {
+        grid-template-columns: 1fr;
+        gap: 2px;
+    }
+
+    .kg-metadata dd {
+        margin-bottom: 8px;
+    }
+}

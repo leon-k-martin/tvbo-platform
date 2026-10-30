@@ -82,7 +82,7 @@ ENV UV_SYSTEM_PYTHON=1 \
 # built. Keep this ARG above the RUN.
 ARG TVBO_VERSION
 ARG CACHE_BUST
-RUN uv pip install --reinstall typing-extensions holidays "rdflib>=7" "tvbo${TVBO_VERSION:+==$TVBO_VERSION}"
+RUN uv pip install --reinstall typing-extensions holidays "rdflib>=7" pybtex "tvbo${TVBO_VERSION:+==$TVBO_VERSION}"
 
 # Copy the hand-written addon sources (schema_models.py / ir.model.access.csv are
 # excluded via .dockerignore — they are supplied by the generator below).

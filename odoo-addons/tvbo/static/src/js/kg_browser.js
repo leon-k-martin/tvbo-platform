@@ -361,6 +361,9 @@ class KnowledgeGraphBrowser {
                 }
             }
         });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && e.target.classList?.contains('result-card')) e.target.click();
+        });
 
         const clearBtn = document.getElementById('clearFilters');
         if (clearBtn) {
@@ -660,14 +663,14 @@ class KnowledgeGraphBrowser {
                 // Section header for this class
                 const sectionHeader = document.createElement('div');
                 sectionHeader.className = 'property-section-header';
-                const classLabel = this.getClassFacetDisplayName(typeKey, classSchema);
-                sectionHeader.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px;"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg> ${this.escapeHtml(classLabel)}`;
+                const classLabel = KGTypes.get(typeKey).label;
+                sectionHeader.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px;"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg> ${KGComponents.escapeHtml(classLabel)}`;
                 facetsSidebar.appendChild(sectionHeader);
 
                 propsWithValues.forEach(({ fieldName, propSchema }) => {
                     const facetDef = {
                         field: fieldName,
-                        label: this.formatLabel(fieldName),
+                        label: KGTypes.label(fieldName),
                         type: 'string',
                     };
                     // Count facet values only within this class.
@@ -762,21 +765,6 @@ class KnowledgeGraphBrowser {
 
         if (allFacetValues.size === 0) return null;
 
-        // For the type facet, use class names (not class labels).
-        const labelMap = {};
-        if (facet.field === 'type') {
-            if (this.classSchemas) {
-                for (const [typeKey, schema] of Object.entries(this.classSchemas)) {
-                    labelMap[typeKey] = this.getClassFacetDisplayName(typeKey, schema);
-                }
-            }
-            allFacetValues.forEach((_, typeKey) => {
-                if (!labelMap[typeKey]) {
-                    labelMap[typeKey] = this.getClassFacetDisplayName(typeKey, null);
-                }
-            });
-        }
-
         const facetGroup = document.createElement('div');
         facetGroup.className = 'facet-group';
         facetGroup.dataset.field = facet.field;
@@ -818,16 +806,13 @@ class KnowledgeGraphBrowser {
             if (isActive) facetItem.classList.add('active');
             if (count === 0 && !isActive) facetItem.classList.add('dimmed');
 
-            const displayLabel = labelMap[value] || value;
-
-            // Add type icon for 'type' facet
-            const typeIcon = facet.field === 'type'
-                ? (() => { const ti = KnowledgeGraphBrowser.TYPE_ICONS[value] || KnowledgeGraphBrowser.TYPE_ICONS._default; return `<i class="${ti.icon}" style="color:${ti.color}; width:16px; text-align:center; margin-right:4px;"></i>`; })()
-                : '';
+            const kgType = facet.field === 'type' ? KGTypes.get(value) : null;
+            const displayLabel = kgType ? kgType.label : value;
+            const typeIcon = kgType ? `<i class="facet-type-icon ${kgType.icon}" style="color:${kgType.color}"></i>` : '';
 
             facetItem.innerHTML = `
                 <input type="checkbox" class="facet-checkbox" ${isActive ? 'checked' : ''}>
-                ${typeIcon}<span class="facet-label">${this.escapeHtml(displayLabel)}</span>
+                ${typeIcon}<span class="facet-label">${KGComponents.escapeHtml(displayLabel)}</span>
                 <span class="facet-count">${count}</span>
             `;
 
@@ -864,95 +849,15 @@ class KnowledgeGraphBrowser {
             sortedItems = [...items]
                 .map((it, i) => ({ it, idx: this.lastResultIndices[i] }))
                 .sort((a, b) => {
-                    const ta = String(this.getItemTitle(a.it) || '').toLowerCase();
-                    const tb = String(this.getItemTitle(b.it) || '').toLowerCase();
+                    const ta = String(KGComponents.title(a.it) || '').toLowerCase();
+                    const tb = String(KGComponents.title(b.it) || '').toLowerCase();
                     const cmp = ta.localeCompare(tb);
                     return this.currentSort === 'az' ? cmp : -cmp;
                 })
                 .map(x => x.it);
         }
 
-        resultsGrid.innerHTML = sortedItems.map((item, i) => {
-            const originalIdx = this.lastResultIndices[i];
-            const title = this.getItemTitle(item);
-            const desc = this.truncateText(this.getItemDescription(item), 150);
-            const type = (item.type || '').toLowerCase();
-            const isOntology = type === 'ontology';
-            const ontologyType = item.ontology_type || '';
-
-            // Determine icon and styling from TVBO icon registry
-            const typeInfo = KnowledgeGraphBrowser.TYPE_ICONS[type] || KnowledgeGraphBrowser.TYPE_ICONS._default;
-            const typeLabel = isOntology ? (ontologyType || 'Ontology') : (item.type || '');
-
-            const typeBadge = typeLabel
-                ? `<span class="badge type-badge" style="background:${typeInfo.gradient};"><i class="${typeInfo.icon}"></i>${typeLabel}</span>`
-                : '';
-            const studyMeta = (item.type === 'study') ? this.getStudyMeta(item) : '';
-
-            // Show symbol for ontology items
-            const symbolDisplay = isOntology && item.symbol && item.symbol !== title
-                ? `<span class="ontology-symbol">${item.symbol}</span>` : '';
-
-            // Thumbnail
-            const thumb = item.thumbnail
-                ? `<img class="card-thumb" src="${item.thumbnail}" alt="" onerror="this.style.display='none'">`
-                : '';
-
-            const header = `
-                <div class="field-display" style="margin-bottom:6px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-                    <span class="field-value" style="font-weight:700; color:#2d3748; font-size:1.05rem;">${this.escapeHtml(title)}</span>
-                    ${symbolDisplay}
-                    ${typeBadge}
-                </div>`;
-            // Show equation only for short single-equation entities
-            // (coupling, observation). Dynamics typically have many equations,
-            // for which the description is more informative on a card.
-            const showEquation = (type === 'coupling' || type === 'observation');
-            const eqDisplay = showEquation
-                ? (item.equation_latex
-                    ? `<div class="card-equation card-equation-latex">$$${item.equation_latex}$$</div>`
-                    : item.equation
-                        ? `<div class="card-equation">${this.escapeHtml(item.equation)}</div>`
-                        : '')
-                : '';
-
-            const body = desc || thumb || eqDisplay ? `
-                <div class="card-body">
-                    ${thumb}
-                    <div class="card-desc">${eqDisplay}<span class="field-value" style="color:#4a5568;">${this.escapeHtml(desc)}</span></div>
-                </div>` : '';
-
-            // Show tags if available
-            const tags = item.tags && item.tags.length > 0
-                ? `<div class="card-tags">${item.tags.map(t => `<span class="tag-pill">${this.escapeHtml(t)}</span>`).join('')}</div>`
-                : '';
-
-            // "Open in Experiment Builder": deep-link a card into the builder.
-            // Experiments load fully; building blocks seed a new experiment.
-            const builderParam = {
-                experiment: 'experiment', dynamics: 'dynamics', network: 'network',
-                coupling: 'coupling', observation: 'observation', integrator: 'integration',
-            }[type];
-            const openInBuilder = (builderParam && item.id != null)
-                ? `<div class="card-actions" style="margin-top:8px;">
-                       <a class="kg-open-builder" href="/tvbo/configurator?${builderParam}=${encodeURIComponent(item.id)}"
-                          onclick="event.stopPropagation()" title="Open in Experiment Builder"
-                          style="display:inline-flex;align-items:center;gap:6px;font-size:0.85rem;font-weight:600;color:#3b4ce2;text-decoration:none;">
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>Open in Experiment Builder
-                       </a>
-                   </div>`
-                : '';
-
-            return `
-                <div class="result-card" data-idx="${originalIdx}">
-                    ${header}
-                    ${studyMeta}
-                    ${body}
-                    ${tags}
-                    ${openInBuilder}
-                </div>
-            `;
-        }).join('');
+        resultsGrid.innerHTML = sortedItems.map((item, i) => KGComponents.Card.render(item, this.lastResultIndices[i])).join('');
 
         // Typeset LaTeX equations in cards
         if (window.MathJax && window.MathJax.typesetPromise) {
@@ -960,44 +865,13 @@ class KnowledgeGraphBrowser {
         }
     }
 
-    getStudyMeta(item) {
-        const parts = [];
-        if (item.year) parts.push(String(item.year));
-        if (item.journal) parts.push(item.journal);
-        if (item.doi) {
-            const doiUrl = item.doi.startsWith('http') ? item.doi : `https://doi.org/${item.doi}`;
-            parts.push(`<a href="${doiUrl}" target="_blank" onclick="event.stopPropagation()">doi</a>`);
-        }
-        if (parts.length === 0) return '';
-        return `<div class="field-display"><span class="field-value" style="color:#718096; font-size: 0.9rem;">${parts.join(' · ')}</span></div>`;
-    }
-
-    getItemTitle(item) {
-        return item.title || item.name || item.label || item.id || 'Untitled';
-    }
-
-    truncateText(text, maxLen = 200) {
-        if (!text) return '';
-        const clean = String(text).replace(/\s+/g, ' ').trim();
-        if (clean.length <= maxLen) return clean;
-        const cutoff = clean.lastIndexOf(' ', maxLen);
-        if (cutoff > Math.floor(maxLen * 0.6)) {
-            return clean.slice(0, cutoff).trimEnd() + '…';
-        }
-        return clean.slice(0, maxLen).trimEnd() + '…';
-    }
-
-    getItemDescription(item) {
-        return item.description || item.desc || item.summary || item.abstract || '';
-    }
-
     /**
-     * Open the detail of the ``kind:id`` the URL names: a record's type and id, or ``ontology`` and a storid, fetching an ontology node the list does not hold.
+     * Open the detail of the ``kind:id`` the URL names: a record's type and id (an experiment's copy of a library record opens that record), or ``ontology`` and a storid, fetching an ontology node the list does not hold.
      */
     async openFromUrl(ref) {
         const [kind, id] = ref.split(':');
         const isOntology = kind === 'ontology';
-        let item = this.originalData.find(it => it.type === kind && String(isOntology ? it.storid : it.id) === id);
+        let item = this.originalData.find(it => it.type === kind && (isOntology ? String(it.storid) === id : [it.id, ...(it.copies || [])].map(String).includes(id)));
         if (!item && isOntology) {
             const resp = await fetch(`/tvbo/api/kg/ontology/node/${encodeURIComponent(id)}`);
             if (resp.ok) item = await resp.json();
@@ -1007,21 +881,16 @@ class KnowledgeGraphBrowser {
 
     async openModal(item) {
         this.currentModalItem = item;
-        const title = this.getItemTitle(item);
+        const title = KGComponents.title(item);
 
         // Show modal IMMEDIATELY with loading placeholder
-        const type = (item.type || '').toLowerCase();
-        const typeInfo = KnowledgeGraphBrowser.TYPE_ICONS[type] || KnowledgeGraphBrowser.TYPE_ICONS._default;
-        // Deep-link into the Experiment Builder — same type->param map as the cards.
-        const builderParam = {
-            experiment: 'experiment', dynamics: 'dynamics', network: 'network',
-            coupling: 'coupling', observation: 'observation', integrator: 'integration',
-        }[type];
-        const builderUrl = (builderParam && item.id != null)
-            ? `/tvbo/configurator?${builderParam}=${encodeURIComponent(item.id)}`
+        const entry = KGTypes.get(item.type);
+        const builderUrl = (entry.builder && item.id != null)
+            ? `/tvbo/configurator?${entry.builder}=${encodeURIComponent(item.id)}`
             : null;
+        const metadata = KGComponents.Metadata.render(item);
         if (this.modal) {
-            this.modal.open(title, `<div class="kg-detail-content"><p style="color:#a0aec0">Loading report...</p></div>`, { item, detailData: null, builderUrl }, item.thumbnail || null, typeInfo);
+            this.modal.open(title, `<div class="kg-detail-content"><p style="color:#a0aec0">Loading report...</p></div>${metadata}`, { item, detailData: null, builderUrl }, item.thumbnail || null, entry);
         }
 
         // Strategy: try pre-rendered report first, fall back to detail API
@@ -1037,7 +906,7 @@ class KnowledgeGraphBrowser {
                     const reportHtml = typeof renderMarkdownWithMath === 'function'
                         ? renderMarkdownWithMath(reportMd)
                         : (typeof marked !== 'undefined' ? marked.parse(reportMd) : reportMd);
-                    const content = `<div class="kg-detail-content"><div class="model-report">${reportHtml}</div></div>`;
+                    const content = `<div class="kg-detail-content"><div class="model-report">${reportHtml}</div></div>${metadata}`;
                     if (this.modal && this.modal.isOpen) {
                         this.modal.updateContent(content, { item });
                         // Typeset math
@@ -1077,9 +946,8 @@ class KnowledgeGraphBrowser {
 
                 if (resp.ok && this.currentModalItem === item) {
                     const detailData = await resp.json();
-                    const fullContent = this.detailPanel ? this.detailPanel.render(item, detailData) : '';
                     if (this.modal && this.modal.isOpen) {
-                        this.modal.updateContent(fullContent, { item, detailData });
+                        this.modal.updateContent(this.detailPanel.render(item, detailData) + metadata, { item, detailData });
                     }
                     return;
                 }
@@ -1090,9 +958,7 @@ class KnowledgeGraphBrowser {
 
         // Fallback: show item properties directly
         if (this.currentModalItem === item && this.modal && this.modal.isOpen) {
-            const fallback = this.detailPanel ? this.detailPanel.render(item, null) : '';
-            const content = fallback || this._renderBasicItemContent(item);
-            this.modal.updateContent(content, { item, detailData: null });
+            this.modal.updateContent(this.detailPanel.render(item, null) + metadata, { item, detailData: null });
         }
     }
 
@@ -1100,24 +966,6 @@ class KnowledgeGraphBrowser {
         if (action === 'download' && data) {
             this.downloadItem(data.item);
         }
-    }
-
-    _renderBasicItemContent(item) {
-        const desc = this.getItemDescription(item);
-        const skip = new Set(['type', 'id', 'name', 'title', 'label', 'description', 'desc',
-            'summary', 'abstract', 'thumbnail', 'report_url', 'record_id', 'tags',
-            'ontology_classes', 'ontology_properties']);
-        let propsHtml = '';
-        for (const [key, val] of Object.entries(item)) {
-            if (skip.has(key) || val === null || val === undefined || val === '') continue;
-            const display = Array.isArray(val) ? val.join(', ') : String(val);
-            if (!display) continue;
-            propsHtml += `<tr><td style="padding:4px 12px 4px 0;font-weight:600;color:#4a5568;white-space:nowrap;vertical-align:top">${this.escapeHtml(this.formatLabel(key))}</td><td style="padding:4px 0">${this.escapeHtml(display)}</td></tr>`;
-        }
-        return `<div class="kg-detail-content">
-            ${desc ? `<p style="margin-bottom:16px">${this.escapeHtml(desc)}</p>` : ''}
-            ${propsHtml ? `<table style="width:100%;border-collapse:collapse">${propsHtml}</table>` : '<p style="color:#a0aec0">No additional details available.</p>'}
-        </div>`;
     }
 
     closeModal() {
@@ -1129,7 +977,8 @@ class KnowledgeGraphBrowser {
 
     downloadItem(item) {
         if (!item) return;
-        const yaml = this.objectToYAML(item);
+        const { related, used_by, copies, ...record } = item; // the page's own link summaries are not part of the record
+        const yaml = this.objectToYAML(record);
         const filename = (item.title || item.name || 'item').replace(/\s+/g, '_') + '.yaml';
         const blob = new Blob([yaml], { type: 'text/yaml' });
         const url = URL.createObjectURL(blob);
@@ -1169,52 +1018,7 @@ class KnowledgeGraphBrowser {
 
         return yaml;
     }
-
-    formatLabel(key) {
-        return key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-    }
-
-    /**
-     * Split CamelCase into readable words: "SimulationExperiment" → "Simulation Experiment"
-     */
-    formatClassName(name) {
-        return String(name)
-            .split('.').pop()
-            .replace(/_/g, ' ')
-            .replace(/([a-z])([A-Z])/g, '$1 $2')
-            .replace(/\b\w/g, l => l.toUpperCase());
-    }
-
-    /**
-     * Display class names in facets/headers using schema keys, not labels.
-     */
-    getClassFacetDisplayName(typeKey, classSchema) {
-        const rawName = (classSchema && classSchema.name) || typeKey;
-        return this.formatClassName(rawName);
-    }
-
-    escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
 }
-
-// Icon & gradient registry — mirrors TVBO_ICONS from docs
-KnowledgeGraphBrowser.TYPE_ICONS = {
-    dynamics:    { icon: 'fa-solid fa-wave-square',          gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: '#667eea' },
-    model:       { icon: 'fa-solid fa-wave-square',          gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: '#667eea' },
-    network:     { icon: 'fa-solid fa-diagram-project',      gradient: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)', color: '#43e97b' },
-    coupling:    { icon: 'fa-solid fa-arrow-right-arrow-left', gradient: 'linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)', color: '#a18cd1' },
-    integrator:  { icon: 'fa-solid fa-gears',                gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', color: '#4facfe' },
-    experiment:  { icon: 'fa-solid fa-flask',                 gradient: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)', color: '#fa709a' },
-    study:       { icon: 'fa-solid fa-book-open',             gradient: 'linear-gradient(135deg, #f7971e 0%, #ffd200 100%)', color: '#f7971e' },
-    observation: { icon: 'fa-solid fa-binoculars',            gradient: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)', color: '#11998e' },
-    ontology:    { icon: 'fa-solid fa-graduation-cap',        gradient: 'linear-gradient(135deg, #c471f5 0%, #fa71cd 100%)', color: '#c471f5' },
-    software:    { icon: 'fa-solid fa-desktop',               gradient: 'linear-gradient(135deg, #6a85b6 0%, #bac8e0 100%)', color: '#6a85b6' },
-    atlas:       { icon: 'fa-solid fa-location-dot',          gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', color: '#f5576c' },
-    _default:    { icon: 'fa-solid fa-tag',                   gradient: 'linear-gradient(135deg, #a0aec0 0%, #718096 100%)', color: '#a0aec0' },
-};
 
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {

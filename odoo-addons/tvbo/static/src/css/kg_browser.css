@@ -319,95 +319,6 @@
     }
 }
 
-/* Result Cards */
-.tvbo-kg-container .result-card {
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-    transition: all 0.3s ease;
-    overflow: hidden;
-    border: 1px solid #e2e8f0;
-    padding: 20px;
-    cursor: pointer;
-    min-height: 120px;
-}
-
-.tvbo-kg-container .result-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-}
-
-.tvbo-kg-container .field-display {
-    margin-bottom: 8px;
-}
-
-.tvbo-kg-container .field-value {
-    color: #2d3748;
-}
-
-.tvbo-kg-container .card-body {
-    margin-top: 8px;
-    display: flex;
-    gap: 12px;
-    align-items: flex-start;
-}
-
-.tvbo-kg-container .card-thumb {
-    width: 80px;
-    height: 80px;
-    object-fit: cover;
-    border-radius: 8px;
-    border: 1px solid #e2e8f0;
-    flex: 0 0 auto;
-}
-
-.tvbo-kg-container .card-thumb + .card-desc {
-    max-height: 80px;
-    overflow: hidden;
-}
-
-.tvbo-kg-container .card-desc {
-    flex: 1 1 auto;
-    min-width: 0;
-    font-size: 0.9rem;
-    color: #4a5568;
-    line-height: 1.5;
-}
-
-.tvbo-kg-container .card-equation {
-    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
-    font-size: 0.8rem;
-    color: #553c9a;
-    background: #f7f5ff;
-    padding: 4px 8px;
-    border-radius: 6px;
-    margin-bottom: 6px;
-    line-height: 1.4;
-    word-break: break-word;
-}
-
-.tvbo-kg-container .card-equation-latex {
-    font-family: inherit;
-    font-size: 0.85rem;
-    overflow-x: auto;
-}
-
-.tvbo-kg-container .card-tags {
-    margin-top: 10px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-}
-
-.tvbo-kg-container .tag-pill {
-    background: #edf2f7;
-    color: #4a5568;
-    padding: 2px 8px;
-    border-radius: 12px;
-    font-size: 11px;
-    font-weight: 500;
-}
-
 /* Badges */
 .tvbo-kg-container .badge {
     display: inline-flex;
@@ -422,28 +333,10 @@
     border: 1px solid transparent;
 }
 
-.tvbo-kg-container .badge.type-badge {
-    color: #fff;
-    font-weight: 600;
-    border: none;
-    padding: 3px 10px;
-    letter-spacing: 0.02em;
-}
-
-.tvbo-kg-container .badge.type-badge i {
-    font-size: 11px;
-    line-height: 1;
-}
-
-/* Ontology symbol display */
-.tvbo-kg-container .ontology-symbol {
-    font-family: 'Times New Roman', serif;
-    font-style: italic;
-    font-size: 1rem;
-    color: #5e35b1;
-    background: #f3e5f5;
-    padding: 2px 8px;
-    border-radius: 4px;
+.tvbo-kg-container .facet-type-icon {
+    width: 16px;
+    margin-right: 4px;
+    text-align: center;
 }
 
 /* No Results */
@@ -614,15 +507,6 @@
 
 .tvbo-kg-container .ontology-iri a:hover {
     text-decoration: underline;
-}
-
-/* Guard against long unbreakable tokens (IRIs, ids, equations) forcing a card
-   — and the whole page — wider than the mobile viewport. `anywhere` also lets
-   the box shrink below its min-content width, which is what prevents overflow. */
-.tvbo-kg-container .field-display,
-.tvbo-kg-container .field-value,
-.tvbo-kg-container .card-desc {
-    overflow-wrap: anywhere;
 }
 
 /* The results toolbar (view toggle + sort + clear) is a single non-wrapping
