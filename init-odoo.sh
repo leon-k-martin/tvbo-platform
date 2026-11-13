@@ -330,8 +330,14 @@ if psql -h "$DB_HOST" -U "$DB_USER" -d postgres -tAc "SELECT 1 FROM pg_database 
   # Check if database is initialized by checking for ir_module_module table
   if psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" -tAc "SELECT 1 FROM information_schema.tables WHERE table_name='ir_module_module'" | grep -q 1; then
     log "Database is initialized"
-    # Only upgrade if explicitly requested via TVBO_UPGRADE=1
-    if [ "${TVBO_UPGRADE:-0}" = "1" ]; then
+    # A database left with base Odoo but no tvbo module, as after an install that failed, gets the install; an upgrade would find nothing to upgrade.
+    if ! psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" -tAc "SELECT 1 FROM ir_module_module WHERE name='tvbo' AND state='installed'" | grep -q 1; then
+      log "TVBO module is not installed - installing..."
+      run_odoo -d "$DB_NAME" -i tvbo --stop-after-init --without-demo=True \
+        --db_host="$DB_HOST" --db_user="$DB_USER" --db_password="$DB_PASSWORD" \
+        --log-level=info
+      log "✓ TVBO module installed"
+    elif [ "${TVBO_UPGRADE:-0}" = "1" ]; then
       reconcile_schema pre   # bridge conflicting columns before Odoo's auto sync
 
       log "Upgrading TVBO module..."
