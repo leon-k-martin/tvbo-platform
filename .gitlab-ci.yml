@@ -14,6 +14,10 @@ deploy-job:
     - export KUBECONFIG=/home/gitlab-runner/kubeconfig.yaml
     - kubectl apply -f tvboRunnerActions.yaml
     - |
+        # tvbo-api pulls leonmartin2/tvbo:dev only when its pod is replaced, so every deploy replaces it and waits until the new pod is ready.
+        kubectl rollout restart deployment/tvbo-api -n kube-system
+        kubectl rollout status deployment/tvbo-api -n kube-system --timeout=300s
+    - |
         # ADMIN_PASSWORD belongs in Settings > CI/CD > Variables (masked, protected); when set, it replaces the secret the pod reads as the website admin's password.
         if [ -n "${ADMIN_PASSWORD:-}" ]; then
           kubectl create secret generic tvbo-odoo-admin -n kube-system --from-literal=password="$ADMIN_PASSWORD" --dry-run=client -o yaml | kubectl apply -f -
