@@ -29,11 +29,9 @@
                         <field name="derived_parameters"/>
                         <field name="derived_variables"/>
                         <field name="coupling_inputs"/>
-                        <field name="coupling_terms"/>
                         <field name="system_type"/>
                         <field name="functions"/>
                         <field name="stimulus"/>
-                        <field name="modes"/>
                         <field name="source"/>
                         <field name="references"/>
                         <field name="iri"/>
@@ -79,7 +77,6 @@
                         <field name="step_size"/>
                         <field name="duration"/>
                         <field name="steps"/>
-                        <field name="time_scale"/>
                         <field name="unit"/>
                         <field name="noise"/>
                         <field name="state_wise_sigma"/>
@@ -222,11 +219,6 @@
                         <field name="incoming_states"/>
                         <field name="local_states"/>
                         <field name="delayed"/>
-                        <field name="inner_coupling"/>
-                        <field name="region_mapping"/>
-                        <field name="regional_connectivity"/>
-                        <field name="aggregation"/>
-                        <field name="distribution"/>
                     </group>
                 </sheet>
             </form>
@@ -381,7 +373,6 @@
                         <field name="integration"/>
                         <field name="connectivity"/>
                         <field name="network"/>
-                        <field name="coupling"/>
                         <field name="observations"/>
                         <field name="functions"/>
                         <field name="stimulation"/>
@@ -430,7 +421,6 @@
                         <field name="label"/>
                         <field name="acronym"/>
                         <field name="description"/>
-                        <field name="time_scale"/>
                         <field name="parameters"/>
                         <field name="equation"/>
                         <field name="environment"/>
@@ -439,9 +429,7 @@
                         <field name="source"/>
                         <field name="downsample_period"/>
                         <field name="voi"/>
-                        <field name="warmup_source"/>
                         <field name="data_source"/>
-                        <field name="skip_t"/>
                     </group>
                 </sheet>
             </form>
