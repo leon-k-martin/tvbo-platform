@@ -68,6 +68,8 @@ spec:
             - {name: PYTHONFAULTHANDLER, value: "1"}
             - {name: PYTHONUNBUFFERED, value: "1"}
             - {name: ODOO_LOG_LEVEL, value: "info"}
+            # The website admin's password, set on start when the deploy job has created the secret from its ADMIN_PASSWORD variable.
+            - {name: ADMIN_PASSWORD, valueFrom: {secretKeyRef: {name: tvbo-odoo-admin, key: password, optional: true}}}
             # Holds a failed-upgrade pod for `kubectl exec` debugging instead of
             # crash-looping. Now backstopped by the readiness probe below: on a
             # failed upgrade the server never starts, the probe never passes, the

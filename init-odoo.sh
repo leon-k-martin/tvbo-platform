@@ -400,6 +400,27 @@ if [ -n "${TVBO_PUBLIC_URL:-}" ]; then
   fi
 fi
 
+# ADMIN_PASSWORD, from the optional tvbo-odoo-admin secret, becomes the website admin's password on every start; unset, the password stays as it is.
+set_admin_password() {
+  local out
+  [ -n "${ADMIN_PASSWORD:-}" ] || return 0
+  log "Setting the admin user's password from ADMIN_PASSWORD..."
+  set +e
+  out=$(printf '%s\n' \
+    'import os' \
+    'env.ref("base.user_admin").password = os.environ["ADMIN_PASSWORD"]' \
+    'env.cr.commit()' \
+    'print("ADMIN_PASSWORD_SET")' \
+    | odoo shell -d "$DB_NAME" --no-http \
+        --db_host="$DB_HOST" --db_user="$DB_USER" --db_password="$DB_PASSWORD" \
+        --log-level=warn 2>&1)
+  set -e
+  case "$out" in
+    *ADMIN_PASSWORD_SET*) log "✓ admin password set" ;;
+    *) log "⚠ could not set the admin password, the previous one stays; the last lines of the attempt:"; printf '%s\n' "$out" | tail -5 ;;
+  esac
+}
+
 # Reconcile the KG's database side against ground truth on every deploy. Fresh
 # install: post_init_hook already seeded, so this is a near no-op (all skipped).
 # Upgrade-only deploy: the hook never ran, so this seeds. Either way it back-fills
@@ -407,6 +428,7 @@ fi
 reconcile_building_blocks
 import_platform_docs
 install_extra_modules
+set_admin_password
 
 # Mark website configurator as done to skip the wizard
 log "Configuring website..."

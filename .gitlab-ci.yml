@@ -14,6 +14,12 @@ deploy-job:
     - export KUBECONFIG=/home/gitlab-runner/kubeconfig.yaml
     - kubectl apply -f tvboRunnerActions.yaml
     - |
+        # ADMIN_PASSWORD belongs in Settings > CI/CD > Variables (masked, protected); when set, it replaces the secret the pod reads as the website admin's password.
+        if [ -n "${ADMIN_PASSWORD:-}" ]; then
+          kubectl create secret generic tvbo-odoo-admin -n kube-system --from-literal=password="$ADMIN_PASSWORD" --dry-run=client -o yaml | kubectl apply -f -
+          echo "admin password secret updated"
+        fi
+    - |
         # Always re-set, so toggling RESET_DB between runs takes effect deterministically.
         kubectl set env deployment/tvbo-odoo -n kube-system "RESET_DB=${RESET_DB:-false}"
     - |
@@ -139,9 +145,22 @@ deploy-job:
           echo "  to   ${IMG_AFTER}"
         fi
 
-        # Fail on a bad rollout, an unchanged image, OR an incomplete KG.
+        echo ""
+        echo "===== Upgrade gate ====="
+        # init-odoo.sh serves on after a failed `-u tvbo` (new code on the old schema), so the failure is surfaced here with its cause.
+        UPG_RC=0
+        if kubectl logs "$POD" -n kube-system --tail=-1 2>/dev/null | grep -q "TVBO UPGRADE FAILED"; then
+          echo "✗ UPGRADE GATE FAILED: -u tvbo failed and the pod serves in DEGRADED mode. The cause:"
+          kubectl logs "$POD" -n kube-system --tail=-1 2>/dev/null | grep -A 60 "TVBO UPGRADE FAILED" | head -80
+          UPG_RC=1
+        else
+          echo "✓ UPGRADE GATE PASSED: -u tvbo completed"
+        fi
+
+        # Fail on a bad rollout, an unchanged image, a failed upgrade, OR an incomplete KG.
         [ "$ROLLOUT_RC" -ne 0 ] && exit "$ROLLOUT_RC"
         [ "$IMG_RC" -ne 0 ] && exit "$IMG_RC"
+        [ "$UPG_RC" -ne 0 ] && exit "$UPG_RC"
         exit "$KG_RC"
   when: manual
 
