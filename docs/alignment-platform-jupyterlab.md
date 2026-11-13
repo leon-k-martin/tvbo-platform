@@ -1,6 +1,6 @@
 # Aligning the TVBO Platform and the tvb-ext-ontology JupyterLab extension
 
-**Status:** proposal · **Audience:** TVBO platform + tvb-ext-ontology maintainers
+**Status:** superseded on 2026-11-07 by `_dev/ui-elements-concept.md` for phases 3 to 5 (shared UI, notebook widgets, round-trip); phases 1 and 2 (spec contract, KG API contract) still apply · **Audience:** TVBO platform + tvb-ext-ontology maintainers
 
 ## 1. Two products, one engine
 

@@ -81,7 +81,7 @@
     <!-- TVBO Custom Header - Replace default website header -->
     <template id="tvbo_header" inherit_id="website.layout" name="TVBO Custom Header">
         <xpath expr="//header" position="replace">
-            <header class="o_header_standard o_header_no_transition">
+            <header t-if="not no_header" class="o_header_standard o_header_no_transition">
                 <!-- expand-xl, not -lg: brand + search + six items need ~1130px, so at
                      the lg breakpoint the bar overflowed the viewport up to ~1240px -->
                 <nav class="navbar navbar-expand-xl">
@@ -155,7 +155,7 @@
     <!-- TVBO Custom Footer - Replace default website footer -->
     <template id="tvbo_footer" inherit_id="website.layout" name="TVBO Custom Footer">
         <xpath expr="//footer" position="replace">
-            <footer class="tvbo-footer">
+            <footer t-if="not no_footer" class="tvbo-footer">
                 <div class="container">
                     <nav class="tvbo-footer-links" aria-label="Footer">
                         <a href="/docs">Platform guide</a>
@@ -170,13 +170,14 @@
         </xpath>
     </template>
 
-    <!-- Line icons shared by the hero steps and the scope panes; call with icon set to explore, specify, generate, run or share -->
+    <!-- Line icons shared by the hero steps and the scope panes; call with icon set to explore, specify, generate, run, report or share -->
     <template id="landing_icon" name="TVBO Landing Icon">
         <svg class="ic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <t t-if="icon == 'explore'"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></t>
             <t t-elif="icon == 'specify'"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h4"/></t>
             <t t-elif="icon == 'generate'"><path d="m8 8-4 4 4 4"/><path d="m16 8 4 4-4 4"/><path d="m13.5 5-3 14"/></t>
             <t t-elif="icon == 'run'"><path d="M7 5v14l11-7z"/></t>
+            <t t-elif="icon == 'report'"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 17v-3M12 17v-6M15 17v-2"/></t>
             <t t-elif="icon == 'share'"><circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="m8.2 10.8 7.6-4.6M8.2 13.2l7.6 4.6"/></t>
         </svg>
     </template>
@@ -203,6 +204,7 @@
                                         ('specify', 'Specify', 'An interoperable metadata standard for full research workflows, from dynamics and model fitting to figures', '/tvbo/configurator'),
                                         ('generate', 'Generate', 'Code for JAX, TVB, Julia, NeuroML and more, with a methods report, from one specification', '#example'),
                                         ('run', 'Run', 'In the browser, in Python, on the command line, or as HPC workflows: SLURM, Snakemake, Nextflow', 'https://virtual-twin.github.io/tvbo/'),
+                                        ('report', 'Report', 'The specification, its results and its figures assembled into one document for review, and back to the specification when review asks', 'https://virtual-twin.github.io/tvbo/5-report/'),
                                         ('share', 'Share', 'Share with named collaborators, or publish to the knowledge graph after validation and peer review', '#community'),
                                     ]"/>
                                     <ol class="steps">

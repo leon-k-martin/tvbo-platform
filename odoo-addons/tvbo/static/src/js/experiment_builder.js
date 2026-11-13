@@ -4464,7 +4464,8 @@
     try {
       // Collect the full experiment configuration
       console.log('[ModelBuilder] Collecting experiment configuration...');
-      const experiment = collectFullExperiment();
+      const experiment = assembleExperimentSpec();
+      if (!experiment.dynamics) throw new Error('No model selected. Add a dynamics model in the Dynamics tab first.');
       console.log('[ModelBuilder] Collected experiment:', JSON.stringify(experiment, null, 2));
       log('Experiment config:', experiment);
 

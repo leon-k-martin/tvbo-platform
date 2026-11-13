@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Attendee page: a country question is one dropdown feeding the hidden radio the survey form submits. -->
+    <template id="tvbo_survey_question_country" inherit_id="survey.question_simple_choice" name="TVBO: country dropdown">
+        <xpath expr="//div[hasclass('o_survey_form_choice')]" position="replace">
+            <div t-if="question.is_country_question" class="o_survey_answer_wrapper o_survey_form_choice"
+                 t-att-data-name="question.id"
+                 t-att-data-is-skipped-question="is_skipped_question or None"
+                 data-question-type="simple_choice_radio">
+                <label class="w-100">
+                    <select class="form-select form-select-lg o_tvbo_country_select" t-att-aria-label="question.title">
+                        <option value="">Select a country</option>
+                        <option t-foreach="question.suggested_answer_ids" t-as="label"
+                                t-att-value="label.id"
+                                t-att-selected="'selected' if answer_line.suggested_answer_id == label else None"
+                                t-out="label.value"/>
+                    </select>
+                    <input type="radio" class="o_survey_form_choice_item d-none"
+                           t-att-name="question.id"
+                           t-att-value="answer_line.suggested_answer_id.id or ''"
+                           t-att-checked="'checked' if answer_line else None"/>
+                </label>
+            </div>
+            <t t-else="">$0</t>
+        </xpath>
+    </template>
+
+    <!-- Host screen: a country question shows its live answers on the world map instead of the bar chart. -->
+    <template id="tvbo_survey_session_country_map" inherit_id="survey.user_input_session_manage_content" name="TVBO: country answers on a world map">
+        <xpath expr="//div[hasclass('o_survey_session_chart')]" position="attributes">
+            <attribute name="t-attf-class">p-2 o_survey_session_chart #{'o_tvbo_session_map' if question.is_country_question else ''}</attribute>
+            <attribute name="t-att-data-country-codes">json.dumps([answer.country_id.code or '' for answer in question.suggested_answer_ids]) if question.is_country_question else None</attribute>
+        </xpath>
+        <xpath expr="//div[hasclass('o_survey_session_chart')]/canvas" position="attributes">
+            <attribute name="t-if">not question.is_country_question</attribute>
+        </xpath>
+    </template>
+
+    <record id="tvbo_survey_question_form_country" model="ir.ui.view">
+        <field name="name">tvbo.survey.question.form.country</field>
+        <field name="model">survey.question</field>
+        <field name="inherit_id" ref="survey.survey_question_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='comments_allowed']" position="before">
+                <field name="is_country_question" invisible="question_type != 'simple_choice'"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

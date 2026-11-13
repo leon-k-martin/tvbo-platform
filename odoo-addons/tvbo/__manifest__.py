@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'TVBO - The Virtual Brain Ontology',
-    'version': '19.0.1.0.2',
+    'version': '19.0.1.0.3',
     'category': 'Research/Neuroscience',
     'summary': 'Data models for brain simulation, DBS, and neuroanatomical atlases',
     'description': '\n            Complete TVBO data models including:\n            - Brain simulation dynamics and experiments\n            - Deep Brain Stimulation (DBS) protocols\n            - Neuroanatomical atlases and parcellations\n        ',
@@ -15,11 +15,13 @@
         'security/ir.model.access.csv',
         'data/survey_workshop_preworkshop.xml',
         'data/survey_workshop_feedback.xml',
+        'data/survey_tvb_school_background.xml',
         'data/website_config.xml',
         'data/forum_data.xml',
         'views/website_templates.xml',
         'views/forum_templates.xml',
         'views/survey_customizations.xml',
+        'views/survey_live_session.xml',
         'views/portal_templates.xml',
         'views/portal_dashboard.xml',
         'views/configurator_templates.xml',
@@ -37,6 +39,13 @@
         ],
         'web.assets_frontend': [
             'tvbo/static/src/css/forum.css',
+        ],
+        'survey.survey_assets': [
+            'tvbo/static/src/css/survey_live.css',
+            'tvbo/static/src/js/survey_country_select.js',
+        ],
+        'survey.survey_user_input_session_assets': [
+            'tvbo/static/src/js/survey_session_host.js',
         ],
     },
     'post_init_hook': 'post_init_hook',

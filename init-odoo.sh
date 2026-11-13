@@ -276,11 +276,16 @@ DB_NAME=${DB_NAME:-tvbo}
 
 export PGPASSWORD="$DB_PASSWORD"
 
-# Install tvbo. The /tmp/tvbo editable mount makes the package importable once
-# linked; an existing install survives container restarts and works offline, so
-# prefer it. Otherwise do an editable install without build isolation (no network
-# needed when the build backend is already present), then fall back to PyPI.
-# Never hard-fail here (set -e): if tvbo ends up importable, that's enough.
+# Link the read-only /tmp/tvbo source onto the path and install its declared dependencies, for when its build hook cannot write into the mount.
+link_tvbo_source() {
+  local site; site="$(python3 -c 'import site; print(site.getusersitepackages())')"
+  python3 -c 'import tomllib; print("\n".join(tomllib.load(open("/tmp/tvbo/pyproject.toml", "rb"))["project"]["dependencies"]))' > /tmp/tvbo-requirements.txt || return 1
+  pip3 install --break-system-packages -r /tmp/tvbo-requirements.txt > /dev/null 2>&1
+  mkdir -p "$site" && echo /tmp/tvbo > "$site/tvbo-source.pth"
+  python3 -c "import tvbo" 2>/dev/null
+}
+
+# Install tvbo without ever failing the start: keep an importable install, else install the /tmp/tvbo mount editable, else link it, else fall back to PyPI.
 if python3 -c "import tvbo" 2>/dev/null; then
   log "✓ tvbo already importable (editable mount)"
 elif [ -d "/tmp/tvbo" ] && [ -f "/tmp/tvbo/pyproject.toml" ]; then
@@ -289,6 +294,8 @@ elif [ -d "/tmp/tvbo" ] && [ -f "/tmp/tvbo/pyproject.toml" ]; then
     log "✓ tvbo installed in editable mode"
   elif python3 -c "import tvbo" 2>/dev/null; then
     log "✓ tvbo importable despite editable-install error"
+  elif link_tvbo_source; then
+    log "✓ tvbo linked from the read-only mount with its dependencies"
   else
     log "⚠ tvbo editable install failed and tvbo is not importable"
   fi

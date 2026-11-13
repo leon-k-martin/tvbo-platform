@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo><data noupdate="1">
+
+    <!-- Live session for the TVB School lecture: the host clicks Start Live Session on the survey, which opens /survey/session/manage/tvb-school-2026; attendees join at /s/tvbschool. -->
+    <record model="survey.survey" id="survey_tvb_school_background">
+        <field name="title">TVB School 2026: Participant Background</field>
+        <field name="access_token">tvb-school-2026</field>
+        <field name="session_code">tvbschool</field>
+        <field name="survey_type">live_session</field>
+        <field name="scoring_type">no_scoring</field>
+        <field name="user_id" ref="base.user_admin"/>
+        <field name="access_mode">public</field>
+        <field name="questions_layout">page_per_question</field>
+        <field name="users_can_go_back" eval="False"/>
+        <field name="lang_ids" eval="False"/>
+        <field name="description" type="html">
+<p>Five quick questions about where you are and what you bring to the TVB School. The shared screen shows only the totals, never who answered what.</p>
+        </field>
+        <field name="description_done" type="html">
+<p>Thank you!</p>
+        </field>
+    </record>
+
+    <record model="survey.question" id="tvb_school_q_country">
+        <field name="survey_id" ref="survey_tvb_school_background"/>
+        <field name="sequence">10</field>
+        <field name="title">Where are you joining from?</field>
+        <field name="question_type">simple_choice</field>
+        <field name="constr_mandatory" eval="True"/>
+        <field name="is_country_question" eval="True"/>
+    </record>
+
+    <record model="survey.question" id="tvb_school_q_career">
+        <field name="survey_id" ref="survey_tvb_school_background"/>
+        <field name="sequence">20</field>
+        <field name="title">What is your career stage?</field>
+        <field name="question_type">simple_choice</field>
+        <field name="constr_mandatory" eval="True"/>
+        <field name="comments_allowed" eval="True"/>
+        <field name="comment_count_as_answer" eval="True"/>
+        <field name="comments_message">Other (please specify)</field>
+    </record>
+    <record model="survey.question.answer" id="tvb_school_q_career_a1">
+        <field name="question_id" ref="tvb_school_q_career"/>
+        <field name="sequence">1</field>
+        <field name="value">Bachelor or Master student</field>
+    </record>
+    <record model="survey.question.answer" id="tvb_school_q_career_a2">
+        <field name="question_id" ref="tvb_school_q_career"/>
+        <field name="sequence">2</field>
+        <field name="value">PhD student</field>
+    </record>
+    <record model="survey.question.answer" id="tvb_school_q_career_a3">
+        <field name="question_id" ref="tvb_school_q_career"/>
+        <field name="sequence">3</field>
+        <field name="value">Postdoc</field>
+    </record>
+    <record model="survey.question.answer" id="tvb_school_q_career_a4">
+        <field name="question_id" ref="tvb_school_q_career"/>
+        <field name="sequence">4</field>
+        <field name="value">Group leader or professor</field>
+    </record>
+    <record model="survey.question.answer" id="tvb_school_q_career_a5">
+        <field name="question_id" ref="tvb_school_q_career"/>
+        <field name="sequence">5</field>
+        <field name="value">Clinician</field>
+    </record>
+    <record model="survey.question.answer" id="tvb_school_q_career_a6">
+        <field name="question_id" ref="tvb_school_q_career"/>
+        <field name="sequence">6</field>
+        <field name="value">Industry</field>
+    </record>
+
+    <record model="survey.question" id="tvb_school_q_background">
+        <field name="survey_id" ref="survey_tvb_school_background"/>
+        <field name="sequence">30</field>
+        <field name="title">What is your main background?</field>
+        <field name="question_type">simple_choice</field>
+        <field name="constr_mandatory" eval="True"/>
+        <field name="comments_allowed" eval="True"/>
+        <field name="comment_count_as_answer" eval="True"/>
+        <field name="comments_message">Other (please specify)</field>
+    </record>
+    <record model="survey.question.answer" id="tvb_school_q_background_a1">
+        <field name="question_id" ref="tvb_school_q_background"/>
+        <field name="sequence">1</field>
+        <field name="value">Neuroscience</field>
+    </record>
+    <record model="survey.question.answer" id="tvb_school_q_background_a2">
+        <field name="question_id" ref="tvb_school_q_background"/>
+        <field name="sequence">2</field>
+        <field name="value">Medicine</field>
+    </record>
+    <record model="survey.question.answer" id="tvb_school_q_background_a3">
+        <field name="question_id" ref="tvb_school_q_background"/>
+        <field name="sequence">3</field>
+        <field name="value">Physics</field>
+    </record>
+    <record model="survey.question.answer" id="tvb_school_q_background_a4">
+        <field name="question_id" ref="tvb_school_q_background"/>
+        <field name="sequence">4</field>
+        <field name="value">Mathematics</field>
+    </record>
+    <record model="survey.question.answer" id="tvb_school_q_background_a5">
+        <field name="question_id" ref="tvb_school_q_background"/>
+        <field name="sequence">5</field>
+        <field name="value">Computer science or engineering</field>
+    </record>
+    <record model="survey.question.answer" id="tvb_school_q_background_a6">
+        <field name="question_id" ref="tvb_school_q_background"/>
+        <field name="sequence">6</field>
+        <field name="value">Psychology or cognitive science</field>
+    </record>
+    <record model="survey.question.answer" id="tvb_school_q_background_a7">
+        <field name="question_id" ref="tvb_school_q_background"/>
+        <field name="sequence">7</field>
+        <field name="value">Biology</field>
+    </record>
+
+    <record model="survey.question" id="tvb_school_q_modelling">
+        <field name="survey_id" ref="survey_tvb_school_background"/>
+        <field name="sequence">40</field>
+        <field name="title">How much experience do you have with computational modelling?</field>
+        <field name="question_type">simple_choice</field>
+        <field name="constr_mandatory" eval="True"/>
+    </record>
+    <record model="survey.question.answer" id="tvb_school_q_modelling_a1">
+        <field name="question_id" ref="tvb_school_q_modelling"/>
+        <field name="sequence">1</field>
+        <field name="value">None</field>
+    </record>
+    <record model="survey.question.answer" id="tvb_school_q_modelling_a2">
+        <field name="question_id" ref="tvb_school_q_modelling"/>
+        <field name="sequence">2</field>
+        <field name="value">Read about it</field>
+    </record>
+    <record model="survey.question.answer" id="tvb_school_q_modelling_a3">
+        <field name="question_id" ref="tvb_school_q_modelling"/>
+        <field name="sequence">3</field>
+        <field name="value">Ran existing models</field>
+    </record>
+    <record model="survey.question.answer" id="tvb_school_q_modelling_a4">
+        <field name="question_id" ref="tvb_school_q_modelling"/>
+        <field name="sequence">4</field>
+        <field name="value">Built my own models</field>
+    </record>
+    <record model="survey.question.answer" id="tvb_school_q_modelling_a5">
+        <field name="question_id" ref="tvb_school_q_modelling"/>
+        <field name="sequence">5</field>
+        <field name="value">Develop modelling methods</field>
+    </record>
+
+    <record model="survey.question" id="tvb_school_q_tvb">
+        <field name="survey_id" ref="survey_tvb_school_background"/>
+        <field name="sequence">50</field>
+        <field name="title">How much experience do you have with The Virtual Brain (TVB)?</field>
+        <field name="question_type">simple_choice</field>
+        <field name="constr_mandatory" eval="True"/>
+    </record>
+    <record model="survey.question.answer" id="tvb_school_q_tvb_a1">
+        <field name="question_id" ref="tvb_school_q_tvb"/>
+        <field name="sequence">1</field>
+        <field name="value">Never heard of it</field>
+    </record>
+    <record model="survey.question.answer" id="tvb_school_q_tvb_a2">
+        <field name="question_id" ref="tvb_school_q_tvb"/>
+        <field name="sequence">2</field>
+        <field name="value">Heard of it</field>
+    </record>
+    <record model="survey.question.answer" id="tvb_school_q_tvb_a3">
+        <field name="question_id" ref="tvb_school_q_tvb"/>
+        <field name="sequence">3</field>
+        <field name="value">Tried a tutorial</field>
+    </record>
+    <record model="survey.question.answer" id="tvb_school_q_tvb_a4">
+        <field name="question_id" ref="tvb_school_q_tvb"/>
+        <field name="sequence">4</field>
+        <field name="value">Used it in a project</field>
+    </record>
+    <record model="survey.question.answer" id="tvb_school_q_tvb_a5">
+        <field name="question_id" ref="tvb_school_q_tvb"/>
+        <field name="sequence">5</field>
+        <field name="value">Contributed to TVB</field>
+    </record>
+
+</data></odoo>
