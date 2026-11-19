@@ -158,7 +158,6 @@ const TABS: [string, string][] = [
   ['#dynamics-panel', 'builder-dynamics.webp'],
   ['#network-panel', 'builder-network.webp'],
   ['#observations-panel', 'builder-observations.webp'],
-  ['#run-panel', 'builder-run.webp'],
 ];
 for (const [target, file] of TABS) {
   test(`builder ${file}`, async ({ page }) => {
@@ -167,13 +166,6 @@ for (const [target, file] of TABS) {
     if (target !== '#general-panel') {
       await page.locator(`[data-bs-target="${target}"]`).click();
       await settle(1500);
-      if (target === '#run-panel') {
-        // Callouts keyed to experiment-builder/export.md (Run on the platform).
-        await annotate(page, [
-          { selector: '#runDuration', n: 1 },      // settings
-          { selector: '#runSimulationBtn', n: 2 }, // Run Simulation
-        ]);
-      }
     } else {
       // Callouts keyed to experiment-builder/building.md.
       await annotate(page, [

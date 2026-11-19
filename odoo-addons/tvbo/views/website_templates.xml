@@ -203,7 +203,7 @@
                                         ('explore', 'Explore', 'One knowledge graph of studies, models and parcellations, linked to GO, MeSH and ICD-11', '/tvbo/kg'),
                                         ('specify', 'Specify', 'An interoperable metadata standard for full research workflows, from dynamics and model fitting to figures', '/tvbo/configurator'),
                                         ('generate', 'Generate', 'Code for JAX, TVB, Julia, NeuroML and more, with a methods report, from one specification', '#example'),
-                                        ('run', 'Run', 'In the browser, in Python, on the command line, or as HPC workflows: SLURM, Snakemake, Nextflow', 'https://virtual-twin.github.io/tvbo/'),
+                                        ('run', 'Run', 'In Python, in a Jupyter notebook, on the command line, or as HPC workflows: SLURM, Snakemake, Nextflow', 'https://virtual-twin.github.io/tvbo/'),
                                         ('report', 'Report', 'The specification, its results and its figures assembled into one document for review, and back to the specification when review asks', 'https://virtual-twin.github.io/tvbo/5-report/'),
                                         ('share', 'Share', 'Share with named collaborators, or publish to the knowledge graph after validation and peer review', '#community'),
                                     ]"/>
@@ -223,7 +223,7 @@
                                 <div class="wrap">
                                     <div class="intro-head">
                                         <h2>Specify, generate and run in one interface</h2>
-                                        <p class="lede">Build a model or a full experiment, get code for the simulator you use, and run it: on this platform, in a Jupyter notebook or as an app on your machine, with the same interface in all three. Code templates of your own add frameworks that TVB-O does not cover.</p>
+                                        <p class="lede">Build a model or a full experiment and get code for the simulator you use, with the same interface on this platform, in a Jupyter notebook or as an app on your machine. Runs happen in the notebook or the app, next to your own data. Code templates of your own add frameworks that TVB-O does not cover.</p>
                                     </div>
 
                                     <!-- The same instrument in three frames: the switch changes only the chrome around it -->

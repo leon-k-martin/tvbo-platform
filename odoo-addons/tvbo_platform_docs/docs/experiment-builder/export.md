@@ -6,29 +6,16 @@ sequence: 30
 
 # Export & run
 
-The **YAML Specification** panel shows the live, valid spec as you build. When
-ready, use the buttons at the top-right of the builder:
+The **YAML Specification** panel shows the live, valid spec as you build. When ready, use the buttons at the top-right of the builder:
 
-- **Download** saves the experiment as a YAML bundle, plus a companion data file for
-  the connectome matrices.
+- **Download** saves the experiment as a YAML bundle, plus a companion data file for the connectome matrices.
 - **Copy Python** copies a ready-to-run snippet to your clipboard.
 
-The YAML is schema-validated, so only well-formed experiments export. An untouched
-example exports byte-for-byte the curated original.
-
-## Run on the platform
-
-You can run the experiment without leaving the browser. Open the **Run** tab, set
-the duration, step size, and compute backend such as JAX (**1**), then click **Run
-Simulation** (**2**). The platform runs it with the `tvbo` package on that backend
-and returns the result. This is the quickest way to check an experiment before you
-export it.
-
-![The Run tab: settings and the Run Simulation button](img/builder-run.webp)
-
-For full control over a run, export it and use Python instead.
+The YAML is schema-validated, so only well-formed experiments export. An untouched example exports byte-for-byte the curated original.
 
 ## Run it in Python
+
+The platform does not run experiments. Export one and run it on your own machine with the `tvbo` package:
 
 ```bash
 pip install tvbo
@@ -54,6 +41,4 @@ A run produces regional time series you can plot:
   <a href="/tvbo_platform_docs/static/video/tvbo-run-in-python.mp4">Download it</a>.
 </video>
 
-The [Python package](../python-package/index.md) section has the full API. Signed
-in, you can save the experiment to your account instead of downloading it. See
-[Save to your account](../account/save-to-account.md).
+The [Python package](../python-package/index.md) section has the full API. Signed in, you can save the experiment to your account instead of downloading it. See [Save to your account](../account/save-to-account.md).
